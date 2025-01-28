@@ -2,25 +2,43 @@
 #define TENSOR_FIELDS
 
 #include <fem.hpp>
-#include <coefficient.hpp>
 
 namespace ngfem
 {
+    const string SIGNATURE = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    class VectorFieldCoefficientFunction : public T_CoefficientFunction<VectorFieldCoefficientFunction>
+    shared_ptr<CoefficientFunction> TensorFieldCF(const shared_ptr<CoefficientFunction> &cf,
+                                                  const string &covariant_indices);
+    shared_ptr<CoefficientFunction> VectorFieldCF(const shared_ptr<CoefficientFunction> &cf);
+    shared_ptr<CoefficientFunction> OneFormCF(const shared_ptr<CoefficientFunction> &cf);
+    shared_ptr<CoefficientFunction> ScalarFieldCF(const shared_ptr<CoefficientFunction> &cf);
+
+    class TensorFieldCoefficientFunction : public T_CoefficientFunction<TensorFieldCoefficientFunction>
     {
+        string covariant_indices;
         shared_ptr<CoefficientFunction> c1;
 
     public:
-        VectorFieldCoefficientFunction(shared_ptr<CoefficientFunction> ac1)
-            : T_CoefficientFunction<VectorFieldCoefficientFunction>(1, ac1->IsComplex()), c1(ac1)
+        TensorFieldCoefficientFunction(shared_ptr<CoefficientFunction> ac1, const string &acovariant_indices)
+            : T_CoefficientFunction<TensorFieldCoefficientFunction>(ac1->Dimension(), ac1->IsComplex()), covariant_indices(acovariant_indices), c1(ac1)
         {
+            if (ac1->Dimensions().Size() != acovariant_indices.size())
+                throw Exception("TensorFieldCF: number of covariant indices must match the number of dimensions of the input coefficient function");
+            this->SetDimensions(ac1->Dimensions());
         }
-        virtual ~VectorFieldCoefficientFunction();
 
         virtual string GetDescription() const override
         {
-            return "VectorField";
+            return "TensorFieldCF";
+        }
+
+        const string &GetCovariantIndices() const { return covariant_indices; }
+
+        shared_ptr<CoefficientFunction> GetCoefficients() const { return c1; }
+
+        string GetSignature() const
+        {
+            return SIGNATURE.substr(0, covariant_indices.size());
         }
 
         auto GetCArgs() const { return tuple{c1}; }
@@ -49,17 +67,35 @@ namespace ngfem
             return c1->NonZeroPattern(ud, values);
         }
 
-        shared_ptr<CoefficientFunction>
-        Transform(CoefficientFunction::T_Transform &transformation) const override
+        // shared_ptr<CoefficientFunction>
+        // Transform(CoefficientFunction::T_Transform &transformation) const override
+        // {
+        //     auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
+        //     if (transformation.cache.count(thisptr))
+        //         return transformation.cache[thisptr];
+        //     if (transformation.replace.count(thisptr))
+        //         return transformation.replace[thisptr];
+        //     auto newcf = make_shared<TensorFieldCoefficientFunction>(c1->Transform(transformation));
+        //     transformation.cache[thisptr] = newcf;
+        //     return newcf;
+        // }
+
+        virtual double Evaluate(const BaseMappedIntegrationPoint &ip) const override
         {
-            auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
-            if (transformation.cache.count(thisptr))
-                return transformation.cache[thisptr];
-            if (transformation.replace.count(thisptr))
-                return transformation.replace[thisptr];
-            auto newcf = make_shared<VectorFieldCoefficientFunction>(c1->Transform(transformation));
-            transformation.cache[thisptr] = newcf;
-            return newcf;
+            return c1->Evaluate(ip);
+        }
+
+        template <typename MIR, typename T, ORDERING ORD>
+        void T_Evaluate(const MIR &ir, BareSliceMatrix<T, ORD> values) const
+        {
+            c1->Evaluate(ir, values);
+        }
+
+        template <typename MIR, typename T, ORDERING ORD>
+        void T_Evaluate(const MIR &ir, FlatArray<BareSliceMatrix<T, ORD>> input,
+                        BareSliceMatrix<T, ORD> values) const
+        {
+            c1->Evaluate(ir, input, values);
         }
 
         shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
@@ -67,7 +103,7 @@ namespace ngfem
         {
             if (this == var)
                 return dir;
-            return VectorFieldCF(c1->Diff(var, dir));
+            return TensorFieldCF(c1->Diff(var, dir), covariant_indices);
         }
         shared_ptr<CoefficientFunction> DiffJacobi(const CoefficientFunction *var, T_DJC &cache) const override
         {
@@ -78,10 +114,58 @@ namespace ngfem
             if (this == var)
                 return IdentityCF(this->Dimensions());
 
-            cache[thisptr] = c1->DiffJacobi(var, cache);
+            auto res = c1->DiffJacobi(var, cache);
+            cache[thisptr] = res;
             return res;
         }
+
+        virtual bool IsZeroCF() const override { return c1->IsZeroCF(); }
     };
+
+    class VectorFieldCoefficientFunction : public TensorFieldCoefficientFunction
+    {
+    public:
+        VectorFieldCoefficientFunction(shared_ptr<CoefficientFunction> ac1)
+            : TensorFieldCoefficientFunction(ac1, "0")
+        {
+        }
+
+        virtual string GetDescription() const override
+        {
+            return "VectorFieldCF";
+        }
+    };
+
+    class OneFormCoefficientFunction : public TensorFieldCoefficientFunction
+    {
+    public:
+        OneFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1)
+            : TensorFieldCoefficientFunction(ac1, "1")
+        {
+        }
+
+        virtual string GetDescription() const override
+        {
+            return "OneFormCF";
+        }
+    };
+
+    class ScalarFieldCoefficientFunction : public TensorFieldCoefficientFunction
+    {
+    public:
+        ScalarFieldCoefficientFunction(shared_ptr<CoefficientFunction> ac1)
+            : TensorFieldCoefficientFunction(ac1, "")
+        {
+        }
+
+        virtual string GetDescription() const override
+        {
+            return "ScalarFieldCF";
+        }
+    };
+
+    shared_ptr<CoefficientFunction> TensorProduct(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2);
+
 }
 
 #include <python_ngstd.hpp>
