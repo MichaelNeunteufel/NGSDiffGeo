@@ -14,6 +14,9 @@ namespace ngfem
         int dim;
         bool has_trial;
         bool is_regge;
+        bool is_proxy;
+        shared_ptr<ProxyFunction> regge_proxy;
+        shared_ptr<ngcomp::FESpace> regge_space;
 
         // metric tensor, its inverse, derivative, and volume forms
         shared_ptr<CoefficientFunction> g;
@@ -24,6 +27,13 @@ namespace ngfem
         // Christoffel symbols of first and second kind
         shared_ptr<CoefficientFunction> chr1;
         shared_ptr<CoefficientFunction> chr2;
+
+        // curvature quantities
+        shared_ptr<CoefficientFunction> Riemann;
+        shared_ptr<CoefficientFunction> Curvature;
+        shared_ptr<CoefficientFunction> Ricci;
+        shared_ptr<CoefficientFunction> Einstein;
+        shared_ptr<CoefficientFunction> Scalar;
 
         // Euclidean and g-normalized normal and tangent vectors
         shared_ptr<CoefficientFunction> nv;
@@ -40,7 +50,27 @@ namespace ngfem
 
         shared_ptr<CoefficientFunction> GetVolumeForm(VorB vb) const;
 
+        shared_ptr<CoefficientFunction> GetLeviCivitaSymbol(bool covariant) const;
+
+        shared_ptr<CoefficientFunction> GetMetricDerivative() const;
+
         shared_ptr<CoefficientFunction> GetChristoffelSymbol(bool second_kind) const;
+
+        // Full 4th order Riemann curvature tensor
+        shared_ptr<CoefficientFunction> GetRiemannCurvatureTensor() const;
+
+        // Ricci tensor, symmetric dim x dim matrix
+        shared_ptr<CoefficientFunction> GetRicciTensor() const;
+
+        // Einstein tensor, 0 for dim < 3, otherwise symmetric dim x dim matrix
+        shared_ptr<CoefficientFunction> GetEinsteinTensor() const;
+
+        // Scalar curvature (twice contracted Riemann tensor; trace of Ricci tensor)
+        shared_ptr<CoefficientFunction> GetScalarCurvature() const;
+
+        // Curvature operator
+        // 2D -> scalar Gauss curvature, 3D -> 3x3 symmetric curvature operator
+        shared_ptr<CoefficientFunction> GetCurvatureOperator() const;
 
         shared_ptr<CoefficientFunction> GetNV() const;
         shared_ptr<CoefficientFunction> GetEdgeTangent(bool consistent) const;

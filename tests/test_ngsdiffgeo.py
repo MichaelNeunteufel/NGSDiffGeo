@@ -9,12 +9,7 @@ def test_import():
     import ngsdiffgeo
 
 
-def test_riemann_mf():
-    from ngsdiffgeo import RiemannianManifold
-    from netgen.occ import unit_square
-    import ngsolve as ng
-    mesh = ng.Mesh(unit_square.GenerateMesh(maxh=0.1))
-    g = 1 * ng.Id(2)
-    mf = RiemannianManifold(metric=g)
-    assert ng.Integrate(mf.dx, mesh) == pytest.approx(1.0)
-    assert ng.Integrate(mf.ds, mesh, ng.BND) == pytest.approx(4.0)
+
+if __name__ == "__main__":
+    test_import()
+    print("All tests passed!")

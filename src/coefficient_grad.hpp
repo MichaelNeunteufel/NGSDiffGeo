@@ -59,7 +59,13 @@ namespace ngfem
         virtual void NonZeroPattern(const class ProxyUserData &ud,
                                     FlatVector<AutoDiffDiff<1, NonZero>> values) const override
         {
-            return c1->NonZeroPattern(ud, values);
+            Vector<AutoDiffDiff<1, NonZero>> v1(c1->Dimension());
+            c1->NonZeroPattern(ud, v1);
+
+            values = AutoDiffDiff<1, NonZero>(true);
+            for (size_t d = 0; d < D; d++)
+                for (size_t i = 0; i < c1->Dimension(); i++)
+                    values[d * c1->Dimension() + i] = v1[i];
         }
 
         shared_ptr<CoefficientFunction>

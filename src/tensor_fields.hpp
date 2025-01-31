@@ -24,7 +24,15 @@ namespace ngfem
         {
             if (ac1->Dimensions().Size() != acovariant_indices.size())
                 throw Exception("TensorFieldCF: number of covariant indices must match the number of dimensions of the input coefficient function");
+
             this->SetDimensions(ac1->Dimensions());
+            if (ac1->Dimensions().Size() > 0)
+            {
+                auto dim = ac1->Dimensions()[0];
+                for (auto cf_dim : ac1->Dimensions())
+                    if (cf_dim != dim)
+                        throw Exception("TensorFieldCF: all dimensions must be the same");
+            }
         }
 
         virtual string GetDescription() const override
