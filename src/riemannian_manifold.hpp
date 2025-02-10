@@ -50,6 +50,11 @@ namespace ngfem
 
         shared_ptr<CoefficientFunction> GetVolumeForm(VorB vb) const;
 
+        // musical ismorphisms
+        shared_ptr<CoefficientFunction> Raise(shared_ptr<TensorFieldCoefficientFunction> c1, size_t index = 0) const;
+
+        shared_ptr<CoefficientFunction> Lower(shared_ptr<TensorFieldCoefficientFunction> c1, size_t index = 0) const;
+
         shared_ptr<CoefficientFunction> GetLeviCivitaSymbol(bool covariant) const;
 
         shared_ptr<CoefficientFunction> GetMetricDerivative() const;
@@ -73,7 +78,7 @@ namespace ngfem
         shared_ptr<CoefficientFunction> GetCurvatureOperator() const;
 
         shared_ptr<CoefficientFunction> GetNV() const;
-        shared_ptr<CoefficientFunction> GetEdgeTangent(bool consistent) const;
+        shared_ptr<CoefficientFunction> GetEdgeTangent() const;
 
         // ------- Tensor operations --------
         shared_ptr<CoefficientFunction> IP(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2) const;
@@ -83,14 +88,22 @@ namespace ngfem
         // ------- Covariant differential operators --------
         shared_ptr<CoefficientFunction> CovDerivative(shared_ptr<TensorFieldCoefficientFunction> c1) const;
 
+        shared_ptr<CoefficientFunction> CovHessian(shared_ptr<TensorFieldCoefficientFunction> c1) const;
+
         shared_ptr<CoefficientFunction> CovDivergence(shared_ptr<TensorFieldCoefficientFunction> c1) const;
 
         shared_ptr<CoefficientFunction> CovCurl(shared_ptr<TensorFieldCoefficientFunction> c1) const;
+
+        shared_ptr<CoefficientFunction> CovInc(shared_ptr<TensorFieldCoefficientFunction> c1) const;
+
+        shared_ptr<CoefficientFunction> CovRot(shared_ptr<TensorFieldCoefficientFunction> c1) const;
 
         // ------- Trace and contraction --------
         shared_ptr<CoefficientFunction> Trace(shared_ptr<TensorFieldCoefficientFunction> c1, size_t index1 = 0, size_t index2 = 1) const;
 
         shared_ptr<CoefficientFunction> Contraction(shared_ptr<TensorFieldCoefficientFunction> tf, shared_ptr<VectorFieldCoefficientFunction> vf, size_t slot = 0) const;
+
+        shared_ptr<CoefficientFunction> Transpose(shared_ptr<TensorFieldCoefficientFunction> tf, size_t index1 = 0, size_t index2 = 1) const;
     };
 }
 
