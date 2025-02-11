@@ -19,9 +19,9 @@ class EuclideanMetric:
         self.chr2 = ngsolve.CF((0,) * dim**3, dims=(dim, dim, dim))
         self.Riemann = ngsolve.CF((0,) * dim**4, dims=(dim, dim, dim, dim))
         self.Ricci = ngsolve.CF((0,) * dim**2, dims=(dim, dim))
-        self.scalar = CF(0)
-        self.Einstein = CF((0,) * dim**2, dims=(dim, dim))
-        self.curvature = CF(0)
+        self.scalar = ngsolve.CF(0)
+        self.Einstein = ngsolve.CF((0,) * dim**2, dims=(dim, dim))
+        self.curvature = ngsolve.CF(0)
         return
 
 
@@ -35,26 +35,62 @@ class Sphere2:
         self.metric = ngsolve.CF((1, 0, 0, ngsolve.sin(ngsolve.x) ** 2), dims=(2, 2))
         # Christoffel symbols of the first kind Gamma_{ijk}=0.5*(d_ig_jk+d_jg_ik-d_kg_ij)
         self.chr1 = ngsolve.CF(
-            (0, 0, 0, sin(x) * cos(x), 0, sin(x) * cos(x), -sin(x) * cos(x), 0),
+            (
+                0,
+                0,
+                0,
+                ngsolve.sin(ngsolve.x) * ngsolve.cos(ngsolve.x),
+                0,
+                ngsolve.sin(ngsolve.x) * ngsolve.cos(ngsolve.x),
+                -ngsolve.sin(ngsolve.x) * ngsolve.cos(ngsolve.x),
+                0,
+            ),
             dims=(2, 2, 2),
         )
         # Christoffel symbols of the second kind Gamma_{ij}^k=g^{kl}Gamma_{ijl}
         self.chr2 = ngsolve.CF(
-            (0, 0, 0, cos(x) / sin(x), 0, cos(x) / sin(x), -sin(x) * cos(x), 0),
+            (
+                0,
+                0,
+                0,
+                ngsolve.cos(ngsolve.x) / ngsolve.sin(ngsolve.x),
+                0,
+                ngsolve.cos(ngsolve.x) / ngsolve.sin(ngsolve.x),
+                -ngsolve.sin(ngsolve.x) * ngsolve.cos(ngsolve.x),
+                0,
+            ),
             dims=(2, 2, 2),
         )
         # Riemann curvature tensor R_{ijkl}=d_jGamma_{ikl}-d_kGamma_{ijl}+Gamma_{ijm}Gamma_{mkl}-Gamma_{ikm}Gamma_{mjl}
         self.Riemann = ngsolve.CF(
-            (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), dims=(2, 2, 2, 2)
+            (
+                0,
+                0,
+                0,
+                0,
+                0,
+                -(ngsolve.sin(ngsolve.x) ** 2),
+                ngsolve.sin(ngsolve.x) ** 2,
+                0,
+                0,
+                ngsolve.sin(ngsolve.x) ** 2,
+                -(ngsolve.sin(ngsolve.x) ** 2),
+                0,
+                0,
+                0,
+                0,
+                0,
+            ),
+            dims=(2, 2, 2, 2),
         )
         # Ricci curvature tensor R_{ij}=g^{kl}R_{kilj}=-g^{kl}R_{ikjl}
-        self.Ricci = None
+        self.Ricci = ngsolve.CF((1, 0, 0, ngsolve.sin(ngsolve.x) ** 2), dims=(2, 2))
         # Scalar curvature R=g^{ij}R_{ij}
-        self.scalar = None
+        self.scalar = ngsolve.CF(2)
         # Einstein tensor G_{ij}=R_{ij}-0.5*g_{ij}R
-        self.Einstein = CF((0, 0, 0, 0), dims=(2, 2))
+        self.Einstein = ngsolve.CF((0, 0, 0, 0), dims=(2, 2))
         # Curvature operator is the Gauss curvature in 2D
-        self.curvature = None
+        self.curvature = ngsolve.CF(1)
         return
 
 
@@ -81,7 +117,122 @@ class Sphere3:
             dims=(3, 3),
         )
         # Christoffel symbols of the first kind Gamma_{ijk}=0.5*(d_ig_jk+d_jg_ik-d_kg_ij)
+        self.chr1 = ngsolve.CF(
+            (
+                0,
+                0,
+                0,
+                0,
+                ngsolve.sin(ngsolve.x) * ngsolve.cos(ngsolve.x),
+                0,
+                0,
+                0,
+                ngsolve.sin(ngsolve.x)
+                * ngsolve.sin(ngsolve.y) ** 2
+                * ngsolve.cos(ngsolve.x),
+                0,
+                ngsolve.sin(ngsolve.x) * ngsolve.cos(ngsolve.x),
+                0,
+                -ngsolve.sin(ngsolve.x) * ngsolve.cos(ngsolve.x),
+                0,
+                0,
+                0,
+                0,
+                ngsolve.sin(ngsolve.x) ** 2
+                * ngsolve.sin(ngsolve.y)
+                * ngsolve.cos(ngsolve.y),
+                0,
+                0,
+                ngsolve.sin(ngsolve.x)
+                * ngsolve.sin(ngsolve.y) ** 2
+                * ngsolve.cos(ngsolve.x),
+                0,
+                0,
+                ngsolve.sin(ngsolve.x) ** 2
+                * ngsolve.sin(ngsolve.y)
+                * ngsolve.cos(ngsolve.y),
+                -ngsolve.sin(ngsolve.x)
+                * ngsolve.cos(ngsolve.x)
+                * ngsolve.sin(ngsolve.y) ** 2,
+                -(ngsolve.sin(ngsolve.x) ** 3) * ngsolve.cos(ngsolve.y),
+                0,
+            ),
+            dims=(3, 3, 3),
+        )
 
+        self.chr2 = ngsolve.CF(
+            (
+                0,
+                0,
+                0,
+                0,
+                ngsolve.cos(ngsolve.x) / ngsolve.sin(ngsolve.x),
+                0,
+                0,
+                0,
+                ngsolve.cos(ngsolve.x) / ngsolve.sin(ngsolve.x),
+                0,
+                ngsolve.cos(ngsolve.x) / ngsolve.sin(ngsolve.x),
+                0,
+                -ngsolve.sin(ngsolve.x) * ngsolve.cos(ngsolve.x),
+                0,
+                0,
+                0,
+                0,
+                ngsolve.cos(ngsolve.y) / ngsolve.sin(ngsolve.y),
+                0,
+                0,
+                ngsolve.cos(ngsolve.x) / ngsolve.sin(ngsolve.x),
+                0,
+                0,
+                ngsolve.cos(ngsolve.y) / ngsolve.sin(ngsolve.y),
+                -ngsolve.sin(ngsolve.x)
+                * ngsolve.cos(ngsolve.x)
+                * ngsolve.sin(ngsolve.y) ** 2,
+                -ngsolve.sin(ngsolve.y) * ngsolve.cos(ngsolve.y),
+                0,
+            ),
+            dims=(3, 3, 3),
+        )
+
+        self.Riemann = None  # ngsolve.CF((0,) * 3**4, dims=(3, 3, 3, 3))
+        # self.Riemann[0, 1, 0, 1] = self.Riemann[1, 0, 1, 0] = (
+        #     ngsolve.sin(ngsolve.x) ** 2
+        # )
+        # self.Riemann[1, 0, 0, 1] = self.Riemann[0, 1, 1, 0] = -(
+        #     ngsolve.sin(ngsolve.x) ** 2
+        # )
+        # self.Riemann[0, 2, 0, 2] = self.Riemann[2, 0, 2, 0] = (
+        #     -(ngsolve.sin(ngsolve.x) ** 2) * ngsolve.sin(ngsolve.y) ** 2
+        # )
+        # self.Riemann[2, 0, 0, 2] = self.Riemann[0, 2, 2, 0] = (
+        #     ngsolve.sin(ngsolve.x) ** 2 * ngsolve.sin(ngsolve.y) ** 2
+        # )
+        # self.Riemann[1, 2, 1, 2] = self.Riemann[2, 1, 2, 1] = (
+        #     -(ngsolve.sin(ngsolve.x) ** 4) * ngsolve.sin(ngsolve.y) ** 2
+        # )
+        # self.Riemann[2, 1, 1, 2] = self.Riemann[1, 2, 2, 1] = (
+        #     ngsolve.sin(ngsolve.x) ** 4 * ngsolve.sin(ngsolve.y) ** 2
+        # )
+
+        self.Ricci = 2 * self.metric
+        self.scalar = ngsolve.CF(6)
+        self.Einstein = -self.metric
+        # curvature = -g^{-1}
+        self.curvature = -ngsolve.CF(
+            (
+                1,
+                0,
+                0,
+                0,
+                1 / ngsolve.sin(ngsolve.x) ** 2,
+                0,
+                0,
+                0,
+                1 / (ngsolve.sin(ngsolve.x) ** 2 * ngsolve.sin(ngsolve.y) ** 2),
+            ),
+            dims=(3, 3),
+        )
         return
 
 
@@ -136,9 +287,9 @@ class PoincareDisk:
             )
         )
         self.Ricci = -4 / (1 - ngsolve.x**2 - ngsolve.y**2) ** 2 * ngsolve.Id(2)
-        self.scalar = -2
+        self.scalar = ngsolve.CF(-2)
         self.Einstein = ngsolve.CF((0, 0, 0, 0), dims=(2, 2))
-        self.curvature = -1
+        self.curvature = ngsolve.CF(-1)
         return
 
 
@@ -164,9 +315,9 @@ class HyperbolicH2:
             )
         )
         self.Ricci = -1 / ngsolve.y**2 * ngsolve.Id(2)
-        self.scalar = -2
+        self.scalar = ngsolve.CF(-2)
         self.Einstein = ngsolve.CF((0, 0, 0, 0), dims=(2, 2))
-        self.curvature = -1
+        self.curvature = ngsolve.CF(-1)
         return
 
 
@@ -358,13 +509,13 @@ class CigarSoliton:
     Cigar soliton metric on R^2.
     """
 
-    def __init__(self):
+    def __init__(self, t=0):
         self.metric = TensorField(
-            1 / (1 + ngsolve.x**2 + ngsolve.y**2) * ngsolve.Id(2), "11"
+            1 / (ngsolve.exp(4 * t) + ngsolve.x**2 + ngsolve.y**2) * ngsolve.Id(2), "11"
         )
         self.chr1 = (
             -1
-            / (1 + ngsolve.x**2 + ngsolve.y**2) ** 2
+            / (ngsolve.exp(4 * t) + ngsolve.x**2 + ngsolve.y**2) ** 2
             * ngsolve.CF(
                 (
                     ngsolve.x,
@@ -381,7 +532,7 @@ class CigarSoliton:
         )
         self.chr2 = (
             -1
-            / (1 + ngsolve.x**2 + ngsolve.y**2)
+            / (ngsolve.exp(4 * t) + ngsolve.x**2 + ngsolve.y**2)
             * ngsolve.CF(
                 (
                     ngsolve.x,
@@ -398,15 +549,25 @@ class CigarSoliton:
         )
         self.Riemann = (
             2
-            / (1 + ngsolve.x**2 + ngsolve.y**2) ** 3
+            * ngsolve.exp(4 * t)
+            / (ngsolve.exp(4 * t) + ngsolve.x**2 + ngsolve.y**2) ** 3
             * ngsolve.CF(
                 (0, 0, 0, 0, 0, -1, 1, 0, 0, 1, -1, 0, 0, 0, 0, 0), dims=(2, 2, 2, 2)
             )
         )
-        self.Ricci = 2 / (1 + ngsolve.x**2 + ngsolve.y**2) ** 2 * ngsolve.Id(2)
-        self.scalar = 4 / (1 + ngsolve.x**2 + ngsolve.y**2)
+        self.Ricci = (
+            2
+            * ngsolve.exp(4 * t)
+            / (ngsolve.exp(4 * t) + ngsolve.x**2 + ngsolve.y**2) ** 2
+            * ngsolve.Id(2)
+        )
+        self.scalar = (
+            4 * ngsolve.exp(4 * t) / (ngsolve.exp(4 * t) + ngsolve.x**2 + ngsolve.y**2)
+        )
         self.Einstein = ngsolve.CF((0, 0, 0, 0), dims=(2, 2))
-        self.curvature = 2 / (1 + ngsolve.x**2 + ngsolve.y**2)
+        self.curvature = (
+            2 * ngsolve.exp(4 * t) / (ngsolve.exp(4 * t) + ngsolve.x**2 + ngsolve.y**2)
+        )
         return
 
 
