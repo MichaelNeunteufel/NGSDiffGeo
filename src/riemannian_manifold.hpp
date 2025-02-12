@@ -9,8 +9,17 @@ namespace ngfem
     class TensorFieldCoefficientFunction;
     class VectorFieldCoefficientFunction;
 
+    /**
+     * @class RiemannianManifold
+     * @brief Represents a Riemannian manifold with various geometric and differential properties.
+     *
+     * This class encapsulates the properties and operations related to a Riemannian manifold,
+     * including metric tensors, Christoffel symbols, curvature tensors, and various covariant
+     * differential operators.
+     */
     class RiemannianManifold
     {
+        // Dimension of the manifold
         int dim;
         bool has_trial;
         bool is_regge;
@@ -42,15 +51,21 @@ namespace ngfem
         shared_ptr<CoefficientFunction> g_tv;
 
     public:
+        /**
+         * @fn RiemannianManifold::RiemannianManifold(shared_ptr<CoefficientFunction> _g)
+         * @brief Constructor for RiemannianManifold.
+         * @param _g The metric tensor.
+         */
         RiemannianManifold(shared_ptr<CoefficientFunction> _g);
 
+        // ------- Metric tensor and related quantities --------
         shared_ptr<CoefficientFunction> GetMetric() const;
 
         shared_ptr<CoefficientFunction> GetMetricInverse() const;
 
         shared_ptr<CoefficientFunction> GetVolumeForm(VorB vb) const;
 
-        // musical ismorphisms
+        // -------  musical isomorphisms -------
         shared_ptr<CoefficientFunction> Raise(shared_ptr<TensorFieldCoefficientFunction> c1, size_t index = 0) const;
 
         shared_ptr<CoefficientFunction> Lower(shared_ptr<TensorFieldCoefficientFunction> c1, size_t index = 0) const;
@@ -77,6 +92,7 @@ namespace ngfem
         // 2D -> scalar Gauss curvature, 3D -> 3x3 symmetric curvature operator
         shared_ptr<CoefficientFunction> GetCurvatureOperator() const;
 
+        // ------- Normal and tangent vectors --------
         shared_ptr<CoefficientFunction> GetNV() const;
         shared_ptr<CoefficientFunction> GetEdgeTangent() const;
 
@@ -98,7 +114,7 @@ namespace ngfem
 
         shared_ptr<CoefficientFunction> CovRot(shared_ptr<TensorFieldCoefficientFunction> c1) const;
 
-        // ------- Trace and contraction --------
+        // ------- Algebraic operations --------
         shared_ptr<CoefficientFunction> Trace(shared_ptr<TensorFieldCoefficientFunction> c1, size_t index1 = 0, size_t index2 = 1) const;
 
         shared_ptr<CoefficientFunction> Contraction(shared_ptr<TensorFieldCoefficientFunction> tf, shared_ptr<VectorFieldCoefficientFunction> vf, size_t slot = 0) const;

@@ -17,6 +17,13 @@ namespace ngfem
         double eps = 1e-4;
 
     public:
+        /**
+         * @brief Constructs a GradCoefficientFunction object.
+         *
+         * @param ac1 A shared pointer to a CoefficientFunction object.
+         *
+         * @throws Exception if any dimension of the input CoefficientFunction is not equal to D.
+         */
         GradCoefficientFunction(shared_ptr<CoefficientFunction> ac1)
             : T_CoefficientFunction<GradCoefficientFunction<D>>(ac1->Dimension() * D, ac1->IsComplex()), c1(ac1)
         {

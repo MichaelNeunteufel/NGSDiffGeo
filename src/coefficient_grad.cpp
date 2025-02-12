@@ -23,6 +23,9 @@ namespace ngfem
                   has_trial = true;
             } });
 
+        // If the input coefficient function includes a trial or test function, we need to use
+        // a proxy function to calculate the gradient via a differential operator.
+        // Otherwise, we can directly calculate the gradient using the CoefficientFunction.
         if (has_trial != has_test)
             switch (dim)
             {
@@ -71,7 +74,7 @@ namespace ngfem
                                    BareSliceMatrix<double, ColMajor> mat,
                                    LocalHeap &lh) const
     {
-        cout << "in GradDiffOp CalcMatrix" << endl;
+        // cout << "in GradDiffOp CalcMatrix" << endl;
         HeapReset hr(lh);
 
         auto &mir = static_cast<const MappedIntegrationRule<D, D> &>(bmir);
@@ -220,5 +223,5 @@ void ExportGradCF(py::module m)
 
     py::class_<GradProxy, shared_ptr<GradProxy>, ProxyFunction>(m, "GradProxy");
     m.def("GradCF", [](shared_ptr<CoefficientFunction> cf, int dim)
-          { return GradCF(cf, dim); }, "Create a GradientCF. Uses numerical differentiation to compute the gradient of a given CoefficientFunction");
+          { return GradCF(cf, dim); }, "Create a GradientCoefficientFunction. Uses numerical differentiation to compute the gradient of a given CoefficientFunction");
 }

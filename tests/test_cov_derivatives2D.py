@@ -6,14 +6,6 @@ from ngsolve import *
 order = 6
 addorder = 6
 
-"""
-A = CF( (10*x*y**3-x**2, y**4*x-y, 
-         sin(x*y), cos(x)*y**2), dims=(2,2) )
-s = CF( 10*x*y**3-x**2*cos(x)*y**2)
-v = CF( (10*x*y**3-x**2, y**4*z*x-y) )
-sigma = Sym( CF( (5+x**2*y**3, sin(x)*cos(y), exp(x-y), 1+y**5), dims=(2,2) ) )
-"""
-
 
 def CovDerS(s, mesh, gfgamma, cov=True):
     Xgf = GridFunction(L2(mesh, order=order + addorder))
@@ -46,13 +38,13 @@ def CovDerT(A, mesh, gfgamma, contra=[True, True]):
             signature = list(str_con)
             signature[2] = str_con[4 + i]
             signature[4 + i] = str_con[1]
-            print("con signature", "".join(signature))
+            # print("con signature", "".join(signature))
             term = term + fem.Einsum("".join(signature), chr2, A)
         else:
             signature = list(str_cov)
             signature[1] = str_cov[4 + i]
             signature[4 + i] = str_cov[2]
-            print("cov signature", "".join(signature))
+            # print("cov signature", "".join(signature))
             term = term - fem.Einsum("".join(signature), chr2, A)
     return term
 
@@ -128,9 +120,218 @@ def test_cov_der_mat():
     return
 
 
+def test_integration_by_parts_2d():
+    metric = dg.CigarSoliton().metric
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.1))
+    mf = dg.RiemannianManifold(metric)
+    omega_T = dg.ScalarField(mf.VolumeForm(VOL))
+    omega_S = dg.ScalarField(mf.VolumeForm(BND))
+
+    f = dg.ScalarField(CF(x**2 * y - 0.1 * y * x))
+    g = dg.ScalarField(CF(x * y**2 + 0.1 * y * x - 0.73 * x))
+
+    X = dg.VectorField(CF((10 * x * y**3 - x**2, y**4 * x - y)))
+    # Y = dg.VectorField(CF((y**2 * x - 0.1 * y * x**2, 10 * x * y**3 + x**2 - y)))
+
+    alpha = dg.OneForm(CF((sin(x * y), cos(x) * y**2)))
+    beta = dg.OneForm(
+        CF((0.2 * y * x**2 + 0.37 * x**3, 2 * x**2 * y**2 + 0.1 * x**2 - 1.34 * y))
+    )
+
+    A = dg.TensorField(
+        CF(
+            (10 * x * y**3 - x**2, y**4 * x - y, sin(x * y), cos(x) * y**2), dims=(2, 2)
+        ),
+        "00",
+    )
+    B = dg.TensorProduct(alpha, X)
+    C = dg.TensorProduct(alpha, beta)
+
+    assert (
+        abs(
+            Integrate(mf.InnerProduct(mf.CovDeriv(f), X) * omega_T * dx, mesh)
+            - Integrate(
+                -mf.InnerProduct(mf.CovDiv(X), f) * omega_T * dx
+                + f * mf.InnerProduct(X, mf.normal) * omega_S * ds,
+                mesh,
+            )
+        )
+        < 1e-9
+    )
+
+    assert (
+        abs(
+            Integrate(mf.InnerProduct(mf.CovDeriv(X), A) * omega_T * dx, mesh)
+            - Integrate(
+                -mf.InnerProduct(mf.CovDiv(A), X) * omega_T * dx
+                + mf.InnerProduct(dg.TensorProduct(mf.normal, X), A) * omega_S * ds,
+                mesh,
+            )
+        )
+        < 1e-9
+    )
+
+    assert (
+        abs(
+            Integrate(mf.InnerProduct(mf.CovCurl(X), f) * omega_T * dx, mesh)
+            - Integrate(
+                mf.InnerProduct(X, mf.CovRot(f)) * omega_T * dx
+                + f * mf.InnerProduct(X, mf.tangent) * omega_S * ds,
+                mesh,
+            )
+        )
+        < 1e-9
+    )
+
+    assert (
+        abs(
+            Integrate(mf.InnerProduct(mf.CovCurl(C), X) * omega_T * dx, mesh)
+            - Integrate(
+                mf.InnerProduct(C, mf.CovRot(X)) * omega_T * dx
+                + mf.InnerProduct(C, dg.TensorProduct(X, mf.tangent)) * omega_S * ds,
+                mesh,
+            )
+        )
+        < 1e-8
+    )
+
+    assert (
+        abs(
+            Integrate(mf.InnerProduct(mf.CovInc(C), f) * omega_T * dx, mesh)
+            - 0.5
+            * Integrate(
+                mf.InnerProduct(mf.CovCurl(C), mf.CovRot(f)) * omega_T * dx
+                + f
+                * mf.InnerProduct(mf.CovCurl(C), mf.tangent)
+                * omega_S
+                * dx(element_boundary=True),
+                mesh,
+            )
+            - 0.5
+            * Integrate(
+                mf.InnerProduct(C, mf.CovRot(mf.CovRot(f))) * omega_T * dx
+                + (
+                    mf.InnerProduct(C, dg.TensorProduct(mf.CovRot(f), mf.tangent))
+                    + f * mf.InnerProduct(mf.CovCurl(C), mf.tangent)
+                )
+                * omega_S
+                * dx(element_boundary=True),
+                mesh,
+            )
+        )
+        < 1e-8
+    )
+
+    assert (
+        abs(
+            Integrate(
+                mf.InnerProduct(mf.CovDiv(B), mf.CovDeriv(f)) * omega_T * dx, mesh
+            )
+            - Integrate(
+                -mf.InnerProduct(B, mf.CovHesse(f)) * omega_T * dx
+                + mf.InnerProduct(B, dg.TensorProduct(mf.normal, mf.CovDeriv(f)))
+                * omega_S
+                * dx(element_boundary=True),
+                mesh,
+            )
+        )
+        < 1e-7
+    )
+
+    assert (
+        abs(
+            Integrate(mf.InnerProduct(mf.Trace(mf.CovHesse(f)), g) * omega_T * dx, mesh)
+            - Integrate(
+                -mf.InnerProduct(mf.CovDeriv(f), mf.CovDeriv(g)) * omega_T * dx
+                + mf.InnerProduct(mf.CovDeriv(f), mf.normal)
+                * g
+                * omega_S
+                * dx(element_boundary=True),
+                mesh,
+            )
+        )
+        < 1e-8
+    )
+    return
+
+
+def test_integration_by_parts_3d():
+    metric = dg.WarpedProduct().metric
+    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.1))
+    mf = dg.RiemannianManifold(metric)
+    omega_T = mf.VolumeForm(VOL)
+    omega_S = mf.VolumeForm(BND)
+
+    X = dg.VectorField(CF((10 * x * y**3 - x**2 * z, y**4 * x - y * z, z * x * y)))
+    Y = dg.VectorField(
+        CF(
+            (
+                y**2 * x * z - 0.1 * y * x**2,
+                10 * x * y**3 + x**2 - y * z,
+                sin(z) + cos(x * y),
+            )
+        )
+    )
+
+    alpha = dg.OneForm(CF((sin(x * y), cos(x) * y**2, 2 * x * y * z)))
+    beta = dg.OneForm(
+        CF(
+            (
+                0.2 * y * x**2 + 0.37 * x**3 * z,
+                2 * x**2 * y**2 + 0.1 * x**2 - 1.34 * y * z,
+                cos(x * y) + 0.1 * z,
+            )
+        )
+    )
+
+    assert (
+        abs(
+            Integrate(
+                mf.InnerProduct(mf.CovCurl(X), Y) * omega_T * dx(bonus_intorder=1), mesh
+            )
+            - Integrate(
+                mf.InnerProduct(X, mf.CovCurl(Y)) * omega_T * dx(bonus_intorder=1)
+                - mf.InnerProduct(mf.Cross(X, mf.normal), Y)
+                * omega_S
+                * ds(bonus_intorder=1),
+                mesh,
+            )
+        )
+        < 1e-8
+    )
+
+    assert (
+        abs(
+            Integrate(mf.InnerProduct(mf.CovCurl(X), alpha) * omega_T * dx, mesh)
+            - Integrate(
+                mf.InnerProduct(X, mf.CovCurl(alpha)) * omega_T * dx
+                - mf.InnerProduct(mf.Cross(X, mf.normal), alpha) * omega_S * ds,
+                mesh,
+            )
+        )
+        < 1e-7
+    )
+
+    assert (
+        abs(
+            Integrate(mf.InnerProduct(mf.CovCurl(alpha), beta) * omega_T * dx, mesh)
+            - Integrate(
+                mf.InnerProduct(alpha, mf.CovCurl(beta)) * omega_T * dx
+                - mf.InnerProduct(mf.Cross(alpha, mf.normal), beta) * omega_S * ds,
+                mesh,
+            )
+        )
+        < 1e-8
+    )
+    return
+
+
 if __name__ == "__main__":
     test_cov_der_scal()
     test_cov_der_vec()
     test_cov_der_mat()
+
+    test_integration_by_parts_2d()
+    test_integration_by_parts_3d()
 
     print("All tests passed!")

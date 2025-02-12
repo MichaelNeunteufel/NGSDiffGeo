@@ -44,7 +44,7 @@ namespace ngfem
         string cov_ind = c1->GetCovariantIndices() + c2->GetCovariantIndices();
 
         if (cov_ind.size() > SIGNATURE.size())
-            throw Exception("TensorProduct: c1 and c2 have > 52 indices together");
+            throw Exception("TensorProduct: Overflow: c1 and c2 have > 52 indices together");
 
         string signature = SIGNATURE.substr(0, c1->GetCovariantIndices().size());
         signature += ",";
