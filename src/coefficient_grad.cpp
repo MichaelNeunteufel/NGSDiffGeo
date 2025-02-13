@@ -1,5 +1,6 @@
 #include "coefficient_grad.hpp"
 #include <hcurlhdiv_dshape.hpp>
+#include <fespace.hpp>
 
 namespace ngfem
 {

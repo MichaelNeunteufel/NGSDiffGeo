@@ -1,7 +1,10 @@
 #ifndef RIEMANNIAN_MANIFOLD
 #define RIEMANNIAN_MANIFOLD
 
-#include <fem.hpp>
+// #include <fem.hpp>
+#include <coefficient.hpp>
+#include <fespace.hpp>
+#include <symbolicintegrator.hpp>
 
 namespace ngfem
 {

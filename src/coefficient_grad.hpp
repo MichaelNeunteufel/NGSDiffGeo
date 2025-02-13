@@ -1,7 +1,11 @@
 #ifndef COEFFICIENT_GRAD
 #define COEFFICIENT_GRAD
 
-#include <fem.hpp>
+// #include <fem.hpp>
+#include <coefficient.hpp>
+// #include <fespace.hpp>
+#include <symbolicintegrator.hpp>
+#include <diffop.hpp>
 
 using namespace std;
 

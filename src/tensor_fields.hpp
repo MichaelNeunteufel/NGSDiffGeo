@@ -1,7 +1,8 @@
 #ifndef TENSOR_FIELDS
 #define TENSOR_FIELDS
 
-#include <fem.hpp>
+// #include <fem.hpp>
+#include <coefficient.hpp>
 
 /**
  * @file tensor_fields.hpp
