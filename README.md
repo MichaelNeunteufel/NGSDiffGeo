@@ -1,6 +1,7 @@
 # NGSDiffGeo
 This is an add-on package to NGSolve for differential geometry support. We focus on Riemannian manifolds.
 
+
 We gratefully acknowledge support by the Austrian Science Foundation [FWF][1] within project grant [J4824 Numerical analysis of curvatures from Regge finite elements][2].
 
 
