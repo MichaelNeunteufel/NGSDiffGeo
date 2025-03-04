@@ -13,11 +13,13 @@ namespace ngfem
 
         bool has_trial = false, has_test = false;
 
+        ProxyFunction *proxy = nullptr;
         cf->TraverseTree([&](CoefficientFunction &nodecf)
                          {
           
-          if (auto proxy = dynamic_cast<ProxyFunction*> (&nodecf))
+          if (dynamic_cast<ProxyFunction*> (&nodecf))
             {
+            proxy = dynamic_cast<ProxyFunction *>(&nodecf);
               if (proxy->IsTestFunction())
                   has_test = true;
               else
@@ -28,15 +30,31 @@ namespace ngfem
         // a proxy function to calculate the gradient via a differential operator.
         // Otherwise, we can directly calculate the gradient using the CoefficientFunction.
         if (has_trial != has_test)
+        {
+            shared_ptr<GradProxy> grad_proxy;
             switch (dim)
             {
             case 1:
-                return make_shared<GradProxy>(cf, has_test, dim, make_shared<GradDiffOp<1>>(cf, has_test));
+                grad_proxy = make_shared<GradProxy>(cf, has_test, dim, make_shared<GradDiffOp<1>>(cf, has_test));
+                break;
             case 2:
-                return make_shared<GradProxy>(cf, has_test, dim, make_shared<GradDiffOp<2>>(cf, has_test));
+                grad_proxy = make_shared<GradProxy>(cf, has_test, dim, make_shared<GradDiffOp<2>>(cf, has_test));
+                break;
             default:
-                return make_shared<GradProxy>(cf, has_test, dim, make_shared<GradDiffOp<3>>(cf, has_test));
+                grad_proxy = make_shared<GradProxy>(cf, has_test, dim, make_shared<GradDiffOp<3>>(cf, has_test));
+                break;
             }
+            return cf->Diff(proxy, grad_proxy);
+            // switch (dim)
+            // {
+            // case 1:
+            //     return make_shared<GradProxy>(cf, has_test, dim, make_shared<GradDiffOp<1>>(cf, has_test));
+            // case 2:
+            //     return make_shared<GradProxy>(cf, has_test, dim, make_shared<GradDiffOp<2>>(cf, has_test));
+            // default:
+            //     return make_shared<GradProxy>(cf, has_test, dim, make_shared<GradDiffOp<3>>(cf, has_test));
+            // }
+        }
         else
             switch (dim)
             {
@@ -75,7 +93,8 @@ namespace ngfem
                                    BareSliceMatrix<double, ColMajor> mat,
                                    LocalHeap &lh) const
     {
-        // cout << "in GradDiffOp CalcMatrix" << endl;
+        cout << "in GradDiffOp CalcMatrix" << endl
+             << "proxy_dim = " << proxy->Dimension() << ", D = " << D << ", ndof = " << inner_fel.GetNDof() << ", mir.size = " << bmir.Size() << endl;
         HeapReset hr(lh);
 
         auto &mir = static_cast<const MappedIntegrationRule<D, D> &>(bmir);
@@ -113,78 +132,18 @@ namespace ngfem
 
                 // dshape_ref.Col(j) = (1.0 / (12.0 * eps)) * (8.0 * bbmat.Cols(proxy_dim, 2 * proxy_dim).AsVector() - 8.0 * bbmat.Cols(0, proxy_dim).AsVector() - bbmat.Cols(3 * proxy_dim, 4 * proxy_dim).AsVector() + bbmat.Cols(2 * proxy_dim, 3 * proxy_dim).AsVector());
                 dshape_ref.Col(j) = (1.0 / (12.0 * eps)) * (8.0 * bbmat.Col(1) - 8.0 * bbmat.Col(0) - bbmat.Col(3) + bbmat.Col(2));
-                // if (j == D - 1)
-                //     cout << "dshape_ref = " << dshape_ref << endl;
+                //  if (j == D - 1)
+                //      cout << "dshape_ref = " << dshape_ref << endl;
             }
             dshape = dshape_ref * mir[i].GetJacobianInverse();
-            // cout << "dshape = " << dshape << endl;
+            cout << "dshape = " << dshape << endl;
 
             for (auto k : Range(dshape.Height()))
                 for (auto l : Range(dshape.Width()))
-                    mat(k * dshape.Width() + l, i) = dshape(k, l);
-            // mat.Col(i) = dshape.AsVector();
+                    mat(i * dshape.Width() + l, k) = dshape(k, l);
         }
 
-        // int nd_u = inner_fel.GetNDof();
-
-        // FlatMatrix<double> shape_ul(nd_u, proxy_dim, lh);
-        // FlatMatrix<double> shape_ur(nd_u, proxy_dim, lh);
-        // FlatMatrix<double> shape_ull(nd_u, proxy_dim, lh);
-        // FlatMatrix<double> shape_urr(nd_u, proxy_dim, lh);
-        // FlatMatrix<double> dshape_u_ref(nd_u, proxy_dim, lh);
-        // FlatMatrix<double> bmatu(nd_u, D * proxy_dim, lh);
-
-        // FlatMatrix<double> dshape_u_ref_comp(nd_u, D, lh);
-        // FlatMatrix<double> dshape_u(nd_u, D, lh); //(shape_ul);///saves "reserved lh-memory"
-
-        // for (size_t i = 0; i < mir.Size(); i++)
-        // {
-        //     bmatu = 0;
-        //     const IntegrationPoint &ip = mir[i].IP(); // volume_ir[i];
-        //     const ElementTransformation &eltrans = mir[i].GetTransformation();
-        //     for (int j = 0; j < D; j++) // d / dxj
-        //     {
-        //         IntegrationPoint ipl(ip);
-        //         ipl(j) -= eps;
-        //         IntegrationPoint ipr(ip);
-        //         ipr(j) += eps;
-        //         IntegrationPoint ipll(ip);
-        //         ipll(j) -= 2 * eps;
-        //         IntegrationPoint iprr(ip);
-        //         iprr(j) += 2 * eps;
-
-        //         MappedIntegrationPoint<D, D> mipl(ipl, eltrans);
-        //         MappedIntegrationPoint<D, D> mipr(ipr, eltrans);
-        //         MappedIntegrationPoint<D, D> mipll(ipll, eltrans);
-        //         MappedIntegrationPoint<D, D> miprr(iprr, eltrans);
-
-        //         proxy->Evaluator()->CalcMatrix(inner_fel, mipl, Trans(shape_ul), lh);
-        //         proxy->Evaluator()->CalcMatrix(inner_fel, mipr, Trans(shape_ur), lh);
-        //         proxy->Evaluator()->CalcMatrix(inner_fel, mipll, Trans(shape_ull), lh);
-        //         proxy->Evaluator()->CalcMatrix(inner_fel, miprr, Trans(shape_urr), lh);
-
-        //         dshape_u_ref = (1.0 / (12.0 * eps)) * (8.0 * shape_ur - 8.0 * shape_ul - shape_urr + shape_ull);
-        //         for (int l = 0; l < proxy_dim; l++)
-        //             bmatu.Col(j * proxy_dim + l) = dshape_u_ref.Col(l);
-        //         // if (j == D - 1)
-        //         //     cout << "bmatu = " << bmatu << endl;
-        //     }
-
-        //     for (int j = 0; j < proxy_dim; j++)
-        //     {
-        //         for (int k = 0; k < nd_u; k++)
-        //             for (int l = 0; l < D; l++)
-        //                 dshape_u_ref_comp(k, l) = bmatu(k, l * proxy_dim + j);
-
-        //         dshape_u = dshape_u_ref_comp * mir[i].GetJacobianInverse();
-
-        //         for (int k = 0; k < nd_u; k++)
-        //             for (int l = 0; l < D; l++)
-        //                 bmatu(k, l * proxy_dim + j) = dshape_u(k, l);
-        //     }
-        //     cout << "bmatu final = " << bmatu << endl;
-        // }
-        // cout << "mat = " << mat << endl;
+        cout << "GradDiffOp CalcMatrix done" << endl;
     }
 
     shared_ptr<FESpace> FindProxySpace(shared_ptr<CoefficientFunction> func)
