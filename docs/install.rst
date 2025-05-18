@@ -2,19 +2,6 @@ Installation
 -----------------
 
 The package will soon be available on PyPI, but for now you can install it from the GitHub repository if you have a self-compiled NGSolve.
-.. If you DON'T have a NGSolve installation you can install NGSDiffGeo using pip
-
-.. .. code-block:: bash
-
-..     pip install ngsdiffgeo
-
-.. or using the GitHub repository
-
-.. .. code-block:: bash
-
-..     python -m pip install  git+https://github.com/MichaelNeunteufel/NGSDiffGeo.git
-
-.. **Alternative** needed for self-compiled NGSolve
 
 If you have a working NGSolve installation, you need to clone the GitHub repository, and then you can build it from source using CMake
 
