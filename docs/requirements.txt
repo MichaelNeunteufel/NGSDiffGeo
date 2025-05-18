@@ -1,0 +1,4 @@
+sphinx>=7.0
+nbsphinx
+myst-parser
+sphinx_rtd_theme
