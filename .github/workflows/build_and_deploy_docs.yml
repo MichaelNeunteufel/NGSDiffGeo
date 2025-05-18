@@ -83,10 +83,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Read Python version tag
+        id: pyver
+        run: |
+          PY_TAG=$(cat py_version_tag.txt)
+          PY_VER="${PY_TAG:2:1}.${PY_TAG:3:1}"  # converts cp312 -> 3.12
+          echo "PY_TAG=$PY_TAG" >> $GITHUB_ENV
+          echo "PY_VER=$PY_VER" >> $GITHUB_ENV
+
+
+      - name: Set up Python from PY_TAG
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: ${{ env.PY_VER }}
 
       - name: Install dependencies
         run: |
@@ -97,12 +106,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: python-version-tag
-
-      - name: Read Python version tag
-        id: pyver
-        run: |
-          PY_TAG=$(cat py_version_tag.txt)
-          echo "PY_TAG=$PY_TAG" >> $GITHUB_ENV
 
       - name: Download built wheel
         uses: actions/download-artifact@v4
