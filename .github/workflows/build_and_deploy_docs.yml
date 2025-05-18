@@ -88,7 +88,7 @@ jobs:
         with:
           name: python-version-tag
 
-      - name: Debug: List downloaded files
+      - name: List downloaded files
         run: ls -la
 
       - name: Read Python version tag
@@ -114,17 +114,17 @@ jobs:
         with:
           name: built-wheels-ubuntu-latest-${{ env.PY_TAG }}
 
-      - name: Debug: List wheel files
+      - name: List wheel files
         run: ls -la
 
       - name: Install built wheel
         run: |
           WHEEL=$(ls *.whl | grep $PY_TAG || true)
           if [ -z "$WHEEL" ]; then
-            echo "❌ No wheel found matching Python version $PY_TAG"
+            echo "No wheel found matching Python version $PY_TAG"
             exit 1
           fi
-          echo "✅ Installing $WHEEL"
+          echo "Installing $WHEEL"
           pip install "$WHEEL"
 
       - name: Build docs with Sphinx
