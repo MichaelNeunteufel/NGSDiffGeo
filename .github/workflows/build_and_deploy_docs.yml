@@ -23,23 +23,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{  github.ref_name }}
-          fetch-tags: 'true'
+          ref: ${{ github.ref_name }}
+          fetch-tags: true
           fetch-depth: 0
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.19.0
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
-          path: ./wheelhouse/*.whl
+      - name: Save Python version tag (Ubuntu only)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          PY_TAG="cp$(python3 -c 'import sys; print(f"{sys.version_info.major}{sys.version_info.minor}")')"
+          echo "$PY_TAG" > py_version_tag.txt
+          echo "PY_TAG=$PY_TAG" >> $GITHUB_ENV
 
-      - name: Upload wheel for docs (Ubuntu only)
+      - name: Upload Python version tag (Ubuntu only)
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
-          name: built-wheels
+          name: python-version-tag
+          path: py_version_tag.txt
+
+      - name: Upload built wheels
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: built-wheels-ubuntu-latest-${{ env.PY_TAG }}
+          path: ./wheelhouse/*.whl
+
+      - name: Upload built wheels (non-Ubuntu)
+        if: matrix.os != 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
 
   build_sdist:
@@ -48,8 +64,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{  github.ref_name }}
-          fetch-tags: 'true'
+          ref: ${{ github.ref_name }}
+          fetch-tags: true
           fetch-depth: 0
 
       - name: Build sdist
@@ -77,14 +93,31 @@ jobs:
           python -m pip install --upgrade pip
           # pip install -r docs/requirements.txt
 
-      - name: Download built wheels
+      - name: Download Python version tag
         uses: actions/download-artifact@v4
         with:
-          name: built-wheels
+          name: python-version-tag
+
+      - name: Read Python version tag
+        id: pyver
+        run: |
+          PY_TAG=$(cat py_version_tag.txt)
+          echo "PY_TAG=$PY_TAG" >> $GITHUB_ENV
+
+      - name: Download built wheel
+        uses: actions/download-artifact@v4
+        with:
+          name: built-wheels-ubuntu-latest-${{ env.PY_TAG }}
 
       - name: Install built wheel
         run: |
-          pip install ./*.whl
+          WHEEL=$(ls *.whl | grep $PY_TAG || true)
+          if [ -z "$WHEEL" ]; then
+            echo "No wheel found matching Python version $PY_TAG"
+            exit 1
+          fi
+          echo "Installing $WHEEL"
+          pip install "$WHEEL"
 
       - name: Build docs with Sphinx
         working-directory: docs
