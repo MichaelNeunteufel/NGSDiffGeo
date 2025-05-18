@@ -83,14 +83,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Download Python version tag
+        uses: actions/download-artifact@v4
+        with:
+          name: python-version-tag
+
+      - name: Debug: List downloaded files
+        run: ls -la
+
       - name: Read Python version tag
         id: pyver
         run: |
           PY_TAG=$(cat py_version_tag.txt)
-          PY_VER="${PY_TAG:2:1}.${PY_TAG:3:1}"  # converts cp312 -> 3.12
+          PY_VER="${PY_TAG:2:1}.${PY_TAG:3:1}"
           echo "PY_TAG=$PY_TAG" >> $GITHUB_ENV
           echo "PY_VER=$PY_VER" >> $GITHUB_ENV
-
 
       - name: Set up Python from PY_TAG
         uses: actions/setup-python@v5
@@ -102,24 +109,22 @@ jobs:
           python -m pip install --upgrade pip
           # pip install -r docs/requirements.txt
 
-      - name: Download Python version tag
-        uses: actions/download-artifact@v4
-        with:
-          name: python-version-tag
-
       - name: Download built wheel
         uses: actions/download-artifact@v4
         with:
           name: built-wheels-ubuntu-latest-${{ env.PY_TAG }}
 
+      - name: Debug: List wheel files
+        run: ls -la
+
       - name: Install built wheel
         run: |
           WHEEL=$(ls *.whl | grep $PY_TAG || true)
           if [ -z "$WHEEL" ]; then
-            echo "No wheel found matching Python version $PY_TAG"
+            echo "❌ No wheel found matching Python version $PY_TAG"
             exit 1
           fi
-          echo "Installing $WHEEL"
+          echo "✅ Installing $WHEEL"
           pip install "$WHEEL"
 
       - name: Build docs with Sphinx
