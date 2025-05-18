@@ -195,31 +195,102 @@ class Sphere3:
             dims=(3, 3, 3),
         )
 
-        self.Riemann = None  # ngsolve.CF((0,) * 3**4, dims=(3, 3, 3, 3))
-        # self.Riemann[0, 1, 0, 1] = self.Riemann[1, 0, 1, 0] = (
-        #     ngsolve.sin(ngsolve.x) ** 2
-        # )
-        # self.Riemann[1, 0, 0, 1] = self.Riemann[0, 1, 1, 0] = -(
-        #     ngsolve.sin(ngsolve.x) ** 2
-        # )
-        # self.Riemann[0, 2, 0, 2] = self.Riemann[2, 0, 2, 0] = (
-        #     -(ngsolve.sin(ngsolve.x) ** 2) * ngsolve.sin(ngsolve.y) ** 2
-        # )
-        # self.Riemann[2, 0, 0, 2] = self.Riemann[0, 2, 2, 0] = (
-        #     ngsolve.sin(ngsolve.x) ** 2 * ngsolve.sin(ngsolve.y) ** 2
-        # )
-        # self.Riemann[1, 2, 1, 2] = self.Riemann[2, 1, 2, 1] = (
-        #     -(ngsolve.sin(ngsolve.x) ** 4) * ngsolve.sin(ngsolve.y) ** 2
-        # )
-        # self.Riemann[2, 1, 1, 2] = self.Riemann[1, 2, 2, 1] = (
-        #     ngsolve.sin(ngsolve.x) ** 4 * ngsolve.sin(ngsolve.y) ** 2
+        # is correct, but with Einsum it's faster
+        # Q00 = (ngsolve.sin(ngsolve.x) ** 4) * ngsolve.sin(ngsolve.y) ** 2
+        # Q11 = ngsolve.sin(ngsolve.x) ** 2 * ngsolve.sin(ngsolve.y) ** 2
+        # Q22 = ngsolve.sin(ngsolve.x) ** 2
+        # self.Riemann = ngsolve.CF(
+        #     (
+        #         0,  # 0000
+        #         0,  # 0001
+        #         0,  # 0002
+        #         0,  # 0010
+        #         0,  # 0011
+        #         0,  # 0012
+        #         0,  # 0020
+        #         0,  # 0021
+        #         0,  # 0022
+        #         0,  # 0100
+        #         -Q22,  # 0101
+        #         0,  # 0102
+        #         Q22,  # 0110
+        #         0,  # 0111
+        #         0,  # 0112
+        #         0,  # 0120
+        #         0,  # 0121
+        #         0,  # 0122
+        #         0,  # 0200
+        #         0,  # 0201
+        #         -Q11,  # 0202
+        #         0,  # 0210
+        #         0,  # 0211
+        #         0,  # 0212
+        #         Q11,  # 0220
+        #         0,  # 0221
+        #         0,  # 0222
+        #         0,  # 1000
+        #         Q22,  # 1001
+        #         0,  # 1002
+        #         -Q22,  # 1010
+        #         0,  # 1011
+        #         0,  # 1012
+        #         0,  # 1020
+        #         0,  # 1021
+        #         0,  # 1022
+        #         0,  # 1100
+        #         0,  # 1101
+        #         0,  # 1102
+        #         0,  # 1110
+        #         0,  # 1111
+        #         0,  # 1112
+        #         0,  # 1120
+        #         0,  # 1121
+        #         0,  # 1122
+        #         0,  # 1200
+        #         0,  # 1201
+        #         0,  # 1202
+        #         0,  # 1210
+        #         0,  # 1211
+        #         -Q00,  # 1212
+        #         0,  # 1220
+        #         Q00,  # 1221
+        #         0,  # 1222
+        #         0,  # 2000
+        #         0,  # 2001
+        #         Q11,  # 2002
+        #         0,  # 2010
+        #         0,  # 2011
+        #         0,  # 2012
+        #         -Q11,  # 2020
+        #         0,  # 2021
+        #         0,  # 2022
+        #         0,  # 2100
+        #         0,  # 2101
+        #         0,  # 2102
+        #         0,  # 2110
+        #         0,  # 2111
+        #         Q00,  # 2112
+        #         0,  # 2120
+        #         -Q00,  # 2121
+        #         0,  # 2122
+        #         0,  # 2200
+        #         0,  # 2201
+        #         0,  # 2202
+        #         0,  # 2210
+        #         0,  # 2211
+        #         0,  # 2212
+        #         0,  # 2220
+        #         0,  # 2221
+        #         0,  # 2222
+        #     ),
+        #     dims=(3, 3, 3, 3),
         # )
 
         self.Ricci = 2 * self.metric
         self.scalar = ngsolve.CF(6)
         self.Einstein = -self.metric
-        # curvature = -g^{-1}
-        self.curvature = -ngsolve.CF(
+        # curvature = g^{-1}
+        self.curvature = ngsolve.CF(
             (
                 1,
                 0,
@@ -232,6 +303,13 @@ class Sphere3:
                 1 / (ngsolve.sin(ngsolve.x) ** 2 * ngsolve.sin(ngsolve.y) ** 2),
             ),
             dims=(3, 3),
+        )
+
+        self.Riemann = -ngsolve.Det(self.metric) * Einsum(
+            "ija,klb,ab->ijkl",
+            ngsolve.fem.LeviCivitaSymbol(3),
+            ngsolve.fem.LeviCivitaSymbol(3),
+            self.curvature,
         )
         return
 
