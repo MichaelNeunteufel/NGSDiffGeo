@@ -7,7 +7,8 @@ description = "Differential geometry tools for NGSolve"
 urls = {github="https://github.com/MichaelNeunteufel/NGSDiffGeo"}
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = [] # ngsolve will be added automatically
+# dependencies = [] # ngsolve will be added automatically
+# dynamic = ["dependencies"]
 dynamic = ["dependencies"]
 classifiers = [
   "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
