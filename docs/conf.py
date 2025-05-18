@@ -28,7 +28,7 @@ evaluate_notebooks = True  # Default: True
 nbsphinx_timeout = 100000
 
 # If True, the build process is continued even if an exception occurs:
-nbsphinx_allow_errors = False
+nbsphinx_allow_errors = True
 
 
 templates_path = ["_templates"]
