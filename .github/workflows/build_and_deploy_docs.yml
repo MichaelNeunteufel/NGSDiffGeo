@@ -95,7 +95,7 @@ jobs:
         id: pyver
         run: |
           PY_TAG=$(cat py_version_tag.txt)
-          PY_VER="${PY_TAG:2:1}.${PY_TAG:3:1}"
+          PY_VER="${PY_TAG:2:1}.${PY_TAG:3:2}"
           echo "PY_TAG=$PY_TAG" >> $GITHUB_ENV
           echo "PY_VER=$PY_VER" >> $GITHUB_ENV
 
