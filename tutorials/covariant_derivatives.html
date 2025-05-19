@@ -1,0 +1,1073 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Covariant Derivatives &mdash; NGSDiffGeo 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Riemannian Manifolds" href="riemannian_manifolds.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NGSDiffGeo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="riemannian_manifolds.html">Riemannian Manifolds</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Covariant Derivatives</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Scalar,-vector,-1-form,-and-tensor-fields">Scalar, vector, 1-form, and tensor fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Inner-product">Inner product</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Covariant-differential-operators">Covariant differential operators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Covariant-derivative">Covariant derivative</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Covariant-divergence">Covariant divergence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Covariant-curl-and-rot-in-2D">Covariant curl and rot in 2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Covariant-curl-in-3D">Covariant curl in 3D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Hessian-and-Laplace-Beltrami">Hessian and Laplace-Beltrami</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#Fancy-identities">Fancy identities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#2D">2D</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NGSDiffGeo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Covariant Derivatives</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/covariant_derivatives.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Covariant-Derivatives">
+<h1>Covariant Derivatives<a class="headerlink" href="#Covariant-Derivatives" title="Link to this heading"></a></h1>
+<p>In this notebook, we show how to differentiate scalar, vector, 1-form, and arbitrary tensor fields using the unique Levi-Civita connection of a Riemannian manifold. A quick introduction in Riemannian manifolds is given <a class="reference internal" href="riemannian_manifolds.html"><span class="doc">here</span></a>. The resulting differential operators are denoted as covariant derivatives such as the covariant divergence and covariant curl. They simplify to the usual derivatives for in the Euclidean setting. In the present of curvature, the coordinate
+expressions involve additional terms using the Christoffel symbols of the Levi-Civita connection.</p>
+<p>First, we define several fields and discuss their inner products. Then the covariant derivatives are defined and explained in coordinates. We will see that integration by parts formulae hold also in the general Riemannian setting as well as (some) differential identities known from the Euclidean case.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve.fem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Einsum</span><span class="p">,</span> <span class="n">LeviCivitaSymbol</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve.webgui</span><span class="w"> </span><span class="kn">import</span> <span class="n">Draw</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">netgen.occ</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ngsdiffgeo</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dg</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">ImportError</span>                               Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[1]</span><span class="ansi-green-fg">, line 5</span>
+<span class="ansi-green-fg">      3</span> <span class="ansi-bold" style="color: rgb(0,135,0)">from</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">ngsolve</span><span class="ansi-blue-intense-fg ansi-bold">.</span><span class="ansi-blue-intense-fg ansi-bold">webgui</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-bold" style="color: rgb(0,135,0)">import</span> Draw
+<span class="ansi-green-fg">      4</span> <span class="ansi-bold" style="color: rgb(0,135,0)">from</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">netgen</span><span class="ansi-blue-intense-fg ansi-bold">.</span><span class="ansi-blue-intense-fg ansi-bold">occ</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-bold" style="color: rgb(0,135,0)">import</span> *
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">5</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">ngsdiffgeo</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-bold" style="color: rgb(0,135,0)">as</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">dg</span>
+
+<span class="ansi-cyan-fg">File </span><span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/site-packages/ngsdiffgeo/__init__.py:4</span>
+<span class="ansi-green-fg">      2</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">ngsolve</span>
+<span class="ansi-green-fg">      3</span> <span class="ansi-bold" style="color: rgb(0,135,0)">from</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">ngsolve</span><span class="ansi-blue-intense-fg ansi-bold">.</span><span class="ansi-blue-intense-fg ansi-bold">fem</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-bold" style="color: rgb(0,135,0)">import</span> Einsum
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">4</span> <span class="ansi-bold" style="color: rgb(0,135,0)">from</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">.</span><span class="ansi-blue-intense-fg ansi-bold">ngsdiffgeo</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-bold" style="color: rgb(0,135,0)">import</span> *
+<span class="ansi-green-fg">      6</span> <span style="color: rgb(95,135,135)"># from .utils import *</span>
+<span class="ansi-green-fg">      9</span> <span class="ansi-bold" style="color: rgb(0,135,0)">class</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">EuclideanMetric</span>:
+
+<span class="ansi-red-fg">ImportError</span>: generic_type: type &#34;GradProxy&#34; referenced unknown base type &#34;ngfem::ProxyFunction&#34;
+</pre></div></div>
+</div>
+<p>Define a Riemannian manifold <span class="math notranslate nohighlight">\((M,g)\)</span> with metric tensor <span class="math notranslate nohighlight">\(g\)</span> on a 2D domain inducing local coordinates <span class="math notranslate nohighlight">\(x^i\)</span> in the local basis <span class="math notranslate nohighlight">\(\partial_i\)</span> with their corresponding dual 1-forms <span class="math notranslate nohighlight">\(dx^i\)</span>. Define the volume forms in the local coordinates on the elements and edges, <span class="math">\begin{align*}
+\omega = \sqrt{\det(g_{ij})}\,dx^1\wedge\dots\wedge dx^N,\qquad \omega_{\partial M} = \star n^\flat,
+\end{align*}</span> where <span class="math notranslate nohighlight">\(n^\flat\)</span> is the 1-form associated with the <span class="math notranslate nohighlight">\(g\)</span>-normalized normal vector <span class="math notranslate nohighlight">\(n\)</span> and <span class="math notranslate nohighlight">\(\star\)</span> the Hodge-star operator.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">metric</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">CigarSoliton</span><span class="p">()</span><span class="o">.</span><span class="n">metric</span>
+<span class="n">christoffel1</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">CigarSoliton</span><span class="p">()</span><span class="o">.</span><span class="n">chr1</span>
+<span class="n">christoffel2</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">CigarSoliton</span><span class="p">()</span><span class="o">.</span><span class="n">chr2</span>
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">unit_square</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span><span class="n">maxh</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+<span class="n">omega_T</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">ScalarField</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">))</span>
+<span class="n">omega_S</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">ScalarField</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">BND</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[2]</span><span class="ansi-green-fg">, line 1</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> metric = <span class="ansi-yellow-bg">dg</span>.CigarSoliton().metric
+<span class="ansi-green-fg">      2</span> christoffel1 = dg.CigarSoliton().chr1
+<span class="ansi-green-fg">      3</span> christoffel2 = dg.CigarSoliton().chr2
+
+<span class="ansi-red-fg">NameError</span>: name &#39;dg&#39; is not defined
+</pre></div></div>
+</div>
+<section id="Scalar,-vector,-1-form,-and-tensor-fields">
+<h2>Scalar, vector, 1-form, and tensor fields<a class="headerlink" href="#Scalar,-vector,-1-form,-and-tensor-fields" title="Link to this heading"></a></h2>
+<p>Define some scalar, vector, 1-form, and tensor fields</p>
+<p><span class="math">\begin{align*}
+&f,g,h\in C^\infty(M),\qquad X = X^i\,\partial_i\in\mathfrak{X}(M),\qquad \alpha = \alpha_i\,dx^i\in \Lambda^1(M),\\
+& A= A^{ij}\partial_i\otimes \partial_j\in\mathcal{T}^0_2(M),\quad B = \alpha\otimes X = \alpha_iX^j\,dx^i\otimes \partial_j\in\mathcal{T}^1_1(M).
+\end{align*}</span> To indicate if the indices of a general tensor field are covariant or contravariant we use a string, where 1 denotes covariant indices and 0 contravariant indices.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">ScalarField</span><span class="p">(</span><span class="n">CF</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">y</span> <span class="o">-</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">x</span><span class="p">))</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">ScalarField</span><span class="p">(</span><span class="n">CF</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">x</span> <span class="o">-</span> <span class="mf">0.73</span> <span class="o">*</span> <span class="n">x</span><span class="p">))</span>
+<span class="n">h</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+
+<span class="n">Z</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">GradCF</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+
+<span class="n">X</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">VectorField</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mi">10</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">3</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span> <span class="o">*</span> <span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">)))</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">VectorField</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">-</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">y</span><span class="p">)))</span>
+
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">),</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)))</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span>
+    <span class="n">CF</span><span class="p">((</span><span class="mf">0.2</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.37</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mf">1.34</span> <span class="o">*</span> <span class="n">y</span><span class="p">))</span>
+<span class="p">)</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorField</span><span class="p">(</span>
+    <span class="n">CF</span><span class="p">((</span><span class="mi">10</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">3</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span> <span class="o">*</span> <span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">,</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">),</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+    <span class="s2">&quot;00&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
+
+<span class="n">C</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[3]</span><span class="ansi-green-fg">, line 1</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> f = <span class="ansi-yellow-bg">dg</span>.ScalarField(CF(x**<span class="ansi-green-fg">2</span> * y - <span class="ansi-green-fg">0.1</span> * y * x))
+<span class="ansi-green-fg">      2</span> g = dg.ScalarField(CF(x * y**<span class="ansi-green-fg">2</span> + <span class="ansi-green-fg">0.1</span> * y * x - <span class="ansi-green-fg">0.73</span> * x))
+<span class="ansi-green-fg">      3</span> h = dg.TensorProduct(f, g)
+
+<span class="ansi-red-fg">NameError</span>: name &#39;dg&#39; is not defined
+</pre></div></div>
+</div>
+</section>
+<section id="Inner-product">
+<h2>Inner product<a class="headerlink" href="#Inner-product" title="Link to this heading"></a></h2>
+<p>The <span class="math notranslate nohighlight">\(g\)</span>-inner product of scalar <span class="math notranslate nohighlight">\(f\)</span>, <span class="math notranslate nohighlight">\(g\)</span>, vector <span class="math notranslate nohighlight">\(X\)</span>, <span class="math notranslate nohighlight">\(Y\)</span>, and 1-form <span class="math notranslate nohighlight">\(\alpha\)</span>, <span class="math notranslate nohighlight">\(\beta\)</span> fields is given by</p>
+<p><span class="math">\begin{align*}
+g(f,g) = f\,g,\qquad g(X,Y)= g_{ij}X^iY^j,\qquad g(\alpha,\beta) = g^{ij}\alpha_i\beta_j, \qquad g(\alpha,X) = \alpha_i\beta^i,
+\end{align*}</span> where we used the Einstein summation convention of repeated indices e.g.</p>
+<p><span class="math">\begin{align*}
+g_{ij}X^iY^j:=\sum_{i,j}g_{ij}X^iY^j.
+\end{align*}</span></p>
+<p>For two tensor fields of the form <span class="math notranslate nohighlight">\(A=X_1 \otimes \dots \otimes X_k \otimes \alpha_1\otimes\dots\otimes \alpha_l\)</span> and <span class="math notranslate nohighlight">\(B=Y_1\otimes\dots\otimes Y_m\otimes \beta_1\otimes\dots\otimes \beta_n\)</span> of the same rank <span class="math notranslate nohighlight">\(r=k+l=m+n\)</span> the definition of the inner product of vector and 1-form fields directly extends to <span class="math">\begin{align*}
+g(A,B) := g(X_1,Y_1)\cdots g(\alpha_l,\beta_n).
+\end{align*}</span></p>
+<p>The InnerProduct method of the Riemannian manifold class recognizes the type of tensor fields and employs the correct inner product.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="n">g</span><span class="p">),</span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">f</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">Y</span><span class="p">),</span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">metric</span><span class="o">*</span><span class="n">X</span><span class="o">*</span><span class="n">Y</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="w"> </span><span class="n">Y</span><span class="p">),</span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">alpha</span><span class="o">*</span><span class="n">Y</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="w"> </span><span class="n">beta</span><span class="p">),</span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">Inv</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span><span class="o">*</span><span class="n">alpha</span><span class="o">*</span><span class="n">beta</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">A</span><span class="p">),</span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">metric</span><span class="o">*</span><span class="n">A</span><span class="o">*</span><span class="n">metric</span><span class="p">,</span><span class="n">A</span><span class="p">),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">),</span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">metric</span><span class="o">*</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[4]</span><span class="ansi-green-fg">, line 1</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> <span style="color: rgb(0,135,0)">print</span>(<span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-yellow-bg">mf</span>.InnerProduct(f,<span style="color: rgb(188,188,188)"> </span>g),mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(f<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>g,<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>)
+<span class="ansi-green-fg">      2</span> <span style="color: rgb(0,135,0)">print</span>(
+<span class="ansi-green-fg">      3</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(mf.InnerProduct(X,<span style="color: rgb(188,188,188)"> </span>Y),mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(metric*X*Y,<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
+<span class="ansi-green-fg">      4</span> )
+<span class="ansi-green-fg">      5</span> <span style="color: rgb(0,135,0)">print</span>(
+<span class="ansi-green-fg">      6</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(mf.InnerProduct(alpha,<span style="color: rgb(188,188,188)"> </span>Y),mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(alpha*Y,<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
+<span class="ansi-green-fg">      7</span> )
+
+<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+</pre></div></div>
+</div>
+</section>
+<section id="Covariant-differential-operators">
+<h2>Covariant differential operators<a class="headerlink" href="#Covariant-differential-operators" title="Link to this heading"></a></h2>
+<section id="Covariant-derivative">
+<h3>Covariant derivative<a class="headerlink" href="#Covariant-derivative" title="Link to this heading"></a></h3>
+<p>Covariant derivatives enable differentiation of tensor fields on Riemannian manifolds. It takes a <span class="math notranslate nohighlight">\((k,l)\)</span>-tensor field <span class="math notranslate nohighlight">\(\mathcal{T}^k_l(M)\)</span> acting on <span class="math notranslate nohighlight">\(k\)</span> vector fields and <span class="math notranslate nohighlight">\(l\)</span> covectors (1-forms) and returns a <span class="math notranslate nohighlight">\((k+1,l)\)</span>-tensor <span class="math notranslate nohighlight">\(\mathcal{T}^{k+1}l(M)\)</span>, i.e. for <span class="math notranslate nohighlight">\(A\in \mathcal{T}^k_l(M)\)</span> and <span class="math notranslate nohighlight">\(X,Y_1,\dots, Y_k\in \mathfrak{X}(M)\)</span>, <span class="math notranslate nohighlight">\(\alpha_1,\dots, \alpha_l\)</span> yields <span class="math notranslate nohighlight">\(\nabla A\in \mathcal{T}^{k+1}l(M)\)</span> with</p>
+<p><span class="math">\begin{align*}
+&(\nabla A)(X,Y_1,\dots, Y_k,\alpha_1,\dots, \alpha_l)= (\nabla_XA)(Y_1,\dots. Y_k,\alpha_1,\dots, \alpha_l)\\
+& = X(A(Y_1,\dots, Y_k,\alpha_1,\dots, \alpha_l)) - A(\nabla_XY_1,\dots Y_k,\alpha_1,\dots \alpha_l) -\cdots - A(Y_1,\dots, Y_k,\alpha_1,\dots, \nabla_X\alpha_l),
+\end{align*}</span></p>
+<p>where the last equality is the Leibnitz rule, which can be used to define the covariant derivative for arbitrary tensors from the differentiation of vector and 1-form fields.</p>
+<p>In the flat case these operators simplify to their Euclidean counter-parts. Therefore, in coordinates, they are expressed by standard derivatives with additional terms involving the metric and its derivatives. Particularly the Christoffel symbols of first <span class="math notranslate nohighlight">\(\Gamma_{ijk}\)</span> and second <span class="math notranslate nohighlight">\(\Gamma_{ij}^k\)</span> kind,</p>
+<p><span class="math">\begin{align*}
+\Gamma_{ijk}=\frac{1}{2}\left(\partial_i g_{jk}+\partial_jg_{ik}-\partial_kg_{ij}\right),\qquad \Gamma_{ij}^k = g^{kl}\Gamma_{ijl} =\frac{1}{2}g^{kl}\left(\partial_i g_{jl}+\partial_jg_{il}-\partial_lg_{ij}\right).
+\end{align*}</span></p>
+<p>Further, the covariant derivative is compatible with the metric <span class="math notranslate nohighlight">\(g\)</span>, and thus its inverse and determinant (volume forms), by construction (the unique Levi-Civita connection). That means</p>
+<p><span class="math">\begin{align*}
+\nabla g = 0,\quad \nabla g^{-1} = 0,\quad \nabla \omega=0.
+\end{align*}</span> However, expressing the volume form in the local basis <span class="math notranslate nohighlight">\(\omega=\sqrt{\det (g_{ij})}\,dx^1\wedge\dots\wedge dx^N\)</span> the covariant derivative of the determinant is in general not zero <span class="math">\begin{align*}
+\nabla \sqrt{\det g}\neq 0.
+\end{align*}</span></p>
+<p>For a scalar field <span class="math notranslate nohighlight">\(s\in C^\infty(M)\)</span> the covariant derivative coincides with the exterior derivative (and Lie derivative) yielding the 1-form <span class="math notranslate nohighlight">\(\nabla s= ds\in \Lambda^1(M)\)</span>. The covariant gradient is obtained by the musical <span class="math notranslate nohighlight">\(\sharp\)</span> operator giving a vector field <span class="math">\begin{align*}
+\nabla s = d s = \partial_i s\,dx^i,\qquad \mathrm{grad}(s) = (\nabla s)^\sharp = g^{ij}\partial_j s\,\partial_i.
+\end{align*}</span> Thus, <span class="math notranslate nohighlight">\(\nabla_X s = (ds)(X) = X(s) = X^i\partial_is\)</span> for a vector field <span class="math notranslate nohighlight">\(X= X^i\partial_i\in \mathfrak{X}(M)\)</span>.</p>
+<p>For vector field <span class="math notranslate nohighlight">\(v\in \mathfrak{X}(M)\)</span> and a 1-form <span class="math notranslate nohighlight">\(\alpha\in \Lambda^1(M)\)</span> the covariant derivative is given in coordinates by <span class="math">\begin{align*}
+&\nabla v = (\partial_i v^j + \Gamma^j_{ik}v^k)dx^i\otimes \partial_j,\qquad \nabla\alpha = (\partial_i \alpha_j - \Gamma_{ij}^k\alpha_k)dx^i\otimes dx^j.
+\end{align*}</span> Note the different sign in front of the Christoffel symbols whether it is contracted with a vector field or 1-form. Using the Leibnitz rule above, the covariant derivative of an arbitrary order tensor <span class="math notranslate nohighlight">\(A\in \mathcal{T}^k_l(M)\)</span> is now easily given <span class="math">\begin{align*}
+&\nabla A = \left(\partial_i A_{r_1\dots r_k}^{s_1\dots s_l}  -\sum_{j=1}^k\Gamma^{t}_{ir_j}A^{s_1\dots s_l}_{r_1\dots t\dots r_k}+ \sum_{j=1}^l\Gamma^{s_j}_{it}A^{s_1\dots t\dots s_l}_{r_1\dots r_k}\right)dx^i\otimes dx^{r_1}\otimes\dots \otimes dx^{r_k}\otimes \partial_{s_1}\otimes\dots\otimes \partial_{s_l}.
+\end{align*}</span></p>
+<p>The covariant derivative method of the Riemannian manifold class takes the tensor’s signature into account. Further, a so-called GradCF (gradient coefficient function) is used to numerically compute the derivative of an arbitrary tensor. It differentiates classical CoefficientFunctions and GridFunctions. Differentiation of trial and test functions is WIP.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># scalar field</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">f</span><span class="p">),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="n">f</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">x</span><span class="p">),</span><span class="n">f</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">y</span><span class="p">))),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<span class="c1"># vector field</span>
+<span class="n">cov_grad_X</span> <span class="o">=</span> <span class="n">CF</span><span class="p">((</span><span class="n">X</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">X</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">y</span><span class="p">)),</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">+</span> <span class="n">Einsum</span><span class="p">(</span>
+    <span class="s2">&quot;ikj,k-&gt;ij&quot;</span><span class="p">,</span> <span class="n">christoffel2</span><span class="p">,</span> <span class="n">X</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">X</span><span class="p">),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">cov_grad_X</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<span class="c1"># 1-form</span>
+<span class="n">cov_grad_alpha</span> <span class="o">=</span> <span class="n">CF</span><span class="p">((</span><span class="n">alpha</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">alpha</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">y</span><span class="p">)),</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">-</span> <span class="n">Einsum</span><span class="p">(</span>
+    <span class="s2">&quot;ijk,k-&gt;ij&quot;</span><span class="p">,</span> <span class="n">christoffel2</span><span class="p">,</span> <span class="n">alpha</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">cov_grad_alpha</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<span class="c1"># second order tensor field</span>
+<span class="n">cov_grad_B</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">CF</span><span class="p">((</span><span class="n">B</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">B</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">y</span><span class="p">)),</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="o">-</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;ijl,lk-&gt;ijk&quot;</span><span class="p">,</span> <span class="n">christoffel2</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+    <span class="o">+</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;ilk,jl-&gt;ijk&quot;</span><span class="p">,</span> <span class="n">christoffel2</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">B</span><span class="p">),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">cov_grad_B</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># covariant derivative of metric is zero (Levi-Civita connection is metric-compatible)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">G</span><span class="p">),</span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = 0&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">G_inv</span><span class="p">),</span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = 0&quot;</span><span class="p">)</span>
+
+
+<span class="c1"># covariant derivative of volume form expressed as determinant in local coordinates</span>
+<span class="c1"># is in general not zero</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">omega_T</span><span class="p">),</span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> != 0&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[5]</span><span class="ansi-green-fg">, line 3</span>
+<span class="ansi-green-fg">      1</span> <span style="color: rgb(95,135,135)"># scalar field</span>
+<span class="ansi-green-fg">      2</span> <span style="color: rgb(0,135,0)">print</span>(
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">3</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-yellow-bg">mf</span>.CovDeriv(f),<span style="color: rgb(188,188,188)"> </span>mesh).Norm()<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(CF((f.Diff(x),f.Diff(y))),<span style="color: rgb(188,188,188)"> </span>mesh).Norm()<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
+<span class="ansi-green-fg">      4</span> )
+<span class="ansi-green-fg">      5</span> <span style="color: rgb(95,135,135)"># vector field</span>
+<span class="ansi-green-fg">      6</span> cov_grad_X = CF((X.Diff(x), X.Diff(y)), dims=(<span class="ansi-green-fg">2</span>, <span class="ansi-green-fg">2</span>)) + Einsum(
+<span class="ansi-green-fg">      7</span>     <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">ikj,k-&gt;ij</span><span class="ansi-yellow-fg">&#34;</span>, christoffel2, X
+<span class="ansi-green-fg">      8</span> )
+
+<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+</pre></div></div>
+</div>
+</section>
+<section id="Covariant-divergence">
+<h3>Covariant divergence<a class="headerlink" href="#Covariant-divergence" title="Link to this heading"></a></h3>
+<p>The covariant divergence of an arbitrary tensor (of order at least 1) is defined as first taking the covariant derivative and then contracting the first two indices, i.e. taking the trace <span class="math">\begin{align*}
+\mathrm{div} A = \mathrm{tr}_{12}(\nabla A),
+\end{align*}</span> where the contraction is to be understand with respect to the metric <span class="math notranslate nohighlight">\(g\)</span>. For example, for a 1-form <span class="math notranslate nohighlight">\(\alpha\)</span> and a vector field <span class="math notranslate nohighlight">\(X\)</span> <span class="math">\begin{align*}
+\mathrm{div}\alpha = g^{ij}(\nabla\alpha)_{ij},\qquad \mathrm{div}X=(\nabla X)^i_{i}.
+\end{align*}</span> The coordinate expression therefore follows directly from the covariant derivative. Again, the covariant divergence of (functions of) the metric vanishes.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># vector field</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">X</span><span class="p">),</span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">Trace</span><span class="p">(</span><span class="n">cov_grad_X</span><span class="p">),</span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="c1"># 1-form</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">Trace</span><span class="p">(</span><span class="n">Inv</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span><span class="o">*</span><span class="n">cov_grad_alpha</span><span class="p">),</span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<span class="c1"># second order tensor field</span>
+<span class="n">cov_div_B</span> <span class="o">=</span> <span class="n">Einsum</span><span class="p">(</span>
+    <span class="s2">&quot;ij,ijk-&gt;k&quot;</span><span class="p">,</span>
+    <span class="n">Inv</span><span class="p">(</span><span class="n">metric</span><span class="p">),</span>
+    <span class="n">CF</span><span class="p">((</span><span class="n">B</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">B</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">y</span><span class="p">)),</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="o">-</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;ijl,lk-&gt;ijk&quot;</span><span class="p">,</span> <span class="n">christoffel2</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+    <span class="o">+</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;ilk,jl-&gt;ijk&quot;</span><span class="p">,</span> <span class="n">christoffel2</span><span class="p">,</span> <span class="n">B</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">B</span><span class="p">),</span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">cov_div_B</span><span class="p">,</span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># covariant divergence of (inverse) metric is zero</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">G</span><span class="p">),</span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = 0&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">G_inv</span><span class="p">),</span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = 0&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[6]</span><span class="ansi-green-fg">, line 2</span>
+<span class="ansi-green-fg">      1</span> <span style="color: rgb(95,135,135)"># vector field</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">2</span> <span style="color: rgb(0,135,0)">print</span>(<span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-yellow-bg">mf</span>.CovDiv(X),mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(Trace(cov_grad_X),mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>)
+<span class="ansi-green-fg">      3</span> <span style="color: rgb(95,135,135)"># 1-form</span>
+<span class="ansi-green-fg">      4</span> <span style="color: rgb(0,135,0)">print</span>(
+<span class="ansi-green-fg">      5</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(mf.CovDiv(alpha),mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(Trace(Inv(metric)*cov_grad_alpha),mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
+<span class="ansi-green-fg">      6</span> )
+
+<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+</pre></div></div>
+</div>
+<p>Analogously to the Euclidean case, there holds the following integration by parts formula for a scalar field <span class="math notranslate nohighlight">\(f \in C^{\infty}(M)\)</span> and a vector field <span class="math notranslate nohighlight">\(X\in\mathfrak{X}(M)\)</span></p>
+<p><span class="math">\begin{align*}
+\int_{M} g(\nabla f,X)\,\omega = -\int_{M} f\,\mathrm{div}(X)\,\omega + \int_{\partial M}f\, g(X,n)\,\omega_{\partial M},
+\end{align*}</span></p>
+<p>where <span class="math notranslate nohighlight">\(n\)</span> denotes the outer <span class="math notranslate nohighlight">\(g\)</span>-normal vector. That means, <span class="math notranslate nohighlight">\(g(n,n)=1\)</span>. Further, for a second order tensor <span class="math notranslate nohighlight">\(A\)</span> we have</p>
+<p><span class="math">\begin{align*}
+\int_{M} g(\nabla X,A)\,\omega = -\int_{M} g(X,\mathrm{div}(A))\,\omega + \int_{\partial M} g(n\otimes X,A)\,\omega_{\partial M},
+\end{align*}</span> where <span class="math notranslate nohighlight">\(g(n\otimes X,A) = g(X, n \llcorner A)\)</span> can be written by contracting <span class="math notranslate nohighlight">\(A\)</span> with <span class="math notranslate nohighlight">\(n\)</span> in its first argument. Note, that in the first integration by parts formula <span class="math notranslate nohighlight">\(X\)</span> can be replaced by a 1-form <span class="math notranslate nohighlight">\(\alpha\in \Lambda^1(M)\)</span>. Also, <span class="math notranslate nohighlight">\(X\)</span> can be replaced by <span class="math notranslate nohighlight">\(\alpha\)</span> in the second formula and the second order tensor <span class="math notranslate nohighlight">\(A\)</span> can have any signature.</p>
+<p>More generally, let <span class="math notranslate nohighlight">\(A\in \mathcal{T}^k_l(M)\)</span> and <span class="math notranslate nohighlight">\(B\in\mathcal{T}^r_s(M)\)</span> with <span class="math notranslate nohighlight">\(k+l+1 = r+s\)</span>. Then there holds <span class="math">\begin{align*}
+\int_{M} g(\nabla A,B)\,\omega = -\int_{M} g(A,\mathrm{div}(B))\,\omega + \int_{\partial M} g(n\otimes A,B)\,\omega_{\partial M}.
+\end{align*}</span></p>
+<p>In coordinates, using that in 2D with <span class="math notranslate nohighlight">\(\hat{t}\)</span> and <span class="math notranslate nohighlight">\(\hat{n}\)</span> the Euclidean tangential and normal vectors <span class="math">\begin{align*}
+n^i = \frac{\sqrt{\det g}}{\sqrt{g_{\hat{t}\hat{t}}}}g^{ij}\hat{n}_j,\qquad \omega = \sqrt{\det(g)},\qquad \omega_{\partial M} = \sqrt{g_{\hat{t}\hat{t}}}
+\end{align*}</span> there holds for a scalar <span class="math notranslate nohighlight">\(f\)</span>, vector field <span class="math notranslate nohighlight">\(X\)</span> and <span class="math notranslate nohighlight">\((2,0)\)</span>-tensor <span class="math notranslate nohighlight">\(A\)</span></p>
+<p><span class="math">\begin{align*}
+\int_M X^i\partial_i f\,\sqrt{\det g}\,dx &= -\int_Mf\,(\partial_iX^i+\Gamma_{ik}^iX^k)\,\sqrt{\det g}\,dx \\
+&\quad+ \int_{\partial M} f\,g_{ij}X^i n^j\, \sqrt{g_{tt}}\,ds,\\
+\int_M(\partial_iX^j+\Gamma_{ik}^jX^k)g^{ik}A_{kj}\,\sqrt{\det g}\,dx &= -\int_MX^j(\partial_iA_{ij}-\Gamma_{ii}^kA_{kj}-\Gamma_{ij}^kA_{ik})\,\sqrt{\det g}\,dx\\
+&\quad +\int_{\partial M}A_{ij}n^i X^j\,\sqrt{g_{tt}}\,ds.
+\end{align*}</span></p>
+<p>From the above expressions it is clear that coordinate based formulas are very error-prone.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># scalar with vector field</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span>
+<span class="w">        </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">f</span><span class="p">),</span><span class="w"> </span><span class="n">X</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span>
+<span class="w">    </span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span>
+<span class="w">        </span><span class="o">-</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">X</span><span class="p">),</span><span class="w"> </span><span class="n">f</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span>
+<span class="w">        </span><span class="o">+</span><span class="w"> </span><span class="n">f</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">normal</span><span class="p">)</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">omega_S</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">ds</span><span class="p">,</span>
+<span class="w">        </span><span class="n">mesh</span><span class="p">,</span>
+<span class="w">    </span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># vector field with second order tensor field</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">X</span><span class="p">),</span><span class="w"> </span><span class="n">A</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span>
+<span class="w">        </span><span class="o">-</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">A</span><span class="p">),</span><span class="w"> </span><span class="n">X</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span>
+<span class="w">        </span><span class="o">+</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span><span class="w"> </span><span class="n">X</span><span class="p">),</span><span class="w"> </span><span class="n">A</span><span class="p">)</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">omega_S</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">ds</span><span class="p">,</span>
+<span class="w">        </span><span class="n">mesh</span><span class="p">,</span>
+<span class="w">    </span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[7]</span><span class="ansi-green-fg">, line 4</span>
+<span class="ansi-green-fg">      1</span> <span style="color: rgb(95,135,135)"># scalar with vector field</span>
+<span class="ansi-green-fg">      2</span> <span style="color: rgb(0,135,0)">print</span>(
+<span class="ansi-green-fg">      3</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">4</span> <span style="color: rgb(188,188,188)">        </span><span class="ansi-yellow-bg">mf</span>.InnerProduct(mf.CovDeriv(f),<span style="color: rgb(188,188,188)"> </span>X)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx,<span style="color: rgb(188,188,188)"> </span>mesh
+<span class="ansi-green-fg">      5</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
+<span class="ansi-green-fg">      6</span> <span style="color: rgb(188,188,188)">        </span>-mf.InnerProduct(mf.CovDiv(X),<span style="color: rgb(188,188,188)"> </span>f)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx
+<span class="ansi-green-fg">      7</span> <span style="color: rgb(188,188,188)">        </span>+<span style="color: rgb(188,188,188)"> </span>f
+<span class="ansi-green-fg">      8</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>mf.InnerProduct(X,<span style="color: rgb(188,188,188)"> </span>mf.normal)
+<span class="ansi-green-fg">      9</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>omega_S
+<span class="ansi-green-fg">     10</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>ds,
+<span class="ansi-green-fg">     11</span> <span style="color: rgb(188,188,188)">        </span>mesh,
+<span class="ansi-green-fg">     12</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
+<span class="ansi-green-fg">     13</span> )
+<span class="ansi-green-fg">     15</span> <span style="color: rgb(95,135,135)"># vector field with second order tensor field</span>
+<span class="ansi-green-fg">     16</span> <span style="color: rgb(0,135,0)">print</span>(
+<span class="ansi-green-fg">     17</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(mf.InnerProduct(mf.CovDeriv(X),<span style="color: rgb(188,188,188)"> </span>A)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx,<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
+<span class="ansi-green-fg">     18</span> <span style="color: rgb(188,188,188)">        </span>-mf.InnerProduct(mf.CovDiv(A),<span style="color: rgb(188,188,188)"> </span>X)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx
+<span class="ansi-green-fg">   (...)</span><span class="ansi-green-fg">     23</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
+<span class="ansi-green-fg">     24</span> )
+
+<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+</pre></div></div>
+</div>
+</section>
+<section id="Covariant-curl-and-rot-in-2D">
+<h3>Covariant curl and rot in 2D<a class="headerlink" href="#Covariant-curl-and-rot-in-2D" title="Link to this heading"></a></h3>
+<p>In two dimensions the covariant rot and curl operators are defined for scalar fields <span class="math notranslate nohighlight">\(f\)</span>, 1-forms <span class="math notranslate nohighlight">\(\alpha\)</span>, vector fields <span class="math notranslate nohighlight">\(X\)</span>, and <span class="math notranslate nohighlight">\((2,0)\)</span>-tensors <span class="math notranslate nohighlight">\(\sigma\)</span> by <span class="math">\begin{align*}
+\mathrm{rot}(f)= \varepsilon^{ij}\partial_jf\,\partial_i,\qquad \mathrm{rot}(X) = \varepsilon^{jq}\left(\partial_qX^i+\Gamma^i_{qk}X^k\right)\,\partial_i\otimes \partial_j
+\end{align*}</span> and <span class="math">\begin{align*}
+\mathrm{curl}(\alpha)= \varepsilon^{ij}\partial_i\alpha_j,\qquad \mathrm{curl}(\sigma)= \varepsilon^{jk}(\partial_j\sigma_{ik}-\Gamma_{ji}^m\sigma_{mk})\,dx^i.
+\end{align*}</span> The incompatibility operator of a <span class="math notranslate nohighlight">\((2,0)\)</span>-tensor is defined as two consecutive curl operators <span class="math">\begin{align*}
+\mathrm{inc}(A) = \mathrm{curl}(\mathrm{curl}(A)),\qquad \mathrm{inc}(A)=\varepsilon^{qi}\varepsilon^{jk}\left(\partial_j\partial_qA_{ik}-\partial_q(\Gamma_{ji}^mA_{mk})-\Gamma_{lq}^l(\partial_jA_{ik}-\Gamma_{ij}^mA_{mk})\right).
+\end{align*}</span> Above, the covariant Levi-Civita symbols are given by <span class="math notranslate nohighlight">\(\varepsilon^{ij}=1/\sqrt{\det g}\,\hat{\varepsilon}^{ij}\)</span> and <span class="math notranslate nohighlight">\(\varepsilon_{ij}\sqrt{\det g}\,\hat{\varepsilon}_{ij}\)</span>, where <span class="math notranslate nohighlight">\(\hat{\varepsilon}_{ij}\)</span> and <span class="math notranslate nohighlight">\(\hat{\varepsilon}_{ij}\)</span> are the standard permuting symbols being 1 or -1 if <span class="math notranslate nohighlight">\((i,j)\)</span> is an even or odd permutation of <span class="math notranslate nohighlight">\((1,2)\)</span> and 0 else. Further, note that the covariant Levi-Civita symbols are not tensors, but tensor densities (they get
+multiplied/divided by the volume form).</p>
+<p>We can also apply the rot operator twice in a row <span class="math">\begin{align*}
+\mathrm{rot}(\mathrm{rot}(f)) = \varepsilon^{jq}\left( \varepsilon^{il}\partial_q\partial_lf-\Gamma_{lq}^q\varepsilon^{il}\partial_lf +\varepsilon^{kl}\Gamma_{qk}^i\partial_lf\right)\,\partial_i\otimes\partial_j.
+\end{align*}</span></p>
+<p>There holds analogously to the Euclidean case <span class="math">\begin{align*}
+\mathrm{div}(\mathrm{rot}(f))=0,\qquad \mathrm{curl}(\nabla f) = 0,\qquad \mathrm{curl}(\mathrm{rot}(f)) = -\Delta f,
+\end{align*}</span> however, these identities are not valid for tensor fields, e.g. <span class="math">\begin{align*}
+\mathrm{div}(\mathrm{rot}(X))\neq 0,\qquad \mathrm{curl}(\nabla \alpha) \neq 0!
+\end{align*}</span></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># rot</span>
+<span class="c1"># scalar field</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovRot</span><span class="p">(</span><span class="n">f</span><span class="p">),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="se">\</span>
+<span class="s2">    = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Det</span><span class="p">(</span><span class="n">metric</span><span class="p">))</span><span class="o">*</span><span class="n">CF</span><span class="p">((</span><span class="n">f</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">y</span><span class="p">),</span><span class="o">-</span><span class="n">f</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">x</span><span class="p">))),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<span class="c1"># vector field</span>
+<span class="n">cov_rot_X</span> <span class="o">=</span> <span class="n">Einsum</span><span class="p">(</span>
+    <span class="s2">&quot;jq,qi-&gt;ij&quot;</span><span class="p">,</span>
+    <span class="mi">1</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Det</span><span class="p">(</span><span class="n">metric</span><span class="p">))</span> <span class="o">*</span> <span class="n">LeviCivitaSymbol</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+    <span class="n">CF</span><span class="p">((</span><span class="n">X</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">X</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">y</span><span class="p">)),</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">+</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;ikj,k-&gt;ij&quot;</span><span class="p">,</span> <span class="n">christoffel2</span><span class="p">,</span> <span class="n">X</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovRot</span><span class="p">(</span><span class="n">X</span><span class="p">),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">cov_rot_X</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<span class="c1"># 1-form</span>
+<span class="n">cov_rot_alpha</span> <span class="o">=</span> <span class="n">Einsum</span><span class="p">(</span>
+    <span class="s2">&quot;jq,qi-&gt;ij&quot;</span><span class="p">,</span>
+    <span class="mi">1</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Det</span><span class="p">(</span><span class="n">metric</span><span class="p">))</span> <span class="o">*</span> <span class="n">LeviCivitaSymbol</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+    <span class="n">dg</span><span class="o">.</span><span class="n">GradCF</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">G_inv</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="o">+</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;ikj,k-&gt;ij&quot;</span><span class="p">,</span> <span class="n">christoffel2</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">G_inv</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovRot</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">cov_rot_alpha</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># curl</span>
+<span class="c1"># 1-form</span>
+<span class="n">cov_curl_alpha</span> <span class="o">=</span> <span class="n">Einsum</span><span class="p">(</span>
+    <span class="s2">&quot;ij,ij-&gt;&quot;</span><span class="p">,</span>
+    <span class="mi">1</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Det</span><span class="p">(</span><span class="n">metric</span><span class="p">))</span> <span class="o">*</span> <span class="n">LeviCivitaSymbol</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+    <span class="n">CF</span><span class="p">((</span><span class="n">alpha</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">alpha</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">y</span><span class="p">)),</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">cov_curl_alpha</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<span class="c1"># vector field</span>
+<span class="n">cov_curl_X</span> <span class="o">=</span> <span class="n">Einsum</span><span class="p">(</span>
+    <span class="s2">&quot;ij,ij-&gt;&quot;</span><span class="p">,</span>
+    <span class="mi">1</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Det</span><span class="p">(</span><span class="n">metric</span><span class="p">))</span> <span class="o">*</span> <span class="n">LeviCivitaSymbol</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+    <span class="n">dg</span><span class="o">.</span><span class="n">GradCF</span><span class="p">(</span><span class="n">metric</span> <span class="o">*</span> <span class="n">X</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">X</span><span class="p">),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">cov_curl_X</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="c1"># (2,0)-tensor field (general 2-order fields not implemented yet)</span>
+<span class="n">cov_curl_C</span> <span class="o">=</span> <span class="n">Einsum</span><span class="p">(</span>
+    <span class="s2">&quot;jk,jik-&gt;i&quot;</span><span class="p">,</span>
+    <span class="mi">1</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Det</span><span class="p">(</span><span class="n">metric</span><span class="p">))</span> <span class="o">*</span> <span class="n">LeviCivitaSymbol</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+    <span class="n">dg</span><span class="o">.</span><span class="n">GradCF</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;jim,mk-&gt;jik&quot;</span><span class="p">,</span> <span class="n">christoffel2</span><span class="p">,</span> <span class="n">C</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">C</span><span class="p">),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">cov_curl_C</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[8]</span><span class="ansi-green-fg">, line 4</span>
+<span class="ansi-green-fg">      1</span> <span style="color: rgb(95,135,135)"># rot</span>
+<span class="ansi-green-fg">      2</span> <span style="color: rgb(95,135,135)"># scalar field</span>
+<span class="ansi-green-fg">      3</span> <span style="color: rgb(0,135,0)">print</span>(
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">4</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-yellow-bg">mf</span>.CovRot(f),<span style="color: rgb(188,188,188)"> </span>mesh).Norm()<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-bold" style="color: rgb(175,95,0)">\</span>
+<span class="ansi-green-fg">      5</span> <span class="ansi-yellow-fg">    = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-green-fg">1</span>/sqrt(Det(metric))*CF((f.Diff(y),-f.Diff(x))),<span style="color: rgb(188,188,188)"> </span>mesh).Norm()<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
+<span class="ansi-green-fg">      6</span> )
+<span class="ansi-green-fg">      7</span> <span style="color: rgb(95,135,135)"># vector field</span>
+<span class="ansi-green-fg">      8</span> cov_rot_X = Einsum(
+<span class="ansi-green-fg">      9</span>     <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">jq,qi-&gt;ij</span><span class="ansi-yellow-fg">&#34;</span>,
+<span class="ansi-green-fg">     10</span>     <span class="ansi-green-fg">1</span> / sqrt(Det(metric)) * LeviCivitaSymbol(<span class="ansi-green-fg">2</span>),
+<span class="ansi-green-fg">     11</span>     CF((X.Diff(x), X.Diff(y)), dims=(<span class="ansi-green-fg">2</span>, <span class="ansi-green-fg">2</span>)) + Einsum(<span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">ikj,k-&gt;ij</span><span class="ansi-yellow-fg">&#34;</span>, christoffel2, X),
+<span class="ansi-green-fg">     12</span> )
+
+<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;div(rot(f)) = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovRot</span><span class="p">(</span><span class="n">f</span><span class="p">)),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;curl(nabla(f)) = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">f</span><span class="p">)),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;curl(rot(f)) = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovRot</span><span class="p">(</span><span class="n">f</span><span class="p">)),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;-Delta f = </span><span class="si">{</span><span class="o">-</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovHesse</span><span class="p">(</span><span class="n">f</span><span class="p">)),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># invoking tensor fields</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;curl(nabla(alpha)) = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">alpha</span><span class="p">)),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;div(rot(X)) = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovRot</span><span class="p">(</span><span class="n">X</span><span class="p">)),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">Norm</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[9]</span><span class="ansi-green-fg">, line 1</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> <span style="color: rgb(0,135,0)">print</span>(<span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">div(rot(f)) = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-yellow-bg">mf</span>.CovDiv(mf.CovRot(f)),<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>)
+<span class="ansi-green-fg">      2</span> <span style="color: rgb(0,135,0)">print</span>(<span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">curl(nabla(f)) = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(mf.CovCurl(mf.CovDeriv(f)),<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>)
+<span class="ansi-green-fg">      3</span> <span style="color: rgb(0,135,0)">print</span>(<span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">curl(rot(f)) = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(mf.CovCurl(mf.CovRot(f)),<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>)
+
+<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+</pre></div></div>
+</div>
+<p>With <span class="math notranslate nohighlight">\(t\)</span> denoting the <span class="math notranslate nohighlight">\(g\)</span>-tangential vector, in coordinates <span class="math notranslate nohighlight">\(t= \frac{1}{\sqrt{g_{\hat{t}\hat{t}}}}\hat{t}^i\,\partial_i\)</span> there holds the following integration by parts formulae <span class="math">\begin{align*}
+\int_M\mathrm{curl}(X)\,f\,\omega &= \int_M g(\mathrm{rot}(f),X)\,\omega + \int_{\partial M} g(X,t)\,f\,\omega_{\partial M},\\
+\int_Mg(\mathrm{curl}(A),X)\,\omega &= \int_M g(A,\mathrm{rot}(X))\,\omega + \int_{\partial M}g(A,X\otimes t)\,\omega_{\partial M},\\
+\int_M \mathrm{inc}(A)\,f\,\omega&=\int_{M}g(\mathrm{curl}(A),\mathrm{rot}(f))\,\omega +\int_{\partial M}g(\mathrm{curl}(A),t)\,f\,\omega_{\partial M}\\
+&= \int_Mg(A,\mathrm{rot}(\mathrm{rot}(f)))\,\omega + \int_{\partial M}\left( g(A,\mathrm{rot}(f)\otimes t)+ g(\mathrm{curl}(A),t)\,f\right)\omega_{\partial M}.
+\end{align*}</span></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># curl-rot integration-by-parts between vector and scalar field</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span>
+<span class="w">        </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">X</span><span class="p">),</span><span class="w"> </span><span class="n">f</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span>
+<span class="w">    </span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span>
+<span class="w">        </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">mf</span><span class="o">.</span><span class="n">CovRot</span><span class="p">(</span><span class="n">f</span><span class="p">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span>
+<span class="w">        </span><span class="o">+</span><span class="w"> </span><span class="n">f</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">tangent</span><span class="p">)</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">omega_S</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">ds</span><span class="p">,</span>
+<span class="w">        </span><span class="n">mesh</span><span class="p">,</span>
+<span class="w">    </span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># curl-rot integration-by-parts between (2,0)-tensor and vector field</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span>
+<span class="w">        </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">C</span><span class="p">),</span><span class="w"> </span><span class="n">X</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span>
+<span class="w">    </span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span>
+<span class="w">        </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">C</span><span class="p">,</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">CovRot</span><span class="p">(</span><span class="n">X</span><span class="p">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span>
+<span class="w">        </span><span class="o">+</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">C</span><span class="p">,</span><span class="w"> </span><span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">mf</span><span class="o">.</span><span class="n">tangent</span><span class="p">))</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">omega_S</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">ds</span><span class="p">,</span>
+<span class="w">        </span><span class="n">mesh</span><span class="p">,</span>
+<span class="w">    </span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># inc - rot/rot integration-by-parts between (2,0)-tensor and scalar field</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span>
+<span class="w">        </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovInc</span><span class="p">(</span><span class="n">C</span><span class="p">),</span><span class="w"> </span><span class="n">f</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span>
+<span class="w">    </span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span>
+<span class="w">        </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">C</span><span class="p">),</span><span class="n">mf</span><span class="o">.</span><span class="n">CovRot</span><span class="p">(</span><span class="n">f</span><span class="p">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span>
+<span class="w">        </span><span class="o">+</span><span class="w"> </span><span class="n">f</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">C</span><span class="p">),</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">tangent</span><span class="p">)</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">omega_S</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+<span class="w">        </span><span class="n">mesh</span><span class="p">,</span>
+<span class="w">    </span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span>
+<span class="w">        </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">C</span><span class="p">,</span><span class="n">mf</span><span class="o">.</span><span class="n">CovRot</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovRot</span><span class="p">(</span><span class="n">f</span><span class="p">)))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span>
+<span class="w">        </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">C</span><span class="p">,</span><span class="w"> </span><span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovRot</span><span class="p">(</span><span class="n">f</span><span class="p">),</span><span class="n">mf</span><span class="o">.</span><span class="n">tangent</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">f</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">C</span><span class="p">),</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">tangent</span><span class="p">))</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">omega_S</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+<span class="w">        </span><span class="n">mesh</span><span class="p">,</span>
+<span class="w">    </span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[10]</span><span class="ansi-green-fg">, line 4</span>
+<span class="ansi-green-fg">      1</span> <span style="color: rgb(95,135,135)"># curl-rot integration-by-parts between vector and scalar field</span>
+<span class="ansi-green-fg">      2</span> <span style="color: rgb(0,135,0)">print</span>(
+<span class="ansi-green-fg">      3</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">4</span> <span style="color: rgb(188,188,188)">        </span><span class="ansi-yellow-bg">mf</span>.InnerProduct(mf.CovCurl(X),<span style="color: rgb(188,188,188)"> </span>f)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx,<span style="color: rgb(188,188,188)"> </span>mesh
+<span class="ansi-green-fg">      5</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
+<span class="ansi-green-fg">      6</span> <span style="color: rgb(188,188,188)">        </span>mf.InnerProduct(X,mf.CovRot(f))<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx
+<span class="ansi-green-fg">      7</span> <span style="color: rgb(188,188,188)">        </span>+<span style="color: rgb(188,188,188)"> </span>f
+<span class="ansi-green-fg">      8</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>mf.InnerProduct(X,<span style="color: rgb(188,188,188)"> </span>mf.tangent)
+<span class="ansi-green-fg">      9</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>omega_S
+<span class="ansi-green-fg">     10</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>ds,
+<span class="ansi-green-fg">     11</span> <span style="color: rgb(188,188,188)">        </span>mesh,
+<span class="ansi-green-fg">     12</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
+<span class="ansi-green-fg">     13</span> )
+<span class="ansi-green-fg">     15</span> <span style="color: rgb(95,135,135)"># curl-rot integration-by-parts between (2,0)-tensor and vector field</span>
+<span class="ansi-green-fg">     16</span> <span style="color: rgb(0,135,0)">print</span>(
+<span class="ansi-green-fg">     17</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
+<span class="ansi-green-fg">     18</span> <span style="color: rgb(188,188,188)">        </span>mf.InnerProduct(mf.CovCurl(C),<span style="color: rgb(188,188,188)"> </span>X)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx,<span style="color: rgb(188,188,188)"> </span>mesh
+<span class="ansi-green-fg">   (...)</span><span class="ansi-green-fg">     25</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
+<span class="ansi-green-fg">     26</span> )
+
+<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+</pre></div></div>
+</div>
+<p>With our definition that the normal vector <span class="math notranslate nohighlight">\(n\)</span> points outward elements, there holds the following relation with the tangent vector <span class="math notranslate nohighlight">\(t\)</span> <span class="math">\begin{align*}
+g(\mathrm{rot}(f),n) = g(\nabla f,t).
+\end{align*}</span></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovRot</span><span class="p">(</span><span class="n">f</span><span class="p">),</span><span class="n">mf</span><span class="o">.</span><span class="n">normal</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="se">\</span>
+<span class="s2">    = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">f</span><span class="p">),</span><span class="n">mf</span><span class="o">.</span><span class="n">tangent</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[11]</span><span class="ansi-green-fg">, line 2</span>
+<span class="ansi-green-fg">      1</span> <span style="color: rgb(0,135,0)">print</span>(
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">2</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-yellow-bg">mf</span>.InnerProduct(mf.CovRot(f),mf.normal)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx(element_boundary=<span class="ansi-bold" style="color: rgb(0,135,0)">True</span>),<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-bold" style="color: rgb(175,95,0)">\</span>
+<span class="ansi-green-fg">      3</span> <span class="ansi-yellow-fg">    = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(mf.InnerProduct(mf.CovDeriv(f),mf.tangent)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx(element_boundary=<span class="ansi-bold" style="color: rgb(0,135,0)">True</span>),<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
+<span class="ansi-green-fg">      4</span> )
+
+<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+</pre></div></div>
+</div>
+</section>
+<section id="Covariant-curl-in-3D">
+<h3>Covariant curl in 3D<a class="headerlink" href="#Covariant-curl-in-3D" title="Link to this heading"></a></h3>
+<p>Next, we consider 3-dimensional Riemannian manifolds. First, define a metric and some fields.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">metric</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">WarpedProduct</span><span class="p">()</span><span class="o">.</span><span class="n">metric</span>
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">unit_cube</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span><span class="n">maxh</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+<span class="n">omega_T</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span>
+<span class="n">omega_S</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">BND</span><span class="p">)</span>
+
+<span class="n">X</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">VectorField</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mi">10</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">3</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span> <span class="o">*</span> <span class="n">x</span> <span class="o">-</span> <span class="n">y</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span> <span class="n">z</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">)))</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">VectorField</span><span class="p">(</span>
+    <span class="n">CF</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+            <span class="mi">10</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">y</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span>
+            <span class="n">sin</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">),</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">z</span><span class="p">)))</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span>
+    <span class="n">CF</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="mf">0.2</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.37</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span>
+            <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mf">1.34</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span>
+            <span class="n">cos</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">B</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[12]</span><span class="ansi-green-fg">, line 1</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> metric = <span class="ansi-yellow-bg">dg</span>.WarpedProduct().metric
+<span class="ansi-green-fg">      2</span> mesh = Mesh(unit_cube.GenerateMesh(maxh=<span class="ansi-green-fg">0.1</span>))
+<span class="ansi-green-fg">      3</span> mf = dg.RiemannianManifold(metric)
+
+<span class="ansi-red-fg">NameError</span>: name &#39;dg&#39; is not defined
+</pre></div></div>
+</div>
+<p>The Covariant curl is defined with the covariant Levi-Civita symbols <span class="math notranslate nohighlight">\(\varepsilon^{ijk}=1/\sqrt{\det g}\,\hat{\varepsilon}^{ijk}\)</span> and <span class="math notranslate nohighlight">\(\varepsilon_{ijk}=\sqrt{\det g}\,\hat{\varepsilon}_{ijk}\)</span> for vector fields <span class="math notranslate nohighlight">\(X\in\mathfrak{X}(M)\)</span> and 1-forms <span class="math notranslate nohighlight">\(\alpha\in\Lambda^1(M)\)</span> <span class="math">\begin{align*}
+\mathrm{curl}(X) = \frac{1}{\sqrt{\det g}}\varepsilon^{ijk}\partial{j}X_k\,\partial_i,\qquad \mathrm{curl}(\alpha) = \frac{1}{\sqrt{\det g}}\varepsilon^{ijk}\partial_{j}\alpha_k\,\partial_i,
+\end{align*}</span> where we lowered the index for <span class="math notranslate nohighlight">\(X\)</span>.</p>
+<p>There holds the integration by parts formula <span class="math">\begin{align*}
+\int_M g(\mathrm{curl}(X),\alpha)\,\omega = \int_M g(X,\mathrm{curl}(\alpha))\,\omega - \int_{\partial M}g(X\times n,\alpha)\,\omega_{\partial M},
+\end{align*}</span> where <span class="math notranslate nohighlight">\(n\)</span> is again the <span class="math notranslate nohighlight">\(g\)</span>-normal vector and the cross product is defined by <span class="math notranslate nohighlight">\(X\times Y = \omega(X,Y,\cdot)^\sharp\)</span>, or in coordinates <span class="math">\begin{align*}
+X\times Y = \frac{1}{\sqrt{\det g}}\varepsilon^{ijk}X_jY_k\,\partial_i.
+\end{align*}</span> In the above formula we can also use 1-forms and mixing vector fields with 1-forms.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># two vector fields</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">X</span><span class="p">),</span><span class="w"> </span><span class="n">Y</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span>
+<span class="w">        </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">Y</span><span class="p">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="w">        </span><span class="o">-</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Cross</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">normal</span><span class="p">),</span><span class="w"> </span><span class="n">Y</span><span class="p">)</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">omega_S</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">ds</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+<span class="w">        </span><span class="n">mesh</span><span class="p">,</span>
+<span class="w">    </span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># vector field with 1-form</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">X</span><span class="p">),</span><span class="w"> </span><span class="n">alpha</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span>
+<span class="w">        </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span>
+<span class="w">        </span><span class="o">-</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Cross</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">normal</span><span class="p">),</span><span class="w"> </span><span class="n">alpha</span><span class="p">)</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">omega_S</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">ds</span><span class="p">,</span>
+<span class="w">        </span><span class="n">mesh</span><span class="p">,</span>
+<span class="w">    </span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># 1-form fields</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span><span class="w"> </span><span class="n">beta</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span>
+<span class="w">        </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">beta</span><span class="p">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span>
+<span class="w">        </span><span class="o">-</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Cross</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">normal</span><span class="p">),</span><span class="w"> </span><span class="n">beta</span><span class="p">)</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">omega_S</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">ds</span><span class="p">,</span>
+<span class="w">        </span><span class="n">mesh</span><span class="p">,</span>
+<span class="w">    </span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[13]</span><span class="ansi-green-fg">, line 3</span>
+<span class="ansi-green-fg">      1</span> <span style="color: rgb(95,135,135)"># two vector fields</span>
+<span class="ansi-green-fg">      2</span> <span style="color: rgb(0,135,0)">print</span>(
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">3</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-yellow-bg">mf</span>.InnerProduct(mf.CovCurl(X),<span style="color: rgb(188,188,188)"> </span>Y)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx(bonus_intorder=<span class="ansi-green-fg">1</span>),<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
+<span class="ansi-green-fg">      4</span> <span style="color: rgb(188,188,188)">        </span>mf.InnerProduct(X,<span style="color: rgb(188,188,188)"> </span>mf.CovCurl(Y))<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx(bonus_intorder=<span class="ansi-green-fg">1</span>)
+<span class="ansi-green-fg">      5</span> <span style="color: rgb(188,188,188)">        </span>-<span style="color: rgb(188,188,188)"> </span>mf.InnerProduct(mf.Cross(X,<span style="color: rgb(188,188,188)"> </span>mf.normal),<span style="color: rgb(188,188,188)"> </span>Y)
+<span class="ansi-green-fg">      6</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>omega_S
+<span class="ansi-green-fg">      7</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>ds(bonus_intorder=<span class="ansi-green-fg">1</span>),
+<span class="ansi-green-fg">      8</span> <span style="color: rgb(188,188,188)">        </span>mesh,
+<span class="ansi-green-fg">      9</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
+<span class="ansi-green-fg">     10</span> )
+<span class="ansi-green-fg">     12</span> <span style="color: rgb(95,135,135)"># vector field with 1-form</span>
+<span class="ansi-green-fg">     13</span> <span style="color: rgb(0,135,0)">print</span>(
+<span class="ansi-green-fg">     14</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(mf.InnerProduct(mf.CovCurl(X),<span style="color: rgb(188,188,188)"> </span>alpha)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx,<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
+<span class="ansi-green-fg">     15</span> <span style="color: rgb(188,188,188)">        </span>mf.InnerProduct(X,<span style="color: rgb(188,188,188)"> </span>mf.CovCurl(alpha))<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx
+<span class="ansi-green-fg">   (...)</span><span class="ansi-green-fg">     20</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
+<span class="ansi-green-fg">     21</span> )
+
+<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+</pre></div></div>
+</div>
+<p>Note, that we used the bonus-intorder flag to increase the order of numerical integration to integrate the terms sufficiently accurate.</p>
+</section>
+<section id="Hessian-and-Laplace-Beltrami">
+<h3>Hessian and Laplace-Beltrami<a class="headerlink" href="#Hessian-and-Laplace-Beltrami" title="Link to this heading"></a></h3>
+<p>For a scalar field <span class="math notranslate nohighlight">\(f\in C^{\infty}(M)\)</span> the Riemannian Hessian is defined by <span class="math notranslate nohighlight">\(\nabla^2 f = \nabla df\in \mathcal{T}^2_0(M)\)</span>. In coordinates</p>
+<p><span class="math">\begin{align*}
+\mathrm{Hess}f = \left(\partial^2_{i,j}f-\Gamma^k_{ij}\partial_k f\right)\,dx^i\otimes dx^j.
+\end{align*}</span> By the symmetry of Christoffel symbols <span class="math notranslate nohighlight">\(\Gamma_{ij}^k=\Gamma_{ji}^k\)</span> the Hessian is symmetric.</p>
+<p>The Laplace-Beltrami operator of a scalar field <span class="math notranslate nohighlight">\(f\in C^{\infty}(M)\)</span> is defined in the usual way <span class="math notranslate nohighlight">\(\Delta f = \mathrm{div}(\nabla f)\)</span>, in coordinates <span class="math">\begin{align*}
+\Delta f = \mathrm{tr}(\nabla^2 f) =  \partial^2_{i,i}f-\Gamma^k_{ii}\partial_k f = \frac{1}{\sqrt{\det g}}\mathrm{div}(\sqrt{\det g} (\nabla f)^\sharp).
+\end{align*}</span></p>
+<p>There hold the following integration by parts formulae <span class="math">\begin{align*}
+&\int_M g(\mathrm{div}A,\nabla f)\,\omega = - \int_Mg(A,\mathrm{Hess}f)\,\omega + \int_{\partial M} g(A, n\otimes \nabla f)\omega_{\partial M},\\
+&\int_M \Delta f\,g\,\omega = -\int_{M} g(\nabla f,\nabla g)\,\omega + \int_{\partial M}(\nabla f)(n)\,g\,\omega_{\partial M}.
+\end{align*}</span> Note that <span class="math notranslate nohighlight">\((\nabla f)(n) = g(\nabla f, n)\)</span>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">B</span><span class="p">),</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">f</span><span class="p">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span>
+<span class="w">        </span><span class="o">-</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">CovHesse</span><span class="p">(</span><span class="n">f</span><span class="p">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span>
+<span class="w">        </span><span class="o">+</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">f</span><span class="p">)))</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">omega_S</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+<span class="w">        </span><span class="n">mesh</span><span class="p">,</span>
+<span class="w">    </span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[14]</span><span class="ansi-green-fg">, line 3</span>
+<span class="ansi-green-fg">      1</span> <span class="ansi-bold" style="color: rgb(0,135,0)">with</span> TaskManager():
+<span class="ansi-green-fg">      2</span>     <span style="color: rgb(0,135,0)">print</span>(
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">3</span>         <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-yellow-bg">mf</span>.InnerProduct(mf.CovDiv(B),<span style="color: rgb(188,188,188)"> </span>mf.CovDeriv(f))<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx,<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
+<span class="ansi-green-fg">      4</span> <span style="color: rgb(188,188,188)">        </span>-mf.InnerProduct(B,<span style="color: rgb(188,188,188)"> </span>mf.CovHesse(f))<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx
+<span class="ansi-green-fg">      5</span> <span style="color: rgb(188,188,188)">        </span>+mf.InnerProduct(B,<span style="color: rgb(188,188,188)"> </span>dg.TensorProduct(mf.normal,mf.CovDeriv(f)))
+<span class="ansi-green-fg">      6</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>omega_S
+<span class="ansi-green-fg">      7</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>dx(element_boundary=<span class="ansi-bold" style="color: rgb(0,135,0)">True</span>),
+<span class="ansi-green-fg">      8</span> <span style="color: rgb(188,188,188)">        </span>mesh,
+<span class="ansi-green-fg">      9</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
+<span class="ansi-green-fg">     10</span>     )
+
+<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+</pre></div></div>
+</div>
+<p>Note, that we used dx(element-boundary=True) instead of ds above for the right-hand side. Otherwise the full covariant derivative would not be available.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovHesse</span><span class="p">(</span><span class="n">f</span><span class="p">)),</span><span class="w"> </span><span class="n">g</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span><span class="p">,</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span>
+<span class="w">        </span><span class="o">-</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">f</span><span class="p">),</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">g</span><span class="p">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omega_T</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span>
+<span class="w">        </span><span class="o">+</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">f</span><span class="p">),</span><span class="w"> </span><span class="n">mf</span><span class="o">.</span><span class="n">normal</span><span class="p">)</span><span class="o">*</span><span class="n">g</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">omega_S</span>
+<span class="w">        </span><span class="o">*</span><span class="w"> </span><span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+<span class="w">        </span><span class="n">mesh</span><span class="p">,</span>
+<span class="w">    </span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[15]</span><span class="ansi-green-fg">, line 2</span>
+<span class="ansi-green-fg">      1</span> <span style="color: rgb(0,135,0)">print</span>(
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">2</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-yellow-bg">mf</span>.InnerProduct(mf.Trace(mf.CovHesse(f)),<span style="color: rgb(188,188,188)"> </span>g)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx,<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
+<span class="ansi-green-fg">      3</span> <span style="color: rgb(188,188,188)">        </span>-mf.InnerProduct(mf.CovDeriv(f),<span style="color: rgb(188,188,188)"> </span>mf.CovDeriv(g))<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx
+<span class="ansi-green-fg">      4</span> <span style="color: rgb(188,188,188)">        </span>+mf.InnerProduct(mf.CovDeriv(f),<span style="color: rgb(188,188,188)"> </span>mf.normal)*g
+<span class="ansi-green-fg">      5</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>omega_S
+<span class="ansi-green-fg">      6</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>dx(element_boundary=<span class="ansi-bold" style="color: rgb(0,135,0)">True</span>),
+<span class="ansi-green-fg">      7</span> <span style="color: rgb(188,188,188)">        </span>mesh,
+<span class="ansi-green-fg">      8</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
+<span class="ansi-green-fg">      9</span> )
+
+<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Fancy-identities">
+<h2>Fancy identities<a class="headerlink" href="#Fancy-identities" title="Link to this heading"></a></h2>
+<section id="2D">
+<h3>2D<a class="headerlink" href="#2D" title="Link to this heading"></a></h3>
+<p>For a <span class="math notranslate nohighlight">\((2,0)\)</span>-tensor <span class="math notranslate nohighlight">\(\sigma\in \mathcal{T}^{2}_0(M)\)</span> there holds <span class="math">\begin{align*}
+\mathrm{inc}(\sigma) = -\mathrm{div}\mathrm{div}(\mathbb{S}\sigma) = -\mathrm{div}\mathrm{div}(\sigma) + \Delta \mathrm{Tr}(\sigma),
+\end{align*}</span> where <span class="math notranslate nohighlight">\(\mathbb{S}\sigma = \sigma-\mathrm{Tr}(\sigma)\,g\)</span>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">metric</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">CigarSoliton</span><span class="p">()</span><span class="o">.</span><span class="n">metric</span>
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">unit_square</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span><span class="n">maxh</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">),</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)))</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span>
+    <span class="n">CF</span><span class="p">((</span><span class="mf">0.2</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.37</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mf">1.34</span> <span class="o">*</span> <span class="n">y</span><span class="p">))</span>
+<span class="p">)</span>
+
+<span class="n">C</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+
+
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovInc</span><span class="p">(</span><span class="n">C</span><span class="p">),</span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="se">\</span>
+<span class="s2">    = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="o">-</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">TensorField</span><span class="p">(</span><span class="n">C</span><span class="o">-</span><span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">C</span><span class="p">)</span><span class="o">*</span><span class="n">mf</span><span class="o">.</span><span class="n">G</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;11&quot;</span><span class="p">))),</span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="se">\</span>
+<span class="s2">    = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="o">-</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">C</span><span class="p">))</span><span class="o">+</span><span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovHesse</span><span class="p">((</span><span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">C</span><span class="p">)))),</span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[16]</span><span class="ansi-green-fg">, line 1</span>
+<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> metric = <span class="ansi-yellow-bg">dg</span>.CigarSoliton().metric
+<span class="ansi-green-fg">      2</span> mesh = Mesh(unit_square.GenerateMesh(maxh=<span class="ansi-green-fg">0.1</span>))
+<span class="ansi-green-fg">      3</span> mf = dg.RiemannianManifold(metric)
+
+<span class="ansi-red-fg">NameError</span>: name &#39;dg&#39; is not defined
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="riemannian_manifolds.html" class="btn btn-neutral float-left" title="Riemannian Manifolds" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Michael Neunteufel.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

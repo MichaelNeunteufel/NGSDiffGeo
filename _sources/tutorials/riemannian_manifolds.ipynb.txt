@@ -1,0 +1,365 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Riemannian Manifolds\n",
+    "\n",
+    "In this notebook, we recap some basic definitions of Riemannian manifolds, especially the metric tensor, Christoffel symbols, and several curvature quantities. Covariant derivatives are handled in details in [following notebook](covariant_derivatives.ipynb). We also present some Riemannian metrics in two and three dimensions."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Let $(M,g)$ be an $N$-dimensional Riemannian manifold with metric tensor $g$. That means $M$ is a smooth manifold and $g$ is a symmetric and positive definite bilinear form on the tangent space of $M$.\n",
+    "\n",
+    "For simplicity we assume that $M$ can be covered by a single chart, inducing local coordinates $x^1,\\dots, x^N$ with basis vectors $\\partial_1,\\dots,\\partial_N$ (a frame of vector fields $\\partial_i\\in \\mathfrak{X}(M)$ ), and their corresponding dual basis of 1-forms $dx^1,\\dots, dx^N$, $dx^i\\in \\Lambda^1(M)$. Then, we can write the metric $g$ and its inverse in terms of the coordinates via\n",
+    "\\begin{align*}\n",
+    "g_{ij} = g(\\partial_i,\\partial_j),\\qquad g^{ij}= g^{-1}(dx^i,dx^j),\\qquad g= g_{ij}dx^i\\otimes dx^j,\\qquad g^{-1} = g^{ij}\\,\\partial_i\\otimes \\partial_j.\n",
+    "\\end{align*}\n",
+    "Note that $g_{ij}$ and $g^{ij}$ is symmetric. The volume form  $\\omega\\in \\Lambda^N(M)$ used for integration on the manifold can be expressed in coordinates as\n",
+    "\\begin{align*}\n",
+    "\\omega = \\sqrt{\\det (g_{ij})}\\,dx^1\\wedge\\dots\\wedge dx^N.\n",
+    "\\end{align*}\n",
+    "\n",
+    "Levi-Civita connection $\\nabla$ is the unique connection, which is metric-compatible (Leibnitz rule) and torsion-free, i.e.\n",
+    "\\begin{align*}\n",
+    "& X(g(Y,Z)) = g(\\nabla_XY,Z)+ g(Y,\\nabla_XZ)\\\\\n",
+    "& \\nabla_XY -\\nabla_YX = [X,Y],\n",
+    "\\end{align*}\n",
+    "where $[X,Y]\\in \\mathfrak{X}(M)$ denotes the commutator (Lie-bracket) defined by\n",
+    "\\begin{align*}\n",
+    "[X,Y]f = X(Y(f))-Y(X(f)).\n",
+    "\\end{align*}\n",
+    "The Christoffel symbols of first and second kind are defined via\n",
+    "\\begin{align*}\n",
+    "\\Gamma_{ijk}= g(\\nabla_{\\partial_i}\\partial_j,\\partial_k),\\qquad \\nabla_{\\partial_i}\\partial_j=\\Gamma_{ij}^k\\partial_k\n",
+    "\\end{align*}\n",
+    "and in terms of the metric tensor\n",
+    "\\begin{align*}\n",
+    "\\Gamma_{ijk}=\\frac{1}{2}\\left(\\partial_ig_{jk}+\\partial_jg_{ik}-\\partial_kg_{ij}\\right),\\qquad \\Gamma_{ij}^k = g^{kl}\\Gamma_{ijl}.\n",
+    "\\end{align*}"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The full fourth-order Riemann curvature tensor, encoding the full curvature information of the Riemannian manifold, is given by\n",
+    "\\begin{align*}\n",
+    "\\mathfrak{R}(X,Y,Z,W) = g(\\nabla_X\\nabla_YZ-\\nabla_Y\\nabla_XZ-\\nabla_{[X,Y]}Z,W),\\qquad \\mathfrak{R}_{ijkl} = \\mathfrak{R}_{ijkl} = \\partial_i \\Gamma_{jkl}-\\partial_j \\Gamma_{ikl} + \\Gamma_{ik}^p\\Gamma_{jlp}- \\Gamma_{jk}^p\\Gamma_{ilp}.\n",
+    "\\end{align*}\n",
+    "The Riemann curvature tensor is skew symmetric in its first two and second two components and symmetric when switching the first two with the second two indices. Further, there holds the first (algebraic) and second (differential) Bianchi identity\n",
+    "\\begin{align*}\n",
+    "\\mathfrak{R}(X,Y,Z,W)=-\\mathfrak{R}(Y,X,Z,W)=-\\mathfrak{R}(X,Y,W,Z)= \\mathfrak{R}(Z,W,X,Y),\\qquad TODO!\n",
+    "\\end{align*}\n",
+    "\n",
+    "Note, that there exist two different sign conventions for the Riemann curvature tensor! The Ricci curvature tensor coincides in both conventions and reads (in our convention)\n",
+    "\\begin{align*}\n",
+    "\\mathrm{Ric}_{ij} = \\mathfrak{R}_{kijl}g^{kl},\n",
+    "\\end{align*}\n",
+    "i.e., the first and last indices are contracted. The scalar curvature is given by a second contraction\n",
+    "\\begin{align*}\n",
+    "S = \\mathrm{Ric}_{ij} g^{ij} = \\mathfrak{R}_{kijl}g^{kl}g^{ij}.\n",
+    "\\end{align*}\n",
+    "\n",
+    "In two dimensions the Gauss curvature is given for linear independent $X,Y$ by\n",
+    "\\begin{align*}\n",
+    "K = \\frac{\\mathcal{R}(X,Y,Y,X)}{g(X,X)g(Y,Y)-g(X,Y)^2},\n",
+    "\\end{align*}\n",
+    "which is independent of the choice of $X,Y$. Further, it is related to the scalar curvature by $S=2K$.\n",
+    "\n",
+    "The notation auf Gauss curvature can be extended to arbitrary dimension considering a plane spanned by two independent vectors $X,Y$. The result is then called sectional curvature $K(X,Y)$.\n",
+    "\n",
+    "The Einstein tensor, which is non-zero for dimensions greater than 2, is defined by\n",
+    "\\begin{align*}\n",
+    "G_{ij}=\\mathrm{Ric}_{ij}-\\frac{1}{2}S\\,g_{ij}.\n",
+    "\\end{align*}"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "On a codimension 1 facet $F$ (hyper-surface) the second fundamental form $I\\!I$ acting on vector fields on the hyper-surface by\n",
+    "\\begin{align*}\n",
+    "I\\!I^n(X,Y)= g(n,\\nabla_XY)=-g(\\nabla_Xn,Y),\\qquad X,Y\\in \\mathfrak{X}(F),\n",
+    "\\end{align*}\n",
+    "where $n$ denotes a $g$-normalized normal vector on $F$. The second fundamental form is symmetric. In two dimensions the second fundamental form reduces to the geodesic curvature on a curve\n",
+    "\\begin{align*}\n",
+    "\\kappa^n_g = g(\\nabla_tt,n)=-g(\\nabla_tn,t),\n",
+    "\\end{align*}\n",
+    "where $t$ is a $g$-normalized tangent vector."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from ngsolve import *\n",
+    "from ngsolve.webgui import Draw\n",
+    "from netgen.occ import *\n",
+    "import ngsdiffgeo as dg"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 2D metrics\n",
+    "Let's start with some two-dimensional Riemannian manifolds and investigate their properties such as curvatures.\n",
+    "\n",
+    "### Poincare Disk\n",
+    "The Poincare disk (also called conformal disk) is defined on the open unit circle $M=\\{(x,y)\\in \\mathbb{R}^2\\,:\\, x^2+y^2<1\\}$ with metric tensor\n",
+    "\\begin{align*}\n",
+    "g = \\frac{4}{(1-x^2-y^2)^2}(dx\\otimes dx + dy\\otimes dy).\n",
+    "\\end{align*}\n",
+    "The Gauss curvature is constant, $K=-1$, and thus, the Poincare disk is a hyperbolic geometry. When plotting the norm of the metric, we clearly observe the blow-up towards the circle boundary."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "mesh = Mesh(\n",
+    "    OCCGeometry(Circle((0, 0), 0.9).Face(), dim=2).GenerateMesh(maxh=0.1)\n",
+    ").Curve(2)\n",
+    "pcd = dg.PoincareDisk()\n",
+    "Draw(Norm(pcd.metric), mesh)\n",
+    "Draw(pcd.curvature, mesh, deformation=True);"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Poincare Plane (H2)\n",
+    "The Poincare plane is given on the hyperbolic upper half-plane $H2:=\\{(x,y)\\in\\mathbb{R}^2\\,:\\, y>0\\}$ with the metric\n",
+    "\\begin{align*}\n",
+    "g = \\frac{1}{y^2}\\, (dx\\otimes dx+dy\\otimes dy).\n",
+    "\\end{align*}\n",
+    "It is also a hyperbolic Riemannian manifold with constant Gauss curvature $K=-1$."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "mesh = Mesh(\n",
+    "    OCCGeometry(MoveTo(-1, 0.1).Rectangle(2, 1).Face(), dim=2).GenerateMesh(maxh=0.1)\n",
+    ")\n",
+    "hyp2 = dg.HyperbolicH2()\n",
+    "\n",
+    "Draw(Norm(hyp2.metric), mesh, order=4)\n",
+    "Draw(hyp2.curvature, mesh, deformation=True);"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### 2 sphere\n",
+    "The standard metric on the sphere $S^2$ is given by ($x,y$ are interpreted as angles)\n",
+    "\\begin{align*}\n",
+    "g = dx\\otimes dx + \\sin^2(x)\\,dy\\otimes dy\n",
+    "\\end{align*}\n",
+    "on the domain $M=[0,\\pi]\\times [0,2\\pi)$. Its Gauss curvature is constant, $K=1$, and therefore an elliptic manifold."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "mesh = Mesh(\n",
+    "    OCCGeometry(MoveTo(0, 0).Rectangle(pi, 2 * pi).Face(), dim=2).GenerateMesh(maxh=0.2)\n",
+    ")\n",
+    "sphere2 = dg.Sphere2()\n",
+    "\n",
+    "Draw(Norm(sphere2.metric), mesh, order=3)\n",
+    "Draw(sphere2.curvature, mesh, min=0.99, max=1.01);"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Cigar soliton metric\n",
+    "The time-dependent cigar soliton metric\n",
+    "\\begin{align*}\n",
+    "g(t) = \\frac{1}{e^{4t}+x^2+y^2}(dx\\otimes dx+dy\\otimes dy)\n",
+    "\\end{align*}\n",
+    "defined on $\\mathbb{R}^2$ is an example for Ricci flow. The metric satisfy the Ricci flow equation $g^\\prime(t) = -2\\mathrm{Ric}(t)$ with $\\mathrm{Ric}(t)$ the Ricci curvature tensor of $g(t)$. It has positive Gauss curvature\n",
+    "\\begin{align*}\n",
+    "K = \\frac{2e^{4t}}{e^{4t}+x^2+y^2},\n",
+    "\\end{align*}\n",
+    "i.e., is a Riemannian manifold of elliptic type."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "mesh = Mesh(\n",
+    "    OCCGeometry(MoveTo(-1, -1).Rectangle(2, 2).Face(), dim=2).GenerateMesh(maxh=0.05)\n",
+    ")\n",
+    "\n",
+    "t = Parameter(0.1)\n",
+    "cig = dg.CigarSoliton(t)\n",
+    "\n",
+    "Draw(Norm(cig.metric), mesh, deformation=True)\n",
+    "# Check if g'(t) = -2 Ric(g(t))\n",
+    "print(\n",
+    "    f\"g'(t) + 2 Ric(g(t)) = {Integrate(Norm(cig.metric.Diff(t)+2*cig.Ricci), mesh):.6f}\"\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 3D metrics\n",
+    "\n",
+    "### 3 sphere\n",
+    "The standard metric on the sphere $S^3$ is given by ($x,y,z$ are interpreted as angles)\n",
+    "\\begin{align*}\n",
+    "g = dx\\otimes dx + \\sin^2(x)\\,dy\\otimes dy + \\sin^2(x)\\sin^2(y)\\,dz\\otimes dz\n",
+    "\\end{align*}\n",
+    "on the domain $M=[0,\\pi]\\times[0,\\pi]\\times [0,2\\pi)$. Its scalar curvature is constant, $S=6$. Further, the section curvature is constant 1 for any two directions."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "mesh = Mesh(OCCGeometry(Box((0, 0, 0), (pi, pi, 2 * pi))).GenerateMesh(maxh=0.5))\n",
+    "sphere3 = dg.Sphere3()\n",
+    "\n",
+    "Draw(Norm(sphere3.metric), mesh, order=3)\n",
+    "Draw(sphere3.scalar, mesh, min=5.9, max=6.1);"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Poincare Plane (H3)\n",
+    "The Poincare plane is given on the hyperbolic upper half-plane $H3:=\\{(x,y,z)\\in\\mathbb{R}^3\\,:\\, z>0\\}$ with the metric\n",
+    "\\begin{align*}\n",
+    "g = \\frac{1}{z^2}\\, (dx\\otimes dx+dy\\otimes dy+dz\\otimes dz).\n",
+    "\\end{align*}\n",
+    "It has constant negative scalar curvature $S=-6$."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Heisenberg"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# mesh = Mesh(unit_cube.GenerateMesh(maxh=0.2))\n",
+    "# hb = dg.Heisenberg()\n",
+    "# metric = hb.metric\n",
+    "\n",
+    "# with TaskManager():\n",
+    "#     gf_metric = GridFunction(HCurlCurl(mesh, order=4))\n",
+    "#     gf_metric.Set(metric, dual=True)\n",
+    "\n",
+    "#     # Draw(BoundaryFromVolumeCF(Norm(gf_metric.Operator(\"Ricci\")-hb.Ricci)),mesh)\n",
+    "#     # Draw(BoundaryFromVolumeCF(gf_metric.Operator(\"scalar\")-hb.scalar),mesh)\n",
+    "#     # for i in range(3):\n",
+    "#     #     for j in range(3):\n",
+    "#     #         print(\"i,j\",i,j)\n",
+    "#     #         Draw(BoundaryFromVolumeCF(gf_metric.Operator(\"Ricci\")[i,j]-hb.Ricci[i,j]),mesh)\n",
+    "#     Draw(BoundaryFromVolumeCF(gf_metric.Operator(\"Ricci\")[1, 1] - hb.Ricci[1, 1]), mesh)\n",
+    "#     # for i in range(3):\n",
+    "#     #     for j in range(3):\n",
+    "#     #         for k in range(3):\n",
+    "#     #             print(\"i,j,k\",i,j,k,sqrt(Integrate((gf_metric.Operator(\"christoffel2\")-hb.chr2)[i,j,k]**2,mesh,order=8)),sqrt(Integrate((hb.chr2)[i,j,k]**2,mesh,order=8)))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Warped"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# mesh = Mesh(unit_cube.GenerateMesh(maxh=0.1))\n",
+    "# wp = dg.WarpedProduct()\n",
+    "# metric = wp.metric\n",
+    "# with TaskManager():\n",
+    "#     gf_metric = GridFunction(HCurlCurl(mesh, order=4))\n",
+    "#     gf_metric.Set(metric, dual=True)\n",
+    "\n",
+    "#     # Draw(Norm(BoundaryFromVolumeCF(gf_metric.Operator(\"christoffel2\")-wp.chr2)),mesh)\n",
+    "#     Draw(BoundaryFromVolumeCF(gf_metric.Operator(\"scalar\") - wp.scalar), mesh)\n",
+    "#     # for i in range(3):\n",
+    "#     #     for j in range(3):\n",
+    "#     #         for k in range(3):\n",
+    "#     #             print(\"i,j,k\",i,j,k,sqrt(Integrate((gf_metric.Operator(\"christoffel2\")-wp.chr2)[i,j,k]**2,mesh,order=8)),sqrt(Integrate((wp.chr2)[i,j,k]**2,mesh,order=8)))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.13.1"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
