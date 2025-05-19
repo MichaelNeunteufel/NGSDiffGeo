@@ -13,12 +13,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-13]
-        include:
-          - os: windows-2019
-            cibw-arch: AMD64
-            cmake-generator: "Visual Studio 16 2019"
-            cmake_generator_platform: "x64"
+        #os: [ubuntu-latest, macos-13]
+        os: [ubuntu-latest]
+        # include:
+        #   - os: windows-2019
+        #     cibw-arch: AMD64
+        #     cmake-generator: "Visual Studio 16 2019"
+        #     cmake_generator_platform: "x64"
 
     steps:
       - uses: actions/checkout@v4
@@ -44,18 +45,29 @@ jobs:
         with:
           name: python-version-tag
           path: py_version_tag.txt
-          
-      # - name: Save NGSolve version (Ubuntu only)
-      #   if: matrix.os == 'ubuntu-latest'
-      #   run: |
-      #     python3 -c 'import ngsolve; print(ngsolve.__version__)' > ngsolve_version.txt
-      #     echo "Saved NGSolve version: $(cat ngsolve_version.txt)"
+
+      - name: Extract Python version from PY_TAG (Ubuntu only)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          if [ -f py_version_tag.txt ]; then
+            PY_TAG=$(cat py_version_tag.txt)
+            PY_VER="${PY_TAG:2:1}.${PY_TAG:3:2}"
+            echo "PY_VER=$PY_VER" >> $GITHUB_ENV
+          else
+            echo "PY_VER=3.10" >> $GITHUB_ENV
+          fi
+
+      - name: Set up Python to match built wheel (Ubuntu only)
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PY_VER }}
 
       - name: Install and extract NGSolve version (Ubuntu only)
         if: matrix.os == 'ubuntu-latest'
         run: |
           pip install ./wheelhouse/*.whl
-          python3 -c 'import ngsolve; print(ngsolve.__version__)' > ngsolve_version.txt
+          python -c 'import ngsolve; print(ngsolve.__version__)' > ngsolve_version.txt
           echo "Saved NGSolve version: $(cat ngsolve_version.txt)"
 
       - name: Upload NGSolve version (Ubuntu only)
