@@ -45,9 +45,16 @@ jobs:
           name: python-version-tag
           path: py_version_tag.txt
           
-      - name: Save NGSolve version (Ubuntu only)
+      # - name: Save NGSolve version (Ubuntu only)
+      #   if: matrix.os == 'ubuntu-latest'
+      #   run: |
+      #     python3 -c 'import ngsolve; print(ngsolve.__version__)' > ngsolve_version.txt
+      #     echo "Saved NGSolve version: $(cat ngsolve_version.txt)"
+
+      - name: Install and extract NGSolve version (Ubuntu only)
         if: matrix.os == 'ubuntu-latest'
         run: |
+          pip install ./wheelhouse/*.whl
           python3 -c 'import ngsolve; print(ngsolve.__version__)' > ngsolve_version.txt
           echo "Saved NGSolve version: $(cat ngsolve_version.txt)"
 
