@@ -55,15 +55,15 @@ jobs:
           path: dist/*.tar.gz
 
   upload_pypi:
-    if: false # remove this if you want to enable upload to pypi (you need to setup that on pypi first)
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
-    environment: pypi
+    environment: testpypi
     permissions:
       id-token: write
     # if: github.event_name == 'release' && github.event.action == 'published'
     # or, alternatively, upload to PyPI on every tag starting with 'v' (remove on: release above to use this)
     # if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    if: github.ref_type == 'tag'
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -71,9 +71,16 @@ jobs:
           pattern: cibw-*
           path: dist
           merge-multiple: true
+          
+      - uses: actions/download-artifact@v4
+        with:
+          name: cibw-sdist
+          path: dist
 
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          repository-url: https://test.pypi.org/legacy/
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           skip-existing: true
-          password: ${{ secrets.PYPI_API_TOKEN_2 }}
+          # password: ${{ secrets.PYPI_API_TOKEN_2 }}
           # To test: repository-url: https://test.pypi.org/legacy/

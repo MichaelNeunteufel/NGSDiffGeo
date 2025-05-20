@@ -46,36 +46,36 @@ jobs:
           name: python-version-tag
           path: py_version_tag.txt
 
-      - name: Extract Python version from PY_TAG (Ubuntu only)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          if [ -f py_version_tag.txt ]; then
-            PY_TAG=$(cat py_version_tag.txt)
-            PY_VER="${PY_TAG:2:1}.${PY_TAG:3:2}"
-            echo "PY_VER=$PY_VER" >> $GITHUB_ENV
-          else
-            echo "PY_VER=3.10" >> $GITHUB_ENV
-          fi
+      # - name: Extract Python version from PY_TAG (Ubuntu only)
+      #   if: matrix.os == 'ubuntu-latest'
+      #   run: |
+      #     if [ -f py_version_tag.txt ]; then
+      #       PY_TAG=$(cat py_version_tag.txt)
+      #       PY_VER="${PY_TAG:2:1}.${PY_TAG:3:2}"
+      #       echo "PY_VER=$PY_VER" >> $GITHUB_ENV
+      #     else
+      #       echo "PY_VER=3.10" >> $GITHUB_ENV
+      #     fi
 
-      - name: Set up Python to match built wheel (Ubuntu only)
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PY_VER }}
+      # - name: Set up Python to match built wheel (Ubuntu only)
+      #   if: matrix.os == 'ubuntu-latest'
+      #   uses: actions/setup-python@v5
+      #   with:
+      #     python-version: ${{ env.PY_VER }}
 
-      - name: Install and extract NGSolve version (Ubuntu only)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          pip install ./wheelhouse/*.whl
-          python -c 'import ngsolve; print(ngsolve.__version__)' > ngsolve_version.txt
-          echo "Saved NGSolve version: $(cat ngsolve_version.txt)"
+      # - name: Install and extract NGSolve version (Ubuntu only)
+      #   if: matrix.os == 'ubuntu-latest'
+      #   run: |
+      #     pip install ./wheelhouse/*.whl
+      #     python -c 'import ngsolve; print(ngsolve.__version__)' > ngsolve_version.txt
+      #     echo "Saved NGSolve version: $(cat ngsolve_version.txt)"
 
-      - name: Upload NGSolve version (Ubuntu only)
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ngsolve-version
-          path: ngsolve_version.txt
+      # - name: Upload NGSolve version (Ubuntu only)
+      #   if: matrix.os == 'ubuntu-latest'
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: ngsolve-version
+      #     path: ngsolve_version.txt
 
       - name: Upload built wheels
         if: matrix.os == 'ubuntu-latest'
@@ -137,15 +137,15 @@ jobs:
         with:
           python-version: ${{ env.PY_VER }}
 
-      - name: Download NGSolve version
-        uses: actions/download-artifact@v4
-        with:
-          name: ngsolve-version
+      # - name: Download NGSolve version
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: ngsolve-version
 
-      - name: Read NGSolve version
-        run: |
-          NGSOLVE_VER=$(cat ngsolve_version.txt)
-          echo "NGSOLVE_VER=$NGSOLVE_VER" >> $GITHUB_ENV
+      # - name: Read NGSolve version
+      #   run: |
+      #     NGSOLVE_VER=$(cat ngsolve_version.txt)
+      #     echo "NGSOLVE_VER=$NGSOLVE_VER" >> $GITHUB_ENV
 
       - name: Install system dependencies
         run: |
@@ -156,7 +156,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r docs/requirements.txt
-          pip install "ngsolve==$NGSOLVE_VER"
+      # pip install "ngsolve==$NGSOLVE_VER"
 
       - name: Download built wheel
         uses: actions/download-artifact@v4
