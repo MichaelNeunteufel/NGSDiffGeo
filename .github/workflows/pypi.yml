@@ -122,7 +122,7 @@ jobs:
         run: pip install $GITHUB_WORKSPACE/wheels/*-cp312-cp312-manylinux_2_28_x86_64.manylinux2014_x86_64.whl
 
       - name: Build docs with Sphinx
-        working-directory: docs
+        working-directory: NGSDiffGeo/docs
         run: |
           make html
 
@@ -130,4 +130,4 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/_build/html
+          publish_dir: NGSDiffGeo/docs/_build/html

@@ -1,7 +1,7 @@
 # Here is the project metadata, adapt it to your needs
 [project]
 name = "ngsdiffgeo"
-version = "0.0.1.dev5"
+version = "0.0.1.dev6"
 authors = [{name="Michael Neunteufel"}]
 description = "Differential geometry tools for NGSolve"
 urls = {github="https://github.com/MichaelNeunteufel/NGSDiffGeo"}
