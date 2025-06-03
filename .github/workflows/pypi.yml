@@ -96,7 +96,7 @@ jobs:
     name: Build and Deploy Documentation
     runs-on: ubuntu-latest
     needs: [build_wheels, build_sdist, upload_pypi]
-    container: python:3.13
+    container: python:3.12
     steps:
       - uses: actions/checkout@v4
         with:
@@ -119,7 +119,7 @@ jobs:
           ls -la
           ls -R $GITHUB_WORKSPACE/wheels
       - name: install ngsdiffgeo
-        run: pip install $GITHUB_WORKSPACE/wheels/*-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+        run: pip install $GITHUB_WORKSPACE/wheels/*-cp312-cp312-manylinux_2_28_x86_64.manylinux2014_x86_64.whl
 
       - name: Build docs with Sphinx
         working-directory: docs
