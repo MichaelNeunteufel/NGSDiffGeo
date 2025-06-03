@@ -1,7 +1,7 @@
 # Here is the project metadata, adapt it to your needs
 [project]
 name = "ngsdiffgeo"
-version = "0.0.1.dev1"
+version = "0.0.1.dev2"
 authors = [{name="Michael Neunteufel"}]
 description = "Differential geometry tools for NGSolve"
 urls = {github="https://github.com/MichaelNeunteufel/NGSDiffGeo"}
@@ -18,7 +18,7 @@ classifiers = [
 # Maybe you also need to add other requirements to build your package
 [build-system]
 requires = [
-            "ngsolve>=6.2.2406.post145.dev1",
+            "ngsolve>=6.2.2502",
             "scikit-build-core>=0.9.0",
             "pybind11_stubgen",
             "cmake",
