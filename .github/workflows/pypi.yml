@@ -19,9 +19,9 @@ jobs:
         cibw_build: 
           - cp39-* cp310-* cp311-* cp312-* cp313-*
         include:
-          - os: windows-2019
+          - os: windows-2022
             cibw-arch: AMD64
-            cmake-generator: "Visual Studio 16 2019"
+            cmake-generator: "Visual Studio 17 2022"
             cmake_generator_platform: "x64"
             cibw_build: cp39-* cp310-* cp311-* cp312-* cp313-*
     env:
@@ -61,6 +61,7 @@ jobs:
           path: dist/*.tar.gz
 
   upload_pypi:
+    name: Publish to PyPI
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
     environment: testpypi
