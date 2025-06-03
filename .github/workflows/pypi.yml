@@ -14,16 +14,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-13]
-        # os: [ubuntu-latest]
+        #os: [ubuntu-latest, macos-13]
+        os: [ubuntu-latest]
         cibw_build: 
           - cp39-* cp310-* cp311-* cp312-* cp313-*
-        include:
-          - os: windows-2022
-            cibw-arch: AMD64
-            cmake-generator: "Visual Studio 17 2022"
-            cmake_generator_platform: "x64"
-            cibw_build: cp39-* cp310-* cp311-* cp312-* cp313-*
+        # include:
+        #   - os: windows-2022
+        #     cibw-arch: AMD64
+        #     cmake-generator: "Visual Studio 17 2022"
+        #     cmake_generator_platform: "x64"
+        #     cibw_build: cp39-* cp310-* cp311-* cp312-* cp313-*
     env:
       CIBW_BUILD: ${{ matrix.cibw_build }}
 
@@ -106,7 +106,8 @@ jobs:
       - name: Install dependencies
         run: |
           apt update -y && DEBIAN_FRONTEND="noninteractive" apt install -y git pandoc
-          pip install -r docs/requirements.txt
+          python -m pip install --upgrade pip
+          pip install -r $GITHUB_WORKSPACE/NGSDiffGeo/docs/requirements.txt
       - uses: actions/download-artifact@v4
         with:
           pattern: cibw-wheels-ubuntu*
