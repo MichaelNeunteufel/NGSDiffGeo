@@ -91,3 +91,42 @@ jobs:
           skip-existing: true
           # password: ${{ secrets.PYPI_API_TOKEN_2 }}
           # To test: repository-url: https://test.pypi.org/legacy/
+
+  docs:
+    name: Build and Deploy Documentation
+    runs-on: ubuntu-latest
+    needs: [build_wheels, build_sdist, upload_pypi]
+    container: python:3.13
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
+          submodules: true
+          path: "NGSDiffGeo"
+      - name: Install dependencies
+        run: |
+          apt update -y && DEBIAN_FRONTEND="noninteractive" apt install -y git pandoc
+          pip install -r docs/requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cibw-wheels-ubuntu*
+          path: wheels
+          merge-multiple: true
+
+      - name: List wheel files
+        run: |
+          ls -la
+          ls -R $GITHUB_WORKSPACE/wheels
+      - name: install ngsdiffgeo
+        run: pip install $GITHUB_WORKSPACE/wheels/*-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+
+      - name: Build docs with Sphinx
+        working-directory: docs
+        run: |
+          make html
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/_build/html
