@@ -101,7 +101,7 @@
 <p>In this notebook, we show how to differentiate scalar, vector, 1-form, and arbitrary tensor fields using the unique Levi-Civita connection of a Riemannian manifold. A quick introduction in Riemannian manifolds is given <a class="reference internal" href="riemannian_manifolds.html"><span class="doc">here</span></a>. The resulting differential operators are denoted as covariant derivatives such as the covariant divergence and covariant curl. They simplify to the usual derivatives for in the Euclidean setting. In the present of curvature, the coordinate
 expressions involve additional terms using the Christoffel symbols of the Levi-Civita connection.</p>
 <p>First, we define several fields and discuss their inner products. Then the covariant derivatives are defined and explained in coordinates. We will see that integration by parts formulae hold also in the general Riemannian setting as well as (some) differential identities known from the Euclidean case.</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
@@ -113,32 +113,10 @@ expressions involve additional terms using the Christoffel symbols of the Levi-C
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">ImportError</span>                               Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[1]</span><span class="ansi-green-fg">, line 5</span>
-<span class="ansi-green-fg">      3</span> <span class="ansi-bold" style="color: rgb(0,135,0)">from</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">ngsolve</span><span class="ansi-blue-intense-fg ansi-bold">.</span><span class="ansi-blue-intense-fg ansi-bold">webgui</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-bold" style="color: rgb(0,135,0)">import</span> Draw
-<span class="ansi-green-fg">      4</span> <span class="ansi-bold" style="color: rgb(0,135,0)">from</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">netgen</span><span class="ansi-blue-intense-fg ansi-bold">.</span><span class="ansi-blue-intense-fg ansi-bold">occ</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-bold" style="color: rgb(0,135,0)">import</span> *
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">5</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">ngsdiffgeo</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-bold" style="color: rgb(0,135,0)">as</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">dg</span>
-
-<span class="ansi-cyan-fg">File </span><span class="ansi-green-fg">/usr/local/lib/python3.12/site-packages/ngsdiffgeo/__init__.py:4</span>
-<span class="ansi-green-fg">      2</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">ngsolve</span>
-<span class="ansi-green-fg">      3</span> <span class="ansi-bold" style="color: rgb(0,135,0)">from</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">ngsolve</span><span class="ansi-blue-intense-fg ansi-bold">.</span><span class="ansi-blue-intense-fg ansi-bold">fem</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-bold" style="color: rgb(0,135,0)">import</span> Einsum
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">4</span> <span class="ansi-bold" style="color: rgb(0,135,0)">from</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">.</span><span class="ansi-blue-intense-fg ansi-bold">ngsdiffgeo</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-bold" style="color: rgb(0,135,0)">import</span> *
-<span class="ansi-green-fg">      6</span> <span style="color: rgb(95,135,135)"># from .utils import *</span>
-<span class="ansi-green-fg">      9</span> <span class="ansi-bold" style="color: rgb(0,135,0)">class</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">EuclideanMetric</span>:
-
-<span class="ansi-red-fg">ImportError</span>: generic_type: type &#34;GradProxy&#34; referenced unknown base type &#34;ngfem::ProxyFunction&#34;
-</pre></div></div>
-</div>
 <p>Define a Riemannian manifold <span class="math notranslate nohighlight">\((M,g)\)</span> with metric tensor <span class="math notranslate nohighlight">\(g\)</span> on a 2D domain inducing local coordinates <span class="math notranslate nohighlight">\(x^i\)</span> in the local basis <span class="math notranslate nohighlight">\(\partial_i\)</span> with their corresponding dual 1-forms <span class="math notranslate nohighlight">\(dx^i\)</span>. Define the volume forms in the local coordinates on the elements and edges, <span class="math">\begin{align*}
 \omega = \sqrt{\det(g_{ij})}\,dx^1\wedge\dots\wedge dx^N,\qquad \omega_{\partial M} = \star n^\flat,
 \end{align*}</span> where <span class="math notranslate nohighlight">\(n^\flat\)</span> is the 1-form associated with the <span class="math notranslate nohighlight">\(g\)</span>-normalized normal vector <span class="math notranslate nohighlight">\(n\)</span> and <span class="math notranslate nohighlight">\(\star\)</span> the Hodge-star operator.</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
@@ -152,21 +130,6 @@ expressions involve additional terms using the Christoffel symbols of the Levi-C
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[2]</span><span class="ansi-green-fg">, line 1</span>
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> metric = <span class="ansi-yellow-bg">dg</span>.CigarSoliton().metric
-<span class="ansi-green-fg">      2</span> christoffel1 = dg.CigarSoliton().chr1
-<span class="ansi-green-fg">      3</span> christoffel2 = dg.CigarSoliton().chr2
-
-<span class="ansi-red-fg">NameError</span>: name &#39;dg&#39; is not defined
-</pre></div></div>
-</div>
 <section id="Scalar,-vector,-1-form,-and-tensor-fields">
 <h2>Scalar, vector, 1-form, and tensor fields<a class="headerlink" href="#Scalar,-vector,-1-form,-and-tensor-fields" title="Link to this heading"></a></h2>
 <p>Define some scalar, vector, 1-form, and tensor fields</p>
@@ -174,7 +137,7 @@ expressions involve additional terms using the Christoffel symbols of the Levi-C
 &f,g,h\in C^\infty(M),\qquad X = X^i\,\partial_i\in\mathfrak{X}(M),\qquad \alpha = \alpha_i\,dx^i\in \Lambda^1(M),\\
 & A= A^{ij}\partial_i\otimes \partial_j\in\mathcal{T}^0_2(M),\quad B = \alpha\otimes X = \alpha_iX^j\,dx^i\otimes \partial_j\in\mathcal{T}^1_1(M).
 \end{align*}</span> To indicate if the indices of a general tensor field are covariant or contravariant we use a string, where 1 denotes covariant indices and 0 contravariant indices.</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
@@ -201,21 +164,6 @@ expressions involve additional terms using the Christoffel symbols of the Levi-C
 <span class="n">C</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[3]</span><span class="ansi-green-fg">, line 1</span>
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> f = <span class="ansi-yellow-bg">dg</span>.ScalarField(CF(x**<span class="ansi-green-fg">2</span> * y - <span class="ansi-green-fg">0.1</span> * y * x))
-<span class="ansi-green-fg">      2</span> g = dg.ScalarField(CF(x * y**<span class="ansi-green-fg">2</span> + <span class="ansi-green-fg">0.1</span> * y * x - <span class="ansi-green-fg">0.73</span> * x))
-<span class="ansi-green-fg">      3</span> h = dg.TensorProduct(f, g)
-
-<span class="ansi-red-fg">NameError</span>: name &#39;dg&#39; is not defined
-</pre></div></div>
 </div>
 </section>
 <section id="Inner-product">
@@ -259,18 +207,12 @@ g(A,B) := g(X_1,Y_1)\cdots g(\alpha_l,\beta_n).
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[4]</span><span class="ansi-green-fg">, line 1</span>
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> <span style="color: rgb(0,135,0)">print</span>(<span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-yellow-bg">mf</span>.InnerProduct(f,<span style="color: rgb(188,188,188)"> </span>g),mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(f<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>g,<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>)
-<span class="ansi-green-fg">      2</span> <span style="color: rgb(0,135,0)">print</span>(
-<span class="ansi-green-fg">      3</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(mf.InnerProduct(X,<span style="color: rgb(188,188,188)"> </span>Y),mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(metric*X*Y,<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">      4</span> )
-<span class="ansi-green-fg">      5</span> <span style="color: rgb(0,135,0)">print</span>(
-<span class="ansi-green-fg">      6</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(mf.InnerProduct(alpha,<span style="color: rgb(188,188,188)"> </span>Y),mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(alpha*Y,<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">      7</span> )
-
-<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+-0.017694 = -0.017694
+-0.019774 = -0.019774
+0.575764 = 0.575764
+-0.203729 = -0.203729
+0.838426 = 0.838426
+1.010107 = 1.010107
 </pre></div></div>
 </div>
 </section>
@@ -351,19 +293,13 @@ g(A,B) := g(X_1,Y_1)\cdots g(\alpha_l,\beta_n).
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[5]</span><span class="ansi-green-fg">, line 3</span>
-<span class="ansi-green-fg">      1</span> <span style="color: rgb(95,135,135)"># scalar field</span>
-<span class="ansi-green-fg">      2</span> <span style="color: rgb(0,135,0)">print</span>(
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">3</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-yellow-bg">mf</span>.CovDeriv(f),<span style="color: rgb(188,188,188)"> </span>mesh).Norm()<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(CF((f.Diff(x),f.Diff(y))),<span style="color: rgb(188,188,188)"> </span>mesh).Norm()<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">      4</span> )
-<span class="ansi-green-fg">      5</span> <span style="color: rgb(95,135,135)"># vector field</span>
-<span class="ansi-green-fg">      6</span> cov_grad_X = CF((X.Diff(x), X.Diff(y)), dims=(<span class="ansi-green-fg">2</span>, <span class="ansi-green-fg">2</span>)) + Einsum(
-<span class="ansi-green-fg">      7</span>     <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">ikj,k-&gt;ij</span><span class="ansi-yellow-fg">&#34;</span>, christoffel2, X
-<span class="ansi-green-fg">      8</span> )
-
-<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+0.531769 = 0.531769
+4.814188 = 4.814188
+1.144794 = 1.144794
+4.772021 = 4.772021
+0.000000 = 0
+0.000000 = 0
+0.495241 != 0
 </pre></div></div>
 </div>
 </section>
@@ -407,17 +343,11 @@ g(A,B) := g(X_1,Y_1)\cdots g(\alpha_l,\beta_n).
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[6]</span><span class="ansi-green-fg">, line 2</span>
-<span class="ansi-green-fg">      1</span> <span style="color: rgb(95,135,135)"># vector field</span>
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">2</span> <span style="color: rgb(0,135,0)">print</span>(<span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-yellow-bg">mf</span>.CovDiv(X),mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(Trace(cov_grad_X),mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>)
-<span class="ansi-green-fg">      3</span> <span style="color: rgb(95,135,135)"># 1-form</span>
-<span class="ansi-green-fg">      4</span> <span style="color: rgb(0,135,0)">print</span>(
-<span class="ansi-green-fg">      5</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(mf.CovDiv(alpha),mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(Trace(Inv(metric)*cov_grad_alpha),mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">      6</span> )
-
-<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+0.788776 = 0.788776
+2.326922 = 2.326922
+9.871358 = 9.871358
+0.000000 = 0
+0.000000 = 0
 </pre></div></div>
 </div>
 <p>Analogously to the Euclidean case, there holds the following integration by parts formula for a scalar field <span class="math notranslate nohighlight">\(f \in C^{\infty}(M)\)</span> and a vector field <span class="math notranslate nohighlight">\(X\in\mathfrak{X}(M)\)</span></p>
@@ -477,30 +407,8 @@ n^i = \frac{\sqrt{\det g}}{\sqrt{g_{\hat{t}\hat{t}}}}g^{ij}\hat{n}_j,\qquad \ome
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[7]</span><span class="ansi-green-fg">, line 4</span>
-<span class="ansi-green-fg">      1</span> <span style="color: rgb(95,135,135)"># scalar with vector field</span>
-<span class="ansi-green-fg">      2</span> <span style="color: rgb(0,135,0)">print</span>(
-<span class="ansi-green-fg">      3</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">4</span> <span style="color: rgb(188,188,188)">        </span><span class="ansi-yellow-bg">mf</span>.InnerProduct(mf.CovDeriv(f),<span style="color: rgb(188,188,188)"> </span>X)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx,<span style="color: rgb(188,188,188)"> </span>mesh
-<span class="ansi-green-fg">      5</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
-<span class="ansi-green-fg">      6</span> <span style="color: rgb(188,188,188)">        </span>-mf.InnerProduct(mf.CovDiv(X),<span style="color: rgb(188,188,188)"> </span>f)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx
-<span class="ansi-green-fg">      7</span> <span style="color: rgb(188,188,188)">        </span>+<span style="color: rgb(188,188,188)"> </span>f
-<span class="ansi-green-fg">      8</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>mf.InnerProduct(X,<span style="color: rgb(188,188,188)"> </span>mf.normal)
-<span class="ansi-green-fg">      9</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>omega_S
-<span class="ansi-green-fg">     10</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>ds,
-<span class="ansi-green-fg">     11</span> <span style="color: rgb(188,188,188)">        </span>mesh,
-<span class="ansi-green-fg">     12</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">     13</span> )
-<span class="ansi-green-fg">     15</span> <span style="color: rgb(95,135,135)"># vector field with second order tensor field</span>
-<span class="ansi-green-fg">     16</span> <span style="color: rgb(0,135,0)">print</span>(
-<span class="ansi-green-fg">     17</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(mf.InnerProduct(mf.CovDeriv(X),<span style="color: rgb(188,188,188)"> </span>A)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx,<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
-<span class="ansi-green-fg">     18</span> <span style="color: rgb(188,188,188)">        </span>-mf.InnerProduct(mf.CovDiv(A),<span style="color: rgb(188,188,188)"> </span>X)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx
-<span class="ansi-green-fg">   (...)</span><span class="ansi-green-fg">     23</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">     24</span> )
-
-<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+0.381579 = 0.381579
+1.246865 = 1.246865
 </pre></div></div>
 </div>
 </section>
@@ -586,23 +494,12 @@ multiplied/divided by the volume form).</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[8]</span><span class="ansi-green-fg">, line 4</span>
-<span class="ansi-green-fg">      1</span> <span style="color: rgb(95,135,135)"># rot</span>
-<span class="ansi-green-fg">      2</span> <span style="color: rgb(95,135,135)"># scalar field</span>
-<span class="ansi-green-fg">      3</span> <span style="color: rgb(0,135,0)">print</span>(
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">4</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-yellow-bg">mf</span>.CovRot(f),<span style="color: rgb(188,188,188)"> </span>mesh).Norm()<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-bold" style="color: rgb(175,95,0)">\</span>
-<span class="ansi-green-fg">      5</span> <span class="ansi-yellow-fg">    = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-green-fg">1</span>/sqrt(Det(metric))*CF((f.Diff(y),-f.Diff(x))),<span style="color: rgb(188,188,188)"> </span>mesh).Norm()<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">      6</span> )
-<span class="ansi-green-fg">      7</span> <span style="color: rgb(95,135,135)"># vector field</span>
-<span class="ansi-green-fg">      8</span> cov_rot_X = Einsum(
-<span class="ansi-green-fg">      9</span>     <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">jq,qi-&gt;ij</span><span class="ansi-yellow-fg">&#34;</span>,
-<span class="ansi-green-fg">     10</span>     <span class="ansi-green-fg">1</span> / sqrt(Det(metric)) * LeviCivitaSymbol(<span class="ansi-green-fg">2</span>),
-<span class="ansi-green-fg">     11</span>     CF((X.Diff(x), X.Diff(y)), dims=(<span class="ansi-green-fg">2</span>, <span class="ansi-green-fg">2</span>)) + Einsum(<span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">ikj,k-&gt;ij</span><span class="ansi-yellow-fg">&#34;</span>, christoffel2, X),
-<span class="ansi-green-fg">     12</span> )
-
-<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+1.063312    = 1.063312
+10.041697 = 10.041697
+3.895205 = 3.895205
+-1.145168 = -1.145168
+-3.832837 = -3.832837
+0.503877 = 0.503877
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -627,14 +524,12 @@ multiplied/divided by the volume form).</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[9]</span><span class="ansi-green-fg">, line 1</span>
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> <span style="color: rgb(0,135,0)">print</span>(<span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">div(rot(f)) = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-yellow-bg">mf</span>.CovDiv(mf.CovRot(f)),<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>)
-<span class="ansi-green-fg">      2</span> <span style="color: rgb(0,135,0)">print</span>(<span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">curl(nabla(f)) = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(mf.CovCurl(mf.CovDeriv(f)),<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>)
-<span class="ansi-green-fg">      3</span> <span style="color: rgb(0,135,0)">print</span>(<span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">curl(rot(f)) = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(mf.CovCurl(mf.CovRot(f)),<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>)
-
-<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+div(rot(f)) = 0.000000
+curl(nabla(f)) = -0.000000
+curl(rot(f)) = -1.833333
+-Delta f = -1.833333
+curl(nabla(alpha)) = 2.824292
+div(rot(X)) = 18.249655
 </pre></div></div>
 </div>
 <p>With <span class="math notranslate nohighlight">\(t\)</span> denoting the <span class="math notranslate nohighlight">\(g\)</span>-tangential vector, in coordinates <span class="math notranslate nohighlight">\(t= \frac{1}{\sqrt{g_{\hat{t}\hat{t}}}}\hat{t}^i\,\partial_i\)</span> there holds the following integration by parts formulae <span class="math">\begin{align*}
@@ -702,30 +597,9 @@ multiplied/divided by the volume form).</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[10]</span><span class="ansi-green-fg">, line 4</span>
-<span class="ansi-green-fg">      1</span> <span style="color: rgb(95,135,135)"># curl-rot integration-by-parts between vector and scalar field</span>
-<span class="ansi-green-fg">      2</span> <span style="color: rgb(0,135,0)">print</span>(
-<span class="ansi-green-fg">      3</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">4</span> <span style="color: rgb(188,188,188)">        </span><span class="ansi-yellow-bg">mf</span>.InnerProduct(mf.CovCurl(X),<span style="color: rgb(188,188,188)"> </span>f)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx,<span style="color: rgb(188,188,188)"> </span>mesh
-<span class="ansi-green-fg">      5</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
-<span class="ansi-green-fg">      6</span> <span style="color: rgb(188,188,188)">        </span>mf.InnerProduct(X,mf.CovRot(f))<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx
-<span class="ansi-green-fg">      7</span> <span style="color: rgb(188,188,188)">        </span>+<span style="color: rgb(188,188,188)"> </span>f
-<span class="ansi-green-fg">      8</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>mf.InnerProduct(X,<span style="color: rgb(188,188,188)"> </span>mf.tangent)
-<span class="ansi-green-fg">      9</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>omega_S
-<span class="ansi-green-fg">     10</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>ds,
-<span class="ansi-green-fg">     11</span> <span style="color: rgb(188,188,188)">        </span>mesh,
-<span class="ansi-green-fg">     12</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">     13</span> )
-<span class="ansi-green-fg">     15</span> <span style="color: rgb(95,135,135)"># curl-rot integration-by-parts between (2,0)-tensor and vector field</span>
-<span class="ansi-green-fg">     16</span> <span style="color: rgb(0,135,0)">print</span>(
-<span class="ansi-green-fg">     17</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
-<span class="ansi-green-fg">     18</span> <span style="color: rgb(188,188,188)">        </span>mf.InnerProduct(mf.CovCurl(C),<span style="color: rgb(188,188,188)"> </span>X)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx,<span style="color: rgb(188,188,188)"> </span>mesh
-<span class="ansi-green-fg">   (...)</span><span class="ansi-green-fg">     25</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">     26</span> )
-
-<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+-0.562212 = -0.562212
+0.610140 = 0.610140
+-1.290332 = -1.290332 = -1.290332
 </pre></div></div>
 </div>
 <p>With our definition that the normal vector <span class="math notranslate nohighlight">\(n\)</span> points outward elements, there holds the following relation with the tangent vector <span class="math notranslate nohighlight">\(t\)</span> <span class="math">\begin{align*}
@@ -747,22 +621,14 @@ g(\mathrm{rot}(f),n) = g(\nabla f,t).
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[11]</span><span class="ansi-green-fg">, line 2</span>
-<span class="ansi-green-fg">      1</span> <span style="color: rgb(0,135,0)">print</span>(
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">2</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-yellow-bg">mf</span>.InnerProduct(mf.CovRot(f),mf.normal)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx(element_boundary=<span class="ansi-bold" style="color: rgb(0,135,0)">True</span>),<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-bold" style="color: rgb(175,95,0)">\</span>
-<span class="ansi-green-fg">      3</span> <span class="ansi-yellow-fg">    = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(mf.InnerProduct(mf.CovDeriv(f),mf.tangent)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx(element_boundary=<span class="ansi-bold" style="color: rgb(0,135,0)">True</span>),<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">      4</span> )
-
-<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+-0.053979    = -0.053979
 </pre></div></div>
 </div>
 </section>
 <section id="Covariant-curl-in-3D">
 <h3>Covariant curl in 3D<a class="headerlink" href="#Covariant-curl-in-3D" title="Link to this heading"></a></h3>
 <p>Next, we consider 3-dimensional Riemannian manifolds. First, define a metric and some fields.</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
@@ -797,21 +663,6 @@ g(\mathrm{rot}(f),n) = g(\nabla f,t).
 <span class="n">B</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[12]</span><span class="ansi-green-fg">, line 1</span>
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> metric = <span class="ansi-yellow-bg">dg</span>.WarpedProduct().metric
-<span class="ansi-green-fg">      2</span> mesh = Mesh(unit_cube.GenerateMesh(maxh=<span class="ansi-green-fg">0.1</span>))
-<span class="ansi-green-fg">      3</span> mf = dg.RiemannianManifold(metric)
-
-<span class="ansi-red-fg">NameError</span>: name &#39;dg&#39; is not defined
-</pre></div></div>
 </div>
 <p>The Covariant curl is defined with the covariant Levi-Civita symbols <span class="math notranslate nohighlight">\(\varepsilon^{ijk}=1/\sqrt{\det g}\,\hat{\varepsilon}^{ijk}\)</span> and <span class="math notranslate nohighlight">\(\varepsilon_{ijk}=\sqrt{\det g}\,\hat{\varepsilon}_{ijk}\)</span> for vector fields <span class="math notranslate nohighlight">\(X\in\mathfrak{X}(M)\)</span> and 1-forms <span class="math notranslate nohighlight">\(\alpha\in\Lambda^1(M)\)</span> <span class="math">\begin{align*}
 \mathrm{curl}(X) = \frac{1}{\sqrt{\det g}}\varepsilon^{ijk}\partial{j}X_k\,\partial_i,\qquad \mathrm{curl}(\alpha) = \frac{1}{\sqrt{\det g}}\varepsilon^{ijk}\partial_{j}\alpha_k\,\partial_i,
@@ -865,27 +716,9 @@ X\times Y = \frac{1}{\sqrt{\det g}}\varepsilon^{ijk}X_jY_k\,\partial_i.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[13]</span><span class="ansi-green-fg">, line 3</span>
-<span class="ansi-green-fg">      1</span> <span style="color: rgb(95,135,135)"># two vector fields</span>
-<span class="ansi-green-fg">      2</span> <span style="color: rgb(0,135,0)">print</span>(
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">3</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-yellow-bg">mf</span>.InnerProduct(mf.CovCurl(X),<span style="color: rgb(188,188,188)"> </span>Y)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx(bonus_intorder=<span class="ansi-green-fg">1</span>),<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
-<span class="ansi-green-fg">      4</span> <span style="color: rgb(188,188,188)">        </span>mf.InnerProduct(X,<span style="color: rgb(188,188,188)"> </span>mf.CovCurl(Y))<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx(bonus_intorder=<span class="ansi-green-fg">1</span>)
-<span class="ansi-green-fg">      5</span> <span style="color: rgb(188,188,188)">        </span>-<span style="color: rgb(188,188,188)"> </span>mf.InnerProduct(mf.Cross(X,<span style="color: rgb(188,188,188)"> </span>mf.normal),<span style="color: rgb(188,188,188)"> </span>Y)
-<span class="ansi-green-fg">      6</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>omega_S
-<span class="ansi-green-fg">      7</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>ds(bonus_intorder=<span class="ansi-green-fg">1</span>),
-<span class="ansi-green-fg">      8</span> <span style="color: rgb(188,188,188)">        </span>mesh,
-<span class="ansi-green-fg">      9</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">     10</span> )
-<span class="ansi-green-fg">     12</span> <span style="color: rgb(95,135,135)"># vector field with 1-form</span>
-<span class="ansi-green-fg">     13</span> <span style="color: rgb(0,135,0)">print</span>(
-<span class="ansi-green-fg">     14</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(mf.InnerProduct(mf.CovCurl(X),<span style="color: rgb(188,188,188)"> </span>alpha)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx,<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
-<span class="ansi-green-fg">     15</span> <span style="color: rgb(188,188,188)">        </span>mf.InnerProduct(X,<span style="color: rgb(188,188,188)"> </span>mf.CovCurl(alpha))<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx
-<span class="ansi-green-fg">   (...)</span><span class="ansi-green-fg">     20</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">     21</span> )
-
-<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+78.498239 = 78.498239
+-5.844097 = -5.844097
+-0.400652 = -0.400652
 </pre></div></div>
 </div>
 <p>Note, that we used the bonus-intorder flag to increase the order of numerical integration to integrate the terms sufficiently accurate.</p>
@@ -925,21 +758,7 @@ X\times Y = \frac{1}{\sqrt{\det g}}\varepsilon^{ijk}X_jY_k\,\partial_i.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[14]</span><span class="ansi-green-fg">, line 3</span>
-<span class="ansi-green-fg">      1</span> <span class="ansi-bold" style="color: rgb(0,135,0)">with</span> TaskManager():
-<span class="ansi-green-fg">      2</span>     <span style="color: rgb(0,135,0)">print</span>(
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">3</span>         <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-yellow-bg">mf</span>.InnerProduct(mf.CovDiv(B),<span style="color: rgb(188,188,188)"> </span>mf.CovDeriv(f))<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx,<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
-<span class="ansi-green-fg">      4</span> <span style="color: rgb(188,188,188)">        </span>-mf.InnerProduct(B,<span style="color: rgb(188,188,188)"> </span>mf.CovHesse(f))<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx
-<span class="ansi-green-fg">      5</span> <span style="color: rgb(188,188,188)">        </span>+mf.InnerProduct(B,<span style="color: rgb(188,188,188)"> </span>dg.TensorProduct(mf.normal,mf.CovDeriv(f)))
-<span class="ansi-green-fg">      6</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>omega_S
-<span class="ansi-green-fg">      7</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>dx(element_boundary=<span class="ansi-bold" style="color: rgb(0,135,0)">True</span>),
-<span class="ansi-green-fg">      8</span> <span style="color: rgb(188,188,188)">        </span>mesh,
-<span class="ansi-green-fg">      9</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">     10</span>     )
-
-<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+17.015834 = 17.015834
 </pre></div></div>
 </div>
 <p>Note, that we used dx(element-boundary=True) instead of ds above for the right-hand side. Otherwise the full covariant derivative would not be available.</p>
@@ -964,20 +783,7 @@ X\times Y = \frac{1}{\sqrt{\det g}}\varepsilon^{ijk}X_jY_k\,\partial_i.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[15]</span><span class="ansi-green-fg">, line 2</span>
-<span class="ansi-green-fg">      1</span> <span style="color: rgb(0,135,0)">print</span>(
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">2</span>     <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(<span class="ansi-yellow-bg">mf</span>.InnerProduct(mf.Trace(mf.CovHesse(f)),<span style="color: rgb(188,188,188)"> </span>g)<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx,<span style="color: rgb(188,188,188)"> </span>mesh)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg"> = </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>Integrate(
-<span class="ansi-green-fg">      3</span> <span style="color: rgb(188,188,188)">        </span>-mf.InnerProduct(mf.CovDeriv(f),<span style="color: rgb(188,188,188)"> </span>mf.CovDeriv(g))<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>omega_T<span style="color: rgb(188,188,188)"> </span>*<span style="color: rgb(188,188,188)"> </span>dx
-<span class="ansi-green-fg">      4</span> <span style="color: rgb(188,188,188)">        </span>+mf.InnerProduct(mf.CovDeriv(f),<span style="color: rgb(188,188,188)"> </span>mf.normal)*g
-<span class="ansi-green-fg">      5</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>omega_S
-<span class="ansi-green-fg">      6</span> <span style="color: rgb(188,188,188)">        </span>*<span style="color: rgb(188,188,188)"> </span>dx(element_boundary=<span class="ansi-bold" style="color: rgb(0,135,0)">True</span>),
-<span class="ansi-green-fg">      7</span> <span style="color: rgb(188,188,188)">        </span>mesh,
-<span class="ansi-green-fg">      8</span> <span style="color: rgb(188,188,188)">    </span>)<span class="ansi-bold" style="color: rgb(175,95,135)">:</span><span class="ansi-yellow-fg">.6f</span><span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">      9</span> )
-
-<span class="ansi-red-fg">NameError</span>: name &#39;mf&#39; is not defined
+-0.081667 = -0.081667
 </pre></div></div>
 </div>
 </section>
@@ -1018,14 +824,7 @@ X\times Y = \frac{1}{\sqrt{\det g}}\varepsilon^{ijk}X_jY_k\,\partial_i.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[16]</span><span class="ansi-green-fg">, line 1</span>
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> metric = <span class="ansi-yellow-bg">dg</span>.CigarSoliton().metric
-<span class="ansi-green-fg">      2</span> mesh = Mesh(unit_square.GenerateMesh(maxh=<span class="ansi-green-fg">0.1</span>))
-<span class="ansi-green-fg">      3</span> mf = dg.RiemannianManifold(metric)
-
-<span class="ansi-red-fg">NameError</span>: name &#39;dg&#39; is not defined
+-4.573159    = -4.573159    = -4.573159
 </pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">

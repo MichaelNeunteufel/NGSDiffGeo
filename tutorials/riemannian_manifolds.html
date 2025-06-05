@@ -138,7 +138,7 @@ I\!I^n(X,Y)= g(n,\nabla_XY)=-g(\nabla_Xn,Y),\qquad X,Y\in \mathfrak{X}(F),
 \end{align*}</span> where <span class="math notranslate nohighlight">\(n\)</span> denotes a <span class="math notranslate nohighlight">\(g\)</span>-normalized normal vector on <span class="math notranslate nohighlight">\(F\)</span>. The second fundamental form is symmetric. In two dimensions the second fundamental form reduces to the geodesic curvature on a curve <span class="math">\begin{align*}
 \kappa^n_g = g(\nabla_tt,n)=-g(\nabla_tn,t),
 \end{align*}</span> where <span class="math notranslate nohighlight">\(t\)</span> is a <span class="math notranslate nohighlight">\(g\)</span>-normalized tangent vector.</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
@@ -149,28 +149,6 @@ I\!I^n(X,Y)= g(n,\nabla_XY)=-g(\nabla_Xn,Y),\qquad X,Y\in \mathfrak{X}(F),
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">ImportError</span>                               Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[1]</span><span class="ansi-green-fg">, line 4</span>
-<span class="ansi-green-fg">      2</span> <span class="ansi-bold" style="color: rgb(0,135,0)">from</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">ngsolve</span><span class="ansi-blue-intense-fg ansi-bold">.</span><span class="ansi-blue-intense-fg ansi-bold">webgui</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-bold" style="color: rgb(0,135,0)">import</span> Draw
-<span class="ansi-green-fg">      3</span> <span class="ansi-bold" style="color: rgb(0,135,0)">from</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">netgen</span><span class="ansi-blue-intense-fg ansi-bold">.</span><span class="ansi-blue-intense-fg ansi-bold">occ</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-bold" style="color: rgb(0,135,0)">import</span> *
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">4</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">ngsdiffgeo</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-bold" style="color: rgb(0,135,0)">as</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">dg</span>
-
-<span class="ansi-cyan-fg">File </span><span class="ansi-green-fg">/usr/local/lib/python3.12/site-packages/ngsdiffgeo/__init__.py:4</span>
-<span class="ansi-green-fg">      2</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">ngsolve</span>
-<span class="ansi-green-fg">      3</span> <span class="ansi-bold" style="color: rgb(0,135,0)">from</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">ngsolve</span><span class="ansi-blue-intense-fg ansi-bold">.</span><span class="ansi-blue-intense-fg ansi-bold">fem</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-bold" style="color: rgb(0,135,0)">import</span> Einsum
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">4</span> <span class="ansi-bold" style="color: rgb(0,135,0)">from</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">.</span><span class="ansi-blue-intense-fg ansi-bold">ngsdiffgeo</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-bold" style="color: rgb(0,135,0)">import</span> *
-<span class="ansi-green-fg">      6</span> <span style="color: rgb(95,135,135)"># from .utils import *</span>
-<span class="ansi-green-fg">      9</span> <span class="ansi-bold" style="color: rgb(0,135,0)">class</span><span style="color: rgb(188,188,188)"> </span><span class="ansi-blue-intense-fg ansi-bold">EuclideanMetric</span>:
-
-<span class="ansi-red-fg">ImportError</span>: generic_type: type &#34;GradProxy&#34; referenced unknown base type &#34;ngfem::ProxyFunction&#34;
-</pre></div></div>
-</div>
 <section id="2D-metrics">
 <h2>2D metrics<a class="headerlink" href="#2D-metrics" title="Link to this heading"></a></h2>
 <p>Let’s start with some two-dimensional Riemannian manifolds and investigate their properties such as curvatures.</p>
@@ -179,7 +157,7 @@ I\!I^n(X,Y)= g(n,\nabla_XY)=-g(\nabla_Xn,Y),\qquad X,Y\in \mathfrak{X}(F),
 <p>The Poincare disk (also called conformal disk) is defined on the open unit circle <span class="math notranslate nohighlight">\(M=\{(x,y)\in \mathbb{R}^2\,:\, x^2+y^2&lt;1\}\)</span> with metric tensor <span class="math">\begin{align*}
 g = \frac{4}{(1-x^2-y^2)^2}(dx\otimes dx + dy\otimes dy).
 \end{align*}</span> The Gauss curvature is constant, <span class="math notranslate nohighlight">\(K=-1\)</span>, and thus, the Poincare disk is a hyperbolic geometry. When plotting the norm of the metric, we clearly observe the blow-up towards the circle boundary.</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
@@ -192,31 +170,13 @@ g = \frac{4}{(1-x^2-y^2)^2}(dx\otimes dx + dy\otimes dy).
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[2]</span><span class="ansi-green-fg">, line 4</span>
-<span class="ansi-green-fg">      1</span> mesh = Mesh(
-<span class="ansi-green-fg">      2</span>     OCCGeometry(Circle((<span class="ansi-green-fg">0</span>, <span class="ansi-green-fg">0</span>), <span class="ansi-green-fg">0.9</span>).Face(), dim=<span class="ansi-green-fg">2</span>).GenerateMesh(maxh=<span class="ansi-green-fg">0.1</span>)
-<span class="ansi-green-fg">      3</span> ).Curve(<span class="ansi-green-fg">2</span>)
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">4</span> pcd = <span class="ansi-yellow-bg">dg</span>.PoincareDisk()
-<span class="ansi-green-fg">      5</span> Draw(Norm(pcd.metric), mesh)
-<span class="ansi-green-fg">      6</span> Draw(pcd.curvature, mesh, deformation=<span class="ansi-bold" style="color: rgb(0,135,0)">True</span>);
-
-<span class="ansi-red-fg">NameError</span>: name &#39;dg&#39; is not defined
-</pre></div></div>
-</div>
 </section>
 <section id="Poincare-Plane-(H2)">
 <h3>Poincare Plane (H2)<a class="headerlink" href="#Poincare-Plane-(H2)" title="Link to this heading"></a></h3>
 <p>The Poincare plane is given on the hyperbolic upper half-plane <span class="math notranslate nohighlight">\(H2:=\{(x,y)\in\mathbb{R}^2\,:\, y&gt;0\}\)</span> with the metric <span class="math">\begin{align*}
 g = \frac{1}{y^2}\, (dx\otimes dx+dy\otimes dy).
 \end{align*}</span> It is also a hyperbolic Riemannian manifold with constant Gauss curvature <span class="math notranslate nohighlight">\(K=-1\)</span>.</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
@@ -230,31 +190,13 @@ g = \frac{1}{y^2}\, (dx\otimes dx+dy\otimes dy).
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[3]</span><span class="ansi-green-fg">, line 4</span>
-<span class="ansi-green-fg">      1</span> mesh = Mesh(
-<span class="ansi-green-fg">      2</span>     OCCGeometry(MoveTo(-<span class="ansi-green-fg">1</span>, <span class="ansi-green-fg">0.1</span>).Rectangle(<span class="ansi-green-fg">2</span>, <span class="ansi-green-fg">1</span>).Face(), dim=<span class="ansi-green-fg">2</span>).GenerateMesh(maxh=<span class="ansi-green-fg">0.1</span>)
-<span class="ansi-green-fg">      3</span> )
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">4</span> hyp2 = <span class="ansi-yellow-bg">dg</span>.HyperbolicH2()
-<span class="ansi-green-fg">      6</span> Draw(Norm(hyp2.metric), mesh, order=<span class="ansi-green-fg">4</span>)
-<span class="ansi-green-fg">      7</span> Draw(hyp2.curvature, mesh, deformation=<span class="ansi-bold" style="color: rgb(0,135,0)">True</span>);
-
-<span class="ansi-red-fg">NameError</span>: name &#39;dg&#39; is not defined
-</pre></div></div>
-</div>
 </section>
 <section id="2-sphere">
 <h3>2 sphere<a class="headerlink" href="#2-sphere" title="Link to this heading"></a></h3>
 <p>The standard metric on the sphere <span class="math notranslate nohighlight">\(S^2\)</span> is given by (<span class="math notranslate nohighlight">\(x,y\)</span> are interpreted as angles) <span class="math">\begin{align*}
 g = dx\otimes dx + \sin^2(x)\,dy\otimes dy
 \end{align*}</span> on the domain <span class="math notranslate nohighlight">\(M=[0,\pi]\times [0,2\pi)\)</span>. Its Gauss curvature is constant, <span class="math notranslate nohighlight">\(K=1\)</span>, and therefore an elliptic manifold.</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
@@ -267,24 +209,6 @@ g = dx\otimes dx + \sin^2(x)\,dy\otimes dy
 <span class="n">Draw</span><span class="p">(</span><span class="n">sphere2</span><span class="o">.</span><span class="n">curvature</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">0.99</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mf">1.01</span><span class="p">);</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[4]</span><span class="ansi-green-fg">, line 4</span>
-<span class="ansi-green-fg">      1</span> mesh = Mesh(
-<span class="ansi-green-fg">      2</span>     OCCGeometry(MoveTo(<span class="ansi-green-fg">0</span>, <span class="ansi-green-fg">0</span>).Rectangle(pi, <span class="ansi-green-fg">2</span> * pi).Face(), dim=<span class="ansi-green-fg">2</span>).GenerateMesh(maxh=<span class="ansi-green-fg">0.2</span>)
-<span class="ansi-green-fg">      3</span> )
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">4</span> sphere2 = <span class="ansi-yellow-bg">dg</span>.Sphere2()
-<span class="ansi-green-fg">      6</span> Draw(Norm(sphere2.metric), mesh, order=<span class="ansi-green-fg">3</span>)
-<span class="ansi-green-fg">      7</span> Draw(sphere2.curvature, mesh, <span style="color: rgb(0,135,0)">min</span>=<span class="ansi-green-fg">0.99</span>, <span style="color: rgb(0,135,0)">max</span>=<span class="ansi-green-fg">1.01</span>);
-
-<span class="ansi-red-fg">NameError</span>: name &#39;dg&#39; is not defined
-</pre></div></div>
 </div>
 </section>
 <section id="Cigar-soliton-metric">
@@ -318,18 +242,7 @@ K = \frac{2e^{4t}}{e^{4t}+x^2+y^2},
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[5]</span><span class="ansi-green-fg">, line 6</span>
-<span class="ansi-green-fg">      1</span> mesh = Mesh(
-<span class="ansi-green-fg">      2</span>     OCCGeometry(MoveTo(-<span class="ansi-green-fg">1</span>, -<span class="ansi-green-fg">1</span>).Rectangle(<span class="ansi-green-fg">2</span>, <span class="ansi-green-fg">2</span>).Face(), dim=<span class="ansi-green-fg">2</span>).GenerateMesh(maxh=<span class="ansi-green-fg">0.05</span>)
-<span class="ansi-green-fg">      3</span> )
-<span class="ansi-green-fg">      5</span> t = Parameter(<span class="ansi-green-fg">0.1</span>)
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">6</span> cig = <span class="ansi-yellow-bg">dg</span>.CigarSoliton(t)
-<span class="ansi-green-fg">      8</span> Draw(Norm(cig.metric), mesh, deformation=<span class="ansi-bold" style="color: rgb(0,135,0)">True</span>)
-<span class="ansi-green-fg">      9</span> <span style="color: rgb(95,135,135)"># Check if g&#39;(t) = -2 Ric(g(t))</span>
-
-<span class="ansi-red-fg">NameError</span>: name &#39;dg&#39; is not defined
+g&#39;(t) + 2 Ric(g(t)) = 0.000000
 </pre></div></div>
 </div>
 </section>
@@ -341,7 +254,7 @@ K = \frac{2e^{4t}}{e^{4t}+x^2+y^2},
 <p>The standard metric on the sphere <span class="math notranslate nohighlight">\(S^3\)</span> is given by (<span class="math notranslate nohighlight">\(x,y,z\)</span> are interpreted as angles) <span class="math">\begin{align*}
 g = dx\otimes dx + \sin^2(x)\,dy\otimes dy + \sin^2(x)\sin^2(y)\,dz\otimes dz
 \end{align*}</span> on the domain <span class="math notranslate nohighlight">\(M=[0,\pi]\times[0,\pi]\times [0,2\pi)\)</span>. Its scalar curvature is constant, <span class="math notranslate nohighlight">\(S=6\)</span>. Further, the section curvature is constant 1 for any two directions.</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
@@ -352,22 +265,6 @@ g = dx\otimes dx + \sin^2(x)\,dy\otimes dy + \sin^2(x)\sin^2(y)\,dz\otimes dz
 <span class="n">Draw</span><span class="p">(</span><span class="n">sphere3</span><span class="o">.</span><span class="n">scalar</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">5.9</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mf">6.1</span><span class="p">);</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[6]</span><span class="ansi-green-fg">, line 2</span>
-<span class="ansi-green-fg">      1</span> mesh = Mesh(OCCGeometry(Box((<span class="ansi-green-fg">0</span>, <span class="ansi-green-fg">0</span>, <span class="ansi-green-fg">0</span>), (pi, pi, <span class="ansi-green-fg">2</span> * pi))).GenerateMesh(maxh=<span class="ansi-green-fg">0.5</span>))
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">2</span> sphere3 = <span class="ansi-yellow-bg">dg</span>.Sphere3()
-<span class="ansi-green-fg">      4</span> Draw(Norm(sphere3.metric), mesh, order=<span class="ansi-green-fg">3</span>)
-<span class="ansi-green-fg">      5</span> Draw(sphere3.scalar, mesh, <span style="color: rgb(0,135,0)">min</span>=<span class="ansi-green-fg">5.9</span>, <span style="color: rgb(0,135,0)">max</span>=<span class="ansi-green-fg">6.1</span>);
-
-<span class="ansi-red-fg">NameError</span>: name &#39;dg&#39; is not defined
-</pre></div></div>
 </div>
 </section>
 <section id="Poincare-Plane-(H3)">
