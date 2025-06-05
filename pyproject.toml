@@ -18,7 +18,7 @@ classifiers = [
 # Maybe you also need to add other requirements to build your package
 [build-system]
 requires = [
-            "ngsolve>=6.2.2502",
+            "ngsolve>=6.2.2503",
             "scikit-build-core>=0.9.0",
             "pybind11_stubgen",
             "cmake",

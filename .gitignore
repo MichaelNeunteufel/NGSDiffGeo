@@ -35,3 +35,5 @@ __pycache__/
 build/
 
 .coverage
+
+.DS_Store
