@@ -23,6 +23,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Curvature quantities on Riemannian manifolds" href="curvatures.html" />
     <link rel="prev" title="Riemannian Manifolds" href="riemannian_manifolds.html" /> 
 </head>
 
@@ -70,6 +71,9 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="curvatures.html">Curvature quantities on Riemannian manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="regge_metric.html">Regge finite elements and Regge metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
 </ul>
 
         </div>
@@ -98,9 +102,9 @@
              
   <section id="Covariant-Derivatives">
 <h1>Covariant Derivatives<a class="headerlink" href="#Covariant-Derivatives" title="Link to this heading"></a></h1>
-<p>In this notebook, we show how to differentiate scalar, vector, 1-form, and arbitrary tensor fields using the unique Levi-Civita connection of a Riemannian manifold. A quick introduction in Riemannian manifolds is given <a class="reference internal" href="riemannian_manifolds.html"><span class="doc">here</span></a>. The resulting differential operators are denoted as covariant derivatives such as the covariant divergence and covariant curl. They simplify to the usual derivatives for in the Euclidean setting. In the present of curvature, the coordinate
+<p>In this notebook, we show how to differentiate scalar, vector, 1-form, and arbitrary tensor fields using the unique Levi-Civita connection of a Riemannian manifold. A brief introduction to Riemannian manifolds is given <a class="reference internal" href="riemannian_manifolds.html"><span class="doc">here</span></a>. The resulting differential operators are denoted as covariant derivatives, such as the covariant divergence and covariant curl. They simplify to the usual derivatives in the Euclidean setting. In the presence of curvature, the coordinate
 expressions involve additional terms using the Christoffel symbols of the Levi-Civita connection.</p>
-<p>First, we define several fields and discuss their inner products. Then the covariant derivatives are defined and explained in coordinates. We will see that integration by parts formulae hold also in the general Riemannian setting as well as (some) differential identities known from the Euclidean case.</p>
+<p>First, we define several fields and discuss their inner products. Then, the covariant derivatives are defined and explained in coordinates. We will see that integration by parts formulae also hold in the general Riemannian setting, as do (some) differential identities known from the Euclidean case.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -113,7 +117,7 @@ expressions involve additional terms using the Christoffel symbols of the Levi-C
 </pre></div>
 </div>
 </div>
-<p>Define a Riemannian manifold <span class="math notranslate nohighlight">\((M,g)\)</span> with metric tensor <span class="math notranslate nohighlight">\(g\)</span> on a 2D domain inducing local coordinates <span class="math notranslate nohighlight">\(x^i\)</span> in the local basis <span class="math notranslate nohighlight">\(\partial_i\)</span> with their corresponding dual 1-forms <span class="math notranslate nohighlight">\(dx^i\)</span>. Define the volume forms in the local coordinates on the elements and edges, <span class="math">\begin{align*}
+<p>Let <span class="math notranslate nohighlight">\((M,g)\)</span> be a Riemannian manifold with metric tensor <span class="math notranslate nohighlight">\(g\)</span> on a 2D manifold <span class="math notranslate nohighlight">\(M\)</span>. Charts induce local coordinates <span class="math notranslate nohighlight">\(x^i\)</span> in the local basis <span class="math notranslate nohighlight">\(\partial_i\)</span> with their corresponding dual 1-forms <span class="math notranslate nohighlight">\(dx^i\)</span>. We define the volume forms in the local coordinates on the elements and edges, <span class="math">\begin{align*}
 \omega = \sqrt{\det(g_{ij})}\,dx^1\wedge\dots\wedge dx^N,\qquad \omega_{\partial M} = \star n^\flat,
 \end{align*}</span> where <span class="math notranslate nohighlight">\(n^\flat\)</span> is the 1-form associated with the <span class="math notranslate nohighlight">\(g\)</span>-normalized normal vector <span class="math notranslate nohighlight">\(n\)</span> and <span class="math notranslate nohighlight">\(\star\)</span> the Hodge-star operator.</p>
 <div class="nbinput nblast docutils container">
@@ -132,11 +136,11 @@ expressions involve additional terms using the Christoffel symbols of the Levi-C
 </div>
 <section id="Scalar,-vector,-1-form,-and-tensor-fields">
 <h2>Scalar, vector, 1-form, and tensor fields<a class="headerlink" href="#Scalar,-vector,-1-form,-and-tensor-fields" title="Link to this heading"></a></h2>
-<p>Define some scalar, vector, 1-form, and tensor fields</p>
+<p>We start by defining some scalar, vector, 1-form, and tensor fields</p>
 <p><span class="math">\begin{align*}
 &f,g,h\in C^\infty(M),\qquad X = X^i\,\partial_i\in\mathfrak{X}(M),\qquad \alpha = \alpha_i\,dx^i\in \Lambda^1(M),\\
 & A= A^{ij}\partial_i\otimes \partial_j\in\mathcal{T}^0_2(M),\quad B = \alpha\otimes X = \alpha_iX^j\,dx^i\otimes \partial_j\in\mathcal{T}^1_1(M).
-\end{align*}</span> To indicate if the indices of a general tensor field are covariant or contravariant we use a string, where 1 denotes covariant indices and 0 contravariant indices.</p>
+\end{align*}</span> We use a string to indicate whether the indices of a general tensor field are covariant or contravariant, where 1 denotes covariant indices and 0 denotes contravariant indices.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -171,7 +175,7 @@ expressions involve additional terms using the Christoffel symbols of the Levi-C
 <p>The <span class="math notranslate nohighlight">\(g\)</span>-inner product of scalar <span class="math notranslate nohighlight">\(f\)</span>, <span class="math notranslate nohighlight">\(g\)</span>, vector <span class="math notranslate nohighlight">\(X\)</span>, <span class="math notranslate nohighlight">\(Y\)</span>, and 1-form <span class="math notranslate nohighlight">\(\alpha\)</span>, <span class="math notranslate nohighlight">\(\beta\)</span> fields is given by</p>
 <p><span class="math">\begin{align*}
 g(f,g) = f\,g,\qquad g(X,Y)= g_{ij}X^iY^j,\qquad g(\alpha,\beta) = g^{ij}\alpha_i\beta_j, \qquad g(\alpha,X) = \alpha_i\beta^i,
-\end{align*}</span> where we used the Einstein summation convention of repeated indices e.g.</p>
+\end{align*}</span> where we used the Einstein summation convention of repeated indices, e.g.</p>
 <p><span class="math">\begin{align*}
 g_{ij}X^iY^j:=\sum_{i,j}g_{ij}X^iY^j.
 \end{align*}</span></p>
@@ -220,13 +224,13 @@ g(A,B) := g(X_1,Y_1)\cdots g(\alpha_l,\beta_n).
 <h2>Covariant differential operators<a class="headerlink" href="#Covariant-differential-operators" title="Link to this heading"></a></h2>
 <section id="Covariant-derivative">
 <h3>Covariant derivative<a class="headerlink" href="#Covariant-derivative" title="Link to this heading"></a></h3>
-<p>Covariant derivatives enable differentiation of tensor fields on Riemannian manifolds. It takes a <span class="math notranslate nohighlight">\((k,l)\)</span>-tensor field <span class="math notranslate nohighlight">\(\mathcal{T}^k_l(M)\)</span> acting on <span class="math notranslate nohighlight">\(k\)</span> vector fields and <span class="math notranslate nohighlight">\(l\)</span> covectors (1-forms) and returns a <span class="math notranslate nohighlight">\((k+1,l)\)</span>-tensor <span class="math notranslate nohighlight">\(\mathcal{T}^{k+1}l(M)\)</span>, i.e. for <span class="math notranslate nohighlight">\(A\in \mathcal{T}^k_l(M)\)</span> and <span class="math notranslate nohighlight">\(X,Y_1,\dots, Y_k\in \mathfrak{X}(M)\)</span>, <span class="math notranslate nohighlight">\(\alpha_1,\dots, \alpha_l\)</span> yields <span class="math notranslate nohighlight">\(\nabla A\in \mathcal{T}^{k+1}l(M)\)</span> with</p>
+<p>Covariant derivatives enable the differentiation of tensor fields on Riemannian manifolds. It takes a <span class="math notranslate nohighlight">\((k,l)\)</span>-tensor field <span class="math notranslate nohighlight">\(\mathcal{T}^k_l(M)\)</span> acting on <span class="math notranslate nohighlight">\(k\)</span> vector fields and <span class="math notranslate nohighlight">\(l\)</span> covectors (1-forms) and returns a <span class="math notranslate nohighlight">\((k+1,l)\)</span>-tensor <span class="math notranslate nohighlight">\(\mathcal{T}^{k+1}l(M)\)</span>, i.e. for <span class="math notranslate nohighlight">\(A\in \mathcal{T}^k_l(M)\)</span> and <span class="math notranslate nohighlight">\(X,Y_1,\dots, Y_k\in \mathfrak{X}(M)\)</span>, <span class="math notranslate nohighlight">\(\alpha_1,\dots, \alpha_l\)</span> yields <span class="math notranslate nohighlight">\(\nabla A\in \mathcal{T}^{k+1}l(M)\)</span> with</p>
 <p><span class="math">\begin{align*}
 &(\nabla A)(X,Y_1,\dots, Y_k,\alpha_1,\dots, \alpha_l)= (\nabla_XA)(Y_1,\dots. Y_k,\alpha_1,\dots, \alpha_l)\\
 & = X(A(Y_1,\dots, Y_k,\alpha_1,\dots, \alpha_l)) - A(\nabla_XY_1,\dots Y_k,\alpha_1,\dots \alpha_l) -\cdots - A(Y_1,\dots, Y_k,\alpha_1,\dots, \nabla_X\alpha_l),
 \end{align*}</span></p>
 <p>where the last equality is the Leibnitz rule, which can be used to define the covariant derivative for arbitrary tensors from the differentiation of vector and 1-form fields.</p>
-<p>In the flat case these operators simplify to their Euclidean counter-parts. Therefore, in coordinates, they are expressed by standard derivatives with additional terms involving the metric and its derivatives. Particularly the Christoffel symbols of first <span class="math notranslate nohighlight">\(\Gamma_{ijk}\)</span> and second <span class="math notranslate nohighlight">\(\Gamma_{ij}^k\)</span> kind,</p>
+<p>In the flat case, these operators simplify to their Euclidean counterparts. Therefore, in coordinates, they are expressed by standard derivatives with additional terms involving the metric and its derivatives. Particularly the Christoffel symbols of first <span class="math notranslate nohighlight">\(\Gamma_{ijk}\)</span> and second <span class="math notranslate nohighlight">\(\Gamma_{ij}^k\)</span> kind,</p>
 <p><span class="math">\begin{align*}
 \Gamma_{ijk}=\frac{1}{2}\left(\partial_i g_{jk}+\partial_jg_{ik}-\partial_kg_{ij}\right),\qquad \Gamma_{ij}^k = g^{kl}\Gamma_{ijl} =\frac{1}{2}g^{kl}\left(\partial_i g_{jl}+\partial_jg_{il}-\partial_lg_{ij}\right).
 \end{align*}</span></p>
@@ -236,15 +240,15 @@ g(A,B) := g(X_1,Y_1)\cdots g(\alpha_l,\beta_n).
 \end{align*}</span> However, expressing the volume form in the local basis <span class="math notranslate nohighlight">\(\omega=\sqrt{\det (g_{ij})}\,dx^1\wedge\dots\wedge dx^N\)</span> the covariant derivative of the determinant is in general not zero <span class="math">\begin{align*}
 \nabla \sqrt{\det g}\neq 0.
 \end{align*}</span></p>
-<p>For a scalar field <span class="math notranslate nohighlight">\(s\in C^\infty(M)\)</span> the covariant derivative coincides with the exterior derivative (and Lie derivative) yielding the 1-form <span class="math notranslate nohighlight">\(\nabla s= ds\in \Lambda^1(M)\)</span>. The covariant gradient is obtained by the musical <span class="math notranslate nohighlight">\(\sharp\)</span> operator giving a vector field <span class="math">\begin{align*}
+<p>For a scalar field <span class="math notranslate nohighlight">\(s\in C^\infty(M)\)</span>, the covariant derivative coincides with the exterior derivative (and Lie derivative), yielding the 1-form <span class="math notranslate nohighlight">\(\nabla s= ds\in \Lambda^1(M)\)</span>. The covariant gradient is obtained by the musical <span class="math notranslate nohighlight">\(\sharp\)</span> operator giving a vector field <span class="math">\begin{align*}
 \nabla s = d s = \partial_i s\,dx^i,\qquad \mathrm{grad}(s) = (\nabla s)^\sharp = g^{ij}\partial_j s\,\partial_i.
 \end{align*}</span> Thus, <span class="math notranslate nohighlight">\(\nabla_X s = (ds)(X) = X(s) = X^i\partial_is\)</span> for a vector field <span class="math notranslate nohighlight">\(X= X^i\partial_i\in \mathfrak{X}(M)\)</span>.</p>
 <p>For vector field <span class="math notranslate nohighlight">\(v\in \mathfrak{X}(M)\)</span> and a 1-form <span class="math notranslate nohighlight">\(\alpha\in \Lambda^1(M)\)</span> the covariant derivative is given in coordinates by <span class="math">\begin{align*}
 &\nabla v = (\partial_i v^j + \Gamma^j_{ik}v^k)dx^i\otimes \partial_j,\qquad \nabla\alpha = (\partial_i \alpha_j - \Gamma_{ij}^k\alpha_k)dx^i\otimes dx^j.
-\end{align*}</span> Note the different sign in front of the Christoffel symbols whether it is contracted with a vector field or 1-form. Using the Leibnitz rule above, the covariant derivative of an arbitrary order tensor <span class="math notranslate nohighlight">\(A\in \mathcal{T}^k_l(M)\)</span> is now easily given <span class="math">\begin{align*}
+\end{align*}</span> Note the different signs in front of the Christoffel symbols, whether they are contracted with a vector field or 1-form. Using the Leibnitz rule above, the covariant derivative of an arbitrary order tensor <span class="math notranslate nohighlight">\(A\in \mathcal{T}^k_l(M)\)</span> is now easily given <span class="math">\begin{align*}
 &\nabla A = \left(\partial_i A_{r_1\dots r_k}^{s_1\dots s_l}  -\sum_{j=1}^k\Gamma^{t}_{ir_j}A^{s_1\dots s_l}_{r_1\dots t\dots r_k}+ \sum_{j=1}^l\Gamma^{s_j}_{it}A^{s_1\dots t\dots s_l}_{r_1\dots r_k}\right)dx^i\otimes dx^{r_1}\otimes\dots \otimes dx^{r_k}\otimes \partial_{s_1}\otimes\dots\otimes \partial_{s_l}.
 \end{align*}</span></p>
-<p>The covariant derivative method of the Riemannian manifold class takes the tensor’s signature into account. Further, a so-called GradCF (gradient coefficient function) is used to numerically compute the derivative of an arbitrary tensor. It differentiates classical CoefficientFunctions and GridFunctions. Differentiation of trial and test functions is WIP.</p>
+<p>The covariant derivative method of the Riemannian manifold class takes the tensor’s signature into account. Further, a so-called GradCF (gradient coefficient function) is used to compute the derivative of an arbitrary tensor numerically. It differentiates classical CoefficientFunctions and GridFunctions. Differentiation of trial and test functions is WIP.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -307,9 +311,9 @@ g(A,B) := g(X_1,Y_1)\cdots g(\alpha_l,\beta_n).
 <h3>Covariant divergence<a class="headerlink" href="#Covariant-divergence" title="Link to this heading"></a></h3>
 <p>The covariant divergence of an arbitrary tensor (of order at least 1) is defined as first taking the covariant derivative and then contracting the first two indices, i.e. taking the trace <span class="math">\begin{align*}
 \mathrm{div} A = \mathrm{tr}_{12}(\nabla A),
-\end{align*}</span> where the contraction is to be understand with respect to the metric <span class="math notranslate nohighlight">\(g\)</span>. For example, for a 1-form <span class="math notranslate nohighlight">\(\alpha\)</span> and a vector field <span class="math notranslate nohighlight">\(X\)</span> <span class="math">\begin{align*}
+\end{align*}</span> where the contraction is to be understood with respect to the metric <span class="math notranslate nohighlight">\(g\)</span>. For example, for a 1-form <span class="math notranslate nohighlight">\(\alpha\)</span> and a vector field <span class="math notranslate nohighlight">\(X\)</span> <span class="math">\begin{align*}
 \mathrm{div}\alpha = g^{ij}(\nabla\alpha)_{ij},\qquad \mathrm{div}X=(\nabla X)^i_{i}.
-\end{align*}</span> The coordinate expression therefore follows directly from the covariant derivative. Again, the covariant divergence of (functions of) the metric vanishes.</p>
+\end{align*}</span> The coordinate expression, therefore, follows directly from the covariant derivative. Again, the covariant divergence of (functions of) the metric vanishes.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -354,10 +358,10 @@ g(A,B) := g(X_1,Y_1)\cdots g(\alpha_l,\beta_n).
 <p><span class="math">\begin{align*}
 \int_{M} g(\nabla f,X)\,\omega = -\int_{M} f\,\mathrm{div}(X)\,\omega + \int_{\partial M}f\, g(X,n)\,\omega_{\partial M},
 \end{align*}</span></p>
-<p>where <span class="math notranslate nohighlight">\(n\)</span> denotes the outer <span class="math notranslate nohighlight">\(g\)</span>-normal vector. That means, <span class="math notranslate nohighlight">\(g(n,n)=1\)</span>. Further, for a second order tensor <span class="math notranslate nohighlight">\(A\)</span> we have</p>
+<p>where <span class="math notranslate nohighlight">\(n\)</span> denotes the outer <span class="math notranslate nohighlight">\(g\)</span>-normal vector. That means, <span class="math notranslate nohighlight">\(g(n,n)=1\)</span>. Further, for a second order tensor <span class="math notranslate nohighlight">\(A\)</span>, we have</p>
 <p><span class="math">\begin{align*}
 \int_{M} g(\nabla X,A)\,\omega = -\int_{M} g(X,\mathrm{div}(A))\,\omega + \int_{\partial M} g(n\otimes X,A)\,\omega_{\partial M},
-\end{align*}</span> where <span class="math notranslate nohighlight">\(g(n\otimes X,A) = g(X, n \llcorner A)\)</span> can be written by contracting <span class="math notranslate nohighlight">\(A\)</span> with <span class="math notranslate nohighlight">\(n\)</span> in its first argument. Note, that in the first integration by parts formula <span class="math notranslate nohighlight">\(X\)</span> can be replaced by a 1-form <span class="math notranslate nohighlight">\(\alpha\in \Lambda^1(M)\)</span>. Also, <span class="math notranslate nohighlight">\(X\)</span> can be replaced by <span class="math notranslate nohighlight">\(\alpha\)</span> in the second formula and the second order tensor <span class="math notranslate nohighlight">\(A\)</span> can have any signature.</p>
+\end{align*}</span> where <span class="math notranslate nohighlight">\(g(n\otimes X,A) = g(X, n \llcorner A)\)</span> can be written by contracting <span class="math notranslate nohighlight">\(A\)</span> with <span class="math notranslate nohighlight">\(n\)</span> in its first argument. Note that in the first integration by parts formula <span class="math notranslate nohighlight">\(X\)</span> can be replaced by a 1-form <span class="math notranslate nohighlight">\(\alpha\in \Lambda^1(M)\)</span>. Also, <span class="math notranslate nohighlight">\(X\)</span> can be replaced by <span class="math notranslate nohighlight">\(\alpha\)</span> in the second formula, and the second-order tensor <span class="math notranslate nohighlight">\(A\)</span> can have any signature.</p>
 <p>More generally, let <span class="math notranslate nohighlight">\(A\in \mathcal{T}^k_l(M)\)</span> and <span class="math notranslate nohighlight">\(B\in\mathcal{T}^r_s(M)\)</span> with <span class="math notranslate nohighlight">\(k+l+1 = r+s\)</span>. Then there holds <span class="math">\begin{align*}
 \int_{M} g(\nabla A,B)\,\omega = -\int_{M} g(A,\mathrm{div}(B))\,\omega + \int_{\partial M} g(n\otimes A,B)\,\omega_{\partial M}.
 \end{align*}</span></p>
@@ -370,7 +374,7 @@ n^i = \frac{\sqrt{\det g}}{\sqrt{g_{\hat{t}\hat{t}}}}g^{ij}\hat{n}_j,\qquad \ome
 \int_M(\partial_iX^j+\Gamma_{ik}^jX^k)g^{ik}A_{kj}\,\sqrt{\det g}\,dx &= -\int_MX^j(\partial_iA_{ij}-\Gamma_{ii}^kA_{kj}-\Gamma_{ij}^kA_{ik})\,\sqrt{\det g}\,dx\\
 &\quad +\int_{\partial M}A_{ij}n^i X^j\,\sqrt{g_{tt}}\,ds.
 \end{align*}</span></p>
-<p>From the above expressions it is clear that coordinate based formulas are very error-prone.</p>
+<p>From the above expressions, it is clear that coordinate-based formulas are very error-prone.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
@@ -414,13 +418,13 @@ n^i = \frac{\sqrt{\det g}}{\sqrt{g_{\hat{t}\hat{t}}}}g^{ij}\hat{n}_j,\qquad \ome
 </section>
 <section id="Covariant-curl-and-rot-in-2D">
 <h3>Covariant curl and rot in 2D<a class="headerlink" href="#Covariant-curl-and-rot-in-2D" title="Link to this heading"></a></h3>
-<p>In two dimensions the covariant rot and curl operators are defined for scalar fields <span class="math notranslate nohighlight">\(f\)</span>, 1-forms <span class="math notranslate nohighlight">\(\alpha\)</span>, vector fields <span class="math notranslate nohighlight">\(X\)</span>, and <span class="math notranslate nohighlight">\((2,0)\)</span>-tensors <span class="math notranslate nohighlight">\(\sigma\)</span> by <span class="math">\begin{align*}
+<p>In two dimensions, the covariant rot and curl operators are defined for scalar fields <span class="math notranslate nohighlight">\(f\)</span>, 1-forms <span class="math notranslate nohighlight">\(\alpha\)</span>, vector fields <span class="math notranslate nohighlight">\(X\)</span>, and <span class="math notranslate nohighlight">\((2,0)\)</span>-tensors <span class="math notranslate nohighlight">\(\sigma\)</span> by <span class="math">\begin{align*}
 \mathrm{rot}(f)= \varepsilon^{ij}\partial_jf\,\partial_i,\qquad \mathrm{rot}(X) = \varepsilon^{jq}\left(\partial_qX^i+\Gamma^i_{qk}X^k\right)\,\partial_i\otimes \partial_j
 \end{align*}</span> and <span class="math">\begin{align*}
 \mathrm{curl}(\alpha)= \varepsilon^{ij}\partial_i\alpha_j,\qquad \mathrm{curl}(\sigma)= \varepsilon^{jk}(\partial_j\sigma_{ik}-\Gamma_{ji}^m\sigma_{mk})\,dx^i.
 \end{align*}</span> The incompatibility operator of a <span class="math notranslate nohighlight">\((2,0)\)</span>-tensor is defined as two consecutive curl operators <span class="math">\begin{align*}
 \mathrm{inc}(A) = \mathrm{curl}(\mathrm{curl}(A)),\qquad \mathrm{inc}(A)=\varepsilon^{qi}\varepsilon^{jk}\left(\partial_j\partial_qA_{ik}-\partial_q(\Gamma_{ji}^mA_{mk})-\Gamma_{lq}^l(\partial_jA_{ik}-\Gamma_{ij}^mA_{mk})\right).
-\end{align*}</span> Above, the covariant Levi-Civita symbols are given by <span class="math notranslate nohighlight">\(\varepsilon^{ij}=1/\sqrt{\det g}\,\hat{\varepsilon}^{ij}\)</span> and <span class="math notranslate nohighlight">\(\varepsilon_{ij}\sqrt{\det g}\,\hat{\varepsilon}_{ij}\)</span>, where <span class="math notranslate nohighlight">\(\hat{\varepsilon}_{ij}\)</span> and <span class="math notranslate nohighlight">\(\hat{\varepsilon}_{ij}\)</span> are the standard permuting symbols being 1 or -1 if <span class="math notranslate nohighlight">\((i,j)\)</span> is an even or odd permutation of <span class="math notranslate nohighlight">\((1,2)\)</span> and 0 else. Further, note that the covariant Levi-Civita symbols are not tensors, but tensor densities (they get
+\end{align*}</span> Above, the covariant Levi-Civita symbols are given by <span class="math notranslate nohighlight">\(\varepsilon^{ij}=1/\sqrt{\det g}\,\hat{\varepsilon}^{ij}\)</span> and <span class="math notranslate nohighlight">\(\varepsilon_{ij}\sqrt{\det g}\,\hat{\varepsilon}_{ij}\)</span>, where <span class="math notranslate nohighlight">\(\hat{\varepsilon}_{ij}\)</span> and <span class="math notranslate nohighlight">\(\hat{\varepsilon}_{ij}\)</span> are the standard permuting symbols being 1 or -1 if <span class="math notranslate nohighlight">\((i,j)\)</span> is an even or odd permutation of <span class="math notranslate nohighlight">\((1,2)\)</span> and 0 else. Further, note that the covariant Levi-Civita symbols are not tensors but tensor densities (they get
 multiplied/divided by the volume form).</p>
 <p>We can also apply the rot operator twice in a row <span class="math">\begin{align*}
 \mathrm{rot}(\mathrm{rot}(f)) = \varepsilon^{jq}\left( \varepsilon^{il}\partial_q\partial_lf-\Gamma_{lq}^q\varepsilon^{il}\partial_lf +\varepsilon^{kl}\Gamma_{qk}^i\partial_lf\right)\,\partial_i\otimes\partial_j.
@@ -532,7 +536,7 @@ curl(nabla(alpha)) = 2.824292
 div(rot(X)) = 18.249655
 </pre></div></div>
 </div>
-<p>With <span class="math notranslate nohighlight">\(t\)</span> denoting the <span class="math notranslate nohighlight">\(g\)</span>-tangential vector, in coordinates <span class="math notranslate nohighlight">\(t= \frac{1}{\sqrt{g_{\hat{t}\hat{t}}}}\hat{t}^i\,\partial_i\)</span> there holds the following integration by parts formulae <span class="math">\begin{align*}
+<p>With <span class="math notranslate nohighlight">\(t\)</span> denoting the <span class="math notranslate nohighlight">\(g\)</span>-tangential vector, in coordinates <span class="math notranslate nohighlight">\(t= \frac{1}{\sqrt{g_{\hat{t}\hat{t}}}}\hat{t}^i\,\partial_i\)</span>, there holds the following integration by parts formulae <span class="math">\begin{align*}
 \int_M\mathrm{curl}(X)\,f\,\omega &= \int_M g(\mathrm{rot}(f),X)\,\omega + \int_{\partial M} g(X,t)\,f\,\omega_{\partial M},\\
 \int_Mg(\mathrm{curl}(A),X)\,\omega &= \int_M g(A,\mathrm{rot}(X))\,\omega + \int_{\partial M}g(A,X\otimes t)\,\omega_{\partial M},\\
 \int_M \mathrm{inc}(A)\,f\,\omega&=\int_{M}g(\mathrm{curl}(A),\mathrm{rot}(f))\,\omega +\int_{\partial M}g(\mathrm{curl}(A),t)\,f\,\omega_{\partial M}\\
@@ -671,7 +675,7 @@ g(\mathrm{rot}(f),n) = g(\nabla f,t).
 \int_M g(\mathrm{curl}(X),\alpha)\,\omega = \int_M g(X,\mathrm{curl}(\alpha))\,\omega - \int_{\partial M}g(X\times n,\alpha)\,\omega_{\partial M},
 \end{align*}</span> where <span class="math notranslate nohighlight">\(n\)</span> is again the <span class="math notranslate nohighlight">\(g\)</span>-normal vector and the cross product is defined by <span class="math notranslate nohighlight">\(X\times Y = \omega(X,Y,\cdot)^\sharp\)</span>, or in coordinates <span class="math">\begin{align*}
 X\times Y = \frac{1}{\sqrt{\det g}}\varepsilon^{ijk}X_jY_k\,\partial_i.
-\end{align*}</span> In the above formula we can also use 1-forms and mixing vector fields with 1-forms.</p>
+\end{align*}</span> We can also use 1-forms and mix vector fields with 1-forms in the above formula.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
@@ -728,7 +732,7 @@ X\times Y = \frac{1}{\sqrt{\det g}}\varepsilon^{ijk}X_jY_k\,\partial_i.
 <p>For a scalar field <span class="math notranslate nohighlight">\(f\in C^{\infty}(M)\)</span> the Riemannian Hessian is defined by <span class="math notranslate nohighlight">\(\nabla^2 f = \nabla df\in \mathcal{T}^2_0(M)\)</span>. In coordinates</p>
 <p><span class="math">\begin{align*}
 \mathrm{Hess}f = \left(\partial^2_{i,j}f-\Gamma^k_{ij}\partial_k f\right)\,dx^i\otimes dx^j.
-\end{align*}</span> By the symmetry of Christoffel symbols <span class="math notranslate nohighlight">\(\Gamma_{ij}^k=\Gamma_{ji}^k\)</span> the Hessian is symmetric.</p>
+\end{align*}</span> The Hessian is symmetric by the symmetry of Christoffel symbols <span class="math notranslate nohighlight">\(\Gamma_{ij}^k=\Gamma_{ji}^k\)</span>.</p>
 <p>The Laplace-Beltrami operator of a scalar field <span class="math notranslate nohighlight">\(f\in C^{\infty}(M)\)</span> is defined in the usual way <span class="math notranslate nohighlight">\(\Delta f = \mathrm{div}(\nabla f)\)</span>, in coordinates <span class="math">\begin{align*}
 \Delta f = \mathrm{tr}(\nabla^2 f) =  \partial^2_{i,i}f-\Gamma^k_{ii}\partial_k f = \frac{1}{\sqrt{\det g}}\mathrm{div}(\sqrt{\det g} (\nabla f)^\sharp).
 \end{align*}</span></p>
@@ -761,7 +765,7 @@ X\times Y = \frac{1}{\sqrt{\det g}}\varepsilon^{ijk}X_jY_k\,\partial_i.
 17.015834 = 17.015834
 </pre></div></div>
 </div>
-<p>Note, that we used dx(element-boundary=True) instead of ds above for the right-hand side. Otherwise the full covariant derivative would not be available.</p>
+<p>Note that we used dx(element-boundary=True) instead of ds above for the right-hand side. Otherwise, the full covariant derivative would not be available.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
@@ -844,6 +848,7 @@ X\times Y = \frac{1}{\sqrt{\det g}}\varepsilon^{ijk}X_jY_k\,\partial_i.
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="riemannian_manifolds.html" class="btn btn-neutral float-left" title="Riemannian Manifolds" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="curvatures.html" class="btn btn-neutral float-right" title="Curvature quantities on Riemannian manifolds" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

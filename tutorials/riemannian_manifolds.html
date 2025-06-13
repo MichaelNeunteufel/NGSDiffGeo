@@ -64,13 +64,14 @@
 <li class="toctree-l2"><a class="reference internal" href="#3D-metrics">3D metrics</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#3-sphere">3 sphere</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#Poincare-Plane-(H3)">Poincare Plane (H3)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Heisenberg">Heisenberg</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Warped">Warped</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="covariant_derivatives.html">Covariant Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="curvatures.html">Curvature quantities on Riemannian manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="regge_metric.html">Regge finite elements and Regge metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
 </ul>
 
         </div>
@@ -99,43 +100,47 @@
              
   <section id="Riemannian-Manifolds">
 <h1>Riemannian Manifolds<a class="headerlink" href="#Riemannian-Manifolds" title="Link to this heading"></a></h1>
-<p>In this notebook, we recap some basic definitions of Riemannian manifolds, especially the metric tensor, Christoffel symbols, and several curvature quantities. Covariant derivatives are handled in details in <a class="reference internal" href="covariant_derivatives.html"><span class="doc">following notebook</span></a>. We also present some Riemannian metrics in two and three dimensions.</p>
-<p>Let <span class="math notranslate nohighlight">\((M,g)\)</span> be an <span class="math notranslate nohighlight">\(N\)</span>-dimensional Riemannian manifold with metric tensor <span class="math notranslate nohighlight">\(g\)</span>. That means <span class="math notranslate nohighlight">\(M\)</span> is a smooth manifold and <span class="math notranslate nohighlight">\(g\)</span> is a symmetric and positive definite bilinear form on the tangent space of <span class="math notranslate nohighlight">\(M\)</span>.</p>
-<p>For simplicity we assume that <span class="math notranslate nohighlight">\(M\)</span> can be covered by a single chart, inducing local coordinates <span class="math notranslate nohighlight">\(x^1,\dots, x^N\)</span> with basis vectors <span class="math notranslate nohighlight">\(\partial_1,\dots,\partial_N\)</span> (a frame of vector fields <span class="math notranslate nohighlight">\(\partial_i\in \mathfrak{X}(M)\)</span> ), and their corresponding dual basis of 1-forms <span class="math notranslate nohighlight">\(dx^1,\dots, dx^N\)</span>, <span class="math notranslate nohighlight">\(dx^i\in \Lambda^1(M)\)</span>. Then, we can write the metric <span class="math notranslate nohighlight">\(g\)</span> and its inverse in terms of the coordinates via <span class="math">\begin{align*}
+<p>In this notebook, we recap some basic definitions of Riemannian manifolds, especially the metric tensor, Christoffel symbols, and several curvature quantities. Covariant derivatives are handled in details in <a class="reference internal" href="covariant_derivatives.html"><span class="doc">following notebook</span></a>. We also present some Riemannian metrics in two and three dimensions. Curvature relations and identities are numerically tested in <a class="reference internal" href="curvatures.html"><span class="doc">this notebook</span></a>.</p>
+<p>Let <span class="math notranslate nohighlight">\((M,g)\)</span> be an <span class="math notranslate nohighlight">\(N\)</span>-dimensional Riemannian manifold with metric tensor <span class="math notranslate nohighlight">\(g\)</span>. That means <span class="math notranslate nohighlight">\(M\)</span> is a smooth manifold, and <span class="math notranslate nohighlight">\(g\)</span> is a symmetric and positive definite bilinear form on the tangent space of <span class="math notranslate nohighlight">\(M\)</span>. If <span class="math notranslate nohighlight">\(g\)</span> has signature <span class="math notranslate nohighlight">\(-+\dots+\)</span>, then <span class="math notranslate nohighlight">\((M,g)\)</span> is called a pseudo-Riemannian manifold. For instance, in general relativity, the metric has the signature <span class="math notranslate nohighlight">\(-+++\)</span>, where the associated negative coordinate corresponds to time. For numerical
+experiments and simulations we will approximate the exact metric by <a class="reference internal" href="regge_metric.html"><span class="doc">Regge finite elements</span></a>.</p>
+<p>For simplicity we assume that <span class="math notranslate nohighlight">\(M\)</span> can be covered by a single chart, inducing local coordinates <span class="math notranslate nohighlight">\(x^1,\dots, x^N\)</span> with basis vectors <span class="math notranslate nohighlight">\(\partial_1,\dots,\partial_N\)</span> (a frame of vector fields <span class="math notranslate nohighlight">\(\partial_i\in \mathfrak{X}(M)\)</span> ), and their corresponding dual basis of 1-forms <span class="math notranslate nohighlight">\(dx^1,\dots, dx^N\)</span>, <span class="math notranslate nohighlight">\(dx^i\in \Lambda^1(M)\)</span>. That means <span class="math notranslate nohighlight">\(dx^i(\partial_j)=\delta^i_{j}\)</span>. Then, we can write the metric <span class="math notranslate nohighlight">\(g\)</span> and its inverse in terms of the coordinates via
+<span class="math">\begin{align*}
 g_{ij} = g(\partial_i,\partial_j),\qquad g^{ij}= g^{-1}(dx^i,dx^j),\qquad g= g_{ij}dx^i\otimes dx^j,\qquad g^{-1} = g^{ij}\,\partial_i\otimes \partial_j.
-\end{align*}</span> Note that <span class="math notranslate nohighlight">\(g_{ij}\)</span> and <span class="math notranslate nohighlight">\(g^{ij}\)</span> is symmetric. The volume form <span class="math notranslate nohighlight">\(\omega\in \Lambda^N(M)\)</span> used for integration on the manifold can be expressed in coordinates as <span class="math">\begin{align*}
-\omega = \sqrt{\det (g_{ij})}\,dx^1\wedge\dots\wedge dx^N.
-\end{align*}</span></p>
-<p>Levi-Civita connection <span class="math notranslate nohighlight">\(\nabla\)</span> is the unique connection, which is metric-compatible (Leibnitz rule) and torsion-free, i.e. <span class="math">\begin{align*}
+\end{align*}</span> Note that both <span class="math notranslate nohighlight">\(g_{ij}\)</span> and <span class="math notranslate nohighlight">\(g^{ij}\)</span> are symmetric. We utilized Einstein’s summation convention of repeated indices. That means if an index appears as a subscript and superscript, we implicitly sum over it. The volume form <span class="math notranslate nohighlight">\(\omega\in \Lambda^N(M)\)</span> used for integration on the manifold can be expressed in coordinates as <span class="math">\begin{align*}
+\omega = \sqrt{\det (g_{ij})}\,dx^1\wedge\dots\wedge dx^N,
+\end{align*}</span> where <span class="math notranslate nohighlight">\(\wedge:\Lambda^i(M)\times\Lambda^j(M)\to\Lambda^{i+j}(M)\)</span> denotes the wedge-product of two forms.</p>
+<p>The Levi-Civita connection <span class="math notranslate nohighlight">\(\nabla\)</span> is the unique connection that is metric-compatible (Leibnitz rule) and torsion-free, i.e. for all <span class="math notranslate nohighlight">\(X,Y,Z\in\mathfrak{X}(M)\)</span> <span class="math">\begin{align*}
 & X(g(Y,Z)) = g(\nabla_XY,Z)+ g(Y,\nabla_XZ)\\
 & \nabla_XY -\nabla_YX = [X,Y],
 \end{align*}</span> where <span class="math notranslate nohighlight">\([X,Y]\in \mathfrak{X}(M)\)</span> denotes the commutator (Lie-bracket) defined by <span class="math">\begin{align*}
-[X,Y]f = X(Y(f))-Y(X(f)).
-\end{align*}</span> The Christoffel symbols of first and second kind are defined via <span class="math">\begin{align*}
+[X,Y]f = X(Y(f))-Y(X(f)),\qquad \forall f\in C^{\infty}(M).
+\end{align*}</span> The Christoffel symbols of the first and second kinds are defined via <span class="math">\begin{align*}
 \Gamma_{ijk}= g(\nabla_{\partial_i}\partial_j,\partial_k),\qquad \nabla_{\partial_i}\partial_j=\Gamma_{ij}^k\partial_k
 \end{align*}</span> and in terms of the metric tensor <span class="math">\begin{align*}
 \Gamma_{ijk}=\frac{1}{2}\left(\partial_ig_{jk}+\partial_jg_{ik}-\partial_kg_{ij}\right),\qquad \Gamma_{ij}^k = g^{kl}\Gamma_{ijl}.
 \end{align*}</span></p>
-<p>The full fourth-order Riemann curvature tensor, encoding the full curvature information of the Riemannian manifold, is given by <span class="math">\begin{align*}
-\mathfrak{R}(X,Y,Z,W) = g(\nabla_X\nabla_YZ-\nabla_Y\nabla_XZ-\nabla_{[X,Y]}Z,W),\qquad \mathfrak{R}_{ijkl} = \mathfrak{R}_{ijkl} = \partial_i \Gamma_{jkl}-\partial_j \Gamma_{ikl} + \Gamma_{ik}^p\Gamma_{jlp}- \Gamma_{jk}^p\Gamma_{ilp}.
-\end{align*}</span> The Riemann curvature tensor is skew symmetric in its first two and second two components and symmetric when switching the first two with the second two indices. Further, there holds the first (algebraic) and second (differential) Bianchi identity <span class="math">\begin{align*}
-\mathfrak{R}(X,Y,Z,W)=-\mathfrak{R}(Y,X,Z,W)=-\mathfrak{R}(X,Y,W,Z)= \mathfrak{R}(Z,W,X,Y),\qquad TODO!
+<p>The full fourth-order Riemann curvature tensor, encoding the complete curvature information of the Riemannian manifold <span class="math notranslate nohighlight">\(M\)</span>, is given by <span class="math">\begin{align*}
+\mathfrak{R}(X,Y,Z,W) = g(\nabla_X\nabla_YZ-\nabla_Y\nabla_XZ-\nabla_{[X,Y]}Z,W),\qquad  \mathfrak{R}_{ijkl} = \partial_i \Gamma_{jkl}-\partial_j \Gamma_{ikl} + \Gamma_{ik}^p\Gamma_{jlp}- \Gamma_{jk}^p\Gamma_{ilp}.
+\end{align*}</span> The Riemann curvature tensor is skew-symmetric in its first two and second two components and symmetric when switching the first two with the second two indices. Further, there holds the first (algebraic) and second (differential) Bianchi identity <span class="math">\begin{align*}
+&\mathfrak{R}(X,Y,Z,W)=-\mathfrak{R}(Y,X,Z,W)=-\mathfrak{R}(X,Y,W,Z)= \mathfrak{R}(Z,W,X,Y),\\
+&\mathfrak{R}(X,Y,Z,W)+\mathfrak{R}(X,Z,W,Y)+\mathfrak{R}(X,W,Y,Z)=0,\\
+&\nabla_V\mathfrak{R}(X,Y,Z,W)+\nabla_Z\mathfrak{R}(X,Y,W,V)+\nabla_W\mathfrak{R}(X,Y,V,Z)=0.
 \end{align*}</span></p>
-<p>Note, that there exist two different sign conventions for the Riemann curvature tensor! The Ricci curvature tensor coincides in both conventions and reads (in our convention) <span class="math">\begin{align*}
+<p>Note that there exist two different sign conventions for the Riemann curvature tensor! The Ricci curvature tensor coincides in both conventions and reads (in our convention) <span class="math">\begin{align*}
 \mathrm{Ric}_{ij} = \mathfrak{R}_{kijl}g^{kl},
-\end{align*}</span> i.e., the first and last indices are contracted. The scalar curvature is given by a second contraction <span class="math">\begin{align*}
+\end{align*}</span> i.e., the first and last indices are contracted (in the other convention, the first and third indices get contracted). A second contraction gives the scalar curvature <span class="math">\begin{align*}
 S = \mathrm{Ric}_{ij} g^{ij} = \mathfrak{R}_{kijl}g^{kl}g^{ij}.
 \end{align*}</span></p>
-<p>In two dimensions the Gauss curvature is given for linear independent <span class="math notranslate nohighlight">\(X,Y\)</span> by <span class="math">\begin{align*}
+<p>In two dimensions, the Gauss curvature is given for any linear independent <span class="math notranslate nohighlight">\(X,Y\)</span> by <span class="math">\begin{align*}
 K = \frac{\mathcal{R}(X,Y,Y,X)}{g(X,X)g(Y,Y)-g(X,Y)^2},
 \end{align*}</span> which is independent of the choice of <span class="math notranslate nohighlight">\(X,Y\)</span>. Further, it is related to the scalar curvature by <span class="math notranslate nohighlight">\(S=2K\)</span>.</p>
-<p>The notation auf Gauss curvature can be extended to arbitrary dimension considering a plane spanned by two independent vectors <span class="math notranslate nohighlight">\(X,Y\)</span>. The result is then called sectional curvature <span class="math notranslate nohighlight">\(K(X,Y)\)</span>.</p>
-<p>The Einstein tensor, which is non-zero for dimensions greater than 2, is defined by <span class="math">\begin{align*}
+<p>The notation of Gauss curvature can be extended to arbitrary dimensions considering a plane spanned by two independent vectors <span class="math notranslate nohighlight">\(X,Y\)</span>. The result is denoted as the sectional curvature <span class="math notranslate nohighlight">\(K(X,Y)\)</span>.</p>
+<p>The Einstein tensor, which is zero in two dimensions but in general non-zero for dimensions greater than 2, is defined by <span class="math">\begin{align*}
 G_{ij}=\mathrm{Ric}_{ij}-\frac{1}{2}S\,g_{ij}.
 \end{align*}</span></p>
-<p>On a codimension 1 facet <span class="math notranslate nohighlight">\(F\)</span> (hyper-surface) the second fundamental form <span class="math notranslate nohighlight">\(I\!I\)</span> acting on vector fields on the hyper-surface by <span class="math">\begin{align*}
+<p>On a codimension 1 manifold <span class="math notranslate nohighlight">\(F\)</span> (also called hyper-surface), the second fundamental form <span class="math notranslate nohighlight">\(I\!I\)</span> acting on vector fields on the hyper-surface is defined by <span class="math">\begin{align*}
 I\!I^n(X,Y)= g(n,\nabla_XY)=-g(\nabla_Xn,Y),\qquad X,Y\in \mathfrak{X}(F),
-\end{align*}</span> where <span class="math notranslate nohighlight">\(n\)</span> denotes a <span class="math notranslate nohighlight">\(g\)</span>-normalized normal vector on <span class="math notranslate nohighlight">\(F\)</span>. The second fundamental form is symmetric. In two dimensions the second fundamental form reduces to the geodesic curvature on a curve <span class="math">\begin{align*}
+\end{align*}</span> where <span class="math notranslate nohighlight">\(n\)</span> denotes a <span class="math notranslate nohighlight">\(g\)</span>-normalized normal vector on <span class="math notranslate nohighlight">\(F\)</span>. Again, the sign may depend on the convention (changing the normal vector’s direction changes the sign). The second fundamental form is symmetric. In two dimensions, the second fundamental form reduces to the geodesic curvature of a curve <span class="math">\begin{align*}
 \kappa^n_g = g(\nabla_tt,n)=-g(\nabla_tn,t),
 \end{align*}</span> where <span class="math notranslate nohighlight">\(t\)</span> is a <span class="math notranslate nohighlight">\(g\)</span>-normalized tangent vector.</p>
 <div class="nbinput nblast docutils container">
@@ -151,12 +156,12 @@ I\!I^n(X,Y)= g(n,\nabla_XY)=-g(\nabla_Xn,Y),\qquad X,Y\in \mathfrak{X}(F),
 </div>
 <section id="2D-metrics">
 <h2>2D metrics<a class="headerlink" href="#2D-metrics" title="Link to this heading"></a></h2>
-<p>Let’s start with some two-dimensional Riemannian manifolds and investigate their properties such as curvatures.</p>
+<p>Let’s start with some two-dimensional Riemannian manifolds and investigate their properties, such as curvatures.</p>
 <section id="Poincare-Disk">
 <h3>Poincare Disk<a class="headerlink" href="#Poincare-Disk" title="Link to this heading"></a></h3>
 <p>The Poincare disk (also called conformal disk) is defined on the open unit circle <span class="math notranslate nohighlight">\(M=\{(x,y)\in \mathbb{R}^2\,:\, x^2+y^2&lt;1\}\)</span> with metric tensor <span class="math">\begin{align*}
 g = \frac{4}{(1-x^2-y^2)^2}(dx\otimes dx + dy\otimes dy).
-\end{align*}</span> The Gauss curvature is constant, <span class="math notranslate nohighlight">\(K=-1\)</span>, and thus, the Poincare disk is a hyperbolic geometry. When plotting the norm of the metric, we clearly observe the blow-up towards the circle boundary.</p>
+\end{align*}</span> The Gauss curvature is constant, <span class="math notranslate nohighlight">\(K=-1\)</span>; thus, the Poincare disk is a hyperbolic geometry. When plotting the norm of the metric, we clearly observe the blow-up towards the circle boundary.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -165,7 +170,9 @@ g = \frac{4}{(1-x^2-y^2)^2}(dx\otimes dx + dy\otimes dy).
     <span class="n">OCCGeometry</span><span class="p">(</span><span class="n">Circle</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.9</span><span class="p">)</span><span class="o">.</span><span class="n">Face</span><span class="p">(),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span><span class="n">maxh</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
 <span class="p">)</span><span class="o">.</span><span class="n">Curve</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">pcd</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">PoincareDisk</span><span class="p">()</span>
+<span class="c1"># Norm of metric</span>
 <span class="n">Draw</span><span class="p">(</span><span class="n">Norm</span><span class="p">(</span><span class="n">pcd</span><span class="o">.</span><span class="n">metric</span><span class="p">),</span> <span class="n">mesh</span><span class="p">)</span>
+<span class="c1"># Gauss curvature</span>
 <span class="n">Draw</span><span class="p">(</span><span class="n">pcd</span><span class="o">.</span><span class="n">curvature</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">deformation</span><span class="o">=</span><span class="kc">True</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -173,7 +180,7 @@ g = \frac{4}{(1-x^2-y^2)^2}(dx\otimes dx + dy\otimes dy).
 </section>
 <section id="Poincare-Plane-(H2)">
 <h3>Poincare Plane (H2)<a class="headerlink" href="#Poincare-Plane-(H2)" title="Link to this heading"></a></h3>
-<p>The Poincare plane is given on the hyperbolic upper half-plane <span class="math notranslate nohighlight">\(H2:=\{(x,y)\in\mathbb{R}^2\,:\, y&gt;0\}\)</span> with the metric <span class="math">\begin{align*}
+<p>The Poincare plane is given on the upper half-plane <span class="math notranslate nohighlight">\(H2:=\{(x,y)\in\mathbb{R}^2\,:\, y&gt;0\}\)</span> with the metric <span class="math">\begin{align*}
 g = \frac{1}{y^2}\, (dx\otimes dx+dy\otimes dy).
 \end{align*}</span> It is also a hyperbolic Riemannian manifold with constant Gauss curvature <span class="math notranslate nohighlight">\(K=-1\)</span>.</p>
 <div class="nbinput nblast docutils container">
@@ -226,6 +233,7 @@ K = \frac{2e^{4t}}{e^{4t}+x^2+y^2},
     <span class="n">OCCGeometry</span><span class="p">(</span><span class="n">MoveTo</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">Face</span><span class="p">(),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span><span class="n">maxh</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
 <span class="p">)</span>
 
+<span class="c1"># set a time parameter</span>
 <span class="n">t</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
 <span class="n">cig</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">CigarSoliton</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
 
@@ -253,7 +261,7 @@ g&#39;(t) + 2 Ric(g(t)) = 0.000000
 <h3>3 sphere<a class="headerlink" href="#3-sphere" title="Link to this heading"></a></h3>
 <p>The standard metric on the sphere <span class="math notranslate nohighlight">\(S^3\)</span> is given by (<span class="math notranslate nohighlight">\(x,y,z\)</span> are interpreted as angles) <span class="math">\begin{align*}
 g = dx\otimes dx + \sin^2(x)\,dy\otimes dy + \sin^2(x)\sin^2(y)\,dz\otimes dz
-\end{align*}</span> on the domain <span class="math notranslate nohighlight">\(M=[0,\pi]\times[0,\pi]\times [0,2\pi)\)</span>. Its scalar curvature is constant, <span class="math notranslate nohighlight">\(S=6\)</span>. Further, the section curvature is constant 1 for any two directions.</p>
+\end{align*}</span> on the domain <span class="math notranslate nohighlight">\(M=[0,\pi]\times[0,\pi]\times [0,2\pi)\)</span>. Its scalar curvature is constant, <span class="math notranslate nohighlight">\(S=6\)</span>. Further, the sectional curvature is constant 1 for any two directions.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -272,66 +280,6 @@ g = dx\otimes dx + \sin^2(x)\,dy\otimes dy + \sin^2(x)\sin^2(y)\,dz\otimes dz
 <p>The Poincare plane is given on the hyperbolic upper half-plane <span class="math notranslate nohighlight">\(H3:=\{(x,y,z)\in\mathbb{R}^3\,:\, z&gt;0\}\)</span> with the metric <span class="math">\begin{align*}
 g = \frac{1}{z^2}\, (dx\otimes dx+dy\otimes dy+dz\otimes dz).
 \end{align*}</span> It has constant negative scalar curvature <span class="math notranslate nohighlight">\(S=-6\)</span>.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-</div>
-</section>
-<section id="Heisenberg">
-<h3>Heisenberg<a class="headerlink" href="#Heisenberg" title="Link to this heading"></a></h3>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># mesh = Mesh(unit_cube.GenerateMesh(maxh=0.2))</span>
-<span class="c1"># hb = dg.Heisenberg()</span>
-<span class="c1"># metric = hb.metric</span>
-
-<span class="c1"># with TaskManager():</span>
-<span class="c1">#     gf_metric = GridFunction(HCurlCurl(mesh, order=4))</span>
-<span class="c1">#     gf_metric.Set(metric, dual=True)</span>
-
-<span class="c1">#     # Draw(BoundaryFromVolumeCF(Norm(gf_metric.Operator(&quot;Ricci&quot;)-hb.Ricci)),mesh)</span>
-<span class="c1">#     # Draw(BoundaryFromVolumeCF(gf_metric.Operator(&quot;scalar&quot;)-hb.scalar),mesh)</span>
-<span class="c1">#     # for i in range(3):</span>
-<span class="c1">#     #     for j in range(3):</span>
-<span class="c1">#     #         print(&quot;i,j&quot;,i,j)</span>
-<span class="c1">#     #         Draw(BoundaryFromVolumeCF(gf_metric.Operator(&quot;Ricci&quot;)[i,j]-hb.Ricci[i,j]),mesh)</span>
-<span class="c1">#     Draw(BoundaryFromVolumeCF(gf_metric.Operator(&quot;Ricci&quot;)[1, 1] - hb.Ricci[1, 1]), mesh)</span>
-<span class="c1">#     # for i in range(3):</span>
-<span class="c1">#     #     for j in range(3):</span>
-<span class="c1">#     #         for k in range(3):</span>
-<span class="c1">#     #             print(&quot;i,j,k&quot;,i,j,k,sqrt(Integrate((gf_metric.Operator(&quot;christoffel2&quot;)-hb.chr2)[i,j,k]**2,mesh,order=8)),sqrt(Integrate((hb.chr2)[i,j,k]**2,mesh,order=8)))</span>
-</pre></div>
-</div>
-</div>
-</section>
-<section id="Warped">
-<h3>Warped<a class="headerlink" href="#Warped" title="Link to this heading"></a></h3>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># mesh = Mesh(unit_cube.GenerateMesh(maxh=0.1))</span>
-<span class="c1"># wp = dg.WarpedProduct()</span>
-<span class="c1"># metric = wp.metric</span>
-<span class="c1"># with TaskManager():</span>
-<span class="c1">#     gf_metric = GridFunction(HCurlCurl(mesh, order=4))</span>
-<span class="c1">#     gf_metric.Set(metric, dual=True)</span>
-
-<span class="c1">#     # Draw(Norm(BoundaryFromVolumeCF(gf_metric.Operator(&quot;christoffel2&quot;)-wp.chr2)),mesh)</span>
-<span class="c1">#     Draw(BoundaryFromVolumeCF(gf_metric.Operator(&quot;scalar&quot;) - wp.scalar), mesh)</span>
-<span class="c1">#     # for i in range(3):</span>
-<span class="c1">#     #     for j in range(3):</span>
-<span class="c1">#     #         for k in range(3):</span>
-<span class="c1">#     #             print(&quot;i,j,k&quot;,i,j,k,sqrt(Integrate((gf_metric.Operator(&quot;christoffel2&quot;)-wp.chr2)[i,j,k]**2,mesh,order=8)),sqrt(Integrate((wp.chr2)[i,j,k]**2,mesh,order=8)))</span>
-</pre></div>
-</div>
-</div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>

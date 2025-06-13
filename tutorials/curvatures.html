@@ -1,0 +1,466 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Curvature quantities on Riemannian manifolds &mdash; NGSDiffGeo 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Regge finite elements and Regge metrics" href="regge_metric.html" />
+    <link rel="prev" title="Covariant Derivatives" href="covariant_derivatives.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NGSDiffGeo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="riemannian_manifolds.html">Riemannian Manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="covariant_derivatives.html">Covariant Derivatives</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Curvature quantities on Riemannian manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="regge_metric.html">Regge finite elements and Regge metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NGSDiffGeo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Curvature quantities on Riemannian manifolds</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/curvatures.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Curvature-quantities-on-Riemannian-manifolds">
+<h1>Curvature quantities on Riemannian manifolds<a class="headerlink" href="#Curvature-quantities-on-Riemannian-manifolds" title="Link to this heading"></a></h1>
+<p>In this notebook, we discuss the definition and computation of different curvature quantities of Riemannian manifolds and their relations, see <a class="reference internal" href="riemannian_manifolds.html"><span class="doc">this notebook</span></a> for a brief introduction to Riemannian manifolds. We focus on the Riemann curvature tensor, curvature operator, Ricci curvature tensor, scalar curvature, and (in 3D) the Einstein tensor.</p>
+<p>We use two- and three-dimensional numerical examples to verify the identities. We consider the Poincare disc in 2D and the three-sphere in 3D. For the numerical computations, we interpolate the exact metric into the <a class="reference internal" href="regge_metric.html"><span class="doc">Regge finite elements</span></a>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve.webgui</span><span class="w"> </span><span class="kn">import</span> <span class="n">Draw</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">netgen.occ</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ngsdiffgeo</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dg</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve.fem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Einsum</span><span class="p">,</span> <span class="n">LeviCivitaSymbol</span>
+
+<span class="n">mesh2d</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span>
+    <span class="n">OCCGeometry</span><span class="p">(</span><span class="n">Circle</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.7</span><span class="p">)</span><span class="o">.</span><span class="n">Face</span><span class="p">(),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span><span class="n">maxh</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<span class="p">)</span><span class="o">.</span><span class="n">Curve</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">pcd</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">PoincareDisk</span><span class="p">()</span>
+<span class="n">Draw</span><span class="p">(</span><span class="n">Norm</span><span class="p">(</span><span class="n">pcd</span><span class="o">.</span><span class="n">metric</span><span class="p">),</span> <span class="n">mesh2d</span><span class="p">)</span>
+
+<span class="n">eps</span> <span class="o">=</span> <span class="mf">2e-1</span>
+<span class="n">mesh3d</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span>
+    <span class="n">OCCGeometry</span><span class="p">(</span><span class="n">Box</span><span class="p">((</span><span class="n">eps</span><span class="p">,</span> <span class="n">eps</span><span class="p">,</span> <span class="n">eps</span><span class="p">),</span> <span class="p">(</span><span class="n">pi</span> <span class="o">-</span> <span class="n">eps</span><span class="p">,</span> <span class="n">pi</span> <span class="o">-</span> <span class="n">eps</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">-</span> <span class="n">eps</span><span class="p">)))</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span>
+        <span class="n">maxh</span><span class="o">=</span><span class="mf">0.3</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="n">sphere3</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Sphere3</span><span class="p">()</span>
+<span class="n">Draw</span><span class="p">(</span><span class="n">Norm</span><span class="p">(</span><span class="n">sphere3</span><span class="o">.</span><span class="n">metric</span><span class="p">),</span> <span class="n">mesh3d</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+
+<span class="c1"># Euclidean Levi-Civita permuting symbols in 2D and 3D</span>
+<span class="n">Eps2d</span> <span class="o">=</span> <span class="n">LeviCivitaSymbol</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">Eps3d</span> <span class="o">=</span> <span class="n">LeviCivitaSymbol</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="c1"># Interpolate exact metric to Regge space</span>
+<span class="n">g2d</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">HCurlCurl</span><span class="p">(</span><span class="n">mesh2d</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span>
+<span class="n">g3d</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">HCurlCurl</span><span class="p">(</span><span class="n">mesh3d</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="n">g2d</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">pcd</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span> <span class="n">dual</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">g3d</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">sphere3</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span> <span class="n">dual</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Define Christoffel symbols of first and second kind</span>
+<span class="n">chr1_2d</span> <span class="o">=</span> <span class="n">g2d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;christoffel&quot;</span><span class="p">)</span>
+<span class="n">chr2_2d</span> <span class="o">=</span> <span class="n">g2d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;christoffel2&quot;</span><span class="p">)</span>
+<span class="n">chr1_3d</span> <span class="o">=</span> <span class="n">g3d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;christoffel&quot;</span><span class="p">)</span>
+<span class="n">chr2_3d</span> <span class="o">=</span> <span class="n">g3d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;christoffel2&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>We start with the fourth-order Riemann curvature tensor <span class="math notranslate nohighlight">\(\mathfrak{R}\)</span>. Its coordinate expression is <span class="math">\begin{align*}
+\mathfrak{R}_{ijkl} = \partial_i \Gamma_{jkl}-\partial_j \Gamma_{ikl} + \Gamma_{ik}^p\Gamma_{jlp}- \Gamma_{jk}^p\Gamma_{ilp}.
+\end{align*}</span></p>
+<p>First, we note that the first two terms can be rewritten using the incompatibility operator <span class="math notranslate nohighlight">\(\mathrm{inc}(g)= \varepsilon^{ij}\varepsilon^{kl}\partial_i\partial_k g_{jl}\)</span> in 2D and <span class="math notranslate nohighlight">\(\mathrm{inc}(g)^{ij}= \varepsilon^{ikl}\varepsilon^{jmn}\partial_k\partial_m g_{ln}\)</span> in 3D. There holds <span class="math">\begin{align*}
+\partial_i \Gamma_{jkl}-\partial_j \Gamma_{ikl} = \begin{cases}\frac{1}{2}\varepsilon_{ij}\varepsilon_{kl}\mathrm{inc}(g), & \text{in 2D},\\
+\frac{1}{2}\varepsilon_{ija}\varepsilon_{klb}\mathrm{inc}(g)^{ab}, & \text{in 3D}.
+\end{cases}
+\end{align*}</span></p>
+<p>We compare the Riemann differential operator from the Regge finite element with its coordinate expression from the metric <span class="math notranslate nohighlight">\(g\)</span> and the exact Riemann curvature tensor. Note that the numerical computations fit up to numerical rounding error precision. Increasing the resolution of the mesh reduces the relative error between the numerical and exact curvature. We will learn later how to approximate the curvature more accurately from the metric tensor.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># NGSolve Riemann curvature tensor</span>
+<span class="n">Riem1_2d</span> <span class="o">=</span> <span class="n">g2d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;Riemann&quot;</span><span class="p">)</span>
+<span class="c1"># manually compute Riemann curvature tensor</span>
+<span class="n">Riem2_2d</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="mf">0.5</span> <span class="o">*</span> <span class="n">g2d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;inc&quot;</span><span class="p">)</span> <span class="o">*</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;ij,kl-&gt;ijkl&quot;</span><span class="p">,</span> <span class="n">Eps2d</span><span class="p">,</span> <span class="n">Eps2d</span><span class="p">)</span>
+    <span class="o">+</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;ikp,jlp-&gt;ijkl&quot;</span><span class="p">,</span> <span class="n">chr2_2d</span><span class="p">,</span> <span class="n">chr1_2d</span><span class="p">)</span>
+    <span class="o">-</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;jkp,ilp-&gt;ijkl&quot;</span><span class="p">,</span> <span class="n">chr2_2d</span><span class="p">,</span> <span class="n">chr1_2d</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># exact Riemann curvature tensor</span>
+<span class="n">Riem_ex_2d</span> <span class="o">=</span> <span class="n">pcd</span><span class="o">.</span><span class="n">Riemann</span>
+
+<span class="c1"># The same in 3D</span>
+<span class="n">Riem1_3d</span> <span class="o">=</span> <span class="n">g3d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;Riemann&quot;</span><span class="p">)</span>
+<span class="n">Riem2_3d</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="mf">0.5</span> <span class="o">*</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;ija,klb,ab-&gt;ijkl&quot;</span><span class="p">,</span> <span class="n">Eps3d</span><span class="p">,</span> <span class="n">Eps3d</span><span class="p">,</span> <span class="n">g3d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;inc&quot;</span><span class="p">))</span>
+    <span class="o">+</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;ikp,jlp-&gt;ijkl&quot;</span><span class="p">,</span> <span class="n">chr2_3d</span><span class="p">,</span> <span class="n">chr1_3d</span><span class="p">)</span>
+    <span class="o">-</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;jkp,ilp-&gt;ijkl&quot;</span><span class="p">,</span> <span class="n">chr2_3d</span><span class="p">,</span> <span class="n">chr1_3d</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">Riem_ex_3d</span> <span class="o">=</span> <span class="n">sphere3</span><span class="o">.</span><span class="n">Riemann</span>
+
+<span class="c1"># check that the expressions are equal</span>
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;err Riemann curvature tensor 2d = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">Riem1_2d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Riem2_2d</span><span class="p">,</span><span class="n">Riem1_2d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Riem2_2d</span><span class="p">),</span><span class="n">mesh2d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;rel err Riemann curvature tensor 2d exact = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">Riem1_2d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Riem_ex_2d</span><span class="p">,</span><span class="n">Riem1_2d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Riem_ex_2d</span><span class="p">),</span><span class="n">mesh2d</span><span class="p">))</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">Riem_ex_2d</span><span class="p">,</span><span class="w"> </span><span class="n">Riem_ex_2d</span><span class="p">),</span><span class="n">mesh2d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;err Riemann curvature tensor 3d = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">Riem1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Riem2_3d</span><span class="p">,</span><span class="n">Riem1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Riem2_3d</span><span class="p">),</span><span class="n">mesh3d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;rel err Riemann curvature tensor 3d exact = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">Riem1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Riem_ex_3d</span><span class="p">,</span><span class="n">Riem1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Riem_ex_3d</span><span class="p">),</span><span class="n">mesh3d</span><span class="p">))</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">Riem_ex_3d</span><span class="p">,</span><span class="w"> </span><span class="n">Riem_ex_3d</span><span class="p">),</span><span class="n">mesh3d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+err Riemann curvature tensor 2d = 0.00000000
+rel err Riemann curvature tensor 2d exact = 0.00009975
+err Riemann curvature tensor 3d = 0.00000000
+rel err Riemann curvature tensor 3d exact = 0.00162283
+</pre></div></div>
+</div>
+<p>Next, we look at the curvature operator <span class="math notranslate nohighlight">\(\mathcal{Q}\)</span>, which incorporates the skew-symmetry property of the Riemann curvature tensor. It is defined via the identity <span class="math">\begin{align*}
+\mathcal{Q}(X^\flat\wedge Y^\flat, W^\flat \wedge Z^\flat) = \mathfrak{R}(X,Y,Z,W),\qquad \forall X,Y,Z,W\in\mathfrak{X}(M).
+\end{align*}</span> Note the convention that the <span class="math notranslate nohighlight">\(Z\)</span> and <span class="math notranslate nohighlight">\(W\)</span> arguments are swapped and that e.g. <span class="math notranslate nohighlight">\(X^\flat\wedge Y^\flat \in \Lambda^2(M)\)</span> is a bi-vector. In two dimensions the curvature operator can be identified with a scalar function as <span class="math notranslate nohighlight">\(\mathcal{Q}\,\omega(X,Y)\,\omega(W,Z) \simeq \mathcal{Q}(X^\flat\wedge Y^\flat, W^\flat\wedge Z^\flat)\)</span> because the bi-vectors and the volume form are linearly dependent. Thus, in coordinates, there holds <span class="math">\begin{align*}
+\mathcal{Q} = -\frac{1}{4}\hat{\varepsilon}^{kl}\hat{\varepsilon}^{mn}\mathfrak{R}_{klmn} = -\frac{1}{4\,\det g}\varepsilon^{kl}\varepsilon^{mn}\mathfrak{R}_{klmn},
+\end{align*}</span> where <span class="math notranslate nohighlight">\(\hat{\varepsilon}^{kl}= \frac{1}{\sqrt{\det g}}\varepsilon^{kl}\)</span> denotes the Levi-Civita symbol with respect to the metric. In three dimensions, <span class="math notranslate nohighlight">\(X^\flat\wedge Y^\flat\)</span> can be identified with the cross product <span class="math notranslate nohighlight">\((X\times Y)^\flat\)</span>. The curvature operator becomes a symmetric operator acting on two 1-forms and reads in coordinates <span class="math">\begin{align*}
+\mathcal{Q}^{ij} = -\frac{1}{4}\hat{\varepsilon}^{ikl}\hat{\varepsilon}^{jmn}\mathfrak{R}_{klmn} = -\frac{1}{4\,\det g}\varepsilon^{ikl}\varepsilon^{jmn}\mathfrak{R}_{klmn}.
+\end{align*}</span> Using the coordinate expression of the Riemann curvature tensor and using the identity <span class="math notranslate nohighlight">\(\hat{\varepsilon}^{ija}\hat{\varepsilon}_{kla}={\varepsilon}^{ija}{\varepsilon}_{kla}= \delta^i_k\delta^j_l-\delta^i_l\delta^j_k\)</span> we have after a short calculation in 2D and 3D <span class="math">\begin{align*}
+\mathcal{Q}=-\frac{1}{2}\hat{\varepsilon}^{kl}\hat{\varepsilon}^{mn}\left(\partial_k\partial_m g_{ln}+\Gamma^q_{km}\Gamma_{lnq}\right),\qquad \mathcal{Q}^{ij}=-\frac{1}{2}\hat{\varepsilon}^{ikl}\hat{\varepsilon}^{jmn}\left(\partial_k\partial_m g_{ln}+\Gamma^q_{km}\Gamma_{lnq}\right).
+\end{align*}</span></p>
+<p>On the opposite, we can express the Riemann curvature tensor in terms of the curvature operator <span class="math">\begin{align*}
+\mathfrak{R}_{ijkl}=\begin{cases} \hat{\varepsilon}_{ij}\hat{\varepsilon}_{kl}\mathcal{Q}, &\text{in 2D}\\
+\hat{\varepsilon}_{ija}\hat{\varepsilon}_{klb}\mathcal{Q}^{ab}&\text{in 3D}.\end{cases}
+\end{align*}</span> We recall that <span class="math notranslate nohighlight">\(\hat{\varepsilon}_{ij} = \sqrt{\det g}\varepsilon_{ij}\)</span>.</p>
+<p>WARNING: The curvature differential operator .Operator(“curvature”) of a Regge object returns <span class="math notranslate nohighlight">\(\det g\,\mathcal{Q}\)</span> instead of <span class="math notranslate nohighlight">\(\mathcal{Q}\)</span>! Thus, we need to divide by the determinant.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Q1_2d</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">Det</span><span class="p">(</span><span class="n">g2d</span><span class="p">)</span> <span class="o">*</span> <span class="n">g2d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;curvature&quot;</span><span class="p">)</span>
+<span class="n">Q2_2d</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">Det</span><span class="p">(</span><span class="n">g2d</span><span class="p">))</span> <span class="o">*</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;ij,kl,ijkl&quot;</span><span class="p">,</span> <span class="n">Eps2d</span><span class="p">,</span> <span class="n">Eps2d</span><span class="p">,</span> <span class="n">g2d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;Riemann&quot;</span><span class="p">))</span>
+<span class="p">)</span>
+<span class="n">Q3_2d</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="o">-</span><span class="mf">0.5</span>
+    <span class="o">/</span> <span class="n">Det</span><span class="p">(</span><span class="n">g2d</span><span class="p">)</span>
+    <span class="o">*</span> <span class="p">(</span><span class="n">g2d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;inc&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;kl,mn,kmq,lnq&quot;</span><span class="p">,</span> <span class="n">Eps2d</span><span class="p">,</span> <span class="n">Eps2d</span><span class="p">,</span> <span class="n">chr2_2d</span><span class="p">,</span> <span class="n">chr1_2d</span><span class="p">))</span>
+<span class="p">)</span>
+<span class="n">Q_ex_2d</span> <span class="o">=</span> <span class="n">pcd</span><span class="o">.</span><span class="n">curvature</span>
+
+<span class="n">Q1_3d</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">Det</span><span class="p">(</span><span class="n">g3d</span><span class="p">)</span> <span class="o">*</span> <span class="n">g3d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;curvature&quot;</span><span class="p">)</span>
+<span class="n">Q2_3d</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="o">-</span><span class="mi">1</span>
+    <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">Det</span><span class="p">(</span><span class="n">g3d</span><span class="p">))</span>
+    <span class="o">*</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;ikl,jmn,klmn-&gt;ij&quot;</span><span class="p">,</span> <span class="n">Eps3d</span><span class="p">,</span> <span class="n">Eps3d</span><span class="p">,</span> <span class="n">g3d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;Riemann&quot;</span><span class="p">))</span>
+<span class="p">)</span>
+<span class="n">Q3_3d</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="o">-</span><span class="mf">0.5</span>
+    <span class="o">/</span> <span class="n">Det</span><span class="p">(</span><span class="n">g3d</span><span class="p">)</span>
+    <span class="o">*</span> <span class="p">(</span>
+        <span class="n">g3d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;inc&quot;</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;ikl,jmn,kmq,lnq-&gt;ij&quot;</span><span class="p">,</span> <span class="n">Eps3d</span><span class="p">,</span> <span class="n">Eps3d</span><span class="p">,</span> <span class="n">chr2_3d</span><span class="p">,</span> <span class="n">chr1_3d</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="n">Q_ex_3d</span> <span class="o">=</span> <span class="n">sphere3</span><span class="o">.</span><span class="n">curvature</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;err curvature operator 2d 1-2 = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">Q1_2d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Q2_2d</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">mesh2d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;err curvature operator 2d 1-3 = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">Q1_2d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Q3_2d</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">mesh2d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;rel err curvature operator 2d exact = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">Q1_2d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Q_ex_2d</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">mesh2d</span><span class="p">))</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">Q_ex_2d</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">mesh2d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;err curvature operator 3d 1-2 = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">Q1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Q2_3d</span><span class="p">,</span><span class="n">Q1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Q2_3d</span><span class="p">),</span><span class="n">mesh3d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;err curvature operator 3d 1-3 = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">Q1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Q3_3d</span><span class="p">,</span><span class="n">Q1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Q3_3d</span><span class="p">),</span><span class="n">mesh3d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;rel err curvature operator 3d exact = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">Q1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Q_ex_3d</span><span class="p">,</span><span class="n">Q1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Q_ex_3d</span><span class="p">),</span><span class="n">mesh3d</span><span class="p">))</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">Q_ex_3d</span><span class="p">,</span><span class="w"> </span><span class="n">Q_ex_3d</span><span class="p">),</span><span class="n">mesh3d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+err curvature operator 2d 1-2 = 0.00000000
+err curvature operator 2d 1-3 = 0.00000000
+rel err curvature operator 2d exact = 0.00005460
+err curvature operator 3d 1-2 = 0.00000000
+err curvature operator 3d 1-3 = 0.00000000
+rel err curvature operator 3d exact = 0.01268933
+</pre></div></div>
+</div>
+<p>The Ricci curvature tensor is defined by contracting two of the indices of the Riemann curvature tensor (i.e., taking a trace) <span class="math">\begin{align*}
+\mathrm{Ric}_{ij} = \mathfrak{R}_{kijl}g^{kl},
+\end{align*}</span> In terms of the curvature operator, we have <span class="math">\begin{align*}
+\mathrm{Ric} = \begin{cases} \mathcal{Q}\,g, &\text{in 2D}\\ g^{-1}\times \mathcal{Q}, &\text{in 3D}\end{cases},
+\end{align*}</span> where <span class="math notranslate nohighlight">\((A \times B)_{ij}= \hat{\varepsilon}_{ikl}\hat{\varepsilon}_{jmn}A^{km}B^{ln}\)</span> is the tensor cross product.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Ric1_2d</span> <span class="o">=</span> <span class="n">g2d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;Ricci&quot;</span><span class="p">)</span>
+<span class="n">Ric2_2d</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">Det</span><span class="p">(</span><span class="n">g2d</span><span class="p">)</span> <span class="o">*</span> <span class="n">g2d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;curvature&quot;</span><span class="p">)</span> <span class="o">*</span> <span class="n">g2d</span>
+<span class="n">Ric_ex_2d</span> <span class="o">=</span> <span class="n">pcd</span><span class="o">.</span><span class="n">Ricci</span>
+
+<span class="n">Ric1_3d</span> <span class="o">=</span> <span class="n">g3d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;Ricci&quot;</span><span class="p">)</span>
+<span class="n">Ric2_3d</span> <span class="o">=</span> <span class="n">Det</span><span class="p">(</span><span class="n">g3d</span><span class="p">)</span> <span class="o">*</span> <span class="n">Einsum</span><span class="p">(</span>
+    <span class="s2">&quot;ikl,jmn,km,ln-&gt;ij&quot;</span><span class="p">,</span>
+    <span class="n">Eps3d</span><span class="p">,</span>
+    <span class="n">Eps3d</span><span class="p">,</span>
+    <span class="n">Inv</span><span class="p">(</span><span class="n">g3d</span><span class="p">),</span>
+    <span class="mi">1</span> <span class="o">/</span> <span class="n">Det</span><span class="p">(</span><span class="n">g3d</span><span class="p">)</span> <span class="o">*</span> <span class="n">g3d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;curvature&quot;</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">Ric_ex_3d</span> <span class="o">=</span> <span class="n">sphere3</span><span class="o">.</span><span class="n">Ricci</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;err Ricci curvature tensor 2d = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">Ric1_2d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Ric2_2d</span><span class="p">,</span><span class="n">Ric1_2d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Ric2_2d</span><span class="p">),</span><span class="n">mesh2d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;rel err Ricci curvature tensor 2d exact = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">Ric1_2d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Ric_ex_2d</span><span class="p">,</span><span class="n">Ric1_2d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Ric_ex_2d</span><span class="p">),</span><span class="n">mesh2d</span><span class="p">))</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">Ric_ex_2d</span><span class="p">,</span><span class="w"> </span><span class="n">Ric_ex_2d</span><span class="p">),</span><span class="n">mesh2d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;err Ricci curvature tensor 3d = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">Ric1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Ric2_3d</span><span class="p">,</span><span class="n">Ric1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Ric2_3d</span><span class="p">),</span><span class="n">mesh3d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;rel err Ricci curvature tensor 3d exact = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">Ric1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Ric_ex_3d</span><span class="p">,</span><span class="n">Ric1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Ric_ex_3d</span><span class="p">),</span><span class="n">mesh3d</span><span class="p">))</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">Ric_ex_3d</span><span class="p">,</span><span class="w"> </span><span class="n">Ric_ex_3d</span><span class="p">),</span><span class="n">mesh3d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+err Ricci curvature tensor 2d = 0.00000000
+rel err Ricci curvature tensor 2d exact = 0.00008250
+err Ricci curvature tensor 3d = 0.00000000
+rel err Ricci curvature tensor 3d exact = 0.00883227
+</pre></div></div>
+</div>
+<p>The scalar curvature is given by contracting the Riemann curvature tensor twice (or equivalently taking the trace of the Ricci curvature tensor) <span class="math">\begin{align*}
+S = \mathrm{Ric}_{ij} g^{ij} = \mathfrak{R}_{kijl}g^{kl}g^{ij}.
+\end{align*}</span></p>
+<p>In two dimensions, the Gauss curvature is given for linear independent <span class="math notranslate nohighlight">\(X,Y\)</span> by <span class="math">\begin{align*}
+K = \frac{\mathcal{R}(X,Y,Y,X)}{g(X,X)g(Y,Y)-g(X,Y)^2},
+\end{align*}</span> which is independent of the choice of <span class="math notranslate nohighlight">\(X,Y\)</span>. Further, it is related to the scalar curvature by <span class="math notranslate nohighlight">\(S=2K\)</span>.</p>
+<p>In two dimensions, the Gauss curvature <span class="math notranslate nohighlight">\(K\)</span> coincides with the curvature operator <span class="math notranslate nohighlight">\(\mathcal{Q}\)</span>, <span class="math notranslate nohighlight">\(K=\mathcal{Q}\)</span>. In 3D, the scalar curvature can be computed from the curvature operator by taking its trace <span class="math">\begin{align*}
+S = 2 \mathrm{tr}_g(\mathcal{Q}) = 2 g_{ij}\mathcal{Q}^{ij}.
+\end{align*}</span></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">S1_2d</span> <span class="o">=</span> <span class="n">g2d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;scalar&quot;</span><span class="p">)</span>
+<span class="n">S2_2d</span> <span class="o">=</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;il,jk,ijkl&quot;</span><span class="p">,</span> <span class="n">Inv</span><span class="p">(</span><span class="n">g2d</span><span class="p">),</span> <span class="n">Inv</span><span class="p">(</span><span class="n">g2d</span><span class="p">),</span> <span class="n">g2d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;Riemann&quot;</span><span class="p">))</span>
+<span class="n">S3_2d</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">Det</span><span class="p">(</span><span class="n">g2d</span><span class="p">)</span> <span class="o">*</span> <span class="n">g2d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;curvature&quot;</span><span class="p">)</span>
+<span class="n">S_ex_2d</span> <span class="o">=</span> <span class="n">pcd</span><span class="o">.</span><span class="n">scalar</span>
+
+<span class="n">S1_3d</span> <span class="o">=</span> <span class="n">g3d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;scalar&quot;</span><span class="p">)</span>
+<span class="n">S2_3d</span> <span class="o">=</span> <span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;il,jk,ijkl&quot;</span><span class="p">,</span> <span class="n">Inv</span><span class="p">(</span><span class="n">g3d</span><span class="p">),</span> <span class="n">Inv</span><span class="p">(</span><span class="n">g3d</span><span class="p">),</span> <span class="n">g3d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;Riemann&quot;</span><span class="p">))</span>
+<span class="n">S3_3d</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">Det</span><span class="p">(</span><span class="n">g3d</span><span class="p">)</span> <span class="o">*</span> <span class="n">InnerProduct</span><span class="p">(</span><span class="n">g3d</span><span class="p">,</span> <span class="n">g3d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;curvature&quot;</span><span class="p">))</span>
+<span class="n">S_ex_3d</span> <span class="o">=</span> <span class="n">sphere3</span><span class="o">.</span><span class="n">scalar</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;err scalar curvature 2d 1-2 = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">S1_2d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">S2_2d</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">mesh2d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;err scalar curvature 2d 1-3 = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">S1_2d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">S3_2d</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">mesh2d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;rel err scalar curvature 2d exact = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">S1_2d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">S_ex_2d</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">mesh2d</span><span class="p">))</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">S_ex_2d</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">mesh2d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;err scalar curvature 3d 1-2 = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">S1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">S2_3d</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">mesh3d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;err scalar curvature 3d 1-3 = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">S1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">S3_3d</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">mesh3d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;rel err scalar curvature 3d exact = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">S1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">S_ex_3d</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">mesh3d</span><span class="p">))</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">S_ex_3d</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">mesh3d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+err scalar curvature 2d 1-2 = 0.00000000
+err scalar curvature 2d 1-3 = 0.00000000
+rel err scalar curvature 2d exact = 0.00005460
+err scalar curvature 3d 1-2 = 0.00000000
+err scalar curvature 3d 1-3 = 0.00000000
+rel err scalar curvature 3d exact = 0.05574200
+</pre></div></div>
+</div>
+<p>The Einstein tensor is defined by <span class="math">\begin{align*}
+G_{ij}=\mathrm{Ric}_{ij}-\frac{1}{2}S\,g_{ij}.
+\end{align*}</span> In three dimensions, it is the negative of the double lowering of the curvature operator <span class="math">\begin{align*}
+G = -\mathcal{Q}^{\flat\flat},\qquad G_{ij} = -g_{ik}\mathcal{Q}^{kl}g_{lj}.
+\end{align*}</span></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">G1_3d</span> <span class="o">=</span> <span class="n">g3d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;Einstein&quot;</span><span class="p">)</span>
+<span class="n">G2_3d</span> <span class="o">=</span> <span class="n">g3d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;Ricci&quot;</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">g3d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;scalar&quot;</span><span class="p">)</span> <span class="o">*</span> <span class="n">g3d</span>
+<span class="n">G3_3d</span> <span class="o">=</span> <span class="o">-</span><span class="n">g3d</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">Det</span><span class="p">(</span><span class="n">g3d</span><span class="p">)</span> <span class="o">*</span> <span class="n">g3d</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;curvature&quot;</span><span class="p">))</span> <span class="o">*</span> <span class="n">g3d</span>
+<span class="n">G_ex_3d</span> <span class="o">=</span> <span class="n">sphere3</span><span class="o">.</span><span class="n">Einstein</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;err Einstein tensor 3d 1-2 = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">G1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">G2_3d</span><span class="p">,</span><span class="n">G1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">G2_3d</span><span class="p">),</span><span class="n">mesh3d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;err Einstein tensor 3d 1-3 = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">G1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">G3_3d</span><span class="p">,</span><span class="n">G1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">G3_3d</span><span class="p">),</span><span class="n">mesh3d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;rel err Einstein tensor 3d exact = </span><span class="si">{</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">G1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">G_ex_3d</span><span class="p">,</span><span class="n">G1_3d</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">G_ex_3d</span><span class="p">),</span><span class="n">mesh3d</span><span class="p">))</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">G_ex_3d</span><span class="p">,</span><span class="w"> </span><span class="n">G_ex_3d</span><span class="p">),</span><span class="n">mesh3d</span><span class="p">))</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+err Einstein tensor 3d 1-2 = 0.00000000
+err Einstein tensor 3d 1-3 = 0.00000000
+rel err Einstein tensor 3d exact = 0.13515517
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="covariant_derivatives.html" class="btn btn-neutral float-left" title="Covariant Derivatives" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="regge_metric.html" class="btn btn-neutral float-right" title="Regge finite elements and Regge metrics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Michael Neunteufel.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
