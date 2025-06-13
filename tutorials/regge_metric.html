@@ -117,29 +117,34 @@ triangulations. Regge finite elements for quadrilateral, hexahedra, and prisms h
 <section id="Regge-finite-element-construction">
 <h2>Regge finite element construction<a class="headerlink" href="#Regge-finite-element-construction" title="Link to this heading"></a></h2>
 <p>We sketch the construction of Regge finite elements for triangles and tetrahedra. For other shapes, we refer to [Neunteufel. Mixed finite Element Methods For Nonlinear Continuum Mechanics and Shells. PhD thesis, (2021).]. The degrees of freedom (DoFs) to construct globally tangential-tangential continuous functions are motivated by the edge lengths and their extensions to higher dimensional simplices. They read for polynomial order <span class="math notranslate nohighlight">\(k\)</span> on a tetrahedron <span class="math notranslate nohighlight">\(T\)</span> with according faces
-<span class="math notranslate nohighlight">\(F_i\)</span> and edges <span class="math notranslate nohighlight">\(E_i\)</span> <span class="math">\begin{align*}
-&\Psi^j_{E_i}: \sigma\mapsto \int_{E_i}\sigma(t_i,t_i)\,q^j\,dl,&&\qquad q^j\in\mathcal{P}^k(E_i),\\
-&\Psi^j_{F_i}: \sigma\mapsto \int_{F_i}\sigma:Q^j\,da,&&\qquad q^j\in\mathcal{P}^{k-1}(F_i, TF_i\odot TF_i),\\
-&\Psi^j_{T}: \sigma\mapsto \int_{T}\sigma : Q^j\,dx,&&\qquad Q^j\in\mathcal{P}^{k-2}(T,\mathbb{R}^{3\times 3}_{\mathrm{sym}}),\\
-\end{align*}</span> Here, <span class="math notranslate nohighlight">\(TF_i\odot TF_i\)</span> denotes the symmetric dyadic product of vectors in the tangent space of <span class="math notranslate nohighlight">\(F_i\)</span>. That means symmetric, matrix-valued polynomials, which are zero when multiplied with the normal vector from either side. Only the edge DoFs and the internal ones are required for a triangle.</p>
-<dl class="simple">
-<dt>We can construct lowest order edge and bubble shape functions of a triangle with the barycentric coordinates <span class="math notranslate nohighlight">\(\lambda_1\)</span>, <span class="math notranslate nohighlight">\(\lambda_2\)</span>, <span class="math notranslate nohighlight">\(\lambda_3\)</span>. :nbsphinx-math:<a href="#id1"><span class="problematic" id="id2">`</span></a>begin{align*}</dt><dd><p>varphi_{E_i} = nabla lambda_jodotnabla lambda_k,qquad t_j^topvarphi_{E_i}t_j=c_idelta_{ij},qquadqquadvarphi_{T_i} = lambda_i,nabla lambda_jodotnabla lambda_k.</p>
-</dd>
-</dl>
-<p>end{align*}` For higher-order shape functions, one might augment these low-order functions by, e.g. linear independent Legendre and Jacobi polynomials. The construction for higher-dimensional simplices follows the same lines, for example, by constructing appropriate bubble functions. In the following figure, the DoFs are schematically sketched for some shapes.</p>
-<center><table><tr><td><p><img alt="fe5de1fc0675415593b56c8e7452203c" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_1.jpg" style="width: 120px;" /></p>
-</td><td><p><img alt="b4dc2a114a65410f94cac372e2235a4a" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_2.jpg" style="width: 120px;" /></p>
-</td><td><p><img alt="f87135d4758a4a43b720f9e194ae2255" class="no-scaled-link" src="../_images/hcurlcurl_0_tet_ref_1.jpg" style="width: 130px;" /></p>
-</td></tr><tr><td><p><img alt="f35e9d57758e401e89e2a5564e928820" class="no-scaled-link" src="../_images/hcurlcurl_0_quad_ref_1.jpg" style="width: 120px;" /></p>
-</td><td><p><img alt="03616d20fbef466b861125e8610ea54e" class="no-scaled-link" src="../_images/hcurlcurl_0_hex_ref_1.jpg" style="width: 120px;" /></p>
-</td><td><p><img alt="205bdc62e8484f798ab818d03a9e10d3" class="no-scaled-link" src="../_images/hcurlcurl_0_prism_ref_1.jpg" style="width: 130px;" /></p>
-</td></tr></table></center><dl class="simple">
-<dt>The canonical Regge interpolant <span class="math notranslate nohighlight">\(\mathcal{I}_{Reg}^k\)</span> is defined by the requirement to preserve tangential-tangential moments at edges and inner moments :nbsphinx-math:<a href="#id3"><span class="problematic" id="id4">`</span></a>begin{align*}</dt><dd><p>&amp;mathcal{I}_{Reg}^k:C^0(Omega,mathbb{R}^{2times 2}_{mathrm{sym}})to text{Reg}_h^k,\
-&amp;int_{E}(g-mathcal{I}_{Reg}^kg)_{tt},q,dl = 0 text{ for all } qin mathcal{P}^{k}(E),\
-&amp;int_T(g-mathcal{I}_{Reg}^kg):Q,da = 0 text{ for all } Qin mathcal{P}^{k-1}(T,mathbb{R}^{2times 2}_{mathrm{sym}})</p>
-</dd>
-</dl>
-<p>end{align*}` and can easily be extended to higher dimensions.</p>
+<span class="math notranslate nohighlight">\(F_i\)</span> and edges <span class="math notranslate nohighlight">\(E_i\)</span></p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align*}
+&amp;\Psi^j_{E_i}: \sigma\mapsto \int_{E_i}\sigma(t_i,t_i)\,q_j\,dl,&amp;&amp;\qquad q_j\in\mathcal{P}^k(E_i),\\
+&amp;\Psi^j_{F_i}: \sigma\mapsto \int_{F_i}\sigma : Q_j\,da,&amp;&amp;\qquad Q_j\in\mathcal{P}^{k-1}(F_i, TF_i\odot TF_i),\\
+&amp;\Psi^j_{T}: \sigma\mapsto \int_{T}\sigma : Q_j\,dx,&amp;&amp;\qquad Q_j\in\mathcal{P}^{k-2}(T,\mathbb{R}^{3\times 3}_{\mathrm{sym}}),\\
+\end{align*}\end{split}\]</div>
+<p>Here, <span class="math notranslate nohighlight">\(TF_i\odot TF_i\)</span> denotes the symmetric dyadic product of vectors in the tangent space of <span class="math notranslate nohighlight">\(F_i\)</span>. That means symmetric, matrix-valued polynomials, which are zero when multiplied with the normal vector from either side. Only the edge DoFs and the internal ones are required for a triangle.</p>
+<p>We can construct lowest order edge and bubble shape functions of a triangle with the barycentric coordinates <span class="math notranslate nohighlight">\(\lambda_1\)</span>, <span class="math notranslate nohighlight">\(\lambda_2\)</span>, <span class="math notranslate nohighlight">\(\lambda_3\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+ \varphi_{E_i} = \nabla \lambda_j\odot\nabla \lambda_k,\qquad t_j^\top\varphi_{E_i}t_j=c_i\delta_{ij},\qquad\qquad\varphi_{T_i} = \lambda_i\,\nabla \lambda_j\odot\nabla \lambda_k.
+\end{align*}\]</div>
+<p>For higher-order shape functions, one might augment these low-order functions by, e.g. linear independent Legendre and Jacobi polynomials. The construction for higher-dimensional simplices follows the same lines, for example, by constructing appropriate bubble functions. In the following figure, the DoFs are schematically sketched for some shapes.</p>
+<center><table><tr><td><p><img alt="66e00f72bfc84e8f90393c268a4f4812" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_1.jpg" style="width: 120px;" /></p>
+</td><td><p><img alt="e2ecd7fc992f46d9a6904416d0bca947" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_2.jpg" style="width: 120px;" /></p>
+</td><td><p><img alt="6829cae403ff45a4ac949e6181c88ed7" class="no-scaled-link" src="../_images/hcurlcurl_0_tet_ref_1.jpg" style="width: 130px;" /></p>
+</td></tr><tr><td><p><img alt="d884b54e5aa548f295bb35839241924e" class="no-scaled-link" src="../_images/hcurlcurl_0_quad_ref_1.jpg" style="width: 120px;" /></p>
+</td><td><p><img alt="e5a0e82166ba4a6791a98e9b7cd04c0d" class="no-scaled-link" src="../_images/hcurlcurl_0_hex_ref_1.jpg" style="width: 120px;" /></p>
+</td><td><p><img alt="2e3379bebada4a4b9b4d2d21a726fd74" class="no-scaled-link" src="../_images/hcurlcurl_0_prism_ref_1.jpg" style="width: 130px;" /></p>
+</td></tr></table></center><p>The canonical Regge interpolant <span class="math notranslate nohighlight">\(\mathcal{I}_{Reg}^k\)</span> is defined by the requirement to preserve tangential-tangential moments at edges and inner moments</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align*}
+ &amp;\mathcal{I}_{Reg}^k:C^0(\Omega,\mathbb{R}^{2\times 2}_{\mathrm{sym}})\to \text{Reg}_h^k,\\
+ &amp;\int_{E}(g-\mathcal{I}_{Reg}^kg)_{tt}\,q\,dl = 0 \text{ for all } q\in \mathcal{P}^{k}(E),\\
+ &amp;\int_T(g-\mathcal{I}_{Reg}^kg) : Q\,da = 0 \text{ for all } Q\in \mathcal{P}^{k-1}(T,\mathbb{R}^{2\times 2}_{\mathrm{sym}})
+\end{align*}\end{split}\]</div>
+<p>and can easily be extended to higher dimensions.</p>
 </section>
 <section id="Further-applications-of-Regge-finite-elements">
 <h2>Further applications of Regge finite elements<a class="headerlink" href="#Further-applications-of-Regge-finite-elements" title="Link to this heading"></a></h2>
