@@ -1,0 +1,548 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Distributional Gauss curvature &mdash; NGSDiffGeo 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Distributional Gauss curvature (numerical analysis)" href="distributional_gauss_curvature_analysis.html" />
+    <link rel="prev" title="Regge finite elements and Regge metrics" href="regge_metric.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NGSDiffGeo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="riemannian_manifolds.html">Riemannian Manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="covariant_derivatives.html">Covariant Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="curvatures.html">Curvature quantities on Riemannian manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="regge_metric.html">Regge finite elements and Regge metrics</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Distributional Gauss curvature</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Gauss-curvature-as-a-nonlinear-distribution">Gauss curvature as a nonlinear distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Gauss-Bonnet-theorem">Gauss-Bonnet theorem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Lifted-Gauss-curvature-approximation">Lifted Gauss curvature approximation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Numerical-example">Numerical example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_analysis.html">Distributional Gauss curvature (numerical analysis)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_surface.html">Gauss curvature approximation on embedded surfaces</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NGSDiffGeo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Distributional Gauss curvature</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/distributional_gauss_curvature.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Distributional-Gauss-curvature">
+<h1>Distributional Gauss curvature<a class="headerlink" href="#Distributional-Gauss-curvature" title="Link to this heading"></a></h1>
+<p>This is the first of several notebooks to present how to compute (distributional) curvature quantities from a Regge metric <span class="math notranslate nohighlight">\(g_h\)</span>, i.e. a discretization of a smooth metric <span class="math notranslate nohighlight">\(g\)</span> tensor by Regge finite elements. We start with the Gauss curvature for a two-dimensional Riemannian manifold. Although this setting is easiest, it highlights the remaining curvature quantities’ strategies and methods. Thus, we will describe the components and ideas in detail. We will show how to define and
+approximate the Gauss curvature of a two-dimensional Riemannian manifold, where its exact metric <span class="math notranslate nohighlight">\(g\)</span> is discretized by a Regge metric <span class="math notranslate nohighlight">\(g_h\)</span>. Its analysis is postponed to <a class="reference internal" href="distributional_gauss_curvature_analysis.html"><span class="doc">here</span></a>. The notebook is based on the following works: <a class="reference external" href="https://doi.org/10.1137/19M1255549">Gawlik. High-Order Approximation of Gaussian Curvature with Regge Finite Elements, SIAM Journal on Numerical Analysis (2020).</a>, <a class="reference external" href="https://doi.org/10.1007/s10208-022-09597-1">Berchenko-Kogan, Gawlik. Finite Element
+Approximation of the Levi-Civita Connection and Its Curvature in Two Dimensions, Found Comput Math (2022)</a>, and <a class="reference external" href="https://doi.org/10.5802/smai-jcm.98">Gopalakrishnan, Neunteufel, Schöberl, Wardetzky. Analysis of curvature approximations via covariant curl and incompatibility for Regge metrics, The SMAI Journal of computational mathematics (2023).</a>.</p>
+<section id="Gauss-curvature-as-a-nonlinear-distribution">
+<h2>Gauss curvature as a nonlinear distribution<a class="headerlink" href="#Gauss-curvature-as-a-nonlinear-distribution" title="Link to this heading"></a></h2>
+<p>The Gauss curvature <span class="math notranslate nohighlight">\(K\)</span> can be expressed in coordinates from the Riemann curvature tensor <span class="math notranslate nohighlight">\(\mathfrak{R}\)</span> by <span class="math">\begin{align*}
+K = \mathfrak{R}_{1221}/\det g = \frac{1}{\det g}\left(\partial_1 \Gamma_{221}-\partial_2 \Gamma_{121} + \Gamma_{12}^p\Gamma_{21p}- \Gamma_{22}^p\Gamma_{11p} \right).
+\end{align*}</span> Noting that the Christoffel symbols involve the first derivatives of the metric <span class="math">\begin{align*}
+\Gamma_{ijk}=\frac{1}{2}(\partial_i g_{jk}+\partial_j g_{ik}-\partial_k g_{ij}),\qquad \Gamma_{ij}^k=g^{kl}\Gamma_{ijl},
+\end{align*}</span> we see that the Gauss curvature is a nonlinear second-order differential operator of the metric. As discussed in the <a class="reference internal" href="regge_metric.html"><span class="doc">introduction of the Regge metrics</span></a>, these finite elements are solely tangential-tangential continuous. Therefore, derivatives have to be understood in the sense of distributions. However, distributions are classically only available for linear differential operators, not nonlinear ones!</p>
+<p>Nevertheless, we can motivate and define a ``nonlinear distributional Gauss curvature’’ and apply rigorous numerical analysis to prove convergence. The two main ingredients are the Gauss-Bonnet theorem and an integral representation of the (distributional) Gauss curvature.</p>
+</section>
+<section id="Gauss-Bonnet-theorem">
+<h2>Gauss-Bonnet theorem<a class="headerlink" href="#Gauss-Bonnet-theorem" title="Link to this heading"></a></h2>
+<p>The Gauss-Bonnet theorem introduced and discussed in <a class="reference internal" href="gauss_bonnet.html"><span class="doc">this notebook</span></a> also holds for two-dimensional Riemannian manifolds. To this end, let <span class="math notranslate nohighlight">\((M,g)\)</span> be a two-dimensional Riemannian manifold with a piecewise smooth boundary. Then, the Gauss-Bonnet theorem reads <span class="math">\begin{align*}
+\int_M K\,\omega + \int_{\partial M}\kappa_g\,\omega_{\partial M} + \sum_{V\in \mathcal{V}}(\pi-\varepsilon_V) = \chi(M),
+\end{align*}</span> where <span class="math notranslate nohighlight">\(\omega\)</span> is the volume form of <span class="math notranslate nohighlight">\(M\)</span> (with coordinate expression <span class="math notranslate nohighlight">\(\omega=\sqrt{\det g}\,dx^1\wedge dx^2\)</span>), <span class="math notranslate nohighlight">\(\omega_{\partial M}\)</span> the volume form on the boundary, and <span class="math notranslate nohighlight">\(\chi(M)\)</span> denotes the Euler-characteristic of <span class="math notranslate nohighlight">\(M\)</span>. Further, <span class="math notranslate nohighlight">\(\mathcal{V}\)</span> denotes the set of all corner points at the boundary and <span class="math notranslate nohighlight">\(\varepsilon_V\)</span> the jump angle, which measures the angle from the incoming tangent vector to the outgoing tangent vector.</p>
+<p>The geodesic curvature measures how ``curved’’ the boundary is within the manifold (i.e. intrinsically). Its definition and coordinate expression is <span class="math">\begin{align*}
+\kappa_g = g(\nabla_tt,n)=-g(\nabla_tn,t)=-\Gamma_{ij}^k t^it^jn_k,
+\end{align*}</span> where <span class="math">\begin{align*}
+t^i = \frac{1}{\sqrt{g(\tau,\tau)}}\tau^i,\qquad n^i = \frac{1}{\sqrt{g^{-1}(\nu,\nu)}}g^{ij}\nu_j
+\end{align*}</span> are the unit tangent and normal vector with respect to the metric <span class="math notranslate nohighlight">\(g\)</span> (and <span class="math notranslate nohighlight">\(\tau\)</span>, <span class="math notranslate nohighlight">\(\nu\)</span> the Euclidean versions). Note that there exists a different sign convention on how to define the geodesic curvature. Further, it depends on the direction of the normal vector, which also may lead to a different sign.</p>
+<p>For a triangle, we have the following version of Gauss-Bonnet <span class="math">\begin{align*}
+\int_T K\,\omega + \int_{\partial T}\kappa_g\,\omega_{\partial T} + \sum_{i=1}^3(\pi-\varepsilon_i) = 2\pi.
+\end{align*}</span></p>
+<p>If the metric <span class="math notranslate nohighlight">\(g_h\)</span> would be globally smooth on the triangulation <span class="math notranslate nohighlight">\(\mathcal{T}\)</span> of <span class="math notranslate nohighlight">\(M\)</span>, then the geodesic curvature computed at an internal edge <span class="math notranslate nohighlight">\(E\)</span> with respect to the adjacent two triangles would coincide up to a sign due to the jump of the normal vector. Thus, the jump of the geodesic curvature would be zero, <span class="math notranslate nohighlight">\([\![\kappa_g]\!]_E=0\)</span>. However, as the Regge metric is only <span class="math notranslate nohighlight">\(tt\)</span>-continuous, the jump of the geodesic curvature won’t vanish in general. The same
+argument can be made at the triangulation’s internal vertices <span class="math notranslate nohighlight">\(V\in\mathcal{V}\)</span>. For a smooth metric, computing the sum of the inner angles of adjacent triangles with respect to the metric would always give <span class="math notranslate nohighlight">\(2\pi\)</span>, <span class="math notranslate nohighlight">\(\sphericalangle_V:=\sum_{T\supset V}\sphericalangle_V^T(g)-2\pi=0\)</span>. Here, <span class="math notranslate nohighlight">\(\sphericalangle_V^T(g):=\arccos(t_1,t_2)\)</span> measures the internal angle with respect to the metric <span class="math notranslate nohighlight">\(g\)</span>, where <span class="math notranslate nohighlight">\(t_1\)</span> and <span class="math notranslate nohighlight">\(t_2\)</span> are the two unit tangent vectors starting
+at <span class="math notranslate nohighlight">\(V\)</span> and going in the direction of the edges attached to <span class="math notranslate nohighlight">\(V\)</span> on the element <span class="math notranslate nohighlight">\(T\)</span>. However, again, for a Regge metric, the sum won’t be <span class="math notranslate nohighlight">\(2\pi\)</span> in general. This motivates us to define the distributional Gauss curvature by</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\widetilde{K\,\omega} := \sum_{T\in\mathcal{T}}K|_T\,\omega|_T+\sum_{E\in\mathcal{E}}[\![\kappa_g]\!]\,\omega_E\,\delta_E+\sum_{V\in\mathcal{V}}\sphericalangle_V\,\delta_V,
+\end{align*}\]</div>
+<p>Here, <span class="math notranslate nohighlight">\(\delta_E\)</span> and <span class="math notranslate nohighlight">\(\delta_V\)</span> are the Dirac deltas with respect to the edge <span class="math notranslate nohighlight">\(E\)</span> and vertex <span class="math notranslate nohighlight">\(V\)</span>, respectively. Note that we always have the volume forms involved in the expression. Therefore, strictly speaking, it is the distributional densitized Gauss curvature <a class="reference external" href="http://arxiv.org/abs/1307.3376">Christiansen. Exact formulas for the approximation of connections and curvature, arXiv (2013).</a>. Further, the volume form on the edges <span class="math notranslate nohighlight">\(\omega_E\)</span>, which reads in
+coordinates <span class="math">\begin{align*}
+\omega_E = \sqrt{g(\tau_E,\tau_E)}
+\end{align*}</span> is single-valued for Regge metrics because of the <span class="math notranslate nohighlight">\(tt\)</span>-continuity. The vertex term in the above expression of the distributional Gauss curvature is well-known in discrete differential geometry as the angle defect (or angle deficit). It is used, for example, to approximate the Gauss curvature of an affine surface (or, equivalently, a Riemannian manifold for piecewise constant metric tensor). Therefore, the above formula extends this well-known concept of discrete differential
+geometry to higher-order metric approximations. Applied to a sufficiently smooth test function <span class="math notranslate nohighlight">\(\varphi\)</span> it reads</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\widetilde{K\,\omega}(\varphi) = \sum_{T\in\mathcal{T}}\int_TK|_T\,\varphi\,\omega|_T+\sum_{E\in\mathcal{E}}\int_E[\![\kappa_g]\!]\,\varphi\,\omega_E+\sum_{V\in\mathcal{V}}\sphericalangle_V\,\varphi(V).
+\end{align*}\]</div>
+<p>In its current form, numerical analysis is not feasible; the terms are all highly nonlinear with respect to the metric. In the <a class="reference internal" href="distributional_gauss_curvature_analysis.html"><span class="doc">following notebook</span></a>, we will see that the distributional Gauss curvature has an integral representation, which opens the door for rigorous analysis.</p>
+</section>
+<section id="Lifted-Gauss-curvature-approximation">
+<h2>Lifted Gauss curvature approximation<a class="headerlink" href="#Lifted-Gauss-curvature-approximation" title="Link to this heading"></a></h2>
+<p>Nevertheless, we can use the above expression for computations. We compute a discrete <span class="math notranslate nohighlight">\(L^2\)</span>-Riesz representative of the distribution to visualise the approximated Gauss curvature. We note that Lagrange finite elements are suitable test functions for the distributional Gauss curvature, as they allow for point evaluation at the vertices. Thus, we define the lifted Gauss curvature <span class="math notranslate nohighlight">\(K_h\)</span> as the solution of the following problem: Let <span class="math notranslate nohighlight">\(g_h\in\mathrm{Reg}^k\)</span> be given as well as
+<span class="math notranslate nohighlight">\(K^D\)</span> on the Dirichlet boundary <span class="math notranslate nohighlight">\(\Gamma_D\)</span> and the geodesic curvature <span class="math notranslate nohighlight">\(\kappa(g)^N\)</span> and external angle <span class="math notranslate nohighlight">\(\sphericalangle_V^N(g)\)</span> on the Neumann boundary <span class="math notranslate nohighlight">\(\Gamma_N\)</span>. Find <span class="math notranslate nohighlight">\(K_h\in \mathrm{Lag}^{k+1}\)</span> such that <span class="math notranslate nohighlight">\(K_h=K\)</span> on <span class="math notranslate nohighlight">\(\Gamma_D\)</span> and for all <span class="math notranslate nohighlight">\(u_h\in \mathrm{Lag}^{k+1}_{\Gamma_D}\)</span></p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\int_M K_h\,u_h\,\omega = \widetilde{K\,\omega}(u_h) - \int_{\Gamma_N}\kappa(g)^Nu_h-\sum_{V\in\mathcal{V}\cap\Gamma_N}\sphericalangle_V^N(g)u_h(V).
+\end{align*}\]</div>
+<p>Here, we split the boundary into a Dirichlet part, where the exact Gauss curvature can be prescribed and a Neumann part, where the exact geodesic curvature and, at the non-smooth points, the external angle must be given.</p>
+</section>
+<section id="Numerical-example">
+<h2>Numerical example<a class="headerlink" href="#Numerical-example" title="Link to this heading"></a></h2>
+<p>In the following example, we compute the lifted Gauss curvature <span class="math notranslate nohighlight">\(K_h\)</span> on a sequence of meshes and compute the <span class="math notranslate nohighlight">\(L^2\)</span> and <span class="math notranslate nohighlight">\(H^{-1}\)</span> error. We split the boundary into two Dirichlet and two Neumann ones.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve.webgui</span><span class="w"> </span><span class="kn">import</span> <span class="n">Draw</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve.meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">MakeStructured2DMesh</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">netgen.occ</span><span class="w"> </span><span class="kn">import</span> <span class="n">unit_square</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve.krylovspace</span><span class="w"> </span><span class="kn">import</span> <span class="n">CGSolver</span>
+
+<span class="n">left</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">right</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">top</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">bottom</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="c1"># Dirichlet data on bottom and right boundary, Neumann on top and left boundary</span>
+<span class="n">dirichlet</span> <span class="o">=</span> <span class="s2">&quot;right|bottom&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">mapping</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">left</span> <span class="o">+</span> <span class="p">(</span><span class="n">right</span> <span class="o">-</span> <span class="n">left</span><span class="p">)</span> <span class="o">*</span> <span class="n">x</span><span class="p">,</span> <span class="n">bottom</span> <span class="o">+</span> <span class="p">(</span><span class="n">top</span> <span class="o">-</span> <span class="n">bottom</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="p">)</span>
+
+
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">MakeStructured2DMesh</span><span class="p">(</span><span class="n">quads</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">mapping</span><span class="o">=</span><span class="n">mapping</span><span class="p">)</span>
+
+<span class="c1"># exact metric tensor</span>
+<span class="n">Gex</span> <span class="o">=</span> <span class="n">CF</span><span class="p">(</span>
+    <span class="p">(</span>
+        <span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">3</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">3</span><span class="p">),</span>
+        <span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="c1"># exact Gauss curvature</span>
+<span class="n">K_ex</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="mi">81</span>
+    <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="o">/</span> <span class="p">(</span><span class="mi">9</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="p">)</span>
+<span class="n">Draw</span><span class="p">(</span><span class="n">K_ex</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="s2">&quot;K&quot;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="c1"># exact Christoffel symbol of second kind</span>
+<span class="n">chr2ex</span> <span class="o">=</span> <span class="n">CF</span><span class="p">(</span>
+    <span class="p">(</span>
+        <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">5</span> <span class="o">-</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span>
+        <span class="o">/</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">9</span><span class="p">),</span>
+        <span class="mi">3</span>
+        <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="o">*</span> <span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="o">*</span> <span class="n">y</span>
+        <span class="o">/</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">9</span><span class="p">),</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="mi">3</span>
+        <span class="o">*</span> <span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="o">*</span> <span class="n">x</span>
+        <span class="o">/</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">9</span><span class="p">),</span>
+        <span class="mi">3</span>
+        <span class="o">*</span> <span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="o">*</span> <span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="o">*</span> <span class="n">y</span>
+        <span class="o">/</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">9</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>We compute the <span class="math notranslate nohighlight">\(H^{-1}\)</span>-norm of the error <span class="math notranslate nohighlight">\(\|K_h-K\|_{H^{-1}}\)</span> by solving the following problem. Find <span class="math notranslate nohighlight">\(u_h\in \mathrm{Lag}^{k+3}_0\)</span> such that for all <span class="math notranslate nohighlight">\(v_h\in \mathrm{Lag}^{k+3}_0\)</span></p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\int_{M}\nabla u_h\cdot\nabla v_h = \langle K_h-K,v_h\rangle_{H^{-1}\times H_0^1}.
+\end{align*}\]</div>
+<p>Then its <span class="math notranslate nohighlight">\(H^1\)</span>-norm is equivalent to the <span class="math notranslate nohighlight">\(H^{-1}\)</span>-norm of the error, <span class="math notranslate nohighlight">\(\|u_h\|_{H^1}\approx \|K_h-K\|_{H^{-1}}\)</span>. To mitigate approximation errors that spoil the convergence, we use two polynomial degrees more than for <span class="math notranslate nohighlight">\(K_h\)</span> to compute <span class="math notranslate nohighlight">\(u_h\)</span>. We use a BDDC preconditioner in combination with static condensation and a CGSolver to solve the problem iteratively.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">CompHm1Norm</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+    <span class="n">fesH</span> <span class="o">=</span> <span class="n">H1</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span> <span class="n">dirichlet</span><span class="o">=</span><span class="s2">&quot;.*&quot;</span><span class="p">)</span>
+    <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">fesH</span><span class="o">.</span><span class="n">TnT</span><span class="p">()</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="n">BilinearForm</span><span class="p">(</span>
+        <span class="n">Grad</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">*</span> <span class="n">Grad</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">*</span> <span class="n">dx</span><span class="p">,</span> <span class="n">symmetric</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">symmetric_storage</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">condense</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">LinearForm</span><span class="p">(</span><span class="n">rhs</span> <span class="o">*</span> <span class="n">v</span> <span class="o">*</span> <span class="n">dx</span><span class="p">)</span><span class="o">.</span><span class="n">Assemble</span><span class="p">()</span>
+
+    <span class="n">apre</span> <span class="o">=</span> <span class="n">Preconditioner</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s2">&quot;bddc&quot;</span><span class="p">)</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">Assemble</span><span class="p">()</span>
+    <span class="n">invS</span> <span class="o">=</span> <span class="n">CGSolver</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">mat</span><span class="p">,</span> <span class="n">apre</span><span class="o">.</span><span class="n">mat</span><span class="p">,</span> <span class="n">printrates</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+    <span class="n">ext</span> <span class="o">=</span> <span class="n">IdentityMatrix</span><span class="p">()</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="n">harmonic_extension</span>
+    <span class="n">inv</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">inner_solve</span> <span class="o">+</span> <span class="n">ext</span> <span class="o">@</span> <span class="n">invS</span> <span class="o">@</span> <span class="n">ext</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">gfu</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">fesH</span><span class="p">)</span>
+    <span class="n">gfu</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">inv</span> <span class="o">*</span> <span class="n">f</span><span class="o">.</span><span class="n">vec</span>
+
+    <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">gfu</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">Grad</span><span class="p">(</span><span class="n">gfu</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">mesh</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">err</span>
+</pre></div>
+</div>
+</div>
+<p>The following function computes the lifted approximated Gauss curvature for a given metric and polynomial order. Further, with the argument ``canonical_interpolation’’ we can specify if a local <span class="math notranslate nohighlight">\(L^2\)</span> best-approximation should approximate the metric tensor <span class="math notranslate nohighlight">\(g\)</span> by setting it to False or using the canonical Regge interpolant by setting it to True. It turns out that the latter improves the convergence rate by one. We discuss this behavior in more detail in the <a class="reference internal" href="distributional_gauss_curvature_analysis.html"><span class="doc">following
+notebook</span></a>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># we use the convention that the normal vector points inward the triangles</span>
+<span class="c1"># note that these are unit vectors and orthogonal w.r.t. Euclidean metric</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">tangential</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">n</span> <span class="o">=</span> <span class="o">-</span><span class="n">specialcf</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="c1"># utility function to compute the angle between two tangential vectors</span>
+<span class="c1"># at a vertex with respect to a given metric G</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">TrigAngle</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="c1"># the two tangent vectors starting at a vertex V</span>
+    <span class="c1"># and pointing to the two adjacent edges of the triangle</span>
+    <span class="n">bbnd_tang</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">VertexTangentialVectors</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">bbnd_tang1</span> <span class="o">=</span> <span class="n">bbnd_tang</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">bbnd_tang2</span> <span class="o">=</span> <span class="n">bbnd_tang</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">acos</span><span class="p">(</span>
+        <span class="n">G</span><span class="p">[</span><span class="n">bbnd_tang1</span><span class="p">,</span> <span class="n">bbnd_tang2</span><span class="p">]</span>
+        <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">bbnd_tang1</span><span class="p">,</span> <span class="n">bbnd_tang1</span><span class="p">])</span>
+        <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">bbnd_tang2</span><span class="p">,</span> <span class="n">bbnd_tang2</span><span class="p">])</span>
+    <span class="p">)</span>
+
+
+<span class="c1"># main function to compute the Gauss curvature</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">ComputeGaussCurvature</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">Gex</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">canonical_interpolation</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">fesCC</span> <span class="o">=</span> <span class="n">HCurlCurl</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
+    <span class="n">gf_G</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">fesCC</span><span class="p">)</span>
+    <span class="n">gf_G</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">Gex</span><span class="p">,</span> <span class="n">dual</span><span class="o">=</span><span class="n">canonical_interpolation</span><span class="p">,</span> <span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+    <span class="c1"># indicator functions for boundary vertices and edges</span>
+    <span class="n">ind_V</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">H1</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">ind_V</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">definedon</span><span class="o">=</span><span class="n">mesh</span><span class="o">.</span><span class="n">Boundaries</span><span class="p">(</span><span class="s2">&quot;.*&quot;</span><span class="p">))</span>
+    <span class="n">ind_E</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">FacetFESpace</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">ind_E</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">definedon</span><span class="o">=</span><span class="n">mesh</span><span class="o">.</span><span class="n">Boundaries</span><span class="p">(</span><span class="s2">&quot;.*&quot;</span><span class="p">))</span>
+
+    <span class="n">fesH</span> <span class="o">=</span> <span class="n">H1</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dirichlet</span><span class="o">=</span><span class="n">dirichlet</span><span class="p">)</span>
+    <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">fesH</span><span class="o">.</span><span class="n">TnT</span><span class="p">()</span>
+
+    <span class="c1"># (simplified) coordinate expressions of the terms of the distributional Gauss curvature</span>
+    <span class="n">vol_term</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Det</span><span class="p">(</span><span class="n">gf_G</span><span class="p">))</span> <span class="o">*</span> <span class="n">gf_G</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;curvature&quot;</span><span class="p">)</span>
+    <span class="n">bnd_term</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Det</span><span class="p">(</span><span class="n">gf_G</span><span class="p">))</span> <span class="o">/</span> <span class="n">gf_G</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">*</span> <span class="n">gf_G</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;christoffel2&quot;</span><span class="p">)[</span><span class="n">t</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span>
+    <span class="n">bbnd_term</span> <span class="o">=</span> <span class="n">TrigAngle</span><span class="p">(</span><span class="n">Id</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span> <span class="o">-</span> <span class="n">TrigAngle</span><span class="p">(</span><span class="n">gf_G</span><span class="p">)</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="n">LinearForm</span><span class="p">(</span><span class="n">fesH</span><span class="p">)</span>
+    <span class="c1"># angle deficit</span>
+    <span class="n">f</span> <span class="o">+=</span> <span class="n">v</span> <span class="o">*</span> <span class="n">bbnd_term</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_vb</span><span class="o">=</span><span class="n">BBND</span><span class="p">)</span>
+    <span class="c1"># jump of geodesic curvature</span>
+    <span class="n">f</span> <span class="o">+=</span> <span class="n">v</span> <span class="o">*</span> <span class="n">bnd_term</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># Gauss curvature</span>
+    <span class="n">f</span> <span class="o">+=</span> <span class="n">v</span> <span class="o">*</span> <span class="n">vol_term</span> <span class="o">*</span> <span class="n">dx</span>
+
+    <span class="c1"># Neumann data</span>
+    <span class="n">f</span> <span class="o">+=</span> <span class="o">-</span><span class="n">ind_V</span> <span class="o">*</span> <span class="n">v</span> <span class="o">*</span> <span class="p">(</span><span class="n">TrigAngle</span><span class="p">(</span><span class="n">Id</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span> <span class="o">-</span> <span class="n">TrigAngle</span><span class="p">(</span><span class="n">Gex</span><span class="p">))</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_vb</span><span class="o">=</span><span class="n">BBND</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">+=</span> <span class="p">(</span>
+        <span class="o">-</span><span class="n">ind_E</span>
+        <span class="o">*</span> <span class="n">v</span>
+        <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Gex</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">t</span><span class="p">])</span>
+        <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Det</span><span class="p">(</span><span class="n">Gex</span><span class="p">))</span>
+        <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Gex</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">t</span><span class="p">])</span> <span class="o">**</span> <span class="mi">3</span>
+        <span class="o">*</span> <span class="n">chr2ex</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span>
+        <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># lifted Gauss curvature</span>
+    <span class="n">gf_K</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">fesH</span><span class="p">)</span>
+
+    <span class="c1"># mass matrix to compute discrete L2 Riesz representative</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">BilinearForm</span><span class="p">(</span>
+        <span class="n">sqrt</span><span class="p">(</span><span class="n">Det</span><span class="p">(</span><span class="n">gf_G</span><span class="p">))</span> <span class="o">*</span> <span class="n">u</span> <span class="o">*</span> <span class="n">v</span> <span class="o">*</span> <span class="n">dx</span><span class="p">,</span>
+        <span class="n">symmetric</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">symmetric_storage</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">condense</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">Mpre</span> <span class="o">=</span> <span class="n">Preconditioner</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="s2">&quot;bddc&quot;</span><span class="p">)</span>
+    <span class="n">M</span><span class="o">.</span><span class="n">Assemble</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">Assemble</span><span class="p">()</span>
+
+    <span class="c1"># Dirichlet data</span>
+    <span class="n">gf_K</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">K_ex</span><span class="p">,</span> <span class="n">definedon</span><span class="o">=</span><span class="n">mesh</span><span class="o">.</span><span class="n">Boundaries</span><span class="p">(</span><span class="n">dirichlet</span><span class="p">),</span> <span class="n">dual</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">gf_K</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">CreateVector</span><span class="p">()</span>
+
+    <span class="n">M</span><span class="o">.</span><span class="n">Apply</span><span class="p">(</span><span class="n">gf_K</span><span class="o">.</span><span class="n">vec</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">data</span> <span class="o">-=</span> <span class="n">f</span><span class="o">.</span><span class="n">vec</span>
+
+    <span class="n">invS</span> <span class="o">=</span> <span class="n">CGSolver</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">mat</span><span class="p">,</span> <span class="n">Mpre</span><span class="o">.</span><span class="n">mat</span><span class="p">,</span> <span class="n">printrates</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+    <span class="n">ext</span> <span class="o">=</span> <span class="n">IdentityMatrix</span><span class="p">()</span> <span class="o">+</span> <span class="n">M</span><span class="o">.</span><span class="n">harmonic_extension</span>
+    <span class="n">inv</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">inner_solve</span> <span class="o">+</span> <span class="n">ext</span> <span class="o">@</span> <span class="n">invS</span> <span class="o">@</span> <span class="n">ext</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">gf_K</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">-=</span> <span class="n">inv</span> <span class="o">*</span> <span class="n">r</span>
+
+    <span class="c1"># uncomment to draw the lifted Gauss curvature</span>
+    <span class="n">Draw</span><span class="p">(</span><span class="n">gf_K</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="s2">&quot;K&quot;</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">deformation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">err_l2</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">gf_K</span> <span class="o">-</span> <span class="n">K_ex</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">mesh</span><span class="p">))</span>
+    <span class="n">err_hm1</span> <span class="o">=</span> <span class="n">CompHm1Norm</span><span class="p">(</span><span class="n">gf_K</span> <span class="o">-</span> <span class="n">K_ex</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">err_l2</span><span class="p">,</span> <span class="n">err_hm1</span><span class="p">,</span> <span class="n">fesH</span><span class="o">.</span><span class="n">ndof</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>To avoid possible super-convergence due to symmetries in the mesh, we perturb the internal vertices by a random noise.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">GeneratePerturbedMesh</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-8</span>
+    <span class="n">ngmesh</span> <span class="o">=</span> <span class="n">unit_square</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span><span class="n">maxh</span><span class="o">=</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="n">i</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">pnts</span> <span class="ow">in</span> <span class="n">ngmesh</span><span class="o">.</span><span class="n">Points</span><span class="p">():</span>
+        <span class="n">px</span><span class="p">,</span> <span class="n">py</span> <span class="o">=</span> <span class="n">pnts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pnts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># perturb internal mesh points</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="nb">abs</span><span class="p">(</span><span class="n">mapping</span><span class="p">(</span><span class="n">px</span><span class="p">,</span> <span class="n">py</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">left</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">eps</span><span class="p">,</span>
+                <span class="nb">abs</span><span class="p">(</span><span class="n">mapping</span><span class="p">(</span><span class="n">px</span><span class="p">,</span> <span class="n">py</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">right</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">eps</span><span class="p">,</span>
+                <span class="nb">abs</span><span class="p">(</span><span class="n">mapping</span><span class="p">(</span><span class="n">px</span><span class="p">,</span> <span class="n">py</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">bottom</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">eps</span><span class="p">,</span>
+                <span class="nb">abs</span><span class="p">(</span><span class="n">mapping</span><span class="p">(</span><span class="n">px</span><span class="p">,</span> <span class="n">py</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">top</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">eps</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">):</span>
+            <span class="n">px</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="n">py</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">pnts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">mapping</span><span class="p">(</span><span class="n">px</span><span class="p">,</span> <span class="n">py</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">pnts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">mapping</span><span class="p">(</span><span class="n">px</span><span class="p">,</span> <span class="n">py</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">ngmesh</span><span class="o">.</span><span class="n">Update</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">ngmesh</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Compute the Gauss curvature approximation on a sequence of meshes. You can play around with the polynomial order and whether or not the canonical Regge interpolant should be used. The <span class="math notranslate nohighlight">\(L^2\)</span>, <span class="math notranslate nohighlight">\(H^{-1}\)</span> errors, and the number of degrees of freedom are stored.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">err_hm1</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">err_l2</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">ndof</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c1"># order of metric approximation &gt;= 0</span>
+<span class="n">order</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="c1"># whether to use canonical Regge interpolation for the metric</span>
+<span class="n">canonical_interpolation</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">7</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;i = </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">GeneratePerturbedMesh</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="n">errl</span><span class="p">,</span> <span class="n">errm1</span><span class="p">,</span> <span class="n">dof</span> <span class="o">=</span> <span class="n">ComputeGaussCurvature</span><span class="p">(</span>
+            <span class="n">mesh</span><span class="p">,</span> <span class="n">Gex</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span> <span class="n">canonical_interpolation</span><span class="o">=</span><span class="n">canonical_interpolation</span>
+        <span class="p">)</span>
+        <span class="n">err_l2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">errl</span><span class="p">)</span>
+        <span class="n">err_hm1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">errm1</span><span class="p">)</span>
+        <span class="n">ndof</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dof</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+i = 0
+CG converged in 3 iterations to residual 1.708073018815039e-17
+CG converged in 2 iterations to residual 2.204795059378995e-18
+i = 1
+CG converged in 7 iterations to residual 3.873191263346619e-20
+CG converged in 11 iterations to residual 2.1824989682311593e-15
+i = 2
+CG converged in 14 iterations to residual 5.582286099683251e-13
+CG converged in 28 iterations to residual 8.157497221680415e-15
+i = 3
+CG converged in 15 iterations to residual 1.4383759953021844e-13
+CG converged in 32 iterations to residual 2.931635048259846e-15
+i = 4
+CG converged in 15 iterations to residual 1.6858195829371805e-13
+CG converged in 34 iterations to residual 2.7164475784051026e-15
+i = 5
+CG converged in 15 iterations to residual 1.6799540575443416e-13
+CG converged in 37 iterations to residual 1.4073482850813826e-15
+i = 6
+CG converged in 15 iterations to residual 1.4435416847030783e-13
+CG converged in 38 iterations to residual 7.317930548792632e-16
+</pre></div></div>
+</div>
+<p>Plot the results together with reference lines for linear, quadratic, and cubic convergence order.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">err_hm1</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;$\|K_h-K_{\mathrm</span><span class="si">{ex}</span><span class="s2">}\|_{H^{-1}}$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">err_l2</span><span class="p">,</span> <span class="s2">&quot;-x&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;$\|K_h-K_{\mathrm</span><span class="si">{ex}</span><span class="s2">}\|_{L^2}$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="p">[</span><span class="n">dof</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">ndof</span><span class="p">],</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;$O(h)$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="p">[</span><span class="n">dof</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">ndof</span><span class="p">],</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;$O(h^2)$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="p">[</span><span class="n">dof</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">3</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">ndof</span><span class="p">],</span> <span class="s2">&quot;-.&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;$O(h^3)$&quot;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;order: </span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s2">; canonical Regge interpolate: </span><span class="si">{</span><span class="n">canonical_interpolation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+&lt;&gt;:3: SyntaxWarning: invalid escape sequence &#39;\|&#39;
+&lt;&gt;:4: SyntaxWarning: invalid escape sequence &#39;\|&#39;
+&lt;&gt;:3: SyntaxWarning: invalid escape sequence &#39;\|&#39;
+&lt;&gt;:4: SyntaxWarning: invalid escape sequence &#39;\|&#39;
+/tmp/ipykernel_865/403342643.py:3: SyntaxWarning: invalid escape sequence &#39;\|&#39;
+  plt.plot(ndof, err_hm1, &#34;-o&#34;, label=&#34;$\|K_h-K_{\mathrm{ex}}\|_{H^{-1}}$&#34;)
+/tmp/ipykernel_865/403342643.py:4: SyntaxWarning: invalid escape sequence &#39;\|&#39;
+  plt.plot(ndof, err_l2, &#34;-x&#34;, label=&#34;$\|K_h-K_{\mathrm{ex}}\|_{L^2}$&#34;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_distributional_gauss_curvature_14_1.png" src="../_images/tutorials_distributional_gauss_curvature_14_1.png" />
+</div>
+</div>
+<p>Observations: If we don’t use the canonical Regge interpolant to approximate the metric tensor <span class="math notranslate nohighlight">\(g\)</span>, we have the following convergence rates for a polynomial order <span class="math notranslate nohighlight">\(k\in \{0,1,2,\dots\}\)</span></p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\|K_h-K\|_{L^2}\le C h^{k-1},\qquad \|K_h-K\|_{H^{-1}}\le C h^{k}.
+\end{align*}\]</div>
+<p>For the canonical Regge interpolant, the convergence rates improve by one</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\|K_h-K\|_{L^2}\le C h^{k},\qquad \|K_h-K\|_{H^{-1}}\le C h^{k+1}.
+\end{align*}\]</div>
+<p>These convergence rates can be rigorously <a class="reference internal" href="distributional_gauss_curvature_analysis.html"><span class="doc">proven</span></a>.</p>
+<p>Remark: Reducing the polynomial approximation for the lifted Gauss curvature <span class="math notranslate nohighlight">\(K_h\)</span> from <span class="math notranslate nohighlight">\(k+1\)</span> to <span class="math notranslate nohighlight">\(k\)</span>, i.e. the same order as the Regge metric, one additional order of convergence is obtained if the canonical Regge interpolant is used. Further, we need to assume that <span class="math notranslate nohighlight">\(k\ge 1\)</span> (as there are no order zero Lagrange elements). We refer to <a class="reference external" href="https://doi.org/10.1016/j.rinam.2024.100511">Gopalakrishnan, Neunteufel, Schöberl, Wardetzky. On the improved convergence of lifted distributional Gauss curvature from Regge elements,
+Results in Applied Mathematics (2024).</a> for details.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="regge_metric.html" class="btn btn-neutral float-left" title="Regge finite elements and Regge metrics" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="distributional_gauss_curvature_analysis.html" class="btn btn-neutral float-right" title="Distributional Gauss curvature (numerical analysis)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Michael Neunteufel.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

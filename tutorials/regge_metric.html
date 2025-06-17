@@ -22,8 +22,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Gauss-Bonnet theorem" href="gauss_bonnet.html" />
-    <link rel="prev" title="Curvature quantities on Riemannian manifolds" href="curvatures.html" /> 
+    <link rel="next" title="Distributional Gauss curvature" href="distributional_gauss_curvature.html" />
+    <link rel="prev" title="Gauss-Bonnet theorem" href="gauss_bonnet.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -55,13 +55,16 @@
 <li class="toctree-l1"><a class="reference internal" href="riemannian_manifolds.html">Riemannian Manifolds</a></li>
 <li class="toctree-l1"><a class="reference internal" href="covariant_derivatives.html">Covariant Derivatives</a></li>
 <li class="toctree-l1"><a class="reference internal" href="curvatures.html">Curvature quantities on Riemannian manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Regge finite elements and Regge metrics</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#History-of-Regge-elements">History of Regge elements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Regge-finite-element-construction">Regge finite element construction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Further-applications-of-Regge-finite-elements">Further applications of Regge finite elements</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature.html">Distributional Gauss curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_analysis.html">Distributional Gauss curvature (numerical analysis)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_surface.html">Gauss curvature approximation on embedded surfaces</a></li>
 </ul>
 
         </div>
@@ -97,27 +100,28 @@
 element space is the correct object.</p>
 <p>A first intuitive way to approximate <span class="math notranslate nohighlight">\(g\)</span> on <span class="math notranslate nohighlight">\(\mathcal{T}\)</span> is to assign to each edge <span class="math notranslate nohighlight">\(E_{ij}\)</span>, connecting two distinguished points <span class="math notranslate nohighlight">\(x_i\)</span> and <span class="math notranslate nohighlight">\(x_j\)</span> of the triangulation, its squared lengths <span class="math notranslate nohighlight">\(l^2_{ij}\)</span> as measured by the metric <span class="math notranslate nohighlight">\(g\)</span>, i.e. <span class="math">\begin{align*}
 l^2_{ij}= \int_{E_{ij}}g(t_{E_{ij}},t_{E_{ij}})\,ds,
-\end{align*}</span> where <span class="math notranslate nohighlight">\(t_{E_{ij}}\)</span> denotes the unit tangent vector of the edge <span class="math notranslate nohighlight">\(E_{ij}\)</span>. Using the squared value, we can use negative numbers to account for pseudo-Riemannian manifolds appearing in general relativity. One may hope that this procedure yields a good approximation of the exact metric for a sequence of finer triangulations. With this idea Tullio Regge proposed in [Regge. General relativity without coordinates. Il Nuovo Cimento, (1961).] a method to solve numerical
-relativity in a coordinate-free way. From the edge lengths, he computed the angle defect (also called angle deficit) to approximate the curvature of the manifold. We will intensively discuss the concept of angle defect in the following notebooks. This method became popular under the name Regge calculus, see, e.g. [Barret, Oriti, Wiliams. Tullio Regge’s legacy: Regge calculus and discrete gravity. arXiv, (2018).] for a review of Regge calculus. The first proof that this concept of an angle defect
-converges to the exact curvature was given in [Cheeger, Müller, Schrader. On the curvature of piecewise flat spaces. Communications in Mathematical Physics, (1984).] by proving convergence in the sense of measures.</p>
-<p>Convergence in measures is weak. Furthermore, we would also like to use higher-order approximations of the exact one. To this end, we embed the above approach into a FEM context. First, it was recognized by Sorkin in [Sorkin. Time-evolution problem in Regge calculus. Phys. Rev. D, (1975).] that assigning length values is equivalent to defining a piecewise constant metric tensor: Let <span class="math notranslate nohighlight">\(l_{ij}^2\)</span> denote the value of the edge connecting vertices <span class="math notranslate nohighlight">\(x_i\)</span> and <span class="math notranslate nohighlight">\(x_j\)</span>, <span class="math notranslate nohighlight">\(i\neq j\)</span>.
-Then there exists a unique piece-wise constant metric tensor <span class="math notranslate nohighlight">\(g_h\)</span> on the triangulation <span class="math notranslate nohighlight">\(\mathcal{T}\)</span> such that <span class="math">\begin{align*}
+\end{align*}</span> where <span class="math notranslate nohighlight">\(t_{E_{ij}}\)</span> denotes the unit tangent vector of the edge <span class="math notranslate nohighlight">\(E_{ij}\)</span>. Using the squared value, we can use negative numbers to account for pseudo-Riemannian manifolds appearing in general relativity. One may hope that this procedure yields a good approximation of the exact metric for a sequence of finer triangulations. With this idea Tullio Regge proposed in <a class="reference external" href="http://link.springer.com/10.1007/BF02733251">Regge. General relativity without coordinates. Il Nuovo Cimento
+(1961)</a> a method to solve numerical relativity in a coordinate-free way. From the edge lengths, he computed the angle defect (also called angle deficit) to approximate the curvature of the manifold. We will intensively discuss the concept of angle defect in the following notebooks. This method became popular under the name Regge calculus, see, e.g. <a class="reference external" href="https://arxiv.org/abs/1812.06193">Barret, Oriti, Wiliams. Tullio Regge’s legacy: Regge calculus and discrete gravity. arXiv,
+(2018).</a> for a review of Regge calculus. The first proof that this concept of an angle defect converges to the exact curvature was given in <a class="reference external" href="http://doi.org/10.1007/BF01210729">Cheeger, Müller, Schrader. On the curvature of piecewise flat spaces. Communications in Mathematical Physics, (1984).</a> by proving convergence in the sense of measures.</p>
+<p>Convergence in measures is weak. Furthermore, we would also like to use higher-order approximations of the exact one. To this end, we embed the above approach into a FEM context. First, it was recognized by Sorkin in <a class="reference external" href="https://link.aps.org/doi/10.1103/PhysRevD.12.385">Sorkin. Time-evolution problem in Regge calculus. Phys. Rev. D, (1975).</a> that assigning length values is equivalent to defining a piecewise constant metric tensor: Let <span class="math notranslate nohighlight">\(l_{ij}^2\)</span> denote the value of the edge connecting
+vertices <span class="math notranslate nohighlight">\(x_i\)</span> and <span class="math notranslate nohighlight">\(x_j\)</span>, <span class="math notranslate nohighlight">\(i\neq j\)</span>. Then there exists a unique piece-wise constant metric tensor <span class="math notranslate nohighlight">\(g_h\)</span> on the triangulation <span class="math notranslate nohighlight">\(\mathcal{T}\)</span> such that <span class="math">\begin{align*}
 g_{h,k\ell} (x_i-x_j)^k(x_i-x_j)^{\ell} = l^2_{ij},
 \end{align*}</span> The above equation defines the metric <span class="math notranslate nohighlight">\(g_h\)</span>. Astonishingly, the metric <span class="math notranslate nohighlight">\(g_h\)</span> is not completely discontinuous over element interfaces: Let <span class="math notranslate nohighlight">\(F\)</span> be an <span class="math notranslate nohighlight">\(N-1\)</span>-dimensional facet of the triangulation and let <span class="math notranslate nohighlight">\(X,Y\)</span> be two vector fields living in <span class="math notranslate nohighlight">\(F\)</span>, i.e. they are tangential vector fields on <span class="math notranslate nohighlight">\(F\)</span>, <span class="math notranslate nohighlight">\(X,Y\in \mathfrak{X}(F)\)</span>. Then the values <span class="math notranslate nohighlight">\(g_h(X,Y)\)</span> measured by the piece-wise constant metric <span class="math notranslate nohighlight">\(g_h\)</span> on the two elements <span class="math notranslate nohighlight">\(T_L\)</span>
 and <span class="math notranslate nohighlight">\(T_R\)</span> connected by <span class="math notranslate nohighlight">\(F= T_L\cap T_R\)</span> coincide <span class="math">\begin{align*}
 {g_h}|_{T_L}(X,Y) = {g_h}|_{T_R}(X,Y),\qquad \forall X,Y\in\mathfrak{X}(F),\quad F=T_L \cap T_R.
 \end{align*}</span> We call this property tangential-tangential continuity, or in short <span class="math notranslate nohighlight">\(tt\)</span>-continuity. Note that the components involve at least one normal vector jump in general.</p>
-<p>Christiansen [Christiansen. On the linearization of Regge calculus. Numerische Mathematik, (2011).] embedded Regge calculus into a FEM context with finite element exterior calculus (FEEC), similar to Whitney 1-forms were identified as Nedelec elements. In contrast to the tangential continuous Nedelec elements, which are a conforming subspace of <span class="math notranslate nohighlight">\(H(\mathrm{curl})=\{u\in L^2(\Omega,\mathbb{R}^N)\,:\, \mathrm{curl}(u)\in L^2\}\)</span>, Regge elements <span class="math">\begin{align*}
+<p>Christiansen <a class="reference external" href="https://doi.org/10.1007/s00211-011-0394-z">Christiansen. On the linearization of Regge calculus. Numerische Mathematik, (2011).</a> embedded Regge calculus into a FEM context with finite element exterior calculus (FEEC), similar to Whitney 1-forms were identified as Nedelec elements. In contrast to the tangential continuous Nedelec elements, which are a conforming subspace of <span class="math notranslate nohighlight">\(H(\mathrm{curl})=\{u\in L^2(\Omega,\mathbb{R}^N)\,:\, \mathrm{curl}(u)\in L^2\}\)</span>, Regge elements
+<span class="math">\begin{align*}
 \mathrm{Reg_h^0}:=\left\{ \sigma_h\in \mathcal{P}^0(\mathcal{T},\mathbb{R}^{3\times 3}_{\mathrm{sym}})\,:\, \sigma_h \text{ is } tt\text{-continuous}\right\}
 \end{align*}</span> are a slightly non-conforming subspace of the function space <span class="math">\begin{align*}
 H(\mathrm{curl}\,\mathrm{curl},\Omega)=\left\{\sigma \in L^2(\Omega,\mathbb{R}^{3\times 3}_{\mathrm{sym}})\,:\, \mathrm{inc}(\sigma):=\mathrm{curl}^T\mathrm{curl}(\sigma)\in H^{-1}(\Omega,\mathbb{R}^{3\times 3}_{\mathrm{sym}})\right\},
-\end{align*}</span> where <span class="math notranslate nohighlight">\(\mathrm{inc}\)</span> is the incompatibility operator. It is ``slightly non-conforming’’ because the required Sobolev embedding theorem fails to hold by an arbitrarily small <span class="math notranslate nohighlight">\(\varepsilon&gt;0\)</span>. In [Li. Regge Finite Elements with Applications in Solid Mechanics and Relativity. PhD thesis, (2018).] Li extended the Regge finite element space to arbitrary polynomial order, <span class="math notranslate nohighlight">\(\mathrm{Reg}_h^k\)</span>, and arbitrary dimensions <span class="math notranslate nohighlight">\(\Omega\subset \mathbb{R}^N\)</span> for simplicial
-triangulations. Regge finite elements for quadrilateral, hexahedra, and prisms have been defined in [Neunteufel. Mixed finite Element Methods For Nonlinear Continuum Mechanics and Shells. PhD thesis, (2021).].</p>
+\end{align*}</span> where <span class="math notranslate nohighlight">\(\mathrm{inc}\)</span> is the incompatibility operator. It is ``slightly non-conforming’’ because the required Sobolev embedding theorem fails to hold by an arbitrarily small <span class="math notranslate nohighlight">\(\varepsilon&gt;0\)</span>. In <a class="reference external" href="http://hdl.handle.net/11299/199048">Li. Regge Finite Elements with Applications in Solid Mechanics and Relativity. PhD thesis, (2018).</a> Li extended the Regge finite element space to arbitrary polynomial order, <span class="math notranslate nohighlight">\(\mathrm{Reg}_h^k\)</span>, and arbitrary dimensions
+<span class="math notranslate nohighlight">\(\Omega\subset \mathbb{R}^N\)</span> for simplicial triangulations. Regge finite elements for quadrilateral, hexahedra, and prisms have been defined in <a class="reference external" href="https://repositum.tuwien.at/handle/20.500.12708/17043">Neunteufel. Mixed finite Element Methods For Nonlinear Continuum Mechanics and Shells. PhD thesis, (2021).</a>.</p>
 </section>
 <section id="Regge-finite-element-construction">
 <h2>Regge finite element construction<a class="headerlink" href="#Regge-finite-element-construction" title="Link to this heading"></a></h2>
-<p>We sketch the construction of Regge finite elements for triangles and tetrahedra. For other shapes, we refer to [Neunteufel. Mixed finite Element Methods For Nonlinear Continuum Mechanics and Shells. PhD thesis, (2021).]. The degrees of freedom (DoFs) to construct globally tangential-tangential continuous functions are motivated by the edge lengths and their extensions to higher dimensional simplices. They read for polynomial order <span class="math notranslate nohighlight">\(k\)</span> on a tetrahedron <span class="math notranslate nohighlight">\(T\)</span> with according faces
-<span class="math notranslate nohighlight">\(F_i\)</span> and edges <span class="math notranslate nohighlight">\(E_i\)</span></p>
+<p>We sketch the construction of Regge finite elements for triangles and tetrahedra. For other shapes, we refer to <a class="reference external" href="https://repositum.tuwien.at/handle/20.500.12708/17043">Neunteufel. Mixed finite Element Methods For Nonlinear Continuum Mechanics and Shells. PhD thesis, (2021).</a>. The degrees of freedom (DoFs) to construct globally tangential-tangential continuous functions are motivated by the edge lengths and their extensions to higher dimensional simplices. They read for polynomial order
+<span class="math notranslate nohighlight">\(k\)</span> on a tetrahedron <span class="math notranslate nohighlight">\(T\)</span> with according faces <span class="math notranslate nohighlight">\(F_i\)</span> and edges <span class="math notranslate nohighlight">\(E_i\)</span></p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{align*}
 &amp;\Psi^j_{E_i}: \sigma\mapsto \int_{E_i}\sigma(t_i,t_i)\,q_j\,dl,&amp;&amp;\qquad q_j\in\mathcal{P}^k(E_i),\\
@@ -131,12 +135,12 @@ triangulations. Regge finite elements for quadrilateral, hexahedra, and prisms h
  \varphi_{E_i} = \nabla \lambda_j\odot\nabla \lambda_k,\qquad t_j^\top\varphi_{E_i}t_j=c_i\delta_{ij},\qquad\qquad\varphi_{T_i} = \lambda_i\,\nabla \lambda_j\odot\nabla \lambda_k.
 \end{align*}\]</div>
 <p>For higher-order shape functions, one might augment these low-order functions by, e.g. linear independent Legendre and Jacobi polynomials. The construction for higher-dimensional simplices follows the same lines, for example, by constructing appropriate bubble functions. In the following figure, the DoFs are schematically sketched for some shapes.</p>
-<center><table><tr><td><p><img alt="66e00f72bfc84e8f90393c268a4f4812" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_1.jpg" style="width: 120px;" /></p>
-</td><td><p><img alt="e2ecd7fc992f46d9a6904416d0bca947" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_2.jpg" style="width: 120px;" /></p>
-</td><td><p><img alt="6829cae403ff45a4ac949e6181c88ed7" class="no-scaled-link" src="../_images/hcurlcurl_0_tet_ref_1.jpg" style="width: 130px;" /></p>
-</td></tr><tr><td><p><img alt="d884b54e5aa548f295bb35839241924e" class="no-scaled-link" src="../_images/hcurlcurl_0_quad_ref_1.jpg" style="width: 120px;" /></p>
-</td><td><p><img alt="e5a0e82166ba4a6791a98e9b7cd04c0d" class="no-scaled-link" src="../_images/hcurlcurl_0_hex_ref_1.jpg" style="width: 120px;" /></p>
-</td><td><p><img alt="2e3379bebada4a4b9b4d2d21a726fd74" class="no-scaled-link" src="../_images/hcurlcurl_0_prism_ref_1.jpg" style="width: 130px;" /></p>
+<center><table><tr><td><p><img alt="eecbef6e2b2d46e18ba582bfd2cb3d05" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_1.jpg" style="width: 120px;" /></p>
+</td><td><p><img alt="fe4bc506925c415c9970ebd2f620beea" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_2.jpg" style="width: 120px;" /></p>
+</td><td><p><img alt="2ffb764f8fa44621a96c5e0cb4647754" class="no-scaled-link" src="../_images/hcurlcurl_0_tet_ref_1.jpg" style="width: 130px;" /></p>
+</td></tr><tr><td><p><img alt="18e497bb07f34fbbb065f85ba665b063" class="no-scaled-link" src="../_images/hcurlcurl_0_quad_ref_1.jpg" style="width: 120px;" /></p>
+</td><td><p><img alt="49b218dc687d4cc2ad5e870d4a956a8d" class="no-scaled-link" src="../_images/hcurlcurl_0_hex_ref_1.jpg" style="width: 120px;" /></p>
+</td><td><p><img alt="62b3d54894b54c989f4bc3e9aea632a8" class="no-scaled-link" src="../_images/hcurlcurl_0_prism_ref_1.jpg" style="width: 130px;" /></p>
 </td></tr></table></center><p>The canonical Regge interpolant <span class="math notranslate nohighlight">\(\mathcal{I}_{Reg}^k\)</span> is defined by the requirement to preserve tangential-tangential moments at edges and inner moments</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{align*}
@@ -150,9 +154,9 @@ triangulations. Regge finite elements for quadrilateral, hexahedra, and prisms h
 <h2>Further applications of Regge finite elements<a class="headerlink" href="#Further-applications-of-Regge-finite-elements" title="Link to this heading"></a></h2>
 <p>Besides their essential contribution in discretizing the metric tensor of (pseudo-)Riemannian manifolds for curvature approximation and numerical relativity, Regge finite elements have been successfully used to discretize fields in elasticity.</p>
 <ul class="simple">
-<li><p>Avoiding membrane locking in (nonlinear) shell analysis by interpolating the membrane stresses into the Regge finite element space [Neunteufel, Schöberl. Avoiding membrane locking with Regge interpolation. Computer Methods in Applied Mechanics and Engineering, (2021).]</p></li>
-<li><p>Linear and nonlinear elasticity (continuum mechanics) by discretizing the strain/stress tensor by Regge elements [Li. Regge Finite Elements with Applications in Solid Mechanics and Relativity. PhD thesis, (2018).], [Hauret, Hecht. A discrete differential sequence for elasticity based upon continuous displacements. SIAM Journal on Scientific Computing, (2013).], [Neunteufel, Pechstein, Schöberl. Three-field mixed finite element methods for nonlinear elasticity. Computer Methods in Applied
-Mechanics and Engineering, (2021).]</p></li>
+<li><p>Avoiding membrane locking in (nonlinear) shell analysis by interpolating the membrane stresses into the Regge finite element space <a class="reference external" href="https://doi.org/10.1016/j.cma.2020.113524">Neunteufel, Schöberl. Avoiding membrane locking with Regge interpolation. Computer Methods in Applied Mechanics and Engineering, (2021).</a></p></li>
+<li><p>Linear and nonlinear elasticity (continuum mechanics) by discretizing the strain/stress tensor by Regge elements <a class="reference external" href="http://hdl.handle.net/11299/199048">Li. Regge Finite Elements with Applications in Solid Mechanics and Relativity. PhD thesis, (2018).</a>, <a class="reference external" href="https://doi.org/10.1137/110848189">Hauret, Hecht. A discrete differential sequence for elasticity based upon continuous displacements. SIAM Journal on Scientific Computing, (2013).</a>, <a class="reference external" href="https://doi.org/10.1016/j.cma.2021.113857">Neunteufel, Pechstein, Schöberl. Three-field mixed
+finite element methods for nonlinear elasticity. Computer Methods in Applied Mechanics and Engineering, (2021).</a></p></li>
 </ul>
 </section>
 </section>
@@ -161,8 +165,8 @@ Mechanics and Engineering, (2021).]</p></li>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="curvatures.html" class="btn btn-neutral float-left" title="Curvature quantities on Riemannian manifolds" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="gauss_bonnet.html" class="btn btn-neutral float-right" title="Gauss-Bonnet theorem" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="gauss_bonnet.html" class="btn btn-neutral float-left" title="Gauss-Bonnet theorem" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="distributional_gauss_curvature.html" class="btn btn-neutral float-right" title="Distributional Gauss curvature" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

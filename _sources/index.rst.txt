@@ -24,7 +24,10 @@ Welcome
    tutorials/riemannian_manifolds.ipynb
    tutorials/covariant_derivatives.ipynb
    tutorials/curvatures.ipynb
-   tutorials/regge_metric.ipynb
    tutorials/gauss_bonnet.ipynb
+   tutorials/regge_metric.ipynb
+   tutorials/distributional_gauss_curvature.ipynb
+   tutorials/distributional_gauss_curvature_analysis.ipynb
+   tutorials/distributional_gauss_curvature_surface.ipynb
 
 

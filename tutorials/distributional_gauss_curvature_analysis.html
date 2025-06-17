@@ -1,0 +1,181 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Distributional Gauss curvature (numerical analysis) &mdash; NGSDiffGeo 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Gauss curvature approximation on embedded surfaces" href="distributional_gauss_curvature_surface.html" />
+    <link rel="prev" title="Distributional Gauss curvature" href="distributional_gauss_curvature.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NGSDiffGeo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="riemannian_manifolds.html">Riemannian Manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="covariant_derivatives.html">Covariant Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="curvatures.html">Curvature quantities on Riemannian manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="regge_metric.html">Regge finite elements and Regge metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature.html">Distributional Gauss curvature</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Distributional Gauss curvature (numerical analysis)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Integral-representation-of-distributional-Gauss-curvature">Integral representation of distributional Gauss curvature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Improved-convergence-rates-by-the-canonical-Regge-interpolant">Improved convergence rates by the canonical Regge interpolant</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_surface.html">Gauss curvature approximation on embedded surfaces</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NGSDiffGeo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Distributional Gauss curvature (numerical analysis)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/distributional_gauss_curvature_analysis.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Distributional-Gauss-curvature-(numerical-analysis)">
+<h1>Distributional Gauss curvature (numerical analysis)<a class="headerlink" href="#Distributional-Gauss-curvature-(numerical-analysis)" title="Link to this heading"></a></h1>
+<p>After we defined the distributional Gauss curvature and its lifting and observed convergence rates numerically in the <a class="reference internal" href="distributional_gauss_curvature.html"><span class="doc">previous notebook</span></a>, we focus in this notebook on the numerical analysis and presenting ideas on how to prove the observed convergence rates.</p>
+<p>The notebook is based on the following works: <a class="reference external" href="https://doi.org/10.1137/19M1255549">Gawlik. High-Order Approximation of Gaussian Curvature with Regge Finite Elements, SIAM Journal on Numerical Analysis (2020).</a>, <a class="reference external" href="https://doi.org/10.1007/s10208-022-09597-1">Berchenko-Kogan, Gawlik. Finite Element Approximation of the Levi-Civita Connection and Its Curvature in Two Dimensions, Found Comput Math (2022)</a>, <a class="reference external" href="https://doi.org/10.5802/smai-jcm.98">Gopalakrishnan, Neunteufel, Schöberl, Wardetzky. Analysis of curvature approximations via
+covariant curl and incompatibility for Regge metrics, The SMAI Journal of computational mathematics (2023).</a>, and <a class="reference external" href="https://doi.org/10.1016/j.rinam.2024.100511">Gopalakrishnan, Neunteufel, Schöberl, Wardetzky. On the improved convergence of lifted distributional Gauss curvature from Regge elements, Results in Applied Mathematics (2024).</a>.</p>
+<p>The distributional Gauss curvature</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\widetilde{K\,\omega}(\varphi) = \sum_{T\in\mathcal{T}}\int_TK|_T\,\varphi\,\omega|_T+\sum_{E\in\mathcal{E}}\int_E[\![\kappa_g]\!]\,\varphi\,\omega_E+\sum_{V\in\mathcal{V}}\sphericalangle_V\,\varphi(V)
+\end{align*}\]</div>
+<p>is highly nonlinear in the metric, making numerical analysis unfeasible in its current form. Fortunately, the distributional Gauss curvature entails an integral representation generalizing the Hellan-Herrmann-Johnson method from the Euclidean to the covariant setting.</p>
+<section id="Integral-representation-of-distributional-Gauss-curvature">
+<h2>Integral representation of distributional Gauss curvature<a class="headerlink" href="#Integral-representation-of-distributional-Gauss-curvature" title="Link to this heading"></a></h2>
+<p>Christiansen showed in <a class="reference external" href="https://doi.org/10.1007/s00211-011-0394-z">Christiansen. On the linearization of Regge calculus. Numer. Math. (2011).</a> that the linearization of the Einstein-Hilbert integral around the Euclidean metric is the incompatibility operator in 3D. Gawlik investigated in <a class="reference external" href="https://doi.org/10.1137/19M1255549">Gawlik. High-Order Approximation of Gaussian Curvature with Regge Finite Elements, SIAM Journal on Numerical Analysis (2020).</a> the variation of the densitized Gauss
+curvature around a given general metric. There holds for a smooth metric the following Gateaux derivative in a direction <span class="math notranslate nohighlight">\(\sigma\in C^{\infty}(\Omega,\mathbb{R}^{2\times 2}_{\mathrm{sym}})\)</span> <span class="math">\begin{align*}
+D_g(K(g)\omega(g))[\sigma]:= \lim\limits_{t\to 0}\frac{K(g+t\sigma)\omega(g+t\sigma)-K(g)\omega(g)}{t} = \frac{1}{2}\mathrm{div}_g\mathrm{div}_g(\mathbb{S}_{g}\sigma)\omega(g),
+\end{align*}</span> where <span class="math notranslate nohighlight">\(\mathbb{S}_g\sigma = \sigma -\mathrm{tr}_g(\sigma)g\)</span> and subscript <span class="math notranslate nohighlight">\(g\)</span> indicates that <a class="reference internal" href="covariant_derivatives.html"><span class="doc">covariant differential operators</span></a> are considered. There also holds the following identity with the incompatibility operator <span class="math">\begin{align*}
+\mathrm{div}_g\mathrm{div}_g(\mathbb{S}_{g}\sigma)\omega(g) = -\mathrm{inc}_g(\sigma)\omega(g),\qquad \mathrm{inc}_g:=\mathrm{curl}_g\mathrm{curl}_g.
+\end{align*}</span> In the Euclidean case, it would become <span class="math notranslate nohighlight">\(\mathrm{div}\mathrm{div}(\mathbb{S}\sigma)\)</span>. Using <span class="math notranslate nohighlight">\(\sigma_h\in \mathrm{Reg}_h^k\)</span> in the Regge space, <span class="math notranslate nohighlight">\(\mathbb{S}\sigma_h\)</span> becomes normal-normal continuous fitting to the Hellan-Herrmann-Johnson method <a class="reference external" href="https://doi.org/10.1090/S0025-5718-1989-0946601-7">Comodi. The Hellan-Herrmann-Johnson method: some new error estimates and postprocessing. Math. Comp. (1989)</a>, which entails a well-defined distributional version reading
+for <span class="math notranslate nohighlight">\(u_h\in\mathrm{Lag}^{k+1}\)</span> Lagrange finite elements as test functions <span class="math">\begin{align*}
+\langle \mathrm{div}\mathrm{div}(\mathbb{S}\sigma_h),u_h\rangle &= \sum_{T\in\mathcal{T}}\int_T \mathbb{S}\sigma_h : \nabla^2 u_h - \int_{\partial T} (\mathbb{S}\sigma_h)_{nn}\partial_nu_h = \sum_{T\in\mathcal{T}}\int_T \mathbb{S}\sigma_h : \nabla^2 u_h + \int_{\partial T} \sigma_h(t,t)\partial_nu_h\\
+&= \sum_{T\in\mathcal{T}}\int_T \mathrm{div}\mathrm{div}(\mathbb{S}\sigma_h) u_h + \int_{\partial T}\mathrm{div}(\mathbb{S}\sigma)_n\,u_h- (\mathbb{S}\sigma_h)_{nt}\partial_tu_h\\
+&= \sum_{T\in\mathcal{T}}\int_T \mathrm{div}\mathrm{div}(\mathbb{S}\sigma_h) u_h + \int_{\partial T} u_h\,\left(\mathrm{div}(\mathbb{S}\sigma)_n+\partial_t(\mathbb{S}\sigma_h(n,t))\right) + \sum_{V}[\![\sigma_h(n,t)]\!]_Vu_h(V),
+\end{align*}</span> where <span class="math notranslate nohighlight">\([\![\sigma_h(n,t)]\!]_V = \sum_{T\supset V}[\![\sigma_h(n,t)]\!]^T_V\)</span> and <span class="math notranslate nohighlight">\([\![\sigma_h(n,t)]\!]^T_V\)</span> measures the jump of <span class="math notranslate nohighlight">\(\sigma_h(n,t)\)</span> evaluated at the triangle <span class="math notranslate nohighlight">\(T\)</span> between the two edges of the triangle attached to the vertex <span class="math notranslate nohighlight">\(V\)</span>, i.e., <span class="math notranslate nohighlight">\([\![\sigma_h(n,t)]\!]^T_V = \sigma_h(n,t)|_{E_1} -\sigma_h(n,t)|_{E_2}\)</span>.</p>
+<p>Gawlik recognized that the HHJ method could be extended to the covariant case, which motivated to define for <span class="math notranslate nohighlight">\(g\in \mathrm{Reg}_h^k\)</span> the following covariant version <span class="math">\begin{align*}
+\langle \mathrm{div}_g\mathrm{div}_g(\mathbb{S}_g\sigma_h)\omega(g),u_h\rangle &= \sum_{T\in\mathcal{T}}\int_T g(\mathbb{S}_g\sigma_h, \nabla_g^2 u_h)\,\omega|_T(g) - \int_{\partial T} (\mathbb{S}_g\sigma_h)_{nn}\partial_nu_h\,\omega_{\partial T}(g)=\sum_{T\in\mathcal{T}}\int_T g(\mathbb{S}_g\sigma_h, \nabla_g^2 u_h)\,\omega|_T(g) + \int_{\partial T} \sigma_h(t,t)\partial_nu_h\,\omega_{\partial T}(g)\\
+&= \sum_{T\in\mathcal{T}}\int_T \mathrm{div}\mathrm{div}(\mathbb{S}\sigma_h) u_h + \int_{\partial T} \mathrm{div}_g(\mathbb{S}_g\sigma)(n)\,u_h-(\mathbb{S}\sigma_h)_{nt}\partial_tu_h\\
+&= \sum_{T\in\mathcal{T}}\int_T \mathrm{div}\mathrm{div}(\mathbb{S}\sigma_h) u_h + \int_{\partial T}u_h\, \left(\mathrm{div}_g(\mathbb{S}_g\sigma)(n)+\partial_t(\mathbb{S}\sigma_h(n,t))\right) + \sum_{V}[\![\sigma_h(n,t)]\!]_Vu_h(V).
+\end{align*}</span> It turns out that taking the variations of the jump of the geodesic curvature and the angle defect <a class="reference external" href="https://doi.org/10.1007/s10208-022-09597-1">Berchenko-Kogan, Gawlik. Finite Element Approximation of the Levi-Civita Connection and Its Curvature in Two Dimensions, Found Comput Math (2022)</a> exactly match the terms of the covariant HHJ method <span class="math">\begin{align*}
+D_g(\kappa_g\,\omega_E)[\sigma]=\frac{1}{2}\left( (\mathrm{div}_g(\mathbb{S}_g(\sigma)))(n)+\partial_{t}(\sigma(n,t)) \right)\,\omega_E,\qquad D_g(\sphericalangle_V)[\sigma]=\frac{1}{2}\sum_{T\supset V}[\![\sigma(n,t)]\!]_V^T
+\end{align*}</span> proving that <span class="math">\begin{align*}
+D_g \widetilde{K\omega}(u_h)[\sigma]=\frac{1}{2}b_h(g;\sigma_h,u_h),\qquad b_h(g;\sigma_h,u_h) =\sum_{T\in\mathcal{T}}\int_T g(\mathbb{S}_g\sigma_h, \nabla_g^2 u_h)\,\omega|_T(g) - \int_{\partial T} \sigma_h(t,t)\partial_nu_h\,\omega_{\partial T}(g)
+\end{align*}</span> Noting that the Gauss curvature for the Euclidean metric is zero, we obtain with the main theorem of integration and differentiation the following integral representation of the Gauss curvature <span class="math">\begin{align*}
+\widetilde{K\omega}(u_h)= \frac{1}{2}\int_0^1b_h(g(t);\sigma_h,u_h)\,dt,\qquad g(t) = \delta+t(g_h-\delta),\quad \sigma_h=\dot{g}(t) = g_h-\delta,
+\end{align*}</span> where <span class="math notranslate nohighlight">\(\delta\)</span> denotes the Euclidean metric. By consistency, the exact Gauss curvature from the smooth, exact metric also fulfils the integral representation. Thus, the error has the following integral representation <span class="math">\begin{align*}
+\langle \widetilde{K\omega}(g_h)-K\omega,u_h\rangle = \frac{1}{2}\int_0^1b_h(g(t);\sigma_h,u_h)\,dt,\qquad g(t) = g+t(g_h-g),\quad \sigma_h=\dot{g}(t) = g_h-g
+\end{align*}</span> The integrand is linear enough to perform numerical analysis to prove the observed convergence rates. For the details of the (technical) proofs, we refer to the above-mentioned literature.</p>
+</section>
+<section id="Improved-convergence-rates-by-the-canonical-Regge-interpolant">
+<h2>Improved convergence rates by the canonical Regge interpolant<a class="headerlink" href="#Improved-convergence-rates-by-the-canonical-Regge-interpolant" title="Link to this heading"></a></h2>
+<p>When using the canonical Regge interpolation operator to approximate the metric tensor, i.e. <span class="math notranslate nohighlight">\(g_h=\mathcal{I}^{\mathrm{Reg}^k}g\)</span>, one can achieve one or even two ordesr of convergence more. For <span class="math notranslate nohighlight">\(g_h=\mathcal{I}^{\mathrm{Reg}^{k-1}}g\)</span> and <span class="math notranslate nohighlight">\(K_h\in\mathrm{Lag}^k\)</span> there holds the following convergence rates</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\|K_h-K\|_{L^2}\le C h^{k},\qquad \|K_h-K\|_{H^{-1}}\le C h^{k+1}.
+\end{align*}\]</div>
+<p>Using stronger norms is also possible and reduces the rates as usual. The proof’s strategy relies on exploiting the definition of the canonical Regge interpolant that the first <span class="math notranslate nohighlight">\(k+1\)</span> tangential-tangential moments at the edges (starting with the zeroth-order moment) and, for higher-order, some internal moments of <span class="math notranslate nohighlight">\(g\)</span> and <span class="math notranslate nohighlight">\(g_h\)</span> coincide. This allows the extraction of one additional order of convergence. The pretty technical proof can be found in <a class="reference external" href="https://doi.org/10.5802/smai-jcm.98">Gopalakrishnan, Neunteufel,
+Schöberl, Wardetzky. Analysis of curvature approximations via covariant curl and incompatibility for Regge metrics, The SMAI Journal of computational mathematics (2023).</a>.</p>
+<p>By reducing the polynomial order of <span class="math notranslate nohighlight">\(K_h\)</span> to coincide with the metric’s order, i.e. <span class="math notranslate nohighlight">\(K_h\in \mathrm{Lag}^k\)</span> and <span class="math notranslate nohighlight">\(g_h=\mathcal{I}^{\mathrm{Reg}^k}g\)</span>, under the assumption that <span class="math notranslate nohighlight">\(k&gt;1\)</span>, yields yet another improvement of the convergence rate</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\|K_h-K\|_{L^2}\le C h^{k+1},\qquad \|K_h-K\|_{H^{-1}}\le C h^{k+2},\qquad k&gt;1.
+\end{align*}\]</div>
+<p>In fact, one obtains the optimal convergence possible in the <span class="math notranslate nohighlight">\(L^2\)</span>-norm. Again, the key ingredient is the definition of the canonical Regge interpolant. THe details can be found in <a class="reference external" href="https://doi.org/10.1016/j.rinam.2024.100511">Gopalakrishnan, Neunteufel, Schöberl, Wardetzky. On the improved convergence of lifted distributional Gauss curvature from Regge elements, Results in Applied Mathematics (2024).</a>. Note that the convergence rates highly depend on the chosen polynomial approximation
+spaces for <span class="math notranslate nohighlight">\(g_h\)</span> and <span class="math notranslate nohighlight">\(K_h\)</span>, and whether the canonical Regge interpolation operator is used or something else.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="distributional_gauss_curvature.html" class="btn btn-neutral float-left" title="Distributional Gauss curvature" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="distributional_gauss_curvature_surface.html" class="btn btn-neutral float-right" title="Gauss curvature approximation on embedded surfaces" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Michael Neunteufel.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
