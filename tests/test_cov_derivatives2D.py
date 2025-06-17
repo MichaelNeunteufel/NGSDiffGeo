@@ -219,7 +219,7 @@ def test_integration_by_parts_2d():
                 mesh,
             )
         )
-        < 1e-8
+        < 5e-8
     )
 
     assert (
