@@ -24,7 +24,8 @@ requires = [
             "cmake",
             "toml;  python_version >= '3.11'",
             "tomli>=1.1.0; python_version < '3.11'",
-            "numpy"
+            "numpy",
+            "matplotlib",
 ]
 build-backend = "scikit_build_core.build"
 
