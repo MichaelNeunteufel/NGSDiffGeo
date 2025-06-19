@@ -55,12 +55,22 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="riemannian_manifolds.html">Riemannian Manifolds</a></li>
 <li class="toctree-l1"><a class="reference internal" href="covariant_derivatives.html">Covariant Derivatives</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Curvature quantities on Riemannian manifolds</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Curvature quantities on Riemannian manifolds</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Riemann-curvature-tensor">Riemann curvature tensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Curvature-operator">Curvature operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Ricci-curvature-tensor">Ricci curvature tensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Scalar-curvature">Scalar curvature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Einstein-tensor">Einstein tensor</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
 <li class="toctree-l1"><a class="reference internal" href="regge_metric.html">Regge finite elements and Regge metrics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature.html">Distributional Gauss curvature</a></li>
-<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_analysis.html">Distributional Gauss curvature (numerical analysis)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_analysis.html">Distributional Gauss curvature (analysis)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_surface.html">Gauss curvature approximation on embedded surfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_scalar_curvature.html">Distributional scalar curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_einstein_tensor.html">Distributional Einstein curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_riemann_curvature_tensor.html">Distributional Riemann curvature tensor curvature</a></li>
 </ul>
 
         </div>
@@ -136,6 +146,8 @@
 </pre></div>
 </div>
 </div>
+<section id="Riemann-curvature-tensor">
+<h2>Riemann curvature tensor<a class="headerlink" href="#Riemann-curvature-tensor" title="Link to this heading"></a></h2>
 <p>We start with the fourth-order Riemann curvature tensor <span class="math notranslate nohighlight">\(\mathfrak{R}\)</span>. Its coordinate expression is <span class="math">\begin{align*}
 \mathfrak{R}_{ijkl} = \partial_i \Gamma_{jkl}-\partial_j \Gamma_{ikl} + \Gamma_{ik}^p\Gamma_{jlp}- \Gamma_{jk}^p\Gamma_{ilp}.
 \end{align*}</span></p>
@@ -198,6 +210,9 @@ err Riemann curvature tensor 3d = 0.00000000
 rel err Riemann curvature tensor 3d exact = 0.00162283
 </pre></div></div>
 </div>
+</section>
+<section id="Curvature-operator">
+<h2>Curvature operator<a class="headerlink" href="#Curvature-operator" title="Link to this heading"></a></h2>
 <p>Next, we look at the curvature operator <span class="math notranslate nohighlight">\(\mathcal{Q}\)</span>, which incorporates the skew-symmetry property of the Riemann curvature tensor. It is defined via the identity <span class="math">\begin{align*}
 \mathcal{Q}(X^\flat\wedge Y^\flat, W^\flat \wedge Z^\flat) = \mathfrak{R}(X,Y,Z,W),\qquad \forall X,Y,Z,W\in\mathfrak{X}(M).
 \end{align*}</span> Note the convention that the <span class="math notranslate nohighlight">\(Z\)</span> and <span class="math notranslate nohighlight">\(W\)</span> arguments are swapped and that e.g. <span class="math notranslate nohighlight">\(X^\flat\wedge Y^\flat \in \Lambda^2(M)\)</span> is a bi-vector. In two dimensions the curvature operator can be identified with a scalar function as <span class="math notranslate nohighlight">\(\mathcal{Q}\,\omega(X,Y)\,\omega(W,Z) \simeq \mathcal{Q}(X^\flat\wedge Y^\flat, W^\flat\wedge Z^\flat)\)</span> because the bi-vectors and the volume form are linearly dependent. Thus, in coordinates, there holds <span class="math">\begin{align*}
@@ -279,6 +294,9 @@ err curvature operator 3d 1-3 = 0.00000000
 rel err curvature operator 3d exact = 0.01268933
 </pre></div></div>
 </div>
+</section>
+<section id="Ricci-curvature-tensor">
+<h2>Ricci curvature tensor<a class="headerlink" href="#Ricci-curvature-tensor" title="Link to this heading"></a></h2>
 <p>The Ricci curvature tensor is defined by contracting two of the indices of the Riemann curvature tensor (i.e., taking a trace) <span class="math">\begin{align*}
 \mathrm{Ric}_{ij} = \mathfrak{R}_{kijl}g^{kl},
 \end{align*}</span> In terms of the curvature operator, we have <span class="math">\begin{align*}
@@ -329,6 +347,9 @@ err Ricci curvature tensor 3d = 0.00000000
 rel err Ricci curvature tensor 3d exact = 0.00883227
 </pre></div></div>
 </div>
+</section>
+<section id="Scalar-curvature">
+<h2>Scalar curvature<a class="headerlink" href="#Scalar-curvature" title="Link to this heading"></a></h2>
 <p>The scalar curvature is given by contracting the Riemann curvature tensor twice (or equivalently taking the trace of the Ricci curvature tensor) <span class="math">\begin{align*}
 S = \mathrm{Ric}_{ij} g^{ij} = \mathfrak{R}_{kijl}g^{kl}g^{ij}.
 \end{align*}</span></p>
@@ -388,6 +409,9 @@ err scalar curvature 3d 1-3 = 0.00000000
 rel err scalar curvature 3d exact = 0.05574200
 </pre></div></div>
 </div>
+</section>
+<section id="Einstein-tensor">
+<h2>Einstein tensor<a class="headerlink" href="#Einstein-tensor" title="Link to this heading"></a></h2>
 <p>The Einstein tensor is defined by <span class="math">\begin{align*}
 G_{ij}=\mathrm{Ric}_{ij}-\frac{1}{2}S\,g_{ij}.
 \end{align*}</span> In three dimensions, it is the negative of the double lowering of the curvature operator <span class="math">\begin{align*}
@@ -433,6 +457,7 @@ rel err Einstein tensor 3d exact = 0.13515517
 </pre></div>
 </div>
 </div>
+</section>
 </section>
 
 

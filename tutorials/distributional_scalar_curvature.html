@@ -1,0 +1,465 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Distributional scalar curvature &mdash; NGSDiffGeo 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Distributional Einstein curvature" href="distributional_einstein_tensor.html" />
+    <link rel="prev" title="Gauss curvature approximation on embedded surfaces" href="distributional_gauss_curvature_surface.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NGSDiffGeo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="riemannian_manifolds.html">Riemannian Manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="covariant_derivatives.html">Covariant Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="curvatures.html">Curvature quantities on Riemannian manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="regge_metric.html">Regge finite elements and Regge metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature.html">Distributional Gauss curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_analysis.html">Distributional Gauss curvature (analysis)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_surface.html">Gauss curvature approximation on embedded surfaces</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Distributional scalar curvature</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Scalar-curvature-as-a-nonlinear-distribution">Scalar curvature as a nonlinear distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Integral-representation-and-convergence">Integral representation and convergence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Numerical-example">Numerical example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_einstein_tensor.html">Distributional Einstein curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_riemann_curvature_tensor.html">Distributional Riemann curvature tensor curvature</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NGSDiffGeo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Distributional scalar curvature</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/distributional_scalar_curvature.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Distributional-scalar-curvature">
+<h1>Distributional scalar curvature<a class="headerlink" href="#Distributional-scalar-curvature" title="Link to this heading"></a></h1>
+<p>After the <a class="reference internal" href="distributional_gauss_curvature.html"><span class="doc">distributional Gauss curvature</span></a>, we consider the distributional scalar curvature for arbitrarily dimensional Riemannian manifolds in this notebook. In two dimensions, the scalar curvature and the Gauss curvature coincide up to a factor <span class="math notranslate nohighlight">\(2\)</span>. We will see that the angle defect directly extends to a higher dimension and that the geodesic curvature becomes the mean curvature. Further, the integral representation of the distributional scalar
+curvature splits into two parts, where the second one is zero in the two-dimensional case and can be identified with the distributional Einstein tensor discussed in the <a class="reference internal" href="distributional_einstein_tensor.html"><span class="doc">next notebook</span></a>. For a detailed derivation and analysis, we refer to <a class="reference external" href="https://doi.org/10.1090/mcom/4038">Gawlik, Neunteufel. Finite element approximation of scalar curvature in arbitrary dimension, Math. Comp. (2024).</a>.</p>
+<section id="Scalar-curvature-as-a-nonlinear-distribution">
+<h2>Scalar curvature as a nonlinear distribution<a class="headerlink" href="#Scalar-curvature-as-a-nonlinear-distribution" title="Link to this heading"></a></h2>
+<p>The scalar curvature <span class="math notranslate nohighlight">\(S\)</span> is the double contraction of the Riemann curvature tensor <span class="math notranslate nohighlight">\(\mathfrak{R}\)</span> or equivalently the contraction of the Ricci curvature tensor <span class="math notranslate nohighlight">\(\mathrm{Ric}\)</span> <span class="math">\begin{align*}
+S = g_{ij}g_{kl}\mathfrak{R}_{iklj}=g_{ij}\mathrm{Ric}_{ij}.
+\end{align*}</span> With the same arguments as for the Gauss curvature, the scalar curvature is a nonlinear (quasi-linear) second-order differential operator of the metric.</p>
+<p>The distributional (densitized) scalar curvature acting on a sufficiently smooth scalar-valued test function <span class="math notranslate nohighlight">\(\varphi\)</span> is defined as</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\widetilde{S\omega}(\varphi) :=\sum_{T\in\mathcal{T}}\int_TS|_T\,\varphi\,\omega_T+2\sum_{F\in\mathcal{F}}\int_F[\![H]\!]\,\varphi\,\omega_F+2\sum_{E\in\mathcal{E}}\int_E\Theta_E\,\varphi\,\omega_E,
+\end{align*}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\omega_T\)</span>, <span class="math notranslate nohighlight">\(\omega_F\)</span>, and <span class="math notranslate nohighlight">\(\omega_E\)</span> are the respective volume forms on elements <span class="math notranslate nohighlight">\(T\)</span>, co-dimension 1 facets <span class="math notranslate nohighlight">\(F\)</span> and co-dimension two boundaries <span class="math notranslate nohighlight">\(E\)</span> (vertices in 2D, edges in 3D, etc.). <span class="math notranslate nohighlight">\(H\)</span> denotes the mean curvature defined as the trace of the second fundamental form <span class="math notranslate nohighlight">\(I\!I\)</span></p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+H:= \mathrm{tr}(I\!I)= g_{ij}I\!I^{ij},\qquad I\!I(X,Y) = g(\nabla_Xn,Y)=-g(\nabla_XY,n),\quad X,Y\in \mathfrak{X}(F),
+\end{align*}\]</div>
+<p>where <span class="math notranslate nohighlight">\(n\)</span> is the normal vector at the facet (caution: there exist again different sign conventions), and <span class="math notranslate nohighlight">\(\Theta_E\)</span> is the angle defect. Note that the concept of the angle defect directly extends from 2D to any dimension, as we always measure the angle in the two-dimensional plane perpendicular to the co-dimension 2 boundary. Thus, exactly the same formula applies.</p>
+<p>Although there is no Gauss-Bonnet theorem in arbitrary dimension, we can heuristically motivate the jump of the mean curvature as the appropriate facet term. At a point of a facet <span class="math notranslate nohighlight">\(p\in F\)</span>, the scalar curvature can be expressed as the sum of sectional curvatures of <span class="math notranslate nohighlight">\(N(N-1)/2\)</span> tangent planes, <span class="math notranslate nohighlight">\(N\)</span> denoting the dimension, that are pairwise <span class="math notranslate nohighlight">\(g\)</span>-perpendicular at <span class="math notranslate nohighlight">\(p\)</span>. <span class="math notranslate nohighlight">\((N-1)(N-2)/2\)</span> of those planes are tangent to <span class="math notranslate nohighlight">\(F\)</span> and <span class="math notranslate nohighlight">\(N-1\)</span> ones are
+<span class="math notranslate nohighlight">\(g\)</span>-perpendicular to <span class="math notranslate nohighlight">\(F\)</span> at <span class="math notranslate nohighlight">\(p\)</span>. Because of the tangential-tangential continuity of the Regge metric, the sectional curvature of the planes tangent to <span class="math notranslate nohighlight">\(F\)</span> are non-singular and do not yield a contribution to the facet term. The other <span class="math notranslate nohighlight">\(N-1\)</span> planes, however, have jumping curvature. On these two-dimensional planes, we can apply the Gauss-Bonnet theorem. Summing up those ``geodesic curvature jumps’’ yields the jump of the mean curvature of <span class="math notranslate nohighlight">\(F\)</span>.</p>
+</section>
+<section id="Integral-representation-and-convergence">
+<h2>Integral representation and convergence<a class="headerlink" href="#Integral-representation-and-convergence" title="Link to this heading"></a></h2>
+<p>Taking the variation of the densitized distributional scalar curvature in the metric in direction <span class="math notranslate nohighlight">\(\sigma\)</span> yields</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+D_g\widetilde{S\omega}(v)[\sigma] = b_h(g;\sigma,v)-a_h(g;\sigma,v)
+\end{align*}\]</div>
+<p>with</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align*}
+b_h(g;\sigma,v)&amp;= \sum_T\int_T\langle\mathbb{S}\sigma,\nabla^2v\rangle\,\omega_T-\sum_{F}\int_F\mathbb{S}\sigma(n,n)[\![\nabla_n v]\!]_F\,\omega_F,\\
+a_h(g;\sigma,v)&amp;= \sum_T\int_T\langle G,\sigma\rangle\,v\,\omega_T+\sum_F\int_F\langle [\![\bar{I\!I}]\!]_F,\sigma|_F\rangle\,v\omega_F-\sum_{E}\int_E\langle\Theta_Eg|_E,\sigma|_E\rangle\,v\,\omega_E.
+\end{align*}\end{split}\]</div>
+<p>Here, all differential operators are covariant with respect to the metric <span class="math notranslate nohighlight">\(g\)</span>. <span class="math notranslate nohighlight">\(\bar{I\!I}=I\!I-H\,g|_F\)</span> denotes the trace-reversed second fundamental form and <span class="math notranslate nohighlight">\(G=\mathrm{Ric}-1/2S\,g\)</span> is the Einstein tensor. Note that in two dimensions, <span class="math notranslate nohighlight">\(a(g;\sigma,v)\)</span> becomes identically zero, and <span class="math notranslate nohighlight">\(b_h(g;\sigma,v)\)</span> coincides with the expression of the integral representation of the distributional Gauss curvature. As we will discuss in the <a class="reference internal" href="distributional_einstein_tensor.html"><span class="doc">following
+notebook</span></a>, <span class="math notranslate nohighlight">\(a_h(g;\sigma,v)\)</span> can be interpreted as the distributional Einstein tensor when we set <span class="math notranslate nohighlight">\(v=1\)</span>. <span class="math notranslate nohighlight">\(b_h(g;\sigma,v)\)</span> can also be interpreted as extending the (covariant) Hellan-Herrmann-Johnson method to arbitrary dimensions. Its numerical analysis follows the same lines as for the Gauss curvature. In three and higher dimensions, however, the bilinear form <span class="math notranslate nohighlight">\(a_h(g;\sigma,v)\)</span> needs to be estimated too.</p>
+<p>We obtain the following convergence rates in the <span class="math notranslate nohighlight">\(H^{-2}\)</span> norm for <span class="math notranslate nohighlight">\(k\ge 0\)</span> and <span class="math notranslate nohighlight">\(g_h\in \mathrm{Reg}^k\)</span></p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align*}
+\|\widetilde{S\omega}(g_h)-(S\omega)(g)\|_{H^{-2}}\le C\begin{cases}
+h^{k+1}, &amp; N=2\\
+h^{\min\{k+1,2k\}}, &amp;N \ge 3
+\end{cases}.
+\end{align*}\end{split}\]</div>
+<p>We proved that in 2D, the angle defect for approximating the scalar (and therefore Gauss) curvature always converges in the <span class="math notranslate nohighlight">\(H^{-2}\)</span> norm. Before, only convergence in the sense of measures was known. We cannot expect convergence in the lowest-order case, <span class="math notranslate nohighlight">\(k=0\)</span>, of a piecewise constant Regge metric for three or higher dimensions. When going to linear order, the convergence rate jumps to be quadratic. Then, the dependency on the polynomial approximation order relates to the convergence
+rate as expected. The co-dimension 2 term of <span class="math notranslate nohighlight">\(a_h(g;\sigma,v)\)</span> turns out to be the issue for not obtaining convergence in the lowest-order case. Unfortunately, numerical investigations show that this estimate is sharp. Nevertheless, in several examples, we still observed linear convergence as the absolute error of this term seems to be small, and the error of the other terms dominates such that the stagnation of error is hard to spot.</p>
+</section>
+<section id="Numerical-example">
+<h2>Numerical example<a class="headerlink" href="#Numerical-example" title="Link to this heading"></a></h2>
+<p>In the following example, we compute the distributional scalar curvature <span class="math notranslate nohighlight">\(\widetilde{S\omega}\)</span> on a sequence of meshes for a three-dimensional Riemannian manifold and compute the <span class="math notranslate nohighlight">\(H^{-2}\)</span> error.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve.meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">MakeStructured3DMesh</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve.webgui</span><span class="w"> </span><span class="kn">import</span> <span class="n">Draw</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve.krylovspace</span><span class="w"> </span><span class="kn">import</span> <span class="n">CGSolver</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">mapping</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">MakeStructured3DMesh</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">nz</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">mapping</span><span class="o">=</span><span class="n">mapping</span><span class="p">)</span>
+
+<span class="c1"># Define an embedded &quot;3D-surface&quot; in 4D via a graph function</span>
+<span class="n">peak</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="mf">0.5</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span>
+<span class="p">)</span>
+
+<span class="c1"># compute the exact induced metric tensor G</span>
+<span class="n">F</span> <span class="o">=</span> <span class="n">CF</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">peak</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">peak</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">peak</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">z</span><span class="p">)),</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">G_ex</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">trans</span> <span class="o">*</span> <span class="n">F</span>
+
+
+<span class="c1"># exact scalar curvature</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">q</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+
+
+<span class="c1"># exact scalar curvature</span>
+<span class="n">S_ex</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="mi">18</span>
+    <span class="o">*</span> <span class="p">(</span>
+        <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">9</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">z</span><span class="p">))</span>
+        <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">9</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">9</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+    <span class="p">)</span>
+<span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="mi">9</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">z</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="n">Draw</span><span class="p">(</span><span class="n">S_ex</span><span class="p">,</span> <span class="n">mesh</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<p>We compute the <span class="math notranslate nohighlight">\(H^{-2}\)</span>-norm of the error <span class="math notranslate nohighlight">\(\|\widetilde{S\omega}-S\omega\|_{H^{-2}}\)</span> by solving the following fourth-order problem <span class="math notranslate nohighlight">\(\mathrm{div}(\mathrm{div}(\nabla^2 u))= \widetilde{S\omega}-S\omega\)</span>. Then <span class="math notranslate nohighlight">\(\|u\|_{H^2}\approx \|\widetilde{S\omega}-S\omega\|_{H^{-2}}\)</span>. We use the Euclidean Hellan-Herrmann-Johnson (HHJ) method to solve the fourth-order problem as a mixed saddle point problem. Therein, <span class="math notranslate nohighlight">\(\sigma=\nabla^2u\)</span> is introduced as an additional unknown. We use
+hybridization techniques to regain a minimization problem. We use a BDDC preconditioner in combination with static condensation and a CGSolver to solve the problem iteratively. To mitigate approximation errors that spoil the convergence, we use two polynomial degrees more than for <span class="math notranslate nohighlight">\(g_h\)</span> to compute <span class="math notranslate nohighlight">\(u_h\)</span>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># compute H^-2 error via HHJ method</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">ComputeHm2Norm</span><span class="p">(</span><span class="n">func_vol</span><span class="p">,</span> <span class="n">func_bnd</span><span class="p">,</span> <span class="n">func_bbnd</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+    <span class="n">fesH</span> <span class="o">=</span> <span class="n">H1</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span> <span class="n">dirichlet</span><span class="o">=</span><span class="s2">&quot;.*&quot;</span><span class="p">)</span>
+    <span class="n">fesS</span> <span class="o">=</span> <span class="n">Discontinuous</span><span class="p">(</span><span class="n">HDivDiv</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">fesHB</span> <span class="o">=</span> <span class="n">NormalFacetFESpace</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dirichlet</span><span class="o">=</span><span class="s2">&quot;.*&quot;</span><span class="p">)</span>
+    <span class="n">fes</span> <span class="o">=</span> <span class="n">fesH</span> <span class="o">*</span> <span class="n">fesS</span> <span class="o">*</span> <span class="n">fesHB</span>
+    <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">uh</span><span class="p">),</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">vh</span><span class="p">)</span> <span class="o">=</span> <span class="n">fes</span><span class="o">.</span><span class="n">TnT</span><span class="p">()</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="n">BilinearForm</span><span class="p">(</span><span class="n">fes</span><span class="p">,</span> <span class="n">symmetric</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">symmetric_storage</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">condense</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">+=</span> <span class="p">(</span>
+        <span class="n">InnerProduct</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span>
+        <span class="o">-</span> <span class="n">InnerProduct</span><span class="p">(</span><span class="n">tau</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;hesse&quot;</span><span class="p">))</span>
+        <span class="o">-</span> <span class="n">InnerProduct</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;hesse&quot;</span><span class="p">))</span>
+    <span class="p">)</span> <span class="o">*</span> <span class="n">dx</span>
+    <span class="n">a</span> <span class="o">+=</span> <span class="p">((</span><span class="n">Grad</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">-</span> <span class="n">uh</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span> <span class="o">*</span> <span class="n">tau</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">Grad</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">-</span> <span class="n">vh</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span> <span class="o">*</span> <span class="n">sigma</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">])</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span>
+        <span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="n">LinearForm</span><span class="p">(</span><span class="n">fes</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">+=</span> <span class="p">(</span>
+        <span class="n">func_vol</span> <span class="o">*</span> <span class="n">v</span> <span class="o">*</span> <span class="n">dx</span>
+        <span class="o">+</span> <span class="n">func_bnd</span> <span class="o">*</span> <span class="n">v</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">func_bbnd</span> <span class="o">*</span> <span class="n">v</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_vb</span><span class="o">=</span><span class="n">BBND</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">Assemble</span><span class="p">()</span>
+
+    <span class="n">apre</span> <span class="o">=</span> <span class="n">Preconditioner</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s2">&quot;bddc&quot;</span><span class="p">)</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">Assemble</span><span class="p">()</span>
+    <span class="n">invS</span> <span class="o">=</span> <span class="n">CGSolver</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">mat</span><span class="p">,</span> <span class="n">apre</span><span class="o">.</span><span class="n">mat</span><span class="p">,</span> <span class="n">printrates</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+    <span class="n">ext</span> <span class="o">=</span> <span class="n">IdentityMatrix</span><span class="p">()</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="n">harmonic_extension</span>
+    <span class="n">inv</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">inner_solve</span> <span class="o">+</span> <span class="n">ext</span> <span class="o">@</span> <span class="n">invS</span> <span class="o">@</span> <span class="n">ext</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">gf_error_lift</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">fes</span><span class="p">)</span>
+    <span class="n">gf_error_lift</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">inv</span> <span class="o">*</span> <span class="n">f</span><span class="o">.</span><span class="n">vec</span>
+
+    <span class="n">gf_u</span><span class="p">,</span> <span class="n">gf_sigma</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">gf_error_lift</span><span class="o">.</span><span class="n">components</span>
+    <span class="c1"># &quot;sigma = hesse u&quot;</span>
+    <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span>
+        <span class="n">Integrate</span><span class="p">(</span><span class="n">gf_u</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">Grad</span><span class="p">(</span><span class="n">gf_u</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">InnerProduct</span><span class="p">(</span><span class="n">gf_sigma</span><span class="p">,</span> <span class="n">gf_sigma</span><span class="p">),</span> <span class="n">mesh</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">err</span>
+</pre></div>
+</div>
+</div>
+<p>The following function computes the <span class="math notranslate nohighlight">\(H^2\)</span>-error of the distributional scalar curvature for a given metric and polynomial order.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># main function to compute the scalar curvature</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">ComputeScalarCurvature</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+    <span class="c1"># utility vectors for the codimension 2 boundary</span>
+    <span class="n">bbnd_tang</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">EdgeFaceTangentialVectors</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">tE</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">tangential</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">tef1</span> <span class="o">=</span> <span class="n">bbnd_tang</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">tef2</span> <span class="o">=</span> <span class="n">bbnd_tang</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">n1</span> <span class="o">=</span> <span class="n">Cross</span><span class="p">(</span><span class="n">tef1</span><span class="p">,</span> <span class="n">tE</span><span class="p">)</span>
+    <span class="n">n2</span> <span class="o">=</span> <span class="n">Cross</span><span class="p">(</span><span class="n">tef2</span><span class="p">,</span> <span class="n">tE</span><span class="p">)</span>
+    <span class="c1"># facet normal vector</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+
+    <span class="c1"># Regge finite element space</span>
+    <span class="n">fesCC</span> <span class="o">=</span> <span class="n">HCurlCurl</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
+    <span class="n">gfG</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">fesCC</span><span class="p">)</span>
+    <span class="n">gfG</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+
+    <span class="c1"># volume forms</span>
+    <span class="n">vol_bbnd</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">gfG</span> <span class="o">*</span> <span class="n">tE</span> <span class="o">*</span> <span class="n">tE</span><span class="p">)</span>
+    <span class="n">vol_bnd</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Cof</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+    <span class="n">vol</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Det</span><span class="p">(</span><span class="n">gfG</span><span class="p">))</span>
+
+    <span class="c1"># angle deficit</span>
+    <span class="n">n1g</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Inv</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span> <span class="o">*</span> <span class="n">n1</span> <span class="o">*</span> <span class="n">n1</span><span class="p">)</span> <span class="o">*</span> <span class="n">Inv</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span> <span class="o">*</span> <span class="n">n1</span>
+    <span class="n">n2g</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Inv</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span> <span class="o">*</span> <span class="n">n2</span> <span class="o">*</span> <span class="n">n2</span><span class="p">)</span> <span class="o">*</span> <span class="n">Inv</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span> <span class="o">*</span> <span class="n">n2</span>
+    <span class="n">func_bbnd</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">acos</span><span class="p">(</span><span class="n">n1</span> <span class="o">*</span> <span class="n">n2</span><span class="p">)</span> <span class="o">-</span> <span class="n">acos</span><span class="p">(</span><span class="n">gfG</span> <span class="o">*</span> <span class="n">n1g</span> <span class="o">*</span> <span class="n">n2g</span><span class="p">))</span> <span class="o">*</span> <span class="n">vol_bbnd</span>
+
+    <span class="c1"># jump of mean curvature</span>
+    <span class="n">ng</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Inv</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">Inv</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span>
+    <span class="n">SFF</span> <span class="o">=</span> <span class="o">-</span><span class="n">gfG</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;christoffel&quot;</span><span class="p">)</span> <span class="o">*</span> <span class="n">ng</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">Inv</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span> <span class="o">-</span> <span class="n">OuterProduct</span><span class="p">(</span><span class="n">ng</span><span class="p">,</span> <span class="n">ng</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">InnerProduct</span><span class="p">(</span><span class="n">gfG</span><span class="p">,</span> <span class="n">P</span> <span class="o">*</span> <span class="n">SFF</span> <span class="o">*</span> <span class="n">P</span><span class="p">)</span>
+    <span class="n">func_bnd</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">H</span> <span class="o">*</span> <span class="n">vol_bnd</span>
+    <span class="c1"># scalar curvature minus exact one</span>
+    <span class="n">func_vol</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;scalar&quot;</span><span class="p">)</span> <span class="o">*</span> <span class="n">vol</span> <span class="o">-</span> <span class="n">S_ex</span> <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Det</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+
+    <span class="n">err_hm2</span> <span class="o">=</span> <span class="n">ComputeHm2Norm</span><span class="p">(</span><span class="n">func_vol</span><span class="p">,</span> <span class="n">func_bnd</span><span class="p">,</span> <span class="n">func_bbnd</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">err_hm2</span><span class="p">,</span> <span class="n">fesCC</span><span class="o">.</span><span class="n">ndof</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>To avoid possible super-convergence due to symmetries in the mesh, we perturb the internal vertices by a random noise.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># compute the diameter of the mesh as maximal mesh size h</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">CompDiam</span><span class="p">(</span><span class="n">mesh</span><span class="p">):</span>
+    <span class="n">lengths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">nedge</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">mesh</span><span class="o">.</span><span class="n">edges</span><span class="p">:</span>
+        <span class="n">pnts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">vert</span> <span class="ow">in</span> <span class="n">edge</span><span class="o">.</span><span class="n">vertices</span><span class="p">:</span>
+            <span class="n">pnt</span> <span class="o">=</span> <span class="n">mesh</span><span class="p">[</span><span class="n">vert</span><span class="p">]</span><span class="o">.</span><span class="n">point</span>
+            <span class="n">pnts</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">pnt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pnt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">pnt</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+        <span class="n">lengths</span><span class="p">[</span><span class="n">edge</span><span class="o">.</span><span class="n">nr</span><span class="p">]</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">pnts</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">pnts</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="o">+</span> <span class="p">(</span><span class="n">pnts</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">pnts</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="o">+</span> <span class="p">(</span><span class="n">pnts</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">pnts</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;max = </span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">lengths</span><span class="p">)</span><span class="si">}</span><span class="s2">, min = </span><span class="si">{</span><span class="nb">min</span><span class="p">(</span><span class="n">lengths</span><span class="p">)</span><span class="si">}</span><span class="s2">, ne = </span><span class="si">{</span><span class="n">mesh</span><span class="o">.</span><span class="n">ne</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">lengths</span><span class="p">)</span>
+
+
+<span class="c1"># generate and randomly perturb it, check if the resulting mesh is valid</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">GenerateRandomMesh</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">par</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">MakeStructured3DMesh</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="n">k</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="n">k</span><span class="p">,</span> <span class="n">nz</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="n">k</span><span class="p">,</span> <span class="n">mapping</span><span class="o">=</span><span class="n">mapping</span><span class="p">)</span>
+        <span class="n">maxh</span> <span class="o">=</span> <span class="n">CompDiam</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">pnts</span> <span class="ow">in</span> <span class="n">mesh</span><span class="o">.</span><span class="n">ngmesh</span><span class="o">.</span><span class="n">Points</span><span class="p">():</span>
+            <span class="n">px</span><span class="p">,</span> <span class="n">py</span><span class="p">,</span> <span class="n">pz</span> <span class="o">=</span> <span class="n">pnts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pnts</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">pnts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="nb">abs</span><span class="p">(</span><span class="n">px</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-8</span>
+                <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">px</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-8</span>
+                <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">py</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-8</span>
+                <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">py</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-8</span>
+                <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pz</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-8</span>
+                <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pz</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-8</span>
+            <span class="p">):</span>
+                <span class="n">px</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">maxh</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="n">par</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">maxh</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="n">par</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+                <span class="n">py</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">maxh</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="n">par</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">maxh</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="n">par</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+                <span class="n">pz</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">maxh</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="n">par</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">maxh</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="n">par</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+            <span class="n">pnts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">px</span>
+            <span class="n">pnts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">py</span>
+            <span class="n">pnts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">pz</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">JacobianMatrix</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="c1"># check if the mesh is valid</span>
+        <span class="k">if</span> <span class="n">Integrate</span><span class="p">(</span><span class="n">IfPos</span><span class="p">(</span><span class="n">Det</span><span class="p">(</span><span class="n">F</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">mesh</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Could not generate a valid mesh&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mesh</span>
+</pre></div>
+</div>
+</div>
+<p>Compute the scalar curvature approximation on a sequence of meshes. You can play around with the polynomial order. The <span class="math notranslate nohighlight">\(H^{-2}\)</span> error and the number of degrees of freedom are stored.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">err_hm2</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">ndof</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c1"># order of metric approximation &gt;= 0</span>
+<span class="n">order</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">GenerateRandomMesh</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">par</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">errm2</span><span class="p">,</span> <span class="n">dof</span> <span class="o">=</span> <span class="n">ComputeScalarCurvature</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">G</span><span class="o">=</span><span class="n">G_ex</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
+        <span class="n">err_hm2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">errm2</span><span class="p">)</span>
+        <span class="n">ndof</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dof</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+max = 3.4641016151377544, min = 2.0, ne = 6
+CG converged in 11 iterations to residual 4.506024949640281e-14
+max = 1.7320508075688772, min = 1.0, ne = 48
+CG converged in 37 iterations to residual 7.282527959098194e-14
+max = 0.8660254037844386, min = 0.5, ne = 384
+CG converged in 51 iterations to residual 3.262678728764829e-14
+max = 0.4330127018922193, min = 0.25, ne = 3072
+CG converged in 63 iterations to residual 9.281523135588967e-15
+</pre></div></div>
+</div>
+<p>Plot the results together with reference lines for linear, quadratic, and cubic convergence order.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">ndof</span><span class="p">,</span>
+    <span class="n">err_hm2</span><span class="p">,</span>
+    <span class="s2">&quot;-x&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;$\|\widetilde{S\omega}-S_{\mathrm</span><span class="si">{ex}</span><span class="s2">}\omega_{\mathrm</span><span class="si">{ex}</span><span class="s2">}\|_{H^{-2}}$&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dof</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">ndof</span><span class="p">],</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;$O(h)$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="p">[</span><span class="mi">5</span> <span class="o">*</span> <span class="n">dof</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">ndof</span><span class="p">],</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;$O(h^2)$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">ndof</span><span class="p">,</span> <span class="p">[</span><span class="mi">50</span> <span class="o">*</span> <span class="n">dof</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">3</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">ndof</span><span class="p">],</span> <span class="s2">&quot;-.&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;$O(h^3)$&quot;</span>
+<span class="p">)</span>
+
+
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;order = </span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_distributional_scalar_curvature_13_0.png" src="../_images/tutorials_distributional_scalar_curvature_13_0.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="distributional_gauss_curvature_surface.html" class="btn btn-neutral float-left" title="Gauss curvature approximation on embedded surfaces" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="distributional_einstein_tensor.html" class="btn btn-neutral float-right" title="Distributional Einstein curvature" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Michael Neunteufel.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

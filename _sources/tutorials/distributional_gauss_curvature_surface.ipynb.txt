@@ -226,8 +226,8 @@
    "source": [
     "import matplotlib.pyplot as plt\n",
     "\n",
-    "plt.plot(ndof, err_hm1, \"-o\", label=\"$\\|K_h-K_{\\mathrm{ex}}\\|_{H^{-1}}$\")\n",
-    "plt.plot(ndof, err_l2, \"-x\", label=\"$\\|K_h-K_{\\mathrm{ex}}\\|_{L^2}$\")\n",
+    "plt.plot(ndof, err_hm1, \"-o\", label=r\"$\\|K_h-K_{\\mathrm{ex}}\\|_{H^{-1}}$\")\n",
+    "plt.plot(ndof, err_l2, \"-x\", label=r\"$\\|K_h-K_{\\mathrm{ex}}\\|_{L^2}$\")\n",
     "plt.plot(\n",
     "    ndof,\n",
     "    [order**order * dof ** (-(order - 1) / 2) for dof in ndof],\n",

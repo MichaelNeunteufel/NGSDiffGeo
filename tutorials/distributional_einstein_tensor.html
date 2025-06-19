@@ -1,0 +1,673 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Distributional Einstein curvature &mdash; NGSDiffGeo 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Distributional Riemann curvature tensor curvature" href="distributional_riemann_curvature_tensor.html" />
+    <link rel="prev" title="Distributional scalar curvature" href="distributional_scalar_curvature.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NGSDiffGeo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="riemannian_manifolds.html">Riemannian Manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="covariant_derivatives.html">Covariant Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="curvatures.html">Curvature quantities on Riemannian manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="regge_metric.html">Regge finite elements and Regge metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature.html">Distributional Gauss curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_analysis.html">Distributional Gauss curvature (analysis)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_surface.html">Gauss curvature approximation on embedded surfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_scalar_curvature.html">Distributional scalar curvature</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Distributional Einstein curvature</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Einstein-tensor-as-a-nonlinear-distribution">Einstein tensor as a nonlinear distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Integral-representation-and-convergence">Integral representation and convergence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Numerical-example">Numerical example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_riemann_curvature_tensor.html">Distributional Riemann curvature tensor curvature</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NGSDiffGeo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Distributional Einstein curvature</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/distributional_einstein_tensor.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Distributional-Einstein-curvature">
+<h1>Distributional Einstein curvature<a class="headerlink" href="#Distributional-Einstein-curvature" title="Link to this heading"></a></h1>
+<p>This notebook discusses the definition and convergence of the distributional Einstein tensor in dimensions three and higher (in one and two dimensions, the Einstein tensor is zero). For a detailed derivation and analysis, we refer to <a class="reference external" href="https://doi.org/10.1093/imanum/draf004">Gawlik, Neunteufel. Finite element approximation of the Einstein tensor, IMA Journal of Numerical Analysis (2025).</a>.</p>
+<section id="Einstein-tensor-as-a-nonlinear-distribution">
+<h2>Einstein tensor as a nonlinear distribution<a class="headerlink" href="#Einstein-tensor-as-a-nonlinear-distribution" title="Link to this heading"></a></h2>
+<p>The Einstein tensor reads with the Ricci curvature tensor <span class="math notranslate nohighlight">\(\mathrm{Ric}\)</span> and scalar curvature <span class="math notranslate nohighlight">\(S\)</span> <span class="math">\begin{align*}
+G = \mathrm{Ric}-\frac{1}{2}S\,g.
+\end{align*}</span> One important application of the Einstein tensor for pseudo-Riemannian manifolds is general relativity. The Einstein field equations <span class="math notranslate nohighlight">\(G=8\pi\mathfrak{T}\)</span>, where <span class="math notranslate nohighlight">\(\mathfrak{T}\)</span> is the energy-stress tensor, describe cosmologic phenomena such as black holes.</p>
+<p>Motivated by the integral representation of the <a class="reference internal" href="distributional_scalar_curvature.html"><span class="doc">distributional scalar curvature</span></a>, we define the distributional (densitized) Einstein tensor acting on a sufficiently smooth matrix-valued test function <span class="math notranslate nohighlight">\(\varphi\)</span> as</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\widetilde{G\omega}(\varphi) :=\sum_{T\in\mathcal{T}}\int_T\langle G|_T,\varphi\rangle\,\omega_T+\sum_{F\in\mathcal{F}}\int_F\langle[\![\bar{I\!I}]\!]_F,\varphi|_F\rangle\,\omega_F-\sum_{E\in\mathcal{E}}\int_E\langle\Theta_Eg|_E,\varphi|_E\rangle\,\omega_E,
+\end{align*}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\omega_T\)</span>, <span class="math notranslate nohighlight">\(\omega_F\)</span>, and <span class="math notranslate nohighlight">\(\omega_E\)</span> are the respective volume forms on elements <span class="math notranslate nohighlight">\(T\)</span>, co-dimension 1 facets <span class="math notranslate nohighlight">\(F\)</span> and co-dimension two boundaries <span class="math notranslate nohighlight">\(E\)</span>. <span class="math notranslate nohighlight">\(\bar{I\!I}=I\!I-H\,g\)</span> is the trace-reversed second fundamental form with mean curvature <span class="math notranslate nohighlight">\(H\)</span></p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+H:= \mathrm{tr}(I\!I)= g_{ij}I\!I^{ij},\qquad I\!I(X,Y) = g(\nabla_Xn,Y)=-g(\nabla_XY,n),\quad X,Y\in \mathfrak{X}(F),
+\end{align*}\]</div>
+<p>where <span class="math notranslate nohighlight">\(n\)</span> is the normal vector at the facet (caution: Different sign conventions exist again). <span class="math notranslate nohighlight">\(\Theta_E\)</span> is the angle defect. As we have seen in the previous notebook, the concept of the angle defect directly extends from 2D to any dimension.</p>
+<p>The jump of the trace-reversed second fundamental form at facets is well-known in physics literature as the Israel junction conditions <a class="reference external" href="https://doi.org/10.1007/BF02710419">Israel. Singular hypersurfaces and thin shells in general relativity, Nuovo Cimento B (1965-1970) 1966.</a> verifying our distributional facet term.</p>
+</section>
+<section id="Integral-representation-and-convergence">
+<h2>Integral representation and convergence<a class="headerlink" href="#Integral-representation-and-convergence" title="Link to this heading"></a></h2>
+<p>The distributional EInstein tensor entails an integral representation, which is more involved than the scalar curvature. Taking the variation of the densitized distributional Einstein tensor in the metric in direction <span class="math notranslate nohighlight">\(\sigma\)</span> yields</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+D_g\widetilde{G\omega}(\rho)[\sigma] = B_h(g;\sigma,\rho)-A_h(g;\sigma,\rho)
+\end{align*}\]</div>
+<p>with</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align*}
+2B_h(g;\sigma,\rho)&amp;= \sum_T\int_T\langle 2\mathrm{ein}\sigma,\rho\rangle\,\omega_T+\sum_{F}\int_F\langle[\![\mathbb{S}_F(\sigma(n,n)I\!I+\nabla_n\sigma-(\nabla^F\sigma)(n,\cdot)-\nabla^F(\sigma(n,\cdot)))]\!],\rho|_F\rangle\,\omega_F\\
+&amp;\qquad-\sum_E\int_E\sum_{F\supset E}[\![\sigma(n,\nu)]\!]_F\mathrm{tr}(\rho|_E)\,\omega_E,\\
+2A_h(g;\sigma,\rho)&amp;= \sum_T\int_T\left(2\sigma:\mathfrak{R}:\rho +\langle\mathrm{Ric},\sigma \rangle\,\mathrm{tr}\rho+\langle\mathrm{Ric},\rho \rangle\,\mathrm{tr}\sigma + S\langle J\sigma,\rho\rangle-2\sigma:\mathrm{Ric}:\rho\right)\,\omega_T\\
+&amp;\qquad+\sum_F\int_F\left(-3(\sigma|_F):[\![\bar{I\!I}]\!]:(\rho|_F)+\langle [\![\bar{I\!I}]\!],\sigma|_F\rangle\,\mathrm{tr}(\rho_F)+\langle [\![\bar{I\!I}]\!],\rho|_F\rangle\,\mathrm{tr}(\sigma|_F)-[\![H]\!]\langle\mathbb{S}_F\sigma,\rho|_F\rangle\right)\omega_F\\
+&amp;\qquad+\sum_{E}\int_E\left(\langle\Theta_E\sigma|_E,\rho|_E\rangle-\Theta_E\mathrm{tr}(\sigma|_E)\,\mathrm{tr}(\rho|_E)\right)\,\omega_S.
+\end{align*}\end{split}\]</div>
+<p>Here, all differential operators are covariant ones with respect to the metric <span class="math notranslate nohighlight">\(g\)</span>, and <span class="math notranslate nohighlight">\(\nu\)</span> denotes the co-normal vector being perpendicular to the co-dimension 2 boundary <span class="math notranslate nohighlight">\(E\)</span> pointing from <span class="math notranslate nohighlight">\(E\)</span> into the adjacent facets <span class="math notranslate nohighlight">\(F\)</span> of the element <span class="math notranslate nohighlight">\(T\)</span>. <span class="math notranslate nohighlight">\(\mathrm{ein}\)</span> is the (covariant) linearized Einstein operator defined by</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\mathrm{ein} = J\,\mathrm{def}\,\mathrm{div}\,J-\frac{1}{2}\Delta\,J,\qquad \mathrm{def} = \mathrm{sym}\,\nabla,\quad J\sigma =\sigma -\frac{1}{2}\mathrm{tr}\sigma\,g
+\end{align*}\]</div>
+<p>and <span class="math notranslate nohighlight">\(\mathbb{S}_F\sigma=\sigma|_F-\mathrm{tr}(\sigma|_F)g|_F\)</span>. Note that <span class="math notranslate nohighlight">\(A(g;\sigma,\rho)\)</span> and <span class="math notranslate nohighlight">\(B(g;\sigma,\rho)\)</span> become identically zero in two dimensions. <span class="math notranslate nohighlight">\(B_h(g;\sigma,\rho)\)</span> can be interpreted as a distributional (covariant) extension of the linearized Einstein operator <span class="math notranslate nohighlight">\(\mathrm{ein}\)</span> for tangential-tangential continuous matrices. In three dimensions, the linearized Einstein operator coincides with the incompatibility operator by up to a factor of <span class="math notranslate nohighlight">\(2\)</span>.</p>
+<p>The convergence rates in the <span class="math notranslate nohighlight">\(H^{-2}\)</span> norm for <span class="math notranslate nohighlight">\(k\ge 0\)</span> and <span class="math notranslate nohighlight">\(g_h\in \mathrm{Reg}^k\)</span> coincide with those of the distributional scalar curvature</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\|\widetilde{G\omega}(g_h)-(G\omega)(g)\|_{H^{-2}}\le C
+h^{\min\{k+1,2k\}}.
+\end{align*}\]</div>
+<p>Again, we cannot expect convergence in the lowest-order case of a piecewise constant Regge metric. When going to linear order, the convergence rate jumps to be quadratic. Then, the dependency on the polynomial approximation order relates to the convergence rate as expected.</p>
+</section>
+<section id="Numerical-example">
+<h2>Numerical example<a class="headerlink" href="#Numerical-example" title="Link to this heading"></a></h2>
+<p>In the following example, we compute the distributional Einstein tensor <span class="math notranslate nohighlight">\(\widetilde{G\omega}\)</span> on a sequence of meshes for a three-dimensional Riemannian manifold and compute the <span class="math notranslate nohighlight">\(H^{-2}\)</span> error.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve.meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">MakeStructured3DMesh</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve.webgui</span><span class="w"> </span><span class="kn">import</span> <span class="n">Draw</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve.krylovspace</span><span class="w"> </span><span class="kn">import</span> <span class="n">CGSolver</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">mapping</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">MakeStructured3DMesh</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">nz</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">mapping</span><span class="o">=</span><span class="n">mapping</span><span class="p">)</span>
+
+<span class="n">peak</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="mf">0.5</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span>
+<span class="p">)</span>
+
+<span class="n">F</span> <span class="o">=</span> <span class="n">CF</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">peak</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">peak</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">peak</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">z</span><span class="p">)),</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">G_ex</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">trans</span> <span class="o">*</span> <span class="n">F</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">q</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">X</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">X</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+
+
+<span class="c1"># exact Ricci curvature tensor</span>
+<span class="n">Ricci11</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="o">-</span><span class="mi">9</span>
+    <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="o">*</span> <span class="p">((</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">q</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="mi">9</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">q</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="o">/</span> <span class="p">(</span><span class="mi">9</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">z</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="p">)</span>
+<span class="n">Ricci22</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="o">-</span><span class="mi">9</span>
+    <span class="o">*</span> <span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="o">*</span> <span class="p">((</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">q</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="mi">9</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">q</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="o">/</span> <span class="p">(</span><span class="mi">9</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">z</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="p">)</span>
+<span class="n">Ricci33</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="o">-</span><span class="mi">9</span>
+    <span class="o">*</span> <span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="o">*</span> <span class="p">((</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">q</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="mi">9</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">q</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="o">/</span> <span class="p">(</span><span class="mi">9</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">z</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="p">)</span>
+<span class="n">Ricci12</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="o">-</span><span class="mi">9</span>
+    <span class="o">*</span> <span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">y</span>
+    <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">x</span>
+    <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="o">*</span> <span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="o">/</span> <span class="p">(</span><span class="mi">9</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">z</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="p">)</span>
+<span class="n">Ricci13</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="o">-</span><span class="mi">9</span>
+    <span class="o">*</span> <span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">z</span>
+    <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">x</span>
+    <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="o">*</span> <span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="o">/</span> <span class="p">(</span><span class="mi">9</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">z</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="p">)</span>
+<span class="n">Ricci23</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="o">-</span><span class="mi">9</span>
+    <span class="o">*</span> <span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">y</span>
+    <span class="o">*</span> <span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">z</span>
+    <span class="o">*</span> <span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="o">*</span> <span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="o">/</span> <span class="p">(</span><span class="mi">9</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">z</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="p">)</span>
+
+<span class="n">Ricci_ex</span> <span class="o">=</span> <span class="o">-</span><span class="n">CF</span><span class="p">(</span>
+    <span class="p">(</span><span class="n">Ricci11</span><span class="p">,</span> <span class="n">Ricci12</span><span class="p">,</span> <span class="n">Ricci13</span><span class="p">,</span> <span class="n">Ricci12</span><span class="p">,</span> <span class="n">Ricci22</span><span class="p">,</span> <span class="n">Ricci23</span><span class="p">,</span> <span class="n">Ricci13</span><span class="p">,</span> <span class="n">Ricci23</span><span class="p">,</span> <span class="n">Ricci33</span><span class="p">),</span>
+    <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># exact scalar curvature</span>
+<span class="n">S_ex</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="o">-</span><span class="p">(</span>
+        <span class="mi">2</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">12</span>
+        <span class="o">+</span> <span class="mi">24</span> <span class="o">*</span> <span class="p">((</span><span class="o">-</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">10</span>
+        <span class="o">+</span> <span class="p">(</span>
+            <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">6</span>
+            <span class="o">+</span> <span class="mi">12</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span>
+            <span class="o">+</span> <span class="p">(</span><span class="mi">108</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">144</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span>
+            <span class="o">-</span> <span class="mi">72</span>
+            <span class="o">-</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span>
+            <span class="o">+</span> <span class="mi">108</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span>
+            <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">6</span>
+        <span class="p">)</span>
+        <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">8</span>
+        <span class="o">+</span> <span class="p">(</span>
+            <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">8</span>
+            <span class="o">+</span> <span class="mi">28</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">6</span>
+            <span class="o">+</span> <span class="mi">114</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span>
+            <span class="o">+</span> <span class="p">(</span><span class="mi">468</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">28</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">8</span> <span class="o">-</span> <span class="mi">198</span> <span class="o">-</span> <span class="mi">114</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span>
+            <span class="o">-</span> <span class="mi">72</span>
+            <span class="o">+</span> <span class="mi">114</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span>
+            <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">8</span>
+            <span class="o">-</span> <span class="mi">28</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">6</span>
+            <span class="o">-</span> <span class="mi">198</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">6</span>
+        <span class="o">+</span> <span class="p">(</span>
+            <span class="p">(</span><span class="o">-</span><span class="mi">12</span> <span class="o">+</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">8</span>
+            <span class="o">+</span> <span class="p">(</span><span class="mi">114</span> <span class="o">-</span> <span class="mi">114</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">6</span>
+            <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mi">360</span> <span class="o">+</span> <span class="mi">360</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span>
+            <span class="o">+</span> <span class="p">(</span><span class="mi">360</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span> <span class="o">-</span> <span class="mi">114</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">6</span> <span class="o">+</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">8</span> <span class="o">+</span> <span class="mi">54</span> <span class="o">-</span> <span class="mi">702</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span>
+            <span class="o">+</span> <span class="mi">594</span>
+            <span class="o">+</span> <span class="mi">114</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">6</span>
+            <span class="o">-</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">8</span>
+            <span class="o">-</span> <span class="mi">360</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span>
+            <span class="o">+</span> <span class="mi">54</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">4</span>
+        <span class="o">+</span> <span class="p">(</span>
+            <span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">12</span>
+            <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mi">24</span> <span class="o">+</span> <span class="mi">24</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">10</span>
+            <span class="o">+</span> <span class="p">(</span><span class="mi">108</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">144</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">8</span>
+            <span class="o">+</span> <span class="p">(</span><span class="mi">468</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">28</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">8</span> <span class="o">-</span> <span class="mi">198</span> <span class="o">-</span> <span class="mi">114</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">6</span>
+            <span class="o">+</span> <span class="p">(</span><span class="mi">360</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span> <span class="o">-</span> <span class="mi">114</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">6</span> <span class="o">+</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">8</span> <span class="o">+</span> <span class="mi">54</span> <span class="o">-</span> <span class="mi">702</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span>
+            <span class="o">+</span> <span class="p">(</span><span class="mi">486</span> <span class="o">+</span> <span class="mi">468</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">12</span> <span class="o">+</span> <span class="mi">24</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">10</span> <span class="o">-</span> <span class="mi">144</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">8</span> <span class="o">-</span> <span class="mi">702</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span><span class="p">)</span>
+            <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span>
+            <span class="o">+</span> <span class="mi">108</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">8</span>
+            <span class="o">-</span> <span class="mi">324</span>
+            <span class="o">-</span> <span class="mi">24</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">10</span>
+            <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">12</span>
+            <span class="o">-</span> <span class="mi">198</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">6</span>
+            <span class="o">+</span> <span class="mi">54</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span>
+            <span class="o">+</span> <span class="mi">486</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span>
+        <span class="o">+</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">12</span>
+        <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mi">24</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">24</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">10</span>
+        <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mi">72</span> <span class="o">-</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">108</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">6</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">8</span>
+        <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mi">72</span> <span class="o">+</span> <span class="mi">114</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">8</span> <span class="o">-</span> <span class="mi">28</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">198</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">6</span>
+        <span class="o">+</span> <span class="p">(</span><span class="mi">594</span> <span class="o">+</span> <span class="mi">114</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">6</span> <span class="o">-</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">8</span> <span class="o">-</span> <span class="mi">360</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">54</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span>
+        <span class="o">+</span> <span class="p">(</span>
+            <span class="mi">108</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">8</span>
+            <span class="o">-</span> <span class="mi">324</span>
+            <span class="o">-</span> <span class="mi">24</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">10</span>
+            <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">12</span>
+            <span class="o">-</span> <span class="mi">198</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">6</span>
+            <span class="o">+</span> <span class="mi">54</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span>
+            <span class="o">+</span> <span class="mi">486</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span>
+        <span class="o">-</span> <span class="mi">486</span>
+        <span class="o">-</span> <span class="mi">72</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">8</span>
+        <span class="o">+</span> <span class="mi">24</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">10</span>
+        <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">12</span>
+        <span class="o">-</span> <span class="mi">72</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">6</span>
+        <span class="o">+</span> <span class="mi">594</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span>
+        <span class="o">-</span> <span class="mi">324</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span>
+    <span class="p">)</span>
+    <span class="o">/</span> <span class="p">(</span>
+        <span class="mi">1</span>
+        <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">9</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">6</span>
+        <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">9</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">6</span>
+        <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">9</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">6</span>
+        <span class="o">-</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span>
+        <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span>
+        <span class="o">-</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">4</span>
+        <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span>
+        <span class="o">-</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span>
+        <span class="o">+</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span>
+    <span class="p">)</span>
+    <span class="o">/</span> <span class="p">(</span>
+        <span class="n">x</span><span class="o">**</span><span class="mi">6</span>
+        <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">6</span>
+        <span class="o">+</span> <span class="n">z</span><span class="o">**</span><span class="mi">6</span>
+        <span class="o">-</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">4</span>
+        <span class="o">-</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span>
+        <span class="o">-</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span>
+        <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span>
+        <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span>
+        <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span>
+        <span class="o">+</span> <span class="mi">9</span>
+    <span class="p">)</span>
+    <span class="o">**</span> <span class="mi">2</span>
+<span class="p">)</span>
+
+<span class="c1"># exact Einstein tensor</span>
+<span class="n">Einstein_ex</span> <span class="o">=</span> <span class="n">Ricci_ex</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">S_ex</span> <span class="o">*</span> <span class="n">G_ex</span>
+<span class="n">clipping</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;pnt&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">),</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+<span class="n">Draw</span><span class="p">(</span><span class="n">Norm</span><span class="p">(</span><span class="n">Einstein_ex</span><span class="p">),</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">clipping</span><span class="o">=</span><span class="n">clipping</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<p>We compute the <span class="math notranslate nohighlight">\(H^{-2}\)</span>-norm of the error <span class="math notranslate nohighlight">\(\|\widetilde{G\omega}-G\omega\|_{H^{-2}}\)</span> by solving for each component the following fourth-order problem <span class="math notranslate nohighlight">\(\mathrm{div}(\mathrm{div}(\nabla^2 u_{ij}))= (\widetilde{G\omega}-G\omega)_{ij}\)</span>. Then <span class="math notranslate nohighlight">\(\|u\|_{H^2}\approx \|\widetilde{G\omega}-G\omega\|_{H^{-2}}\)</span>. We use the Euclidean Hellan-Herrmann-Johnson (HHJ) method to solve the fourth-order problem as a mixed saddle point problem. Therein, <span class="math notranslate nohighlight">\(\sigma=\nabla^2u_{ij}\)</span> is
+introduced as an additional unknown. We use hybridization techniques to regain a minimization problem. We use a BDDC preconditioner in combination with static condensation and a CGSolver to solve the problem iteratively. To mitigate approximation errors that spoil the convergence, we use two polynomial degrees more than for <span class="math notranslate nohighlight">\(g_h\)</span> to compute <span class="math notranslate nohighlight">\(u_h\)</span>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">ComputeHm2Norm</span><span class="p">(</span><span class="n">func_vol</span><span class="p">,</span> <span class="n">func_bnd</span><span class="p">,</span> <span class="n">func_bbnd</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+    <span class="n">fesH</span> <span class="o">=</span> <span class="n">H1</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span> <span class="n">dirichlet</span><span class="o">=</span><span class="s2">&quot;.*&quot;</span><span class="p">)</span>
+    <span class="n">fesS</span> <span class="o">=</span> <span class="n">Discontinuous</span><span class="p">(</span><span class="n">HDivDiv</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">fesHB</span> <span class="o">=</span> <span class="n">NormalFacetFESpace</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dirichlet</span><span class="o">=</span><span class="s2">&quot;.*&quot;</span><span class="p">)</span>
+    <span class="n">fes</span> <span class="o">=</span> <span class="n">fesH</span> <span class="o">*</span> <span class="n">fesS</span> <span class="o">*</span> <span class="n">fesHB</span>
+    <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">uh</span><span class="p">),</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">vh</span><span class="p">)</span> <span class="o">=</span> <span class="n">fes</span><span class="o">.</span><span class="n">TnT</span><span class="p">()</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="n">BilinearForm</span><span class="p">(</span><span class="n">fes</span><span class="p">,</span> <span class="n">symmetric</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">symmetric_storage</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">condense</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">+=</span> <span class="p">(</span>
+        <span class="n">InnerProduct</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span>
+        <span class="o">-</span> <span class="n">InnerProduct</span><span class="p">(</span><span class="n">tau</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;hesse&quot;</span><span class="p">))</span>
+        <span class="o">-</span> <span class="n">InnerProduct</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;hesse&quot;</span><span class="p">))</span>
+    <span class="p">)</span> <span class="o">*</span> <span class="n">dx</span>
+    <span class="n">a</span> <span class="o">+=</span> <span class="p">((</span><span class="n">Grad</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">-</span> <span class="n">uh</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span> <span class="o">*</span> <span class="n">tau</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">Grad</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">-</span> <span class="n">vh</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span> <span class="o">*</span> <span class="n">sigma</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">])</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span>
+        <span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+
+    <span class="n">apre</span> <span class="o">=</span> <span class="n">Preconditioner</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s2">&quot;bddc&quot;</span><span class="p">)</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">Assemble</span><span class="p">()</span>
+
+    <span class="n">invS</span> <span class="o">=</span> <span class="n">CGSolver</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">mat</span><span class="p">,</span> <span class="n">apre</span><span class="p">,</span> <span class="n">printrates</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">600</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">condense</span><span class="p">:</span>
+        <span class="n">ext</span> <span class="o">=</span> <span class="n">IdentityMatrix</span><span class="p">()</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="n">harmonic_extension</span>
+        <span class="n">inv</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">inner_solve</span> <span class="o">+</span> <span class="n">ext</span> <span class="o">@</span> <span class="n">invS</span> <span class="o">@</span> <span class="n">ext</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">inv</span> <span class="o">=</span> <span class="n">invS</span>
+
+    <span class="c1"># use MultiVector to solve for all right-hand sides at once</span>
+    <span class="n">rhs</span> <span class="o">=</span> <span class="n">MultiVector</span><span class="p">(</span><span class="n">fes</span><span class="o">.</span><span class="n">ndof</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="n">gf_u_i</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">fes</span><span class="o">**</span><span class="mi">6</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">i</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="k">else</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">5</span> <span class="k">else</span> <span class="mi">8</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">LinearForm</span><span class="p">(</span>
+            <span class="n">func_vol</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">v</span> <span class="o">*</span> <span class="n">dx</span>
+            <span class="o">+</span> <span class="n">func_bnd</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">v</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="o">+</span> <span class="n">func_bbnd</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">v</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_vb</span><span class="o">=</span><span class="n">BBND</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">Assemble</span><span class="p">()</span>
+        <span class="n">rhs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">vec</span>
+
+    <span class="n">gfu_multivec</span> <span class="o">=</span> <span class="p">(</span><span class="n">inv</span> <span class="o">*</span> <span class="n">rhs</span><span class="p">)</span><span class="o">.</span><span class="n">Evaluate</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span>
+        <span class="n">gf_u_i</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfu_multivec</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="n">index_symmetric_matrix</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+    <span class="c1"># u</span>
+    <span class="n">gfu</span> <span class="o">=</span> <span class="n">CF</span><span class="p">(</span>
+        <span class="nb">tuple</span><span class="p">([</span><span class="n">gf_u_i</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index_symmetric_matrix</span><span class="p">]),</span>
+        <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="c1"># Grad(u)</span>
+    <span class="n">grad_gfu</span> <span class="o">=</span> <span class="n">CF</span><span class="p">(</span>
+        <span class="nb">tuple</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">Grad</span><span class="p">(</span><span class="n">gf_u_i</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index_symmetric_matrix</span><span class="p">]</span>
+        <span class="p">),</span>
+        <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="c1"># sigma = hesse u</span>
+    <span class="n">gf_sigma</span> <span class="o">=</span> <span class="n">CF</span><span class="p">(</span>
+        <span class="nb">tuple</span><span class="p">([</span><span class="n">gf_u_i</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index_symmetric_matrix</span><span class="p">),</span>
+        <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span>
+        <span class="n">Integrate</span><span class="p">(</span>
+            <span class="n">InnerProduct</span><span class="p">(</span><span class="n">gfu</span><span class="p">,</span> <span class="n">gfu</span><span class="p">)</span>
+            <span class="o">+</span> <span class="n">InnerProduct</span><span class="p">(</span><span class="n">grad_gfu</span><span class="p">,</span> <span class="n">grad_gfu</span><span class="p">)</span>
+            <span class="o">+</span> <span class="n">InnerProduct</span><span class="p">(</span><span class="n">gf_sigma</span><span class="p">,</span> <span class="n">gf_sigma</span><span class="p">),</span>
+            <span class="n">mesh</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">err</span>
+</pre></div>
+</div>
+</div>
+<p>The following function computes the <span class="math notranslate nohighlight">\(H^2\)</span>-error of the distributional Einstein tensor for a given metric and polynomial order.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">ComputeEinsteinCurvature</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+    <span class="n">bbnd_tang</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">EdgeFaceTangentialVectors</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">tE</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">tangential</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">tef1</span> <span class="o">=</span> <span class="n">bbnd_tang</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">tef2</span> <span class="o">=</span> <span class="n">bbnd_tang</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">n1</span> <span class="o">=</span> <span class="n">Cross</span><span class="p">(</span><span class="n">tef1</span><span class="p">,</span> <span class="n">tE</span><span class="p">)</span>
+    <span class="n">n2</span> <span class="o">=</span> <span class="n">Cross</span><span class="p">(</span><span class="n">tef2</span><span class="p">,</span> <span class="n">tE</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+
+    <span class="c1"># Regge metric</span>
+    <span class="n">fesCC</span> <span class="o">=</span> <span class="n">HCurlCurl</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
+    <span class="n">gfG</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">fesCC</span><span class="p">)</span>
+    <span class="n">gfG</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+
+    <span class="c1"># volume forms</span>
+    <span class="n">vol_bbnd</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">gfG</span> <span class="o">*</span> <span class="n">tE</span> <span class="o">*</span> <span class="n">tE</span><span class="p">)</span>
+    <span class="n">vol_bnd</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Cof</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+    <span class="n">vol</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Det</span><span class="p">(</span><span class="n">gfG</span><span class="p">))</span>
+
+    <span class="c1"># co-dimension 2 term</span>
+    <span class="n">n1g</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Inv</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span> <span class="o">*</span> <span class="n">n1</span> <span class="o">*</span> <span class="n">n1</span><span class="p">)</span> <span class="o">*</span> <span class="n">Inv</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span> <span class="o">*</span> <span class="n">n1</span>
+    <span class="n">n2g</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Inv</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span> <span class="o">*</span> <span class="n">n2</span> <span class="o">*</span> <span class="n">n2</span><span class="p">)</span> <span class="o">*</span> <span class="n">Inv</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span> <span class="o">*</span> <span class="n">n2</span>
+    <span class="n">tEg</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">gfG</span> <span class="o">*</span> <span class="n">tE</span> <span class="o">*</span> <span class="n">tE</span><span class="p">)</span> <span class="o">*</span> <span class="n">tE</span>
+    <span class="n">func_bbnd</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="o">-</span><span class="n">vol_bbnd</span> <span class="o">*</span> <span class="p">(</span><span class="n">acos</span><span class="p">(</span><span class="n">n1</span> <span class="o">*</span> <span class="n">n2</span><span class="p">)</span> <span class="o">-</span> <span class="n">acos</span><span class="p">(</span><span class="n">gfG</span> <span class="o">*</span> <span class="n">n1g</span> <span class="o">*</span> <span class="n">n2g</span><span class="p">))</span> <span class="o">*</span> <span class="n">OuterProduct</span><span class="p">(</span><span class="n">tEg</span><span class="p">,</span> <span class="n">tEg</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># co-dimension 1 facet term</span>
+    <span class="n">ng</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Inv</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">Inv</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span>
+    <span class="n">SFF</span> <span class="o">=</span> <span class="o">-</span><span class="n">gfG</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;christoffel&quot;</span><span class="p">)</span> <span class="o">*</span> <span class="n">ng</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">Inv</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span> <span class="o">-</span> <span class="n">OuterProduct</span><span class="p">(</span><span class="n">ng</span><span class="p">,</span> <span class="n">ng</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">InnerProduct</span><span class="p">(</span><span class="n">gfG</span><span class="p">,</span> <span class="n">P</span> <span class="o">*</span> <span class="n">SFF</span> <span class="o">*</span> <span class="n">P</span><span class="p">)</span>
+    <span class="n">func_bnd</span> <span class="o">=</span> <span class="n">vol_bnd</span> <span class="o">*</span> <span class="n">P</span> <span class="o">*</span> <span class="p">(</span><span class="n">SFF</span> <span class="o">-</span> <span class="n">H</span> <span class="o">*</span> <span class="n">gfG</span><span class="p">)</span> <span class="o">*</span> <span class="n">P</span>
+
+    <span class="c1"># volume term</span>
+    <span class="n">func_vol</span> <span class="o">=</span> <span class="n">vol</span> <span class="o">*</span> <span class="n">Inv</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span> <span class="o">*</span> <span class="n">gfG</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="s2">&quot;Einstein&quot;</span><span class="p">)</span> <span class="o">*</span> <span class="n">Inv</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span> <span class="o">-</span> <span class="n">sqrt</span><span class="p">(</span>
+        <span class="n">Det</span><span class="p">(</span><span class="n">G_ex</span><span class="p">)</span>
+    <span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">Inv</span><span class="p">(</span><span class="n">G_ex</span><span class="p">)</span> <span class="o">*</span> <span class="n">Einstein_ex</span> <span class="o">*</span> <span class="n">Inv</span><span class="p">(</span><span class="n">G_ex</span><span class="p">))</span>
+
+    <span class="n">err_hm2</span> <span class="o">=</span> <span class="n">ComputeHm2Norm</span><span class="p">(</span><span class="n">func_vol</span><span class="p">,</span> <span class="n">func_bnd</span><span class="p">,</span> <span class="n">func_bbnd</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">err_hm2</span><span class="p">,</span> <span class="n">fesCC</span><span class="o">.</span><span class="n">ndof</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>To avoid possible super-convergence due to symmetries in the mesh, we perturb the internal vertices by a random noise.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># compute the diameter of the mesh as maximal mesh size h</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">CompDiam</span><span class="p">(</span><span class="n">mesh</span><span class="p">):</span>
+    <span class="n">lengths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">nedge</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">mesh</span><span class="o">.</span><span class="n">edges</span><span class="p">:</span>
+        <span class="n">pnts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">vert</span> <span class="ow">in</span> <span class="n">edge</span><span class="o">.</span><span class="n">vertices</span><span class="p">:</span>
+            <span class="n">pnt</span> <span class="o">=</span> <span class="n">mesh</span><span class="p">[</span><span class="n">vert</span><span class="p">]</span><span class="o">.</span><span class="n">point</span>
+            <span class="n">pnts</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">pnt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pnt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">pnt</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+        <span class="n">lengths</span><span class="p">[</span><span class="n">edge</span><span class="o">.</span><span class="n">nr</span><span class="p">]</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">pnts</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">pnts</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="o">+</span> <span class="p">(</span><span class="n">pnts</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">pnts</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="o">+</span> <span class="p">(</span><span class="n">pnts</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">pnts</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;max = </span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">lengths</span><span class="p">)</span><span class="si">}</span><span class="s2">, min = </span><span class="si">{</span><span class="nb">min</span><span class="p">(</span><span class="n">lengths</span><span class="p">)</span><span class="si">}</span><span class="s2">, ne = </span><span class="si">{</span><span class="n">mesh</span><span class="o">.</span><span class="n">ne</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">lengths</span><span class="p">)</span>
+
+
+<span class="c1"># generate and randomly perturb it, check if the resulting mesh is valid</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">GenerateRandomMesh</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">par</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">MakeStructured3DMesh</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="n">k</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="n">k</span><span class="p">,</span> <span class="n">nz</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="n">k</span><span class="p">,</span> <span class="n">mapping</span><span class="o">=</span><span class="n">mapping</span><span class="p">)</span>
+        <span class="n">maxh</span> <span class="o">=</span> <span class="n">CompDiam</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">pnts</span> <span class="ow">in</span> <span class="n">mesh</span><span class="o">.</span><span class="n">ngmesh</span><span class="o">.</span><span class="n">Points</span><span class="p">():</span>
+            <span class="n">px</span><span class="p">,</span> <span class="n">py</span><span class="p">,</span> <span class="n">pz</span> <span class="o">=</span> <span class="n">pnts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pnts</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">pnts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="nb">abs</span><span class="p">(</span><span class="n">px</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-8</span>
+                <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">px</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-8</span>
+                <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">py</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-8</span>
+                <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">py</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-8</span>
+                <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pz</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-8</span>
+                <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pz</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-8</span>
+            <span class="p">):</span>
+                <span class="n">px</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">maxh</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="n">par</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">maxh</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="n">par</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+                <span class="n">py</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">maxh</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="n">par</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">maxh</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="n">par</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+                <span class="n">pz</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">maxh</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="n">par</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">maxh</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="n">par</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+            <span class="n">pnts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">px</span>
+            <span class="n">pnts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">py</span>
+            <span class="n">pnts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">pz</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">JacobianMatrix</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="c1"># check if the mesh is valid</span>
+        <span class="k">if</span> <span class="n">Integrate</span><span class="p">(</span><span class="n">IfPos</span><span class="p">(</span><span class="n">Det</span><span class="p">(</span><span class="n">F</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">mesh</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Could not generate a valid mesh&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mesh</span>
+</pre></div>
+</div>
+</div>
+<p>Compute the Einstein tensor approximation on a sequence of meshes. You can play around with the polynomial order. The <span class="math notranslate nohighlight">\(H^{-2}\)</span> error and the number of degrees of freedom are stored.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">err_hm2</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">ndof</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c1"># order of metric approximation &gt;= 0</span>
+<span class="n">order</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">GenerateRandomMesh</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">par</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">errm2</span><span class="p">,</span> <span class="n">dof</span> <span class="o">=</span> <span class="n">ComputeEinsteinCurvature</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">G</span><span class="o">=</span><span class="n">G_ex</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
+        <span class="n">err_hm2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">errm2</span><span class="p">)</span>
+        <span class="n">ndof</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dof</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+max = 3.4641016151377544, min = 2.0, ne = 6
+CG converged in 13 iterations to residual 8.100671238419884e-15
+CG converged in 9 iterations to residual 3.004197716587717e-14
+CG converged in 10 iterations to residual 2.4779665730783795e-14
+CG converged in 13 iterations to residual 7.779420042805486e-15
+CG converged in 10 iterations to residual 2.114800464466474e-14
+CG converged in 13 iterations to residual 7.902510933588196e-15
+max = 1.7320508075688772, min = 1.0, ne = 48
+CG converged in 38 iterations to residual 1.1418442814032859e-14
+CG converged in 38 iterations to residual 4.10174013930407e-15
+CG converged in 38 iterations to residual 3.708636074905793e-15
+CG converged in 38 iterations to residual 9.888659319911466e-15
+CG converged in 38 iterations to residual 3.868378355135443e-15
+CG converged in 38 iterations to residual 1.2710926290858649e-14
+max = 0.8660254037844386, min = 0.5, ne = 384
+CG converged in 52 iterations to residual 6.432207022228706e-15
+CG converged in 52 iterations to residual 2.295605727194935e-15
+CG converged in 52 iterations to residual 2.4888391021397085e-15
+CG converged in 52 iterations to residual 6.5474574421251e-15
+CG converged in 52 iterations to residual 2.3099705332215236e-15
+CG converged in 52 iterations to residual 6.075861335268847e-15
+max = 0.4330127018922193, min = 0.25, ne = 3072
+CG converged in 62 iterations to residual 2.794948497194403e-15
+CG converged in 62 iterations to residual 1.0693912500405173e-15
+CG converged in 62 iterations to residual 1.0872771882634035e-15
+CG converged in 62 iterations to residual 2.7203467513712784e-15
+CG converged in 62 iterations to residual 1.0275368576650931e-15
+CG converged in 62 iterations to residual 2.7743128810455e-15
+</pre></div></div>
+</div>
+<p>Plot the results together with reference lines for linear, quadratic, and cubic convergence order.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">ndof</span><span class="p">,</span>
+    <span class="n">err_hm2</span><span class="p">,</span>
+    <span class="s2">&quot;-x&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;$\|\widetilde{G\omega}-G_{\mathrm</span><span class="si">{ex}</span><span class="s2">}\omega_{\mathrm</span><span class="si">{ex}</span><span class="s2">}\|_{H^{-2}}$&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dof</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">ndof</span><span class="p">],</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;$O(h)$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="p">[</span><span class="mi">5</span> <span class="o">*</span> <span class="n">dof</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">ndof</span><span class="p">],</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;$O(h^2)$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">ndof</span><span class="p">,</span> <span class="p">[</span><span class="mi">50</span> <span class="o">*</span> <span class="n">dof</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">3</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">ndof</span><span class="p">],</span> <span class="s2">&quot;-.&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;$O(h^3)$&quot;</span>
+<span class="p">)</span>
+
+
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;order = </span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_distributional_einstein_tensor_13_0.png" src="../_images/tutorials_distributional_einstein_tensor_13_0.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="distributional_scalar_curvature.html" class="btn btn-neutral float-left" title="Distributional scalar curvature" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="distributional_riemann_curvature_tensor.html" class="btn btn-neutral float-right" title="Distributional Riemann curvature tensor curvature" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Michael Neunteufel.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

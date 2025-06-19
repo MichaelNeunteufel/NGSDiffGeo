@@ -23,7 +23,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="Distributional Gauss curvature (numerical analysis)" href="distributional_gauss_curvature_analysis.html" /> 
+    <link rel="next" title="Distributional scalar curvature" href="distributional_scalar_curvature.html" />
+    <link rel="prev" title="Distributional Gauss curvature (analysis)" href="distributional_gauss_curvature_analysis.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -58,12 +59,15 @@
 <li class="toctree-l1"><a class="reference internal" href="gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
 <li class="toctree-l1"><a class="reference internal" href="regge_metric.html">Regge finite elements and Regge metrics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature.html">Distributional Gauss curvature</a></li>
-<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_analysis.html">Distributional Gauss curvature (numerical analysis)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_analysis.html">Distributional Gauss curvature (analysis)</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Gauss curvature approximation on embedded surfaces</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#Setting">Setting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Numerical-example">Numerical example</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_scalar_curvature.html">Distributional scalar curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_einstein_tensor.html">Distributional Einstein curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_riemann_curvature_tensor.html">Distributional Riemann curvature tensor curvature</a></li>
 </ul>
 
         </div>
@@ -260,20 +264,20 @@
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CG converged in 2 iterations to residual 3.2741202502362136e-16
-CG converged in 10 iterations to residual 1.6675010826207335e-14
- Check Gauss-Bonnet theorem: int gf_K = 12.566370614358734 = 4*pi = 12.566370614359172
-CG converged in 2 iterations to residual 3.34096851896721e-16
-CG converged in 11 iterations to residual 3.842523892768609e-15
- Check Gauss-Bonnet theorem: int gf_K = 12.566370614359522 = 4*pi = 12.566370614359172
-CG converged in 2 iterations to residual 3.7269473068673703e-16
-CG converged in 11 iterations to residual 4.419424413736211e-15
- Check Gauss-Bonnet theorem: int gf_K = 12.566370614360906 = 4*pi = 12.566370614359172
-CG converged in 2 iterations to residual 3.798641899153782e-16
-CG converged in 12 iterations to residual 2.2263178275208494e-16
- Check Gauss-Bonnet theorem: int gf_K = 12.566370614358835 = 4*pi = 12.566370614359172
-CG converged in 2 iterations to residual 4.495941246308417e-16
-CG converged in 12 iterations to residual 3.6268503583896456e-16
+CG converged in 2 iterations to residual 3.4914719444041356e-16
+CG converged in 10 iterations to residual 1.667501082620788e-14
+ Check Gauss-Bonnet theorem: int gf_K = 12.566370614358735 = 4*pi = 12.566370614359172
+CG converged in 2 iterations to residual 3.5102924054337744e-16
+CG converged in 11 iterations to residual 3.842523892768628e-15
+ Check Gauss-Bonnet theorem: int gf_K = 12.56637061435951 = 4*pi = 12.566370614359172
+CG converged in 2 iterations to residual 3.6699830585138894e-16
+CG converged in 11 iterations to residual 4.41942441373617e-15
+ Check Gauss-Bonnet theorem: int gf_K = 12.566370614360904 = 4*pi = 12.566370614359172
+CG converged in 2 iterations to residual 4.552794261946925e-16
+CG converged in 12 iterations to residual 2.2263178275208573e-16
+ Check Gauss-Bonnet theorem: int gf_K = 12.566370614358847 = 4*pi = 12.566370614359172
+CG converged in 2 iterations to residual 4.517962715975102e-16
+CG converged in 12 iterations to residual 3.626850358389636e-16
  Check Gauss-Bonnet theorem: int gf_K = 12.566370614372076 = 4*pi = 12.566370614359172
 </pre></div></div>
 </div>
@@ -284,8 +288,8 @@ CG converged in 12 iterations to residual 3.6268503583896456e-16
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">err_hm1</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;$\|K_h-K_{\mathrm</span><span class="si">{ex}</span><span class="s2">}\|_{H^{-1}}$&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">err_l2</span><span class="p">,</span> <span class="s2">&quot;-x&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;$\|K_h-K_{\mathrm</span><span class="si">{ex}</span><span class="s2">}\|_{L^2}$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">err_hm1</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;$\|K_h-K_{\mathrm</span><span class="si">{ex}</span><span class="s2">}\|_{H^{-1}}$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">err_l2</span><span class="p">,</span> <span class="s2">&quot;-x&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;$\|K_h-K_{\mathrm</span><span class="si">{ex}</span><span class="s2">}\|_{L^2}$&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
     <span class="n">ndof</span><span class="p">,</span>
     <span class="p">[</span><span class="n">order</span><span class="o">**</span><span class="n">order</span> <span class="o">*</span> <span class="n">dof</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">order</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">ndof</span><span class="p">],</span>
@@ -315,26 +319,11 @@ CG converged in 12 iterations to residual 3.6268503583896456e-16
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-&lt;&gt;:3: SyntaxWarning: invalid escape sequence &#39;\|&#39;
-&lt;&gt;:4: SyntaxWarning: invalid escape sequence &#39;\|&#39;
-&lt;&gt;:3: SyntaxWarning: invalid escape sequence &#39;\|&#39;
-&lt;&gt;:4: SyntaxWarning: invalid escape sequence &#39;\|&#39;
-/tmp/ipykernel_1076/1936859508.py:3: SyntaxWarning: invalid escape sequence &#39;\|&#39;
-  plt.plot(ndof, err_hm1, &#34;-o&#34;, label=&#34;$\|K_h-K_{\mathrm{ex}}\|_{H^{-1}}$&#34;)
-/tmp/ipykernel_1076/1936859508.py:4: SyntaxWarning: invalid escape sequence &#39;\|&#39;
-  plt.plot(ndof, err_l2, &#34;-x&#34;, label=&#34;$\|K_h-K_{\mathrm{ex}}\|_{L^2}$&#34;)
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_distributional_gauss_curvature_surface_10_1.png" src="../_images/tutorials_distributional_gauss_curvature_surface_10_1.png" />
+<img alt="../_images/tutorials_distributional_gauss_curvature_surface_10_0.png" src="../_images/tutorials_distributional_gauss_curvature_surface_10_0.png" />
 </div>
 </div>
 <p>Observations: Except for <span class="math notranslate nohighlight">\(k=2\)</span>, we observe the convergence rates</p>
@@ -358,7 +347,8 @@ CG converged in 12 iterations to residual 3.6268503583896456e-16
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="distributional_gauss_curvature_analysis.html" class="btn btn-neutral float-left" title="Distributional Gauss curvature (numerical analysis)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="distributional_gauss_curvature_analysis.html" class="btn btn-neutral float-left" title="Distributional Gauss curvature (analysis)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="distributional_scalar_curvature.html" class="btn btn-neutral float-right" title="Distributional scalar curvature" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

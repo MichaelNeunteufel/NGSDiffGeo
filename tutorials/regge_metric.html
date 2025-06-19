@@ -63,8 +63,11 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature.html">Distributional Gauss curvature</a></li>
-<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_analysis.html">Distributional Gauss curvature (numerical analysis)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_analysis.html">Distributional Gauss curvature (analysis)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_surface.html">Gauss curvature approximation on embedded surfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_scalar_curvature.html">Distributional scalar curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_einstein_tensor.html">Distributional Einstein curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_riemann_curvature_tensor.html">Distributional Riemann curvature tensor curvature</a></li>
 </ul>
 
         </div>
@@ -135,12 +138,12 @@ H(\mathrm{curl}\,\mathrm{curl},\Omega)=\left\{\sigma \in L^2(\Omega,\mathbb{R}^{
  \varphi_{E_i} = \nabla \lambda_j\odot\nabla \lambda_k,\qquad t_j^\top\varphi_{E_i}t_j=c_i\delta_{ij},\qquad\qquad\varphi_{T_i} = \lambda_i\,\nabla \lambda_j\odot\nabla \lambda_k.
 \end{align*}\]</div>
 <p>For higher-order shape functions, one might augment these low-order functions by, e.g. linear independent Legendre and Jacobi polynomials. The construction for higher-dimensional simplices follows the same lines, for example, by constructing appropriate bubble functions. In the following figure, the DoFs are schematically sketched for some shapes.</p>
-<center><table><tr><td><p><img alt="eecbef6e2b2d46e18ba582bfd2cb3d05" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_1.jpg" style="width: 120px;" /></p>
-</td><td><p><img alt="fe4bc506925c415c9970ebd2f620beea" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_2.jpg" style="width: 120px;" /></p>
-</td><td><p><img alt="2ffb764f8fa44621a96c5e0cb4647754" class="no-scaled-link" src="../_images/hcurlcurl_0_tet_ref_1.jpg" style="width: 130px;" /></p>
-</td></tr><tr><td><p><img alt="18e497bb07f34fbbb065f85ba665b063" class="no-scaled-link" src="../_images/hcurlcurl_0_quad_ref_1.jpg" style="width: 120px;" /></p>
-</td><td><p><img alt="49b218dc687d4cc2ad5e870d4a956a8d" class="no-scaled-link" src="../_images/hcurlcurl_0_hex_ref_1.jpg" style="width: 120px;" /></p>
-</td><td><p><img alt="62b3d54894b54c989f4bc3e9aea632a8" class="no-scaled-link" src="../_images/hcurlcurl_0_prism_ref_1.jpg" style="width: 130px;" /></p>
+<center><table><tr><td><p><img alt="b81d5863faa049b389bcbeb21f46c8e8" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_1.jpg" style="width: 120px;" /></p>
+</td><td><p><img alt="b3384e824ea840b7ba3a4056b87d9974" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_2.jpg" style="width: 120px;" /></p>
+</td><td><p><img alt="7d1f0f3eadd94295a2868ed432f6e33a" class="no-scaled-link" src="../_images/hcurlcurl_0_tet_ref_1.jpg" style="width: 130px;" /></p>
+</td></tr><tr><td><p><img alt="540842e8ef624b538889624763c92828" class="no-scaled-link" src="../_images/hcurlcurl_0_quad_ref_1.jpg" style="width: 120px;" /></p>
+</td><td><p><img alt="6050ec489c794b81865c8ef5b0ef8611" class="no-scaled-link" src="../_images/hcurlcurl_0_hex_ref_1.jpg" style="width: 120px;" /></p>
+</td><td><p><img alt="d76c4200618a4a7eacd934f5f1ff9c5c" class="no-scaled-link" src="../_images/hcurlcurl_0_prism_ref_1.jpg" style="width: 130px;" /></p>
 </td></tr></table></center><p>The canonical Regge interpolant <span class="math notranslate nohighlight">\(\mathcal{I}_{Reg}^k\)</span> is defined by the requirement to preserve tangential-tangential moments at edges and inner moments</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{align*}

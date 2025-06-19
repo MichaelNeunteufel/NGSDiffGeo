@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Distributional Gauss curvature (numerical analysis) &mdash; NGSDiffGeo 0.1 documentation</title>
+  <title>Distributional Gauss curvature (analysis) &mdash; NGSDiffGeo 0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
 
@@ -58,12 +58,15 @@
 <li class="toctree-l1"><a class="reference internal" href="gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
 <li class="toctree-l1"><a class="reference internal" href="regge_metric.html">Regge finite elements and Regge metrics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature.html">Distributional Gauss curvature</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Distributional Gauss curvature (numerical analysis)</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Distributional Gauss curvature (analysis)</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#Integral-representation-of-distributional-Gauss-curvature">Integral representation of distributional Gauss curvature</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Improved-convergence-rates-by-the-canonical-Regge-interpolant">Improved convergence rates by the canonical Regge interpolant</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_surface.html">Gauss curvature approximation on embedded surfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_scalar_curvature.html">Distributional scalar curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_einstein_tensor.html">Distributional Einstein curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_riemann_curvature_tensor.html">Distributional Riemann curvature tensor curvature</a></li>
 </ul>
 
         </div>
@@ -80,7 +83,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Distributional Gauss curvature (numerical analysis)</li>
+      <li class="breadcrumb-item active">Distributional Gauss curvature (analysis)</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/tutorials/distributional_gauss_curvature_analysis.ipynb.txt" rel="nofollow"> View page source</a>
       </li>
@@ -90,8 +93,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="Distributional-Gauss-curvature-(numerical-analysis)">
-<h1>Distributional Gauss curvature (numerical analysis)<a class="headerlink" href="#Distributional-Gauss-curvature-(numerical-analysis)" title="Link to this heading"></a></h1>
+  <section id="Distributional-Gauss-curvature-(analysis)">
+<h1>Distributional Gauss curvature (analysis)<a class="headerlink" href="#Distributional-Gauss-curvature-(analysis)" title="Link to this heading"></a></h1>
 <p>After we defined the distributional Gauss curvature and its lifting and observed convergence rates numerically in the <a class="reference internal" href="distributional_gauss_curvature.html"><span class="doc">previous notebook</span></a>, we focus in this notebook on the numerical analysis and presenting ideas on how to prove the observed convergence rates.</p>
 <p>The notebook is based on the following works: <a class="reference external" href="https://doi.org/10.1137/19M1255549">Gawlik. High-Order Approximation of Gaussian Curvature with Regge Finite Elements, SIAM Journal on Numerical Analysis (2020).</a>, <a class="reference external" href="https://doi.org/10.1007/s10208-022-09597-1">Berchenko-Kogan, Gawlik. Finite Element Approximation of the Levi-Civita Connection and Its Curvature in Two Dimensions, Found Comput Math (2022)</a>, <a class="reference external" href="https://doi.org/10.5802/smai-jcm.98">Gopalakrishnan, Neunteufel, Schöberl, Wardetzky. Analysis of curvature approximations via
 covariant curl and incompatibility for Regge metrics, The SMAI Journal of computational mathematics (2023).</a>, and <a class="reference external" href="https://doi.org/10.1016/j.rinam.2024.100511">Gopalakrishnan, Neunteufel, Schöberl, Wardetzky. On the improved convergence of lifted distributional Gauss curvature from Regge elements, Results in Applied Mathematics (2024).</a>.</p>
@@ -123,9 +126,9 @@ D_g(\kappa_g\,\omega_E)[\sigma]=\frac{1}{2}\left( (\mathrm{div}_g(\mathbb{S}_g(\
 \end{align*}</span> proving that <span class="math">\begin{align*}
 D_g \widetilde{K\omega}(u_h)[\sigma]=\frac{1}{2}b_h(g;\sigma_h,u_h),\qquad b_h(g;\sigma_h,u_h) =\sum_{T\in\mathcal{T}}\int_T g(\mathbb{S}_g\sigma_h, \nabla_g^2 u_h)\,\omega|_T(g) - \int_{\partial T} \sigma_h(t,t)\partial_nu_h\,\omega_{\partial T}(g)
 \end{align*}</span> Noting that the Gauss curvature for the Euclidean metric is zero, we obtain with the main theorem of integration and differentiation the following integral representation of the Gauss curvature <span class="math">\begin{align*}
-\widetilde{K\omega}(u_h)= \frac{1}{2}\int_0^1b_h(g(t);\sigma_h,u_h)\,dt,\qquad g(t) = \delta+t(g_h-\delta),\quad \sigma_h=\dot{g}(t) = g_h-\delta,
+\widetilde{K\omega}(u_h)= \frac{1}{2}\int_0^1b_h(g(t);\sigma,u_h)\,dt,\qquad g(t) = \delta+t(g_h-\delta),\quad \sigma=\dot{g}(t) = g_h-\delta,
 \end{align*}</span> where <span class="math notranslate nohighlight">\(\delta\)</span> denotes the Euclidean metric. By consistency, the exact Gauss curvature from the smooth, exact metric also fulfils the integral representation. Thus, the error has the following integral representation <span class="math">\begin{align*}
-\langle \widetilde{K\omega}(g_h)-K\omega,u_h\rangle = \frac{1}{2}\int_0^1b_h(g(t);\sigma_h,u_h)\,dt,\qquad g(t) = g+t(g_h-g),\quad \sigma_h=\dot{g}(t) = g_h-g
+\langle \widetilde{K\omega}(g_h)-K\omega,u_h\rangle = \frac{1}{2}\int_0^1b_h(g(t);\sigma,u_h)\,dt,\qquad g(t) = g+t(g_h-g),\quad \sigma=\dot{g}(t) = g_h-g
 \end{align*}</span> The integrand is linear enough to perform numerical analysis to prove the observed convergence rates. For the details of the (technical) proofs, we refer to the above-mentioned literature.</p>
 </section>
 <section id="Improved-convergence-rates-by-the-canonical-Regge-interpolant">
@@ -142,7 +145,7 @@ Schöberl, Wardetzky. Analysis of curvature approximations via covariant curl an
 \[\begin{align*}
 \|K_h-K\|_{L^2}\le C h^{k+1},\qquad \|K_h-K\|_{H^{-1}}\le C h^{k+2},\qquad k&gt;1.
 \end{align*}\]</div>
-<p>In fact, one obtains the optimal convergence possible in the <span class="math notranslate nohighlight">\(L^2\)</span>-norm. Again, the key ingredient is the definition of the canonical Regge interpolant. THe details can be found in <a class="reference external" href="https://doi.org/10.1016/j.rinam.2024.100511">Gopalakrishnan, Neunteufel, Schöberl, Wardetzky. On the improved convergence of lifted distributional Gauss curvature from Regge elements, Results in Applied Mathematics (2024).</a>. Note that the convergence rates highly depend on the chosen polynomial approximation
+<p>In fact, one obtains the optimal convergence possible in the <span class="math notranslate nohighlight">\(L^2\)</span>-norm. Again, the key ingredient is the definition of the canonical Regge interpolant. The details can be found in <a class="reference external" href="https://doi.org/10.1016/j.rinam.2024.100511">Gopalakrishnan, Neunteufel, Schöberl, Wardetzky. On the improved convergence of lifted distributional Gauss curvature from Regge elements, Results in Applied Mathematics (2024).</a>. Note that the convergence rates highly depend on the chosen polynomial approximation
 spaces for <span class="math notranslate nohighlight">\(g_h\)</span> and <span class="math notranslate nohighlight">\(K_h\)</span>, and whether the canonical Regge interpolation operator is used or something else.</p>
 </section>
 </section>
