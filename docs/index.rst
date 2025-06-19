@@ -29,5 +29,8 @@ Welcome
    tutorials/distributional_gauss_curvature.ipynb
    tutorials/distributional_gauss_curvature_analysis.ipynb
    tutorials/distributional_gauss_curvature_surface.ipynb
+   tutorials/distributional_scalar_curvature.ipynb
+   tutorials/distributional_einstein_tensor.ipynb
+   tutorials/distributional_riemann_curvature_tensor.ipynb
 
 
