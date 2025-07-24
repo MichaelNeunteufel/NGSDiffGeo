@@ -32,5 +32,6 @@ Welcome
    tutorials/distributional_scalar_curvature.ipynb
    tutorials/distributional_einstein_tensor.ipynb
    tutorials/distributional_riemann_curvature_tensor.ipynb
+   tutorials/linearization_curvature_quantitites.ipynb
 
 
