@@ -131,7 +131,7 @@ namespace ngfem
 
         shared_ptr<CoefficientFunction> CovCurl(shared_ptr<TensorFieldCoefficientFunction> c1) const;
 
-        shared_ptr<CoefficientFunction> CovInc(shared_ptr<TensorFieldCoefficientFunction> c1) const;
+        shared_ptr<CoefficientFunction> CovInc(shared_ptr<TensorFieldCoefficientFunction> c1, bool matrix = false) const;
 
         shared_ptr<CoefficientFunction> CovEin(shared_ptr<TensorFieldCoefficientFunction> c1) const;
 

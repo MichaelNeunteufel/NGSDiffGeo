@@ -540,26 +540,28 @@ namespace ngfem
             throw Exception("CovCurl: only available in 2D and 3D yet");
     }
 
-    shared_ptr<CoefficientFunction> RiemannianManifold::CovInc(shared_ptr<TensorFieldCoefficientFunction> c1) const
+    shared_ptr<CoefficientFunction> RiemannianManifold::CovInc(shared_ptr<TensorFieldCoefficientFunction> c1, bool matrix) const
     {
         if (c1->Dimensions().Size() < 2)
             throw Exception("CovInc: called with scalar, vector, or 1-form field");
-
+        if (matrix)
+        {
+            if (dim == 3)
+            {
+                return CovCurl(dynamic_pointer_cast<TensorFieldCoefficientFunction>(Transpose(dynamic_pointer_cast<TensorFieldCoefficientFunction>(c1))));
+            }
+            else if (dim == 2)
+            {
+                return CovCurl(dynamic_pointer_cast<TensorFieldCoefficientFunction>(CovCurl(c1)));
+            }
+            else
+                throw Exception("CovInc: not implemented for dim = " + ToString(dim) + " yet");
+        }
         shared_ptr<CoefficientFunction> cov_hesse = CovHessian(c1);
         shared_ptr<CoefficientFunction> p_cov_hesse = make_shared<ConstantCoefficientFunction>(0.25)*(cov_hesse-EinsumCF("ijkl->kjil",{cov_hesse})-EinsumCF("ijkl->ilkj",{cov_hesse})+EinsumCF("ijkl->klij",{cov_hesse}));
         
         return TensorFieldCF(-EinsumCF("ijkl->ikjl",{p_cov_hesse}),"1111");
         
-        // if (dim == 3)
-        // {
-        //     return CovCurl(dynamic_pointer_cast<TensorFieldCoefficientFunction>(Transpose(dynamic_pointer_cast<TensorFieldCoefficientFunction>(c1))));
-        // }
-        // else if (dim == 2)
-        // {
-        //     return CovCurl(dynamic_pointer_cast<TensorFieldCoefficientFunction>(CovCurl(c1)));
-        // }
-        // else
-        //     throw Exception("CovInc: not implemented for dim = " + ToString(dim) + " yet");
     }
 
     shared_ptr<CoefficientFunction> RiemannianManifold::CovEin(shared_ptr<TensorFieldCoefficientFunction> c1) const
@@ -861,11 +863,11 @@ void ExportRiemannianManifold(py::module m)
         if (!dynamic_pointer_cast<TensorFieldCoefficientFunction>(tf))
             throw Exception("CovCurl: input must be a TensorFieldCoefficientFunction");
         return self->CovCurl(dynamic_pointer_cast<TensorFieldCoefficientFunction>(tf)); }, "Covariant curl of a TensorField in 3D", py::arg("tf"))
-        .def("CovInc", [](shared_ptr<RiemannianManifold> self, shared_ptr<CoefficientFunction> tf)
+        .def("CovInc", [](shared_ptr<RiemannianManifold> self, shared_ptr<CoefficientFunction> tf, bool matrix = false)
              {
         if (!dynamic_pointer_cast<TensorFieldCoefficientFunction>(tf))
             throw Exception("CovInc: input must be a TensorFieldCoefficientFunction");
-        return self->CovInc(dynamic_pointer_cast<TensorFieldCoefficientFunction>(tf)); }, "Covariant inc of a TensorField in 2D or 3D", py::arg("tf"))
+        return self->CovInc(dynamic_pointer_cast<TensorFieldCoefficientFunction>(tf), matrix); }, "Covariant inc of a TensorField. If matrix=True a scalar in 2D and matrix in 3D is returned", py::arg("tf"), py::arg("matrix") = false)
         .def("CovEin", [](shared_ptr<RiemannianManifold> self, shared_ptr<CoefficientFunction> tf)
              {
         if (!dynamic_pointer_cast<TensorFieldCoefficientFunction>(tf))
