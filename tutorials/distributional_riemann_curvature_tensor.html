@@ -23,6 +23,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Linearization of curvature quantities" href="linearization_curvature_quantitites.html" />
     <link rel="prev" title="Distributional Einstein curvature" href="distributional_einstein_tensor.html" /> 
 </head>
 
@@ -69,6 +70,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#Numerical-example">Numerical example</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="linearization_curvature_quantitites.html">Linearization of curvature quantities</a></li>
 </ul>
 
         </div>
@@ -237,7 +239,7 @@ A^{ijkl} = \hat{\varepsilon}^{ijm}\hat{\varepsilon}^{kln}U_{mn},
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;netgen.webgui.WebGLScene at 0x7f94ae4893a0&gt;
+&lt;netgen.webgui.WebGLScene at 0x7f59881a46b0&gt;
 </pre></div></div>
 </div>
 <p>Like for the Einstein tensor, we compute the <span class="math notranslate nohighlight">\(H^{-2}\)</span>-norm of the error <span class="math notranslate nohighlight">\(\|\widetilde{\mathcal{Q}\omega}-\mathcal{Q}\omega\|_{H^{-2}}\)</span> by solving for each component the following fourth-order problem <span class="math notranslate nohighlight">\(\mathrm{div}(\mathrm{div}(\nabla^2 u_{ij}))= (\widetilde{\mathcal{Q}\omega}-\mathcal{Q}\omega)_{ij}\)</span>. Then <span class="math notranslate nohighlight">\(\|u\|_{H^2}\approx \|\widetilde{\mathcal{Q}\omega}-\mathcal{Q}\omega\|_{H^{-2}}\)</span>. We use the Euclidean Hellan-Herrmann-Johnson (HHJ) method to solve the fourth-order
@@ -464,33 +466,33 @@ problem as a mixed saddle point problem. Therein, <span class="math notranslate 
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 max = 3.4641016151377544, min = 2.0, ne = 6
-CG converged in 13 iterations to residual 8.10024787131927e-15
-CG converged in 10 iterations to residual 4.960031981473037e-15
-CG converged in 10 iterations to residual 2.4789855682245292e-14
-CG converged in 13 iterations to residual 7.780011868923281e-15
-CG converged in 10 iterations to residual 2.2155500817183902e-14
-CG converged in 13 iterations to residual 7.896707788822336e-15
+CG converged in 13 iterations to residual 8.100309453884928e-15
+CG converged in 10 iterations to residual 4.189032225560238e-15
+CG converged in 10 iterations to residual 2.4751642185563085e-14
+CG converged in 13 iterations to residual 7.779862762438183e-15
+CG converged in 10 iterations to residual 2.2158288209679064e-14
+CG converged in 12 iterations to residual 5.565864993093065e-14
 max = 1.7320508075688772, min = 1.0, ne = 48
-CG converged in 41 iterations to residual 1.7501108613656265e-14
-CG converged in 41 iterations to residual 8.012709735045386e-15
-CG converged in 41 iterations to residual 9.2347854524392e-15
-CG converged in 41 iterations to residual 1.637746887373637e-14
-CG converged in 41 iterations to residual 1.0145447670133149e-14
-CG converged in 41 iterations to residual 2.184850447402927e-14
+CG converged in 36 iterations to residual 2.1940685788095002e-14
+CG converged in 37 iterations to residual 3.0453094830516913e-15
+CG converged in 37 iterations to residual 3.3515494291679433e-15
+CG converged in 37 iterations to residual 8.581881788894038e-15
+CG converged in 37 iterations to residual 3.1947560083614245e-15
+CG converged in 37 iterations to residual 8.600999775648963e-15
 max = 0.8660254037844386, min = 0.5, ne = 384
-CG converged in 112 iterations to residual 1.2294302938075027e-14
-CG converged in 112 iterations to residual 6.514842418523974e-15
-CG converged in 111 iterations to residual 5.9312289796006606e-15
-CG converged in 110 iterations to residual 1.2446465630043467e-14
-CG converged in 111 iterations to residual 6.748653705412542e-15
-CG converged in 112 iterations to residual 7.901491136048827e-15
+CG converged in 73 iterations to residual 9.955415234257614e-15
+CG converged in 74 iterations to residual 4.1505276063176806e-15
+CG converged in 74 iterations to residual 3.699227424113798e-15
+CG converged in 74 iterations to residual 9.306784838343124e-15
+CG converged in 74 iterations to residual 3.563987384144465e-15
+CG converged in 74 iterations to residual 8.762104102727233e-15
 max = 0.4330127018922193, min = 0.25, ne = 3072
-CG converged in 88 iterations to residual 3.8181587919766905e-15
-CG converged in 89 iterations to residual 1.1265567901651994e-15
-CG converged in 88 iterations to residual 1.5249060956352838e-15
-CG converged in 88 iterations to residual 3.399746395847402e-15
-CG converged in 87 iterations to residual 1.4373302456875102e-15
-CG converged in 89 iterations to residual 2.5551543069127086e-15
+CG converged in 105 iterations to residual 3.4442195054676197e-15
+CG converged in 106 iterations to residual 1.1649030325804967e-15
+CG converged in 105 iterations to residual 1.198086187250047e-15
+CG converged in 106 iterations to residual 2.7960293988817628e-15
+CG converged in 107 iterations to residual 9.552471096325376e-16
+CG converged in 106 iterations to residual 3.489751680907799e-15
 </pre></div></div>
 </div>
 <p>Plot the results together with reference lines for linear, quadratic, and cubic convergence order.</p>
@@ -544,6 +546,7 @@ CG converged in 89 iterations to residual 2.5551543069127086e-15
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="distributional_einstein_tensor.html" class="btn btn-neutral float-left" title="Distributional Einstein curvature" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="linearization_curvature_quantitites.html" class="btn btn-neutral float-right" title="Linearization of curvature quantities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
