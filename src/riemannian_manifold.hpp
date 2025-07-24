@@ -33,6 +33,10 @@ namespace ngfem
         // metric tensor, its inverse, derivative, and volume forms
         shared_ptr<CoefficientFunction> g;
         shared_ptr<CoefficientFunction> g_inv;
+        shared_ptr<CoefficientFunction> g_F;
+        shared_ptr<CoefficientFunction> g_F_inv;
+        shared_ptr<CoefficientFunction> g_E;
+        shared_ptr<CoefficientFunction> g_E_inv;
         shared_ptr<CoefficientFunction> g_deriv;
         shared_ptr<CoefficientFunction> vol[4];
 
@@ -47,11 +51,16 @@ namespace ngfem
         shared_ptr<CoefficientFunction> Einstein;
         shared_ptr<CoefficientFunction> Scalar;
 
+        shared_ptr<CoefficientFunction> SFF;
+
         // Euclidean and g-normalized normal and tangent vectors
         shared_ptr<CoefficientFunction> nv;
         shared_ptr<CoefficientFunction> tv;
         shared_ptr<CoefficientFunction> g_nv;
         shared_ptr<CoefficientFunction> g_tv;
+        
+        shared_ptr<CoefficientFunction> P_n;
+        shared_ptr<CoefficientFunction> P_F;
 
     public:
         /**
@@ -90,39 +99,60 @@ namespace ngfem
 
         // Scalar curvature (twice contracted Riemann tensor; trace of Ricci tensor)
         shared_ptr<CoefficientFunction> GetScalarCurvature() const;
+        
+        // Gauss curvature in 2D
+        shared_ptr<CoefficientFunction> GetGaussCurvature() const;
 
         // Curvature operator
         // 2D -> scalar Gauss curvature, 3D -> 3x3 symmetric curvature operator
         shared_ptr<CoefficientFunction> GetCurvatureOperator() const;
+
+
+        // ------- second fundamental form --------
+        shared_ptr<CoefficientFunction> GetSecondFundamentalForm() const;
+        shared_ptr<CoefficientFunction> GetGeodesicCurvature() const;
+        shared_ptr<CoefficientFunction> GetMeanCurvature() const;
 
         // ------- Normal and tangent vectors --------
         shared_ptr<CoefficientFunction> GetNV() const;
         shared_ptr<CoefficientFunction> GetEdgeTangent() const;
 
         // ------- Tensor operations --------
-        shared_ptr<CoefficientFunction> IP(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2) const;
+        shared_ptr<CoefficientFunction> IP(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2, VorB vb = VOL) const;
 
         shared_ptr<CoefficientFunction> Cross(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2) const;
 
         // ------- Covariant differential operators --------
-        shared_ptr<CoefficientFunction> CovDerivative(shared_ptr<TensorFieldCoefficientFunction> c1) const;
+        shared_ptr<CoefficientFunction> CovDerivative(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb = VOL) const;
 
         shared_ptr<CoefficientFunction> CovHessian(shared_ptr<TensorFieldCoefficientFunction> c1) const;
 
-        shared_ptr<CoefficientFunction> CovDivergence(shared_ptr<TensorFieldCoefficientFunction> c1) const;
+        shared_ptr<CoefficientFunction> CovDivergence(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb = VOL) const;
 
         shared_ptr<CoefficientFunction> CovCurl(shared_ptr<TensorFieldCoefficientFunction> c1) const;
 
         shared_ptr<CoefficientFunction> CovInc(shared_ptr<TensorFieldCoefficientFunction> c1) const;
 
+        shared_ptr<CoefficientFunction> CovEin(shared_ptr<TensorFieldCoefficientFunction> c1) const;
+
+        shared_ptr<CoefficientFunction> CovLaplace(shared_ptr<TensorFieldCoefficientFunction> c1) const;
+        shared_ptr<CoefficientFunction> CovDef(shared_ptr<TensorFieldCoefficientFunction> c1) const;
+
         shared_ptr<CoefficientFunction> CovRot(shared_ptr<TensorFieldCoefficientFunction> c1) const;
 
+        shared_ptr<CoefficientFunction> LichnerowiczLaplacian(shared_ptr<TensorFieldCoefficientFunction> c1) const;
+
+
+
         // ------- Algebraic operations --------
-        shared_ptr<CoefficientFunction> Trace(shared_ptr<TensorFieldCoefficientFunction> c1, size_t index1 = 0, size_t index2 = 1) const;
+        shared_ptr<CoefficientFunction> Trace(shared_ptr<TensorFieldCoefficientFunction> c1, size_t index1 = 0, size_t index2 = 1, VorB vb = VOL) const;
 
         shared_ptr<CoefficientFunction> Contraction(shared_ptr<TensorFieldCoefficientFunction> tf, shared_ptr<VectorFieldCoefficientFunction> vf, size_t slot = 0) const;
 
         shared_ptr<CoefficientFunction> Transpose(shared_ptr<TensorFieldCoefficientFunction> tf, size_t index1 = 0, size_t index2 = 1) const;
+
+        shared_ptr<CoefficientFunction> S_op(shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb = VOL) const;
+        shared_ptr<CoefficientFunction> J_op(shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb = VOL) const;
     };
 }
 

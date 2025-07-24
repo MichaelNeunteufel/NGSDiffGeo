@@ -197,7 +197,7 @@ def test_integration_by_parts_2d():
 
     assert (
         abs(
-            Integrate(mf.InnerProduct(mf.CovInc(C), f) * omega_T * dx, mesh)
+            Integrate(mf.InnerProduct(mf.CovInc(C, True), f) * omega_T * dx, mesh)
             - 0.5
             * Integrate(
                 mf.InnerProduct(mf.CovCurl(C), mf.CovRot(f)) * omega_T * dx
