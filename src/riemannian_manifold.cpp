@@ -31,15 +31,22 @@ namespace ngfem
         // check if _g itself is a Regge trial function
         if (dynamic_pointer_cast<ProxyFunction>(g))
         {
+            // cout << "In RMF: g is a ProxyFunction" << endl;
             regge_proxy = dynamic_pointer_cast<ProxyFunction>(g);
-            regge_space = dynamic_pointer_cast<ngcomp::HCurlCurlFESpace>(regge_proxy->GetFESpace());
             is_proxy = true;
-            is_regge = bool(regge_space); //"HCurlCurlFESpace" == regge_space->GetClassName();
+            is_regge = true;
+            if (regge_proxy->GetFESpace()->GetClassName().find(string("HCurlCurlFESpace")) == string::npos)
+                throw Exception("In RMF: ProxyFunction must be from HCurlCurlFESpace");
+            regge_space = regge_proxy->GetFESpace();
         }
         else if (auto gf = dynamic_pointer_cast<ngcomp::GridFunction>(g))
         {
-            regge_space = dynamic_pointer_cast<ngcomp::HCurlCurlFESpace>(gf->GetFESpace());
-            is_regge = bool(regge_space);
+            // cout << "In RMF: g is a GridFunction from space " << gf->GetFESpace()->GetClassName() << endl;
+
+            is_regge = true;
+            if (gf->GetFESpace()->GetClassName().find(string("HCurlCurlFESpace")) == string::npos)
+                throw Exception("In RMF: GridFunction must be from HCurlCurlFESpace");
+            regge_space = gf->GetFESpace();
         }
 
         dim = g->Dimensions()[0];
@@ -94,10 +101,13 @@ namespace ngfem
 
         g_nv = VectorFieldCF(vol[VOL] / vol[BND] * g_inv * nv);
 
+
         if (is_regge)
         {
             if (is_proxy)
             {
+                // cout << "is_proxy" << endl;
+
                 auto g_proxy = dynamic_pointer_cast<ProxyFunction>(g);
                 g_deriv = g_proxy->GetAdditionalProxy("grad");
                 chr1 = g_proxy->GetAdditionalProxy("christoffel");
@@ -107,49 +117,56 @@ namespace ngfem
                 Ricci = g_proxy->GetAdditionalProxy("Ricci");
                 Einstein = g_proxy->GetAdditionalProxy("Einstein");
                 Scalar = g_proxy->GetAdditionalProxy("scalar");
+                if (!g_deriv || !chr1 || !chr2 || !Riemann || !Curvature || !Ricci || !Einstein || !Scalar)
+                    throw Exception("In RMF: Could not load all additional proxy functions");
                 SFF = EinsumCF("ijk,k->ij", {chr1->Reshape(Array<int>({dim, dim, dim})),g_nv});
             }
             else
             {
-                auto diffop = regge_space->GetAdditionalEvaluators()["grad"];
+                // cout << "not proxy" << endl;
+                auto diffop_grad = regge_space->GetAdditionalEvaluators()["grad"];
+                auto diffop_chr1 = regge_space->GetAdditionalEvaluators()["christoffel"];
+                auto diffop_chr2 = regge_space->GetAdditionalEvaluators()["christoffel2"];
+                auto diffop_Riemann = regge_space->GetAdditionalEvaluators()["Riemann"];
+                auto diffop_curvature = regge_space->GetAdditionalEvaluators()["curvature"];
+                auto diffop_Ricci = regge_space->GetAdditionalEvaluators()["Ricci"];
+                auto diffop_Einstein = regge_space->GetAdditionalEvaluators()["Einstein"];
+                auto diffop_scalar = regge_space->GetAdditionalEvaluators()["scalar"];
                 shared_ptr<ngcomp::GridFunction> gf = dynamic_pointer_cast<ngcomp::GridFunction>(g);
 
-                g_deriv = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop);
-                g_deriv->SetDimensions(diffop->Dimensions());
+                if (!diffop_grad || !diffop_chr1 || !diffop_chr2 || !diffop_Riemann || !diffop_curvature || !diffop_Ricci || !diffop_Einstein || !diffop_scalar || !gf)
+                    throw Exception("In RMF: Could not load all additional evaluators");
 
-                diffop = regge_space->GetAdditionalEvaluators()["christoffel"];
-                chr1 = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop);
-                chr1->SetDimensions(diffop->Dimensions());
+                g_deriv = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop_grad);
+                g_deriv->SetDimensions(diffop_grad->Dimensions());
 
-                diffop = regge_space->GetAdditionalEvaluators()["christoffel2"];
-                chr2 = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop);
-                chr2->SetDimensions(diffop->Dimensions());
+                chr1 = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop_chr1);
+                chr1->SetDimensions(diffop_chr1->Dimensions());
 
-                diffop = regge_space->GetAdditionalEvaluators()["Riemann"];
-                Riemann = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop);
-                Riemann->SetDimensions(diffop->Dimensions());
+                chr2 = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop_chr2);
+                chr2->SetDimensions(diffop_chr2->Dimensions());
 
-                diffop = regge_space->GetAdditionalEvaluators()["curvature"];
-                Curvature = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop);
-                Curvature->SetDimensions(diffop->Dimensions());
+                Riemann = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop_Riemann);
+                Riemann->SetDimensions(diffop_Riemann->Dimensions());
 
-                diffop = regge_space->GetAdditionalEvaluators()["Ricci"];
-                Ricci = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop);
-                Ricci->SetDimensions(diffop->Dimensions());
+                Curvature = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop_curvature);
+                Curvature->SetDimensions(diffop_curvature->Dimensions());
 
-                diffop = regge_space->GetAdditionalEvaluators()["Einstein"];
-                Einstein = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop);
-                Einstein->SetDimensions(diffop->Dimensions());
+                Ricci = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop_Ricci);
+                Ricci->SetDimensions(diffop_Ricci->Dimensions());
 
-                diffop = regge_space->GetAdditionalEvaluators()["scalar"];
-                Scalar = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop);
-                Scalar->SetDimensions(diffop->Dimensions());
+                Einstein = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop_Einstein);
+                Einstein->SetDimensions(diffop_Einstein->Dimensions());
+
+                Scalar = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop_scalar);
+                Scalar->SetDimensions(diffop_scalar->Dimensions());
 
                 SFF = EinsumCF("ijk,k->ij", {chr1->Reshape(Array<int>({dim, dim, dim})),g_nv});
             }
         }
         else
         {
+            // cout << "is CF" << endl;
             g_deriv = GradCF(g, dim);
             Array<shared_ptr<CoefficientFunction>> values(dim * dim * dim);
 
@@ -168,10 +185,10 @@ namespace ngfem
             Riemann = TensorFieldCF(lin_part + non_lin_part, "1111");
             auto LeviCivita = GetLeviCivitaSymbol(false);
             string signature = SIGNATURE.substr(0, 4) + "," + SIGNATURE.substr(4, dim - 2) + SIGNATURE.substr(0, 2) + "," + SIGNATURE.substr(2 + dim, dim - 2) + SIGNATURE.substr(2, 2) + "->" + SIGNATURE.substr(4, dim - 2) + SIGNATURE.substr(2 + dim, dim - 2);
-            Curvature = TensorFieldCF(1 / 4 * EinsumCF(signature, {Riemann, LeviCivita, LeviCivita}), "00");
+            Curvature = 1 / 4 * EinsumCF(signature, {Riemann, LeviCivita, LeviCivita});
             Ricci = Trace(dynamic_pointer_cast<TensorFieldCoefficientFunction>(Riemann), 0, 2);
             Scalar = Trace(dynamic_pointer_cast<TensorFieldCoefficientFunction>(Ricci), 0, 1);
-            Einstein = TensorFieldCF(Ricci - 0.5 * Scalar * g, "11");
+            Einstein = Ricci - 0.5 * Scalar * g;
         }
     }
 
@@ -250,7 +267,10 @@ namespace ngfem
 
     shared_ptr<CoefficientFunction> RiemannianManifold::GetCurvatureOperator() const
     {
-        return TensorFieldCF(Curvature,"00");
+        if (dim == 2)
+            return ScalarFieldCF(Curvature);
+        else
+            return TensorFieldCF(Curvature,"00");
     }
 
     shared_ptr<CoefficientFunction> RiemannianManifold::GetRicciTensor() const
@@ -265,7 +285,7 @@ namespace ngfem
 
     shared_ptr<CoefficientFunction> RiemannianManifold::GetScalarCurvature() const
     {
-        return Scalar;
+        return ScalarFieldCF(Scalar);
     }
 
     shared_ptr<CoefficientFunction> RiemannianManifold::GetGaussCurvature() const

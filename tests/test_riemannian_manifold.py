@@ -73,10 +73,16 @@ def GetDiffOp(name, cf):
         )
 
 
-def test_volume_forms_vectors_2D():
+@pytest.mark.parametrize("interpolate", [True, False])
+def test_volume_forms_vectors_2D(interpolate):
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.1))
-    metric = dg.CigarSoliton().metric
+    cf_metric = dg.CigarSoliton().metric
 
+    if interpolate:
+        metric = GridFunction(HCurlCurl(mesh, order=2))
+        metric.Set(cf_metric, dual=True)
+    else:
+        metric = cf_metric
     mf = dg.RiemannianManifold(metric=metric)
     tang = specialcf.tangential(mesh.dim)
     nv = specialcf.normal(2)
@@ -84,42 +90,60 @@ def test_volume_forms_vectors_2D():
         Integrate((mf.VolumeForm(VOL) - sqrt(Det(metric))) ** 2, mesh)
     ) == pytest.approx(0)
     assert sqrt(
-        Integrate((mf.VolumeForm(BND) - sqrt(metric * tang * tang)) ** 2, mesh, BND)
+        Integrate(
+            (mf.VolumeForm(BND) - sqrt(metric * tang * tang)) ** 2
+            * dx(element_boundary=True),
+            mesh,
+        )
     ) == pytest.approx(0)
 
     assert sqrt(
         Integrate(
-            (mf.normal - 1 / sqrt(Inv(metric) * nv * nv) * Inv(metric) * nv) ** 2,
+            (mf.normal - 1 / sqrt(Inv(metric) * nv * nv) * Inv(metric) * nv) ** 2
+            * dx(element_boundary=True),
             mesh,
-            BND,
         )
     ) == pytest.approx(0)
     assert sqrt(
-        Integrate((mf.tangent - 1 / sqrt(metric * tang * tang) * tang) ** 2, mesh, BND)
+        Integrate(
+            (mf.tangent - 1 / sqrt(metric * tang * tang) * tang) ** 2
+            * dx(element_boundary=True),
+            mesh,
+        )
     ) == pytest.approx(0)
 
     return
 
 
-def test_volume_forms_vectors_3D():
+@pytest.mark.parametrize("interpolate", [True, False])
+def test_volume_forms_vectors_3D(interpolate):
     mesh = Mesh(unit_cube.GenerateMesh(maxh=0.2))
-    metric = dg.WarpedProduct().metric
+    cf_metric = dg.WarpedProduct().metric
 
+    if interpolate:
+        metric = GridFunction(HCurlCurl(mesh, order=2))
+        metric.Set(cf_metric, dual=True)
+    else:
+        metric = cf_metric
     mf = dg.RiemannianManifold(metric=metric)
     nv = specialcf.normal(mesh.dim)
     assert sqrt(
         Integrate((mf.VolumeForm(VOL) - sqrt(Det(metric))) ** 2, mesh)
     ) == pytest.approx(0)
     assert sqrt(
-        Integrate((mf.VolumeForm(BND) - sqrt(Cof(metric) * nv * nv)) ** 2, mesh, BND)
+        Integrate(
+            (mf.VolumeForm(BND) - sqrt(Cof(metric) * nv * nv)) ** 2
+            * dx(element_boundary=True),
+            mesh,
+        )
     ) == pytest.approx(0)
     # TODO: test for BBND
 
     assert sqrt(
         Integrate(
-            (mf.normal - 1 / sqrt(Inv(metric) * nv * nv) * Inv(metric) * nv) ** 2,
+            (mf.normal - 1 / sqrt(Inv(metric) * nv * nv) * Inv(metric) * nv) ** 2
+            * dx(element_boundary=True),
             mesh,
-            BND,
         )
     ) == pytest.approx(0)
 
@@ -128,10 +152,15 @@ def test_volume_forms_vectors_3D():
     return
 
 
-def test_metric_inverse_derivative2D():
+@pytest.mark.parametrize("interpolate", [True, False])
+def test_metric_inverse_derivative2D(interpolate):
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.2))
-    metric = dg.TestMetric(dim=2, order=4)
-
+    cf_metric = dg.TestMetric(dim=2, order=4)
+    if interpolate:
+        metric = GridFunction(HCurlCurl(mesh, order=2))
+        metric.Set(cf_metric, dual=True)
+    else:
+        metric = cf_metric
     mf = dg.RiemannianManifold(metric=metric)
 
     assert sqrt(
@@ -141,12 +170,18 @@ def test_metric_inverse_derivative2D():
         Integrate(InnerProduct(mf.G_inv - Inv(metric), mf.G_inv - Inv(metric)), mesh)
     ) == pytest.approx(0)
 
-    g_grad = GetDiffOp("grad", cf=metric)
+    g_grad = (
+        GetDiffOp("grad", cf=metric) if not interpolate else metric.Operator("grad")
+    )
     assert (
         sqrt(Integrate(InnerProduct(mf.G_deriv - g_grad, mf.G_deriv - g_grad), mesh))
         < 1e-10
     )
-    chr1 = GetDiffOp(name="christoffel", cf=metric)
+    chr1 = (
+        GetDiffOp(name="christoffel", cf=metric)
+        if not interpolate
+        else metric.Operator("christoffel")
+    )
 
     assert (
         sqrt(
@@ -160,7 +195,11 @@ def test_metric_inverse_derivative2D():
         )
         < 1e-10
     )
-    chr2 = GetDiffOp(name="christoffel2", cf=metric)
+    chr2 = (
+        GetDiffOp(name="christoffel2", cf=metric)
+        if not interpolate
+        else metric.Operator("christoffel2")
+    )
     assert (
         sqrt(
             Integrate(
@@ -177,9 +216,16 @@ def test_metric_inverse_derivative2D():
     return
 
 
-def test_metric_inverse_derivative3D():
+@pytest.mark.parametrize("interpolate", [True, False])
+def test_metric_inverse_derivative3D(interpolate):
     mesh = Mesh(unit_cube.GenerateMesh(maxh=0.3))
-    metric = dg.TestMetric(dim=3, order=4)  # WarpedProduct
+    cf_metric = dg.TestMetric(dim=3, order=4)  # WarpedProduct
+
+    if interpolate:
+        metric = GridFunction(HCurlCurl(mesh, order=2))
+        metric.Set(cf_metric, dual=True)
+    else:
+        metric = cf_metric
 
     mf = dg.RiemannianManifold(metric=metric)
 
@@ -190,12 +236,18 @@ def test_metric_inverse_derivative3D():
         Integrate(InnerProduct(mf.G_inv - Inv(metric), mf.G_inv - Inv(metric)), mesh)
     ) == pytest.approx(0)
 
-    g_grad = GetDiffOp("grad", cf=metric)
+    g_grad = (
+        GetDiffOp("grad", cf=metric) if not interpolate else metric.Operator("grad")
+    )
     assert (
         sqrt(Integrate(InnerProduct(mf.G_deriv - g_grad, mf.G_deriv - g_grad), mesh))
         < 1e-10
     )
-    chr1 = GetDiffOp(name="christoffel", cf=metric)
+    chr1 = (
+        GetDiffOp(name="christoffel", cf=metric)
+        if not interpolate
+        else metric.Operator("christoffel")
+    )
 
     assert (
         sqrt(
@@ -209,7 +261,11 @@ def test_metric_inverse_derivative3D():
         )
         < 1e-10
     )
-    chr2 = GetDiffOp(name="christoffel2", cf=metric)
+    chr2 = (
+        GetDiffOp(name="christoffel2", cf=metric)
+        if not interpolate
+        else metric.Operator("christoffel2")
+    )
     assert (
         sqrt(
             Integrate(
@@ -226,9 +282,15 @@ def test_metric_inverse_derivative3D():
     return
 
 
-def test_inner_product():
+@pytest.mark.parametrize("interpolate", [True, False])
+def test_inner_product(interpolate):
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
-    metric = dg.CigarSoliton().metric
+    cf_metric = dg.CigarSoliton().metric
+    if interpolate:
+        metric = GridFunction(HCurlCurl(mesh, order=2))
+        metric.Set(cf_metric, dual=True)
+    else:
+        metric = cf_metric
     mf = dg.RiemannianManifold(metric=metric)
 
     f = CoefficientFunction(x**2 * y - 0.1 * y * x)
@@ -308,10 +370,9 @@ def test_inner_product():
             mesh,
         )
     ) == pytest.approx(0)
-
     assert sqrt(
         Integrate(
-            (mf.InnerProduct(Amix2, Bcon) - InnerProduct(A * metric, B)) ** 2, mesh
+            (mf.InnerProduct(Amix2, Bcon) - InnerProduct(metric * A, B)) ** 2, mesh
         )
     ) == pytest.approx(0)
     assert sqrt(
@@ -333,9 +394,16 @@ def test_inner_product():
     return
 
 
-def test_contraction():
+@pytest.mark.parametrize("interpolate", [True, False])
+def test_contraction(interpolate):
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.1))
-    metric = dg.CigarSoliton().metric
+    cf_metric = dg.CigarSoliton().metric
+
+    if interpolate:
+        metric = GridFunction(HCurlCurl(mesh, order=2))
+        metric.Set(cf_metric, dual=True)
+    else:
+        metric = cf_metric
 
     mf = dg.RiemannianManifold(metric=metric)
     v = CF((10 * x * y**3 - x**2, y**4 * x - y))

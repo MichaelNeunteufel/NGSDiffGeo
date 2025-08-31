@@ -33,7 +33,9 @@ namespace ngfem
     shared_ptr<CoefficientFunction> ScalarFieldCF(const shared_ptr<CoefficientFunction> &cf)
     {
         if (cf->Dimensions().Size() != 0)
-            throw Exception("ScalarFieldCF: input must be a scalar CoefficientFunction");
+        {
+            throw Exception("ScalarFieldCF: input must be a scalar CoefficientFunction. Received: dimensions " + ToString(cf->Dimensions()));
+        }
         if (cf->IsZeroCF())
             return cf;
         return make_shared<ScalarFieldCoefficientFunction>(cf);
