@@ -468,7 +468,6 @@
     "        gfGt.vec.data = gfG.vec + t * gfsigma.vec\n",
     "        mf_t = dg.RiemannianManifold(gfGt)\n",
     "        term_t = mf_t.Scalar * mf_t.VolumeForm(VOL)\n",
-    "\n",
     "        errold = err\n",
     "        err = sqrt(Integrate((term_t - term_0 - t * variation) ** 2, mesh))\n",
     "        print(\n",

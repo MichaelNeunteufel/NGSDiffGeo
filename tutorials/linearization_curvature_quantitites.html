@@ -572,7 +572,6 @@ err = 0.0000001421, order = 2.0
         <span class="n">gfGt</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">vec</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span>
         <span class="n">mf_t</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfGt</span><span class="p">)</span>
         <span class="n">term_t</span> <span class="o">=</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">Scalar</span> <span class="o">*</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span>
-
         <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
         <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">mesh</span><span class="p">))</span>
         <span class="nb">print</span><span class="p">(</span>
@@ -598,14 +597,14 @@ err = 0.0000779575, order = 1.99
 err = 0.0000195550, order = 1.995
 
 scalar omega_T:
-err = 0.2723036949, order = -
-err = 0.1004688830, order = 1.438
-err = 0.0407144528, order = 1.303
-err = 0.0181759950, order = 1.164
-err = 0.0086155202, order = 1.077
-err = 0.0042036695, order = 1.035
-err = 0.0020779474, order = 1.016
-err = 0.0010332948, order = 1.008
+err = 0.1965983500, order = -
+err = 0.0568023431, order = 1.791
+err = 0.0154271989, order = 1.88
+err = 0.0040331370, order = 1.936
+err = 0.0010320349, order = 1.966
+err = 0.0002610946, order = 1.983
+err = 0.0000656671, order = 1.991
+err = 0.0000164664, order = 1.996
 </pre></div></div>
 </div>
 <p>The mean curvature <span class="math notranslate nohighlight">\(H\)</span> at a facet <span class="math notranslate nohighlight">\(F\)</span> generalizes the geodesic curvature to higher dimensions and has the linearization</p>
@@ -873,20 +872,20 @@ err = 0.0000150708, order = 1.995
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Einstein tensor:
-err = 1.2245879041, order = -
-err = 0.6177252394, order = 0.987
-err = 0.3112946652, order = 0.989
-err = 0.1564494114, order = 0.993
-err = 0.0784550769, order = 0.996
-err = 0.0392893002, order = 0.998
+err = 0.1512166526, order = -
+err = 0.0443818474, order = 1.769
+err = 0.0121730979, order = 1.866
+err = 0.0032003156, order = 1.927
+err = 0.0008213934, order = 1.962
+err = 0.0002081289, order = 1.981
 
 Einstein omega_T:
-err = 1.7698258643, order = -
-err = 0.8383977598, order = 1.078
-err = 0.4087488491, order = 1.036
-err = 0.2019511657, order = 1.017
-err = 0.1003972062, order = 1.008
-err = 0.0500577284, order = 1.004
+err = 0.1340645474, order = -
+err = 0.0386422341, order = 1.795
+err = 0.0104839120, order = 1.882
+err = 0.0027394745, order = 1.936
+err = 0.0007008378, order = 1.967
+err = 0.0001772848, order = 1.983
 </pre></div></div>
 </div>
 <p>The linearization of the full Riemann curvature tensor is given by</p>
