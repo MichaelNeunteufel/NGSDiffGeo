@@ -4,81 +4,162 @@
 
 namespace ngfem
 {
-    shared_ptr<CoefficientFunction> TensorFieldCF(const shared_ptr<CoefficientFunction> &cf,
-                                                  const string &covariant_indices)
+
+  bool IsVectorField(const TensorFieldCoefficientFunction &t)
+  {
+    auto m = t.Meta();
+    return m.rank == 1 && m.covmask == 0;
+  }
+
+  bool IsOneForm(const TensorFieldCoefficientFunction &t)
+  {
+    auto m = t.Meta();
+    return m.rank == 1 && m.covmask == 1;
+  }
+
+  shared_ptr<TensorFieldCoefficientFunction> TensorFieldCF(const shared_ptr<CoefficientFunction> &cf,
+                                                           const string &covariant_indices)
+  {
+    auto meta = TensorMeta::FromCovString(covariant_indices);
+    if (auto tf = dynamic_pointer_cast<TensorFieldCoefficientFunction>(cf))
+      if (tf->Meta() == meta)
+        return tf;
+    return make_shared<TensorFieldCoefficientFunction>(cf, meta);
+  }
+
+  shared_ptr<TensorFieldCoefficientFunction> TensorFieldCF(const shared_ptr<CoefficientFunction> &cf,
+                                                           const TensorMeta &meta)
+  {
+    if (auto tf = dynamic_pointer_cast<TensorFieldCoefficientFunction>(cf))
+      if (tf->Meta() == meta)
+        return tf;
+    auto result = make_shared<TensorFieldCoefficientFunction>(cf, meta);
+    return result;
+  }
+
+  shared_ptr<VectorFieldCoefficientFunction> VectorFieldCF(const shared_ptr<CoefficientFunction> &cf)
+  {
+    if (cf->Dimensions().Size() != 1)
+      throw Exception("VectorFieldCF: input must be a vector-valued CoefficientFunction");
+    // if (cf->IsZeroCF())
+    //     return cf;
+    if (auto vf = dynamic_pointer_cast<VectorFieldCoefficientFunction>(cf))
+      return vf;
+    return make_shared<VectorFieldCoefficientFunction>(cf);
+  }
+
+  shared_ptr<OneFormCoefficientFunction> OneFormCF(const shared_ptr<CoefficientFunction> &cf)
+  {
+    if (cf->Dimensions().Size() != 1)
+      throw Exception("OneFormCF: input must be a vector-valued CoefficientFunction");
+    // if (cf->IsZeroCF())
+    //     return cf;
+    if (auto of = dynamic_pointer_cast<OneFormCoefficientFunction>(cf))
+      return of;
+    return make_shared<OneFormCoefficientFunction>(cf);
+  }
+
+  shared_ptr<ScalarFieldCoefficientFunction> ScalarFieldCF(const shared_ptr<CoefficientFunction> &cf)
+  {
+    if (cf->Dimensions().Size() != 0)
     {
-        if (cf->IsZeroCF())
-            return cf;
-        return make_shared<TensorFieldCoefficientFunction>(cf, covariant_indices);
+      throw Exception("ScalarFieldCF: input must be a scalar CoefficientFunction. Received: dimensions " + ToString(cf->Dimensions()));
     }
+    // if (cf->IsZeroCF())
+    //     return cf;
+    if (auto sf = dynamic_pointer_cast<ScalarFieldCoefficientFunction>(cf))
+      return sf;
+    return make_shared<ScalarFieldCoefficientFunction>(cf);
+  }
 
-    shared_ptr<CoefficientFunction> VectorFieldCF(const shared_ptr<CoefficientFunction> &cf)
-    {
-        if (cf->Dimensions().Size() != 1)
-            throw Exception("VectorFieldCF: input must be a vector-valued CoefficientFunction");
-        if (cf->IsZeroCF())
-            return cf;
-        return make_shared<VectorFieldCoefficientFunction>(cf);
-    }
+  shared_ptr<TensorFieldCoefficientFunction> TensorProduct(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2)
+  {
+    auto m1 = c1->Meta();
+    auto m2 = c2->Meta();
+    auto mout = m1.Concatenated(m2);
 
-    shared_ptr<CoefficientFunction> OneFormCF(const shared_ptr<CoefficientFunction> &cf)
-    {
-        if (cf->Dimensions().Size() != 1)
-            throw Exception("OneFormCF: input must be a vector-valued CoefficientFunction");
-        if (cf->IsZeroCF())
-            return cf;
-        return make_shared<OneFormCoefficientFunction>(cf);
-    }
+    std::string sig1 = SIGNATURE.substr(0, m1.rank);
+    std::string sig2 = SIGNATURE.substr(m1.rank, m2.rank);
+    std::string sigout = SIGNATURE.substr(0, mout.rank);
 
-    shared_ptr<CoefficientFunction> ScalarFieldCF(const shared_ptr<CoefficientFunction> &cf)
-    {
-        if (cf->Dimensions().Size() != 0)
-        {
-            throw Exception("ScalarFieldCF: input must be a scalar CoefficientFunction. Received: dimensions " + ToString(cf->Dimensions()));
-        }
-        if (cf->IsZeroCF())
-            return cf;
-        return make_shared<ScalarFieldCoefficientFunction>(cf);
-    }
+    std::string eins = sig1 + "," + sig2 + "->" + sigout;
 
-    shared_ptr<CoefficientFunction> TensorProduct(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2)
-    {
-        string cov_ind = c1->GetCovariantIndices() + c2->GetCovariantIndices();
+    auto out_cf = EinsumCF(eins, {c1, c2});
+    return TensorFieldCF(out_cf, mout);
+  }
+}
 
-        if (cov_ind.size() > SIGNATURE.size())
-            throw Exception("TensorProduct: Overflow: c1 and c2 have > 52 indices together");
-
-        string signature = SIGNATURE.substr(0, c1->GetCovariantIndices().size());
-        signature += ",";
-        signature += SIGNATURE.substr(c1->GetCovariantIndices().size(), c2->GetCovariantIndices().size());
-        signature += "->";
-        signature += SIGNATURE.substr(0, cov_ind.size());
-
-        return TensorFieldCF(EinsumCF(signature, {c1, c2}), cov_ind);
-    }
+void CheckCovariantIndices(const std::string &s)
+{
+  for (char c : s)
+    if (c != '0' && c != '1')
+      throw ngstd::Exception("covariant_indices must be a string of 0s and 1s");
 }
 
 void ExportTensorFields(py::module m)
 {
-    using namespace ngfem;
-    using namespace ngfem::tensor_internal;
+  using namespace ngfem;
+  using std::shared_ptr;
+  using std::string;
 
-    m.def("TensorField", [](shared_ptr<CoefficientFunction> cf, string cov_indices)
-          {
-            for (auto i : Range(cov_indices.size()))
-                if (cov_indices[i] != '0' && cov_indices[i] != '1')
-                    throw Exception("TensorField: covariant_indices must be a string of 0s and 1s");
+  // TensorField
+  py::class_<TensorFieldCoefficientFunction,
+             CoefficientFunction,
+             shared_ptr<TensorFieldCoefficientFunction>>(m, "TensorField")
+      .def(py::init([](shared_ptr<CoefficientFunction> cf, string cov_indices)
+                    {
+      CheckCovariantIndices(cov_indices);
+     return std::static_pointer_cast<TensorFieldCoefficientFunction>(TensorFieldCF(cf, cov_indices)); }),
+           py::arg("cf"), py::arg("covariant_indices"))
 
-            return TensorFieldCF(cf, cov_indices); }, "Create a TensorField from a CoefficientFunction and a list of covariant indices");
-    m.def("VectorField", [](shared_ptr<CoefficientFunction> c1)
-          { return VectorFieldCF(c1); }, "Create a VectorField from a CoefficientFunction");
-    m.def("OneForm", [](shared_ptr<CoefficientFunction> c1)
-          { return OneFormCF(c1); }, "Create a OneForm from a CoefficientFunction");
-    m.def("ScalarField", [](shared_ptr<CoefficientFunction> c1)
-          { return ScalarFieldCF(c1); }, "Create a ScalarField from a CoefficientFunction");
-    m.def("TensorProduct", [](shared_ptr<CoefficientFunction> c1, shared_ptr<CoefficientFunction> c2)
-          {
-        if (!dynamic_pointer_cast<TensorFieldCoefficientFunction>(c1) || !dynamic_pointer_cast<TensorFieldCoefficientFunction>(c2))
-        throw Exception("TensorProduct: both inputs must be TensorFields");
-        return TensorProduct(dynamic_pointer_cast<TensorFieldCoefficientFunction>(c1), dynamic_pointer_cast<TensorFieldCoefficientFunction>(c2)); }, "Build tensor product from two TensorFields");
+      .def_property_readonly("covariant_indices",
+                             &TensorFieldCoefficientFunction::GetCovariantIndices)
+      .def_property_readonly("coef",
+                             &TensorFieldCoefficientFunction::GetCoefficients)
+
+      .def_static("from_cf", [](shared_ptr<CoefficientFunction> cf, string cov_indices)
+                  {
+      CheckCovariantIndices(cov_indices);
+      return TensorFieldCF(cf, cov_indices); }, py::arg("cf"), py::arg("covariant_indices"));
+
+  // VectorField
+  py::class_<VectorFieldCoefficientFunction,
+             TensorFieldCoefficientFunction,
+             shared_ptr<VectorFieldCoefficientFunction>>(m, "VectorField")
+      .def(py::init([](shared_ptr<CoefficientFunction> cf)
+                    { return VectorFieldCF(cf); }),
+           py::arg("cf"))
+      .def_static("from_cf", [](shared_ptr<CoefficientFunction> cf)
+                  { return VectorFieldCF(cf); }, py::arg("cf"));
+
+  // OneForm
+  py::class_<OneFormCoefficientFunction,
+             TensorFieldCoefficientFunction,
+             shared_ptr<OneFormCoefficientFunction>>(m, "OneForm")
+      .def(py::init([](shared_ptr<CoefficientFunction> cf)
+                    { return OneFormCF(cf); }),
+           py::arg("cf"))
+      .def_static("from_cf", [](shared_ptr<CoefficientFunction> cf)
+                  { return OneFormCF(cf); }, py::arg("cf"));
+
+  // ScalarField
+  py::class_<ScalarFieldCoefficientFunction,
+             TensorFieldCoefficientFunction,
+             shared_ptr<ScalarFieldCoefficientFunction>>(m, "ScalarField")
+      .def(py::init([](shared_ptr<CoefficientFunction> cf)
+                    { return ScalarFieldCF(cf); }),
+           py::arg("cf"))
+      .def_static("from_cf", [](shared_ptr<CoefficientFunction> cf)
+                  { return ScalarFieldCF(cf); }, py::arg("cf"));
+
+  m.def("MakeTensorField", [](shared_ptr<CoefficientFunction> cf, string cov_indices)
+        {
+        CheckCovariantIndices(cov_indices);
+        return TensorFieldCF(cf, cov_indices); });
+
+  m.def("MakeVectorField", [](shared_ptr<CoefficientFunction> cf)
+        { return VectorFieldCF(cf); });
+
+  m.def("TensorProduct", [](shared_ptr<TensorFieldCoefficientFunction> a, shared_ptr<TensorFieldCoefficientFunction> b)
+        { return TensorProduct(a, b); }, py::arg("a"), py::arg("b"));
 }

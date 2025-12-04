@@ -8,8 +8,13 @@ namespace ngfem
     using namespace ngcomp;
     shared_ptr<CoefficientFunction> GradCF(const shared_ptr<CoefficientFunction> &cf, size_t dim)
     {
+        // create new ZeroCF with updated dimensions
         if (cf->IsZeroCF())
-            return cf;
+        {
+            Array<int> resultdims = {int(dim)};
+            resultdims += cf->Dimensions();
+            return ZeroCF(resultdims);
+        }
 
         bool has_trial = false, has_test = false;
 
