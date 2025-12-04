@@ -109,6 +109,7 @@ jobs:
           apt update -y && DEBIAN_FRONTEND="noninteractive" apt install -y git pandoc
           python -m pip install --upgrade pip
           pip install -r $GITHUB_WORKSPACE/NGSDiffGeo/docs/requirements.txt
+          pip install ipywidgets webgui_jupyter_widgets
       - uses: actions/download-artifact@v4
         with:
           pattern: cibw-wheels-ubuntu*

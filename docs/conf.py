@@ -21,7 +21,10 @@ extensions = [
 ]
 
 # Whether or not to evaluate the notebooks prior to embedding them
-evaluate_notebooks = True  # Default: True
+# evaluate_notebooks = True  # Default: True
+
+# actually used by nbsphinx (evaluate_notebooks = True is ignored)
+nbsphinx_execute = "auto"  # or "always" to force execution
 
 # START nbsphinx stuff
 # increase timeout for cell execution, since some files take long to execute
@@ -37,6 +40,13 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
+
+nbsphinx_widgets_path = "_static/widgets"
+# (optional, but can avoid “missing require.js” surprises)
+nbsphinx_requirejs_path = (
+    "https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"
+)
+
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
