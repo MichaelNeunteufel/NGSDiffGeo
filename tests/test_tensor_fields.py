@@ -110,9 +110,5 @@ def test_nested_wrapping_is_idempotent_in_value():
 
 
 if __name__ == "__main__":
-    test_tensorfield_constructors_and_metadata()
-    test_typed_zeros_preserved()
-    test_tensorproduct_matches_outerproduct_and_covariance()
-    test_tensorproduct_requires_tensorfields()
-    test_nested_wrapping_is_idempotent_in_value()
+    pytest.main([__file__])
     print("All tests passed!")

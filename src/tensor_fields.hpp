@@ -196,22 +196,6 @@ namespace ngfem
     shared_ptr<VectorFieldCoefficientFunction> VectorFieldCF(const shared_ptr<CoefficientFunction> &cf);
 
     /**
-     * @fn shared_ptr<CoefficientFunction> OneFormCF(const shared_ptr<CoefficientFunction> &cf)
-     * @brief Creates a one-form coefficient function.
-     * @param cf The input coefficient function.
-     * @return A shared pointer to the created one-form coefficient function.
-     */
-    shared_ptr<OneFormCoefficientFunction> OneFormCF(const shared_ptr<CoefficientFunction> &cf);
-
-    /**
-     * @fn shared_ptr<CoefficientFunction> ScalarFieldCF(const shared_ptr<CoefficientFunction> &cf)
-     * @brief Creates a scalar field coefficient function.
-     * @param cf The input coefficient function.
-     * @return A shared pointer to the created scalar field coefficient function.
-     */
-    shared_ptr<ScalarFieldCoefficientFunction> ScalarFieldCF(const shared_ptr<CoefficientFunction> &cf);
-
-    /**
      * @class TensorFieldCoefficientFunction
      * @brief A class representing a tensor field coefficient function.
      */
@@ -378,54 +362,6 @@ namespace ngfem
         virtual string GetDescription() const override
         {
             return "VectorFieldCF";
-        }
-    };
-
-    /**
-     * @class OneFormCoefficientFunction
-     * @brief A class representing a one-form coefficient function.
-     * @details This class is derived from TensorFieldCoefficientFunction and represents a one-form.
-     */
-    class OneFormCoefficientFunction : public TensorFieldCoefficientFunction
-    {
-    public:
-        /**
-         * @fn OneFormCoefficientFunction::OneFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1)
-         * @brief Constructor for OneFormCoefficientFunction.
-         * @param ac1 The input coefficient function.
-         */
-        OneFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1)
-            : TensorFieldCoefficientFunction(ac1, "1")
-        {
-        }
-
-        virtual string GetDescription() const override
-        {
-            return "OneFormCF";
-        }
-    };
-
-    /**
-     * @class ScalarFieldCoefficientFunction
-     * @brief A class representing a scalar field coefficient function.
-     * @details This class is derived from TensorFieldCoefficientFunction and represents a scalar field.
-     */
-    class ScalarFieldCoefficientFunction : public TensorFieldCoefficientFunction
-    {
-    public:
-        /**
-         * @fn ScalarFieldCoefficientFunction::ScalarFieldCoefficientFunction(shared_ptr<CoefficientFunction> ac1)
-         * @brief Constructor for ScalarFieldCoefficientFunction.
-         * @param ac1 The input coefficient function.
-         */
-        ScalarFieldCoefficientFunction(shared_ptr<CoefficientFunction> ac1)
-            : TensorFieldCoefficientFunction(ac1, "")
-        {
-        }
-
-        virtual string GetDescription() const override
-        {
-            return "ScalarFieldCF";
         }
     };
 

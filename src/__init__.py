@@ -2,8 +2,65 @@
 import ngsolve
 from ngsolve.fem import Einsum
 from .ngsdiffgeo import *
+from .wrappers import (
+    OneForm,
+    TwoForm,
+    ThreeForm,
+    KForm,
+    VectorField,
+    TensorField,
+    Wedge,
+    d,
+    star,
+    delta,
+    as_oneform,
+    as_twoform,
+    as_threeform,
+    as_kform,
+    as_vectorfield,
+    as_tensorfield,
+)
 
 # from .utils import *
+
+# # ---- keep references to the C++ classes (important) ----
+# _CPP_OneForm = OneForm
+# _CPP_KForm = KForm  # if you want later
+
+
+# def as_oneform(cf, *, dim):
+#     if isinstance(cf, OneForm):  # wrapper
+#         return cf
+#     if isinstance(cf, _CPP_OneForm):  # pybind
+#         return OneForm(cf, dim=dim)  # rewrap into wrapper
+#     return OneForm(cf, dim=dim)
+
+
+# class OneForm(_CPP_OneForm):
+#     def __init__(self, cf, *, dim):
+#         super().__init__(cf, dim=dim)
+#         self._dim = dim
+
+#     def _wrap(self, cf):
+#         return as_oneform(cf, dim=self._dim)
+
+#     def __add__(self, other):
+#         return self._wrap(_CPP_OneForm.__add__(self, other))
+
+#     def __radd__(self, other):
+#         return self.__add__(other)
+
+#     def __sub__(self, other):
+#         return self._wrap(_CPP_OneForm.__sub__(self, other))
+
+#     def __mul__(self, other):
+#         return self._wrap(_CPP_OneForm.__mul__(self, other))
+
+#     def __rmul__(self, other):
+#         return self.__mul__(other)
+
+#     def __truediv__(self, other):
+#         return self._wrap(_CPP_OneForm.__truediv__(self, other))
 
 
 class EuclideanMetric:

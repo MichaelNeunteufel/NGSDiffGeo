@@ -466,12 +466,6 @@ def test_contraction(interpolate):
 
 
 if __name__ == "__main__":
-    for interpolate in [True, False]:
-        test_volume_forms_vectors_2D(interpolate=interpolate)
-        test_volume_forms_vectors_3D(interpolate=interpolate)
-        test_metric_inverse_derivative2D(interpolate=interpolate)
-        test_metric_inverse_derivative3D(interpolate=interpolate)
-        test_inner_product(interpolate=interpolate)
-        test_contraction(interpolate=interpolate)
+    pytest.main([__file__])
 
     print("All tests passed!")

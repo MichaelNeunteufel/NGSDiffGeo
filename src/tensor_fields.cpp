@@ -48,30 +48,6 @@ namespace ngfem
     return make_shared<VectorFieldCoefficientFunction>(cf);
   }
 
-  shared_ptr<OneFormCoefficientFunction> OneFormCF(const shared_ptr<CoefficientFunction> &cf)
-  {
-    if (cf->Dimensions().Size() != 1)
-      throw Exception("OneFormCF: input must be a vector-valued CoefficientFunction");
-    // if (cf->IsZeroCF())
-    //     return cf;
-    if (auto of = dynamic_pointer_cast<OneFormCoefficientFunction>(cf))
-      return of;
-    return make_shared<OneFormCoefficientFunction>(cf);
-  }
-
-  shared_ptr<ScalarFieldCoefficientFunction> ScalarFieldCF(const shared_ptr<CoefficientFunction> &cf)
-  {
-    if (cf->Dimensions().Size() != 0)
-    {
-      throw Exception("ScalarFieldCF: input must be a scalar CoefficientFunction. Received: dimensions " + ToString(cf->Dimensions()));
-    }
-    // if (cf->IsZeroCF())
-    //     return cf;
-    if (auto sf = dynamic_pointer_cast<ScalarFieldCoefficientFunction>(cf))
-      return sf;
-    return make_shared<ScalarFieldCoefficientFunction>(cf);
-  }
-
   shared_ptr<TensorFieldCoefficientFunction> TensorProduct(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2)
   {
     auto m1 = c1->Meta();
@@ -131,26 +107,6 @@ void ExportTensorFields(py::module m)
            py::arg("cf"))
       .def_static("from_cf", [](shared_ptr<CoefficientFunction> cf)
                   { return VectorFieldCF(cf); }, py::arg("cf"));
-
-  // OneForm
-  py::class_<OneFormCoefficientFunction,
-             TensorFieldCoefficientFunction,
-             shared_ptr<OneFormCoefficientFunction>>(m, "OneForm")
-      .def(py::init([](shared_ptr<CoefficientFunction> cf)
-                    { return OneFormCF(cf); }),
-           py::arg("cf"))
-      .def_static("from_cf", [](shared_ptr<CoefficientFunction> cf)
-                  { return OneFormCF(cf); }, py::arg("cf"));
-
-  // ScalarField
-  py::class_<ScalarFieldCoefficientFunction,
-             TensorFieldCoefficientFunction,
-             shared_ptr<ScalarFieldCoefficientFunction>>(m, "ScalarField")
-      .def(py::init([](shared_ptr<CoefficientFunction> cf)
-                    { return ScalarFieldCF(cf); }),
-           py::arg("cf"))
-      .def_static("from_cf", [](shared_ptr<CoefficientFunction> cf)
-                  { return ScalarFieldCF(cf); }, py::arg("cf"));
 
   m.def("MakeTensorField", [](shared_ptr<CoefficientFunction> cf, string cov_indices)
         {
