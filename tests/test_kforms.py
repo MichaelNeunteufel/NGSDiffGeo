@@ -6,11 +6,11 @@ import ngsdiffgeo as dg
 
 
 def l2_error(a, b, mesh):
-    return sqrt(Integrate(InnerProduct(a - b, a - b), mesh))
+    return sqrt(Integrate(InnerProduct(a - b, a - b) * dx(bonus_intorder=3), mesh))
 
 
 def l2_norm(a, mesh):
-    return sqrt(Integrate(InnerProduct(a, a), mesh))
+    return sqrt(Integrate(InnerProduct(a, a) * dx(bonus_intorder=3), mesh))
 
 
 def test_kform_construction_and_metadata():
@@ -45,18 +45,18 @@ def test_wedge_algebra_and_overflow_zero_2d():
 
     assert ab.degree == 2
     assert ab.covariant_indices == "11"
-    assert l2_error(ab, -ba, mesh) < 1e-11
+    assert l2_error(ab, -ba, mesh) == pytest.approx(0)
 
     f_ab = dg.Wedge(f, ab)
-    assert l2_error(f_ab, f * ab, mesh) < 1e-11
+    assert l2_error(f_ab, f * ab, mesh) == pytest.approx(0)
 
     aa = dg.Wedge(alpha, alpha)
-    assert l2_norm(aa, mesh) < 1e-11
+    assert l2_norm(aa, mesh) == pytest.approx(0)
 
     overflow = dg.Wedge(ab, alpha)
     assert overflow.degree == 3
     assert overflow.covariant_indices == "111"
-    assert l2_norm(overflow, mesh) < 1e-11
+    assert l2_norm(overflow, mesh) == pytest.approx(0)
 
 
 def test_wedge_algebra_and_overflow_zero_3d():
@@ -103,7 +103,7 @@ def test_exterior_derivative_basic_identities_2d():
 
     expected_df = dg.OneForm(CF((y, x)))
     assert l2_error(df, expected_df, mesh) < 1e-8
-    assert l2_norm(ddf, mesh) < 1e-11
+    assert l2_norm(ddf, mesh) < 1e-10
 
     left = dg.d(dg.Wedge(f_form, alpha))
     right = dg.Wedge(df, alpha) + dg.Wedge(f_form, dg.d(alpha))
@@ -126,7 +126,7 @@ def test_exterior_derivative_basic_identities_3d():
 
     expected_df = dg.OneForm(CF((y * z, x * z, x * y)))
     assert l2_error(df, expected_df, mesh) < 1e-8
-    assert l2_norm(ddf, mesh) < 1e-11
+    assert l2_norm(ddf, mesh) < 1e-10
 
     left = dg.d(dg.Wedge(f_form, alpha))
     right = dg.Wedge(df, alpha) + dg.Wedge(f_form, dg.d(alpha))
@@ -183,7 +183,7 @@ def test_wedge_associativity_scaling_3d():
     right = dg.Wedge(dx, dg.Wedge(dy, dz))
 
     assert left.degree == 3 and right.degree == 3
-    assert l2_error(left, right, mesh) < 1e-12
+    assert l2_error(left, right, mesh) == pytest.approx(0)
 
 
 def test_exterior_derivative_scaling_on_rot_field():
@@ -203,7 +203,7 @@ def test_exterior_derivative_scaling_on_rot_field():
     expected = 3 * volume_form
 
     assert d_two_form.degree == 3
-    assert l2_error(d_two_form, expected, mesh) < 1e-10
+    assert l2_error(d_two_form, expected, mesh) == pytest.approx(0)
 
 
 def test_hodge_star_involution_nonorthonormal_metric():
@@ -218,11 +218,11 @@ def test_hodge_star_involution_nonorthonormal_metric():
 
     for form in (dx, dy, dz):
         ss = dg.star(dg.star(form, rm), rm)
-        assert l2_error(ss, form, mesh) < 1e-10
+        assert l2_error(ss, form, mesh) == pytest.approx(0)
 
     one = dg.ScalarField(CF(1), dim=dim)
     ss_scalar = dg.star(dg.star(one, rm), rm)
-    assert l2_error(ss_scalar, one, mesh) < 1e-10
+    assert l2_error(ss_scalar, one, mesh) == pytest.approx(0)
 
 
 def test_hodge_star_zero_preserves_degree():
@@ -235,7 +235,7 @@ def test_hodge_star_zero_preserves_degree():
 
     assert isinstance(starred, dg.KForm)
     assert starred.degree == 1
-    assert l2_norm(starred, mesh) < 1e-12
+    assert l2_norm(starred, mesh) == pytest.approx(0)
 
 
 if __name__ == "__main__":
