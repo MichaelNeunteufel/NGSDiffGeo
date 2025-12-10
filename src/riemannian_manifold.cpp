@@ -1,6 +1,7 @@
 #include "riemannian_manifold.hpp"
 #include "tensor_fields.hpp"
 #include "coefficient_grad.hpp"
+#include "kforms.hpp"
 
 #include <coefficient_stdmath.hpp>
 #include <python_comp.hpp>
@@ -10,6 +11,15 @@
 
 namespace ngfem
 {
+    namespace
+    {
+        inline int DeltaSign(int n, int k)
+        {
+            int exponent = n * (k + 1) + 1;
+            return (exponent % 2 == 0) ? 1 : -1;
+        }
+    } // namespace
+
     using namespace std;
     RiemannianManifold::RiemannianManifold(shared_ptr<CoefficientFunction> _g)
         : is_regge(false), is_proxy(false), regge_proxy(nullptr), regge_space(nullptr), g(_g)
@@ -233,6 +243,11 @@ namespace ngfem
 
         auto mout = m.WithCovariant(index, false);
         auto out_cf = EinsumCF(eins, {tf, g_inv});
+
+        // if tf is a OneFormCoefficientFunction, return a VectorFieldCoefficientFunction
+        if (dynamic_pointer_cast<OneFormCoefficientFunction>(tf))
+            return VectorFieldCF(out_cf);
+
         return TensorFieldCF(out_cf, mout);
     }
 
@@ -258,6 +273,11 @@ namespace ngfem
 
         auto mout = m.WithCovariant(index, true);
         auto out_cf = EinsumCF(eins, {tf, g});
+
+        // if tf is a VectorFieldCoefficientFunction, return a OneFormCoefficientFunction
+        if (dynamic_pointer_cast<VectorFieldCoefficientFunction>(tf))
+            return OneFormCF(out_cf);
+
         return TensorFieldCF(out_cf, mout);
     }
 
@@ -377,7 +397,7 @@ namespace ngfem
         // create boolean array with true if cov_ind1 and ind_cov2 coincide at the position
         Array<bool> same_index(cov_ind1.size());
         Array<size_t> position_same_index;
-        for (int i = 0; i < cov_ind1.size(); i++)
+        for (size_t i = 0; i < cov_ind1.size(); i++)
         {
             same_index[i] = cov_ind1[i] == cov_ind2[i];
             if (same_index[i])
@@ -449,6 +469,43 @@ namespace ngfem
             // c1 vector field, c2 1-form
             return VectorFieldCF(EinsumCF("ijk,jl,l,k->i", {g_inv, GetLeviCivitaSymbol(false), g, c1, c2}));
         }
+    }
+
+    shared_ptr<KFormCoefficientFunction> RiemannianManifold::MakeKForm(shared_ptr<CoefficientFunction> cf, int k) const
+    {
+        return KFormCF(cf, k, dim);
+    }
+
+    shared_ptr<KFormCoefficientFunction> RiemannianManifold::Star(shared_ptr<KFormCoefficientFunction> a) const
+    {
+        if (!a)
+            throw Exception("Star: input must be non-null");
+        if (a->DimensionOfSpace() != dim)
+            throw Exception("Star: form dimension does not match manifold dimension");
+        return HodgeStar(a, *this);
+    }
+
+    shared_ptr<KFormCoefficientFunction> RiemannianManifold::Coderivative(shared_ptr<KFormCoefficientFunction> a) const
+    {
+        if (!a)
+            throw Exception("Coderivative: input must be non-null");
+        if (a->DimensionOfSpace() != dim)
+            throw Exception("Coderivative: form dimension does not match manifold dimension");
+
+        int k = a->Degree();
+        if (k == 0)
+            return ZeroKForm(0, dim);
+
+        auto first_star = Star(a);
+        auto d_first_star = ExteriorDerivative(first_star);
+        auto second_star = Star(d_first_star);
+
+        int sign = DeltaSign(dim, k);
+        if (sign == 1)
+            return second_star;
+
+        auto signed_cf = (-1.0) * second_star->GetCoefficients();
+        return KFormCF(signed_cf, k - 1, dim);
     }
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::CovDerivative(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb) const
@@ -791,6 +848,7 @@ void ExportRiemannianManifold(py::module m)
     py::class_<RiemannianManifold, shared_ptr<RiemannianManifold>>(m, "RiemannianManifold")
         .def(py::init<shared_ptr<CoefficientFunction>>(), "constructor", py::arg("metric"))
         .def("VolumeForm", &RiemannianManifold::GetVolumeForm, "return the volume form of given dimension", py::arg("vb"))
+        .def_property_readonly("dim", &RiemannianManifold::GetDimension, "return the manifold dimension")
         .def_property_readonly("G", [](shared_ptr<RiemannianManifold> self)
                                { return self->GetMetric(); }, "return the metric tensor")
         .def_property_readonly("G_inv", [](shared_ptr<RiemannianManifold> self)
@@ -805,6 +863,10 @@ void ExportRiemannianManifold(py::module m)
              { return self->GetChristoffelSymbol(second_kind); }, "return the Christoffel symbol of the first or second kind", py::arg("second_kind") = false)
         .def("LeviCivitaSymbol", [](shared_ptr<RiemannianManifold> self, bool covariant)
              { return self->GetLeviCivitaSymbol(covariant); }, "return the Levi-Civita symbol", py::arg("covariant") = false)
+        .def("Raise", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, size_t index)
+             { return self->Raise(tf, index); }, "Raise a tensor index using the manifold metric", py::arg("tf"), py::arg("index") = 0)
+        .def("Lower", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, size_t index)
+             { return self->Lower(tf, index); }, "Lower a tensor index using the manifold metric", py::arg("tf"), py::arg("index") = 0)
         .def_property_readonly("Riemann", &RiemannianManifold::GetRiemannCurvatureTensor, "return the Riemann curvature tensor")
         .def_property_readonly("Curvature", &RiemannianManifold::GetCurvatureOperator, "return the curvature operator")
         .def_property_readonly("Gauss", &RiemannianManifold::GetGaussCurvature, "return the Gauss curvature in 2D")
@@ -814,6 +876,12 @@ void ExportRiemannianManifold(py::module m)
         .def_property_readonly("SFF", &RiemannianManifold::GetSecondFundamentalForm, "return the second fundamental form")
         .def_property_readonly("GeodesicCurvature", &RiemannianManifold::GetGeodesicCurvature, "return the geodesic curvature")
         .def_property_readonly("MeanCurvature", &RiemannianManifold::GetMeanCurvature, "return the mean curvature")
+        .def("KForm", [](shared_ptr<RiemannianManifold> self, shared_ptr<CoefficientFunction> cf, int k)
+             { return self->MakeKForm(cf, k); }, "Wrap a CoefficientFunction as a k-form using the manifold dimension", py::arg("cf"), py::arg("k"))
+        .def("star", [](shared_ptr<RiemannianManifold> self, shared_ptr<KFormCoefficientFunction> a)
+             { return self->Star(a); }, "Hodge star of a k-form using the manifold metric", py::arg("a"))
+        .def("delta", [](shared_ptr<RiemannianManifold> self, shared_ptr<KFormCoefficientFunction> a)
+             { return self->Coderivative(a); }, "Exterior coderivative of a k-form using the manifold metric", py::arg("a"))
         .def("InnerProduct", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf1, shared_ptr<TensorFieldCoefficientFunction> tf2, VorB vb)
              { return self->IP(tf1, tf2, vb); }, "InnerProduct of two TensorFields", py::arg("tf1"), py::arg("tf2"), py::arg("vb") = VOL)
         .def("Cross", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf1, shared_ptr<TensorFieldCoefficientFunction> tf2)

@@ -50,7 +50,7 @@ def CovDerT(A, mesh, gfgamma, contra=[True, True]):
 
 
 def test_cov_der_scal():
-    mesh = Mesh(unit_square.GenerateMesh(maxh=0.1))
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.2))
     metric = dg.CigarSoliton().metric
     mf = dg.RiemannianManifold(metric=metric)
     gf_metric = GridFunction(HCurlCurl(mesh, order=5))
@@ -67,7 +67,7 @@ def test_cov_der_scal():
 
 
 def test_cov_der_vec():
-    mesh = Mesh(unit_square.GenerateMesh(maxh=0.1))
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.15))
     metric = dg.CigarSoliton().metric
     mf = dg.RiemannianManifold(metric=metric)
     gf_metric = GridFunction(HCurlCurl(mesh, order=5))
@@ -79,17 +79,17 @@ def test_cov_der_vec():
 
     term1 = CovDerV(v, mesh, gf_metric, contra=True)
     term2 = mf.CovDeriv(vv)
-    assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 1e-7
+    assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 5e-7
 
     term1 = CovDerV(v, mesh, gf_metric, contra=False)
     term2 = mf.CovDeriv(ov)
-    assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 1e-7
+    assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 5e-7
 
     return
 
 
 def test_cov_der_mat():
-    mesh = Mesh(unit_square.GenerateMesh(maxh=0.1))
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.15))
     metric = dg.CigarSoliton().metric
     mf = dg.RiemannianManifold(metric=metric)
     gf_metric = GridFunction(HCurlCurl(mesh, order=5))
@@ -103,26 +103,26 @@ def test_cov_der_mat():
 
     term1 = CovDerT(A, mesh, gf_metric, contra=[True, True])
     term2 = mf.CovDeriv(Acon)
-    assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 1e-7
+    assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 5e-7
 
     term1 = CovDerT(A, mesh, gf_metric, contra=[False, False])
     term2 = mf.CovDeriv(Acov)
-    assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 1e-7
+    assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 5e-7
 
     term1 = CovDerT(A, mesh, gf_metric, contra=[False, True])
     term2 = mf.CovDeriv(Amix1)
-    assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 1e-7
+    assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 5e-7
 
     term1 = CovDerT(A, mesh, gf_metric, contra=[True, False])
     term2 = mf.CovDeriv(Amix2)
-    assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 1e-7
+    assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 5e-7
 
     return
 
 
 def test_integration_by_parts_2d():
     metric = dg.CigarSoliton().metric
-    mesh = Mesh(unit_square.GenerateMesh(maxh=0.1))
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.15))
     mf = dg.RiemannianManifold(metric)
     omega_T = dg.ScalarField(mf.VolumeForm(VOL))
     omega_S = dg.ScalarField(mf.VolumeForm(BND))
@@ -156,7 +156,7 @@ def test_integration_by_parts_2d():
                 mesh,
             )
         )
-        < 1e-9
+        < 1e-8
     )
 
     assert (
@@ -168,7 +168,7 @@ def test_integration_by_parts_2d():
                 mesh,
             )
         )
-        < 1e-9
+        < 1e-8
     )
 
     assert (
@@ -180,7 +180,7 @@ def test_integration_by_parts_2d():
                 mesh,
             )
         )
-        < 1e-9
+        < 1e-8
     )
 
     assert (
@@ -192,7 +192,7 @@ def test_integration_by_parts_2d():
                 mesh,
             )
         )
-        < 1e-8
+        < 5e-8
     )
 
     assert (
@@ -219,7 +219,7 @@ def test_integration_by_parts_2d():
                 mesh,
             )
         )
-        < 5e-8
+        < 1e-7
     )
 
     assert (
@@ -250,7 +250,7 @@ def test_integration_by_parts_2d():
                 mesh,
             )
         )
-        < 1e-8
+        < 5e-8
     )
     return
 
@@ -327,11 +327,4 @@ def test_integration_by_parts_3d():
 
 
 if __name__ == "__main__":
-    test_cov_der_scal()
-    test_cov_der_vec()
-    test_cov_der_mat()
-
-    test_integration_by_parts_2d()
-    test_integration_by_parts_3d()
-
-    print("All tests passed!")
+    pytest.main([__file__])

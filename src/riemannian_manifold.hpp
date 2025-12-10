@@ -12,6 +12,7 @@ namespace ngfem
     class TensorFieldCoefficientFunction;
     class VectorFieldCoefficientFunction;
     class ScalarFieldCoefficientFunction;
+    class KFormCoefficientFunction;
 
     /**
      * @class RiemannianManifold
@@ -71,12 +72,15 @@ namespace ngfem
          */
         RiemannianManifold(shared_ptr<CoefficientFunction> _g);
 
+        int GetDimension() const { return dim; }
+
         // ------- Metric tensor and related quantities --------
         shared_ptr<CoefficientFunction> GetMetric() const;
 
         shared_ptr<CoefficientFunction> GetMetricInverse() const;
 
         shared_ptr<CoefficientFunction> GetVolumeForm(VorB vb) const;
+        int Dimension() const { return dim; }
 
         // -------  musical isomorphisms -------
         shared_ptr<TensorFieldCoefficientFunction> Raise(shared_ptr<TensorFieldCoefficientFunction> c1, size_t index = 0) const;
@@ -121,6 +125,11 @@ namespace ngfem
         shared_ptr<ScalarFieldCoefficientFunction> IP(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2, VorB vb = VOL) const;
 
         shared_ptr<TensorFieldCoefficientFunction> Cross(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2) const;
+
+        // ------- Forms --------
+        shared_ptr<KFormCoefficientFunction> MakeKForm(shared_ptr<CoefficientFunction> cf, int k) const;
+        shared_ptr<KFormCoefficientFunction> Star(shared_ptr<KFormCoefficientFunction> a) const;
+        shared_ptr<KFormCoefficientFunction> Coderivative(shared_ptr<KFormCoefficientFunction> a) const;
 
         // ------- Covariant differential operators --------
         shared_ptr<TensorFieldCoefficientFunction> CovDerivative(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb = VOL) const;

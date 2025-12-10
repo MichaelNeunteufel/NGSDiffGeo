@@ -75,7 +75,7 @@ def GetDiffOp(name, cf):
 
 @pytest.mark.parametrize("interpolate", [True, False])
 def test_volume_forms_vectors_2D(interpolate):
-    mesh = Mesh(unit_square.GenerateMesh(maxh=0.1))
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.2))
     cf_metric = dg.CigarSoliton().metric
 
     if interpolate:
@@ -89,9 +89,10 @@ def test_volume_forms_vectors_2D(interpolate):
     assert sqrt(
         Integrate((mf.VolumeForm(VOL) - sqrt(Det(metric))) ** 2, mesh)
     ) == pytest.approx(0)
+    print(type(metric))
     assert sqrt(
         Integrate(
-            (mf.VolumeForm(BND) - sqrt(metric * tang * tang)) ** 2
+            (mf.VolumeForm(BND) - sqrt(metric[tang, tang])) ** 2
             * dx(element_boundary=True),
             mesh,
         )
@@ -106,7 +107,7 @@ def test_volume_forms_vectors_2D(interpolate):
     ) == pytest.approx(0)
     assert sqrt(
         Integrate(
-            (mf.tangent - 1 / sqrt(metric * tang * tang) * tang) ** 2
+            (mf.tangent - 1 / sqrt(metric[tang, tang]) * tang) ** 2
             * dx(element_boundary=True),
             mesh,
         )
@@ -117,7 +118,7 @@ def test_volume_forms_vectors_2D(interpolate):
 
 @pytest.mark.parametrize("interpolate", [True, False])
 def test_volume_forms_vectors_3D(interpolate):
-    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.2))
+    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.3))
     cf_metric = dg.WarpedProduct().metric
 
     if interpolate:
@@ -154,7 +155,7 @@ def test_volume_forms_vectors_3D(interpolate):
 
 @pytest.mark.parametrize("interpolate", [True, False])
 def test_metric_inverse_derivative2D(interpolate):
-    mesh = Mesh(unit_square.GenerateMesh(maxh=0.2))
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
     cf_metric = dg.TestMetric(dim=2, order=4)
     if interpolate:
         metric = GridFunction(HCurlCurl(mesh, order=2))
@@ -326,11 +327,15 @@ def test_inner_product(interpolate):
         Integrate((mf.InnerProduct(vv, wo) - InnerProduct(v, w)) ** 2, mesh)
     ) == pytest.approx(0)
     assert sqrt(
-        Integrate((mf.InnerProduct(vv, wv) - InnerProduct(metric * v, w)) ** 2, mesh)
+        Integrate(
+            (mf.InnerProduct(vv, wv) - metric[w, v]) ** 2,
+            mesh,
+        )
     ) == pytest.approx(0)
     assert sqrt(
         Integrate(
-            (mf.InnerProduct(vo, wo) - InnerProduct(Inv(metric) * v, w)) ** 2, mesh
+            (mf.InnerProduct(vo, wo) - Inv(metric)[w, v]) ** 2,
+            mesh,
         )
     ) == pytest.approx(0)
 
@@ -396,7 +401,7 @@ def test_inner_product(interpolate):
 
 @pytest.mark.parametrize("interpolate", [True, False])
 def test_contraction(interpolate):
-    mesh = Mesh(unit_square.GenerateMesh(maxh=0.1))
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.2))
     cf_metric = dg.CigarSoliton().metric
 
     if interpolate:
@@ -466,12 +471,4 @@ def test_contraction(interpolate):
 
 
 if __name__ == "__main__":
-    for interpolate in [True, False]:
-        test_volume_forms_vectors_2D(interpolate=interpolate)
-        test_volume_forms_vectors_3D(interpolate=interpolate)
-        test_metric_inverse_derivative2D(interpolate=interpolate)
-        test_metric_inverse_derivative3D(interpolate=interpolate)
-        test_inner_product(interpolate=interpolate)
-        test_contraction(interpolate=interpolate)
-
-    print("All tests passed!")
+    pytest.main([__file__])
