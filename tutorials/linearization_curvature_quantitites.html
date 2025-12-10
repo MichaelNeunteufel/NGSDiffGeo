@@ -724,7 +724,7 @@ err = 0.0000105671, order = 1.996
 <p>The linearization of the Ricci curvature is given by</p>
 <div class="math notranslate nohighlight">
 \[\frac{d}{dt}\mathrm{Ric} = -0.5\big(\Delta_L\sigma+\nabla_g^2(\mathrm{tr}\sigma)-2\,\mathrm{def}_g(\mathrm{div}_g\sigma)\big),\]</div>
-<p>where <span class="math notranslate nohighlight">\(\nabla_g^2\)</span> denotes the covariant Hessian, <span class="math notranslate nohighlight">\(\mathrm{def}_g = 0.5(\nabla_g+\nabla_g^T\)</span> the covariant defect operator (symmetric covariant derivative) for vector-fields or 1-forms, and <span class="math notranslate nohighlight">\(\Delta_L\sigma\)</span> is the Licherowitz Laplacian defined by</p>
+<p>where <span class="math notranslate nohighlight">\(\nabla_g^2\)</span> denotes the covariant Hessian, <span class="math notranslate nohighlight">\(\mathrm{def}_g = 0.5(\nabla_g+\nabla_g^T)\)</span> the covariant defect operator (symmetric covariant derivative) for vector-fields or 1-forms, and <span class="math notranslate nohighlight">\(\Delta_L\sigma\)</span> is the Licherowitz Laplacian defined by</p>
 <div class="math notranslate nohighlight">
 \[\Delta_L\sigma = \Delta_g\sigma - 2 \big(\mathfrak{R}_{ikjl}g^{la}\sigma_{ab}g^{bk}dx^i\otimes dx^j-\mathrm{sym}(\mathrm{Ric}_{ia}g^{ab}\sigma_{bj}dx^i\otimes dx^j)\big).\]</div>
 <div class="nbinput docutils container">
@@ -808,7 +808,7 @@ err = 0.0000150708, order = 1.995
         <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">Scalar</span> <span class="o">*</span> <span class="n">sigma</span>
     <span class="p">)</span>
 
-    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
         <span class="n">t</span> <span class="o">/=</span> <span class="mi">2</span>
         <span class="n">gfGt</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">vec</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span>
         <span class="n">mf_t</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfGt</span><span class="p">)</span>
@@ -846,7 +846,7 @@ err = 0.0000150708, order = 1.995
         <span class="o">-</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">Scalar</span> <span class="o">*</span> <span class="n">gfG</span>
     <span class="p">)</span> <span class="o">*</span> <span class="n">omega_T</span>
 
-    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
         <span class="n">t</span> <span class="o">/=</span> <span class="mi">2</span>
         <span class="n">gfGt</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">vec</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span>
         <span class="n">mf_t</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfGt</span><span class="p">)</span>
@@ -879,6 +879,8 @@ err = 0.0121730979, order = 1.866
 err = 0.0032003156, order = 1.927
 err = 0.0008213934, order = 1.962
 err = 0.0002081289, order = 1.981
+err = 0.0000523874, order = 1.99
+err = 0.0000131417, order = 1.995
 
 Einstein omega_T:
 err = 0.1340645474, order = -
@@ -887,6 +889,8 @@ err = 0.0104839120, order = 1.882
 err = 0.0027394745, order = 1.936
 err = 0.0007008378, order = 1.967
 err = 0.0001772848, order = 1.983
+err = 0.0000445858, order = 1.991
+err = 0.0000111798, order = 1.996
 </pre></div></div>
 </div>
 <p>The linearization of the full Riemann curvature tensor is given by</p>
