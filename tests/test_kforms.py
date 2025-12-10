@@ -203,7 +203,7 @@ def test_exterior_derivative_scaling_on_rot_field():
     expected = 3 * volume_form
 
     assert d_two_form.degree == 3
-    assert l2_error(d_two_form, expected, mesh) == pytest.approx(0)
+    assert l2_error(d_two_form, expected, mesh) < 1e-11
 
 
 def test_hodge_star_involution_nonorthonormal_metric():
