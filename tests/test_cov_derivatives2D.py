@@ -255,78 +255,76 @@ def test_integration_by_parts_2d():
     return
 
 
-# def test_integration_by_parts_3d():
-#     metric = dg.WarpedProduct().metric
-#     mesh = Mesh(unit_cube.GenerateMesh(maxh=0.1))
-#     mf = dg.RiemannianManifold(metric)
-#     omega_T = mf.VolumeForm(VOL)
-#     omega_S = mf.VolumeForm(BND)
+def test_integration_by_parts_3d():
+    metric = dg.WarpedProduct().metric
+    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.1))
+    mf = dg.RiemannianManifold(metric)
+    omega_T = mf.VolumeForm(VOL)
+    omega_S = mf.VolumeForm(BND)
 
-#     X = dg.VectorField(CF((10 * x * y**3 - x**2 * z, y**4 * x - y * z, z * x * y)))
-#     Y = dg.VectorField(
-#         CF(
-#             (
-#                 y**2 * x * z - 0.1 * y * x**2,
-#                 10 * x * y**3 + x**2 - y * z,
-#                 sin(z) + cos(x * y),
-#             )
-#         )
-#     )
+    X = dg.VectorField(CF((10 * x * y**3 - x**2 * z, y**4 * x - y * z, z * x * y)))
+    Y = dg.VectorField(
+        CF(
+            (
+                y**2 * x * z - 0.1 * y * x**2,
+                10 * x * y**3 + x**2 - y * z,
+                sin(z) + cos(x * y),
+            )
+        )
+    )
 
-#     alpha = dg.OneForm(CF((sin(x * y), cos(x) * y**2, 2 * x * y * z)))
-#     beta = dg.OneForm(
-#         CF(
-#             (
-#                 0.2 * y * x**2 + 0.37 * x**3 * z,
-#                 2 * x**2 * y**2 + 0.1 * x**2 - 1.34 * y * z,
-#                 cos(x * y) + 0.1 * z,
-#             )
-#         )
-#     )
+    alpha = dg.OneForm(CF((sin(x * y), cos(x) * y**2, 2 * x * y * z)))
+    beta = dg.OneForm(
+        CF(
+            (
+                0.2 * y * x**2 + 0.37 * x**3 * z,
+                2 * x**2 * y**2 + 0.1 * x**2 - 1.34 * y * z,
+                cos(x * y) + 0.1 * z,
+            )
+        )
+    )
 
-#     assert (
-#         abs(
-#             Integrate(
-#                 mf.InnerProduct(mf.CovCurl(X), Y) * omega_T * dx(bonus_intorder=1), mesh
-#             )
-#             - Integrate(
-#                 mf.InnerProduct(X, mf.CovCurl(Y)) * omega_T * dx(bonus_intorder=1)
-#                 - mf.InnerProduct(mf.Cross(X, mf.normal), Y)
-#                 * omega_S
-#                 * ds(bonus_intorder=1),
-#                 mesh,
-#             )
-#         )
-#         < 1e-8
-#     )
+    assert (
+        abs(
+            Integrate(
+                mf.InnerProduct(mf.CovCurl(X), Y) * omega_T * dx(bonus_intorder=1), mesh
+            )
+            - Integrate(
+                mf.InnerProduct(X, mf.CovCurl(Y)) * omega_T * dx(bonus_intorder=1)
+                - mf.InnerProduct(mf.Cross(X, mf.normal), Y)
+                * omega_S
+                * ds(bonus_intorder=1),
+                mesh,
+            )
+        )
+        < 1e-8
+    )
 
-#     assert (
-#         abs(
-#             Integrate(mf.InnerProduct(mf.CovCurl(X), alpha) * omega_T * dx, mesh)
-#             - Integrate(
-#                 mf.InnerProduct(X, mf.CovCurl(alpha)) * omega_T * dx
-#                 - mf.InnerProduct(mf.Cross(X, mf.normal), alpha) * omega_S * ds,
-#                 mesh,
-#             )
-#         )
-#         < 1e-7
-#     )
+    assert (
+        abs(
+            Integrate(mf.InnerProduct(mf.CovCurl(X), alpha) * omega_T * dx, mesh)
+            - Integrate(
+                mf.InnerProduct(X, mf.CovCurl(alpha)) * omega_T * dx
+                - mf.InnerProduct(mf.Cross(X, mf.normal), alpha) * omega_S * ds,
+                mesh,
+            )
+        )
+        < 1e-7
+    )
 
-#     assert (
-#         abs(
-#             Integrate(mf.InnerProduct(mf.CovCurl(alpha), beta) * omega_T * dx, mesh)
-#             - Integrate(
-#                 mf.InnerProduct(alpha, mf.CovCurl(beta)) * omega_T * dx
-#                 - mf.InnerProduct(mf.Cross(alpha, mf.normal), beta) * omega_S * ds,
-#                 mesh,
-#             )
-#         )
-#         < 1e-8
-#     )
-#     return
+    assert (
+        abs(
+            Integrate(mf.InnerProduct(mf.CovCurl(alpha), beta) * omega_T * dx, mesh)
+            - Integrate(
+                mf.InnerProduct(alpha, mf.CovCurl(beta)) * omega_T * dx
+                - mf.InnerProduct(mf.Cross(alpha, mf.normal), beta) * omega_S * ds,
+                mesh,
+            )
+        )
+        < 1e-8
+    )
+    return
 
 
 if __name__ == "__main__":
     pytest.main([__file__])
-
-    print("All tests passed!")

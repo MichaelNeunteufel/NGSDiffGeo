@@ -10,4 +10,3 @@ def test_import():
 
 if __name__ == "__main__":
     pytest.main([__file__])
-    print("All tests passed!")

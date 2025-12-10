@@ -111,4 +111,3 @@ def test_nested_wrapping_is_idempotent_in_value():
 
 if __name__ == "__main__":
     pytest.main([__file__])
-    print("All tests passed!")

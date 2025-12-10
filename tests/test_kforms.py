@@ -197,7 +197,7 @@ def test_exterior_derivative_scaling_on_rot_field():
     dz_dx = dg.Wedge(dz, dx)
     dx_dy = dg.Wedge(dx, dy)
 
-    two_form = dg.TwoForm(x * dy_dz + y * dz_dx + z * dx_dy)
+    two_form = x * dy_dz + y * dz_dx + z * dx_dy
     d_two_form = dg.d(two_form)
     volume_form = dg.Wedge(dx, dy_dz)
     expected = 3 * volume_form

@@ -13,7 +13,7 @@ add_ngsolve_addon(${addon_name} src/ngsdiffgeo.cpp src/riemannian_manifold.cpp s
 # install the compiled python module and __init__.py ( don't change this )
 set(install_dir ${ADDON_INSTALL_DIR_PYTHON}/${addon_name})
 install(TARGETS ${addon_name} DESTINATION ${install_dir})
-install(FILES src/__init__.py DESTINATION ${install_dir})
+install(FILES src/__init__.py src/wrappers.py src/manifolds.py DESTINATION ${install_dir})
 
 # install additional python files/demos/examples
 #install(FILES demos/exploremesh.py DESTINATION ${install_dir}/demos)
