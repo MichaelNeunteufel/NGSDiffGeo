@@ -1,3 +1,14 @@
+try:
+    from ._version import version as __version__
+except Exception:
+    try:
+        from importlib.metadata import version as _pkg_version
+
+        __version__ = _pkg_version("ngsdiffgeo")
+    except Exception:
+        __version__ = "0+unknown"
+
+
 # It's important to import ngsolve first, to load all shared libs before the add on is loaded
 import ngsolve
 from ngsolve.fem import Einsum

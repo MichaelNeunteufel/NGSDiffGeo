@@ -1,7 +1,8 @@
 # Here is the project metadata, adapt it to your needs
 [project]
 name = "ngsdiffgeo"
-version = "0.0.1.dev6"
+dynamic = ["version", "dependencies"]
+# version = "0.0.1.dev6"
 authors = [{name="Michael Neunteufel"}]
 description = "Differential geometry tools for NGSolve"
 urls = {github="https://github.com/MichaelNeunteufel/NGSDiffGeo"}
@@ -9,7 +10,6 @@ readme = "README.md"
 requires-python = ">=3.9"
 # dependencies = [] # ngsolve will be added automatically
 # dynamic = ["dependencies"]
-dynamic = ["dependencies"]
 classifiers = [
   "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
 ]
@@ -20,6 +20,8 @@ classifiers = [
 requires = [
             "ngsolve>=6.2.2505.post105.dev0",
             "scikit-build-core>=0.9.0",
+            "setuptools>=80",
+            "setuptools-scm>=8",
             "pybind11_stubgen",
             "cmake",
             "toml;  python_version >= '3.11'",
@@ -38,9 +40,12 @@ build-backend = "scikit_build_core.build"
 experimental = true
 # This adds ngsolve (with exact build-time version) to the dependencies
 metadata.dependencies.provider="ngsolve._scikit_build_core_dependencies"
+metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
+sdist.include = ["src/_version.py"]
 
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
+version_file = "src/_version.py"
 
 [tool.cibuildwheel]
 manylinux-x86_64-image = "manylinux_2_28"
