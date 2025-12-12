@@ -41,13 +41,12 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-# nbsphinx prepends `_static/` automatically; keep only the relative path
-nbsphinx_widgets_path = "widgets"
-# (optional, but can avoid “missing require.js” surprises)
+nbsphinx_widgets_path = (
+    "https://unpkg.com/@jupyter-widgets/html-manager@*/dist/embed-amd.js"
+)
 nbsphinx_requirejs_path = (
     "https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"
 )
-
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
