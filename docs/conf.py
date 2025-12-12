@@ -41,7 +41,8 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-nbsphinx_widgets_path = "_static/widgets"
+# nbsphinx prepends `_static/` automatically; keep only the relative path
+nbsphinx_widgets_path = "widgets"
 # (optional, but can avoid “missing require.js” surprises)
 nbsphinx_requirejs_path = (
     "https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"
