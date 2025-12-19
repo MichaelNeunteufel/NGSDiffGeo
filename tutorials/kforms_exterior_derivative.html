@@ -1,0 +1,950 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alternating k-forms, wedge product, Hodge star, and exterior (co-) derivative &mdash; NGSDiffGeo 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+      <script src="https://unpkg.com/@jupyter-widgets/html-manager@*/dist/embed-amd.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Linearization of curvature quantities" href="linearization_curvature_quantitites.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NGSDiffGeo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="riemannian_manifolds.html">Riemannian Manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="covariant_derivatives.html">Covariant Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="curvatures.html">Curvature quantities on Riemannian manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="regge_metric.html">Regge finite elements and Regge metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature.html">Distributional Gauss curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_analysis.html">Distributional Gauss curvature (analysis)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_gauss_curvature_surface.html">Gauss curvature approximation on embedded surfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_scalar_curvature.html">Distributional scalar curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_einstein_tensor.html">Distributional Einstein curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distributional_riemann_curvature_tensor.html">Distributional Riemann curvature tensor curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linearization_curvature_quantitites.html">Linearization of curvature quantities</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Alternating k-forms, wedge product, Hodge star, and exterior (co-) derivative</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#3D-Euclidean-case">3D Euclidean case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#3D-with-general-Riemannian-manifold">3D with general Riemannian manifold</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#2D-Euclidean-case">2D Euclidean case</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NGSDiffGeo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Alternating k-forms, wedge product, Hodge star, and exterior (co-) derivative</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/kforms_exterior_derivative.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Alternating-k-forms,-wedge-product,-Hodge-star,-and-exterior-(co-)-derivative">
+<h1>Alternating k-forms, wedge product, Hodge star, and exterior (co-) derivative<a class="headerlink" href="#Alternating-k-forms,-wedge-product,-Hodge-star,-and-exterior-(co-)-derivative" title="Link to this heading"></a></h1>
+<p>In this notebook, we introduce important objects and identities of exterior calculus.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">netgen.occ</span><span class="w"> </span><span class="kn">import</span> <span class="n">unit_square</span><span class="p">,</span> <span class="n">unit_cube</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ngsdiffgeo</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dg</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">l2_error</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">mesh</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">),</span> <span class="n">mesh</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">l2_norm</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">mesh</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">),</span> <span class="n">mesh</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<section id="3D-Euclidean-case">
+<h2>3D Euclidean case<a class="headerlink" href="#3D-Euclidean-case" title="Link to this heading"></a></h2>
+<p>We focus on the more interesting case of <span class="math notranslate nohighlight">\(N=3\)</span>. First we consider the Euclidean manifold, <span class="math notranslate nohighlight">\(\Omega\subset \mathbb{R}^3\)</span>, with the usual Euclidean inner products. Although the wedge product and exterior derivative are independent of the metric, for the Hodge star and exterior co-derivative this is essential. Later, we consider a non-Euclidean Riemannian manifold with a metric tensor <span class="math notranslate nohighlight">\(g\neq I\)</span>.</p>
+<p>We define the 1-forms <span class="math notranslate nohighlight">\(dx,dy,dz\in \Lambda^1(\Omega)\)</span>, 2-forms <span class="math notranslate nohighlight">\(dx\wedge dy, dx\wedge dz, dy\wedge dz\in \Lambda^2(\Omega)\)</span>, and 3-form <span class="math notranslate nohighlight">\(dx\wedge dy\wedge dz\in \Lambda^3(\Omega)\)</span>. The wedge product anti-symmetrizes the dyadic product of the forms. For example there holds</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\alpha\wedge \beta = \alpha \otimes \beta - \beta\otimes \alpha,\qquad \alpha,\beta\in\Lambda^1(\Omega).
+\end{align*}\]</div>
+<p>For the wedge product, there holds the associative rule <span class="math notranslate nohighlight">\((\alpha\wedge\beta)\wedge \gamma = \alpha\wedge(\beta\wedge\gamma)\)</span>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mesh3</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">unit_cube</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span><span class="n">maxh</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+
+<span class="n">dx</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+<span class="n">dy</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+<span class="n">dz</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+
+<span class="n">dx_dy</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">)</span>
+<span class="n">dx_dz</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dz</span><span class="p">)</span>
+<span class="n">dy_dz</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">dy</span><span class="p">,</span> <span class="n">dz</span><span class="p">)</span>
+
+<span class="n">dx_dy2</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TwoForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">dx_dz2</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TwoForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">dy_dz2</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TwoForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error dx_dy - dx_dy2 = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">dx_dy</span><span class="p">,</span><span class="w"> </span><span class="n">dx_dy2</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error dx_dz - dx_dz2 = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">dx_dz</span><span class="p">,</span><span class="w"> </span><span class="n">dx_dz2</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error dy_dz - dy_dz2 = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">dy_dz</span><span class="p">,</span><span class="w"> </span><span class="n">dy_dz2</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">dx_dy_dz</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">dx_dy</span><span class="p">,</span> <span class="n">dz</span><span class="p">)</span>
+<span class="n">dx_dy_dz_as</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy_dz</span><span class="p">)</span>
+<span class="n">dx_dy_dz2</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">ThreeForm</span><span class="p">(</span>
+    <span class="n">CF</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">1</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">1</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">1</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error dx_dy_dz - dx_dy_dz2 = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">dx_dy_dz</span><span class="p">,</span><span class="w"> </span><span class="n">dx_dy_dz2</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error dx_dy_dz - dx_dy_dz_as = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">dx_dy_dz</span><span class="p">,</span><span class="w"> </span><span class="n">dx_dy_dz_as</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+L2 error dx_dy - dx_dy2 = 0.0
+L2 error dx_dz - dx_dz2 = 0.0
+L2 error dy_dz - dy_dz2 = 0.0
+L2 error dx_dy_dz - dx_dy_dz2 = 0.0
+L2 error dx_dy_dz - dx_dy_dz_as = 0.0
+</pre></div></div>
+</div>
+<p>Further, the wedge product is anti-commutative depending on the degree of the involved forms</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\alpha\wedge\beta = (-1)^{lk}\beta\wedge\alpha,\qquad \alpha\in\Lambda^l(\Omega), \beta\in\Lambda^k(\Omega),
+\end{align*}\]</div>
+<p>such that <span class="math notranslate nohighlight">\(\alpha\wedge\alpha=0\)</span> for all <span class="math notranslate nohighlight">\(\alpha\in\Lambda^k(\Omega)\)</span>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dy_dx</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">dy</span><span class="p">,</span> <span class="n">dx</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error dy^dx + dx^dy = </span><span class="si">{</span><span class="n">l2_norm</span><span class="p">(</span><span class="n">dy_dx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">dx_dy</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">dz_dx_dy</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">dz</span><span class="p">,</span> <span class="n">dx_dy</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error dz^(dx^dy) - dx^dy^dz = </span><span class="si">{</span><span class="n">l2_norm</span><span class="p">(</span><span class="n">dz_dx_dy</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">dx_dy_dz</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mf">0.3</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="p">)))</span>
+<span class="n">alpha_wedge_alpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 norm alpha^alpha = </span><span class="si">{</span><span class="n">l2_norm</span><span class="p">(</span><span class="n">alpha_wedge_alpha</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+L2 error dy^dx + dx^dy = 0.0
+L2 error dz^(dx^dy) - dx^dy^dz = 0.0
+L2 norm alpha^alpha = 0.0
+</pre></div></div>
+</div>
+<p>Let <span class="math notranslate nohighlight">\(X\in\mathfrak{X}(\Omega)\)</span> be a vector field. The contraction (also denoted as interior product) <span class="math notranslate nohighlight">\(\iota_X:\Lambda^k(\Omega)\to\Lambda^{k-1}(\Omega)\)</span>, sometimes denoted by <span class="math notranslate nohighlight">\(X\lrcorner\)</span>, is defined by</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+(\iota_X\alpha)(Y_1,\dots,Y_{k-1}) = \alpha(X,Y_1,\dots, Y_{k-1}), \qquad\alpha\in\Lambda^k(\Omega),\, Y_i\in \mathfrak{X}(\Omega).
+\end{align*}\]</div>
+<p>There holds the following identity for the wedge product</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\iota_X(\beta\wedge\gamma) = (\iota_X\beta)\wedge \gamma + (-1)^k\beta\wedge(\iota_X\gamma),\qquad\beta\in\Lambda^k(\Omega),\gamma\in\Lambda^l(\Omega).
+\end{align*}\]</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">Id</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+
+<span class="n">X</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">VectorField</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mf">0.3</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">z</span> <span class="o">+</span> <span class="mf">0.34</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">z</span><span class="p">)))</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mf">0.3</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="p">)))</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TwoForm</span><span class="p">(</span>
+    <span class="n">CF</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="n">y</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="o">-</span><span class="p">(</span><span class="n">y</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="n">x</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="o">-</span><span class="n">x</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">iota_X_beta_gamma</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Contraction</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">))</span>
+<span class="n">iota_beta_iota_gamma</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Contraction</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">alpha</span><span class="p">),</span> <span class="n">beta</span><span class="p">)</span> <span class="o">-</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span>
+    <span class="n">alpha</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">Contraction</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;L2 error i_X(alpha^beta) - i_X(alpha)^beta + alpha^i_X(beta) = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">iota_X_beta_gamma</span><span class="p">,</span><span class="w"> </span><span class="n">iota_beta_iota_gamma</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+L2 error i_X(alpha^beta) - i_X(alpha)^beta + alpha^i_X(beta) = 2.865749496467125e-17
+</pre></div></div>
+</div>
+<p>The Hodge star operator <span class="math notranslate nohighlight">\(\star:\Lambda^{k}(\Omega)\to \Lambda^{N-k}(\Omega)\)</span> is defined by the identity</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\alpha\wedge (\star\beta) = \frac{1}{k!}\langle \alpha, \beta\rangle\,\omega,\qquad \alpha,\beta\in \Lambda^{k}(\Omega),
+\end{align*}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\omega\)</span> is the volume form (<span class="math notranslate nohighlight">\(dx\wedge dy\wedge dz\)</span> in the Euclidean case) and <span class="math notranslate nohighlight">\(\langle \alpha, \beta\rangle\)</span> the inner product of <span class="math notranslate nohighlight">\(k\)</span>-tensors. Note that the normalization factor <span class="math notranslate nohighlight">\(1/k!\)</span> is necessary as in the inner product we sum over all indices. In the literature the inner product of <span class="math notranslate nohighlight">\(k\)</span>-forms, sometimes denoted by <span class="math notranslate nohighlight">\(g^{1}(\alpha,\beta)\)</span> is defined by</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+g^{-1}(\alpha, \beta)=\frac{1}{k!} g^{i_1 j_1}\cdots g^{i_k j_k}\, \alpha_{i_1\dots i_k}\, \beta_{j_1\dots j_k},\qquad \alpha,\beta\in \Lambda^{k}(\Omega),
+\end{align*}\]</div>
+<p>without the normalization factor, so there holds <span class="math notranslate nohighlight">\(\langle\alpha,\beta\rangle = k!\,g^{-1}(\alpha,\beta)\)</span> for <span class="math notranslate nohighlight">\(\alpha,\beta\in\Lambda^k(\Omega)\)</span>. Applying the Hodge star twice yields the identity up to a sign</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\star\star \alpha = (-1)^{k(N-k)}\alpha, \alpha\in\Lambda^k(\Omega).
+\end{align*}\]</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Euclidean manifold, metric tensor g=Id</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">Id</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+
+<span class="n">one</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">ScalarField</span><span class="p">(</span><span class="n">CF</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="n">star_one</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">one</span><span class="p">)</span>
+<span class="n">star_dx</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+<span class="n">star_dy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">dy</span><span class="p">)</span>
+<span class="n">star_dz</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">dz</span><span class="p">)</span>
+<span class="n">star_dx_dy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">dx_dy</span><span class="p">)</span>
+<span class="n">star_dx_dz</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">dx_dz</span><span class="p">)</span>
+<span class="n">star_dy_dz</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">dy_dz</span><span class="p">)</span>
+<span class="n">star_dx_dy_dz</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">dx_dy_dz</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error star(1) - dx^dy^dz = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">star_one</span><span class="p">,</span><span class="w"> </span><span class="n">dx_dy_dz</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error star(dx) - dy^dz = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">star_dx</span><span class="p">,</span><span class="w"> </span><span class="n">dy_dz</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error star(dy) - -dz^dx = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">star_dy</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">dx_dz</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error star(dz) - dx^dy = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">star_dz</span><span class="p">,</span><span class="w"> </span><span class="n">dx_dy</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error star(dx^dy) - dz = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">star_dx_dy</span><span class="p">,</span><span class="w"> </span><span class="n">dz</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error star(dx^dz) - -dy = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">star_dx_dz</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">dy</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error star(dy^dz) - dx = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">star_dy_dz</span><span class="p">,</span><span class="w"> </span><span class="n">dx</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error star(dx^dy^dz) - 1 = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">star_dx_dy_dz</span><span class="p">,</span><span class="w"> </span><span class="n">one</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mf">0.3</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="p">)))</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TwoForm</span><span class="p">(</span>
+    <span class="n">CF</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="n">y</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="o">-</span><span class="p">(</span><span class="n">y</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="n">x</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="o">-</span><span class="n">x</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="n">gamma</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.1</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span> <span class="o">-</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">z</span><span class="p">)</span> <span class="o">*</span> <span class="n">dx_dy_dz</span>
+
+<span class="n">star_star_alpha</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span>
+<span class="n">expected_star_star_alpha</span> <span class="o">=</span> <span class="n">alpha</span>
+<span class="n">star_star_beta</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">beta</span><span class="p">))</span>
+<span class="n">expected_star_star_beta</span> <span class="o">=</span> <span class="n">beta</span>
+<span class="n">star_star_gamma</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">gamma</span><span class="p">))</span>
+<span class="n">expected_star_star_gamma</span> <span class="o">=</span> <span class="n">gamma</span>
+
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;L2 error star(star(alpha)) - alpha = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">star_star_alpha</span><span class="p">,</span><span class="w"> </span><span class="n">expected_star_star_alpha</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;L2 error star(star(beta)) - beta = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">star_star_beta</span><span class="p">,</span><span class="w"> </span><span class="n">expected_star_star_beta</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;L2 error star(star(gamma)) - gamma = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">star_star_gamma</span><span class="p">,</span><span class="w"> </span><span class="n">expected_star_star_gamma</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+L2 error star(1) - dx^dy^dz = 0.0
+L2 error star(dx) - dy^dz = 0.0
+L2 error star(dy) - -dz^dx = 0.0
+L2 error star(dz) - dx^dy = 0.0
+L2 error star(dx^dy) - dz = 0.0
+L2 error star(dx^dz) - -dy = 0.0
+L2 error star(dy^dz) - dx = 0.0
+L2 error star(dx^dy^dz) - 1 = 0.0
+L2 error star(star(alpha)) - alpha = 0.0
+L2 error star(star(beta)) - beta = 0.0
+L2 error star(star(gamma)) - gamma = 9.732194815973799e-17
+</pre></div></div>
+</div>
+<p>The exterior derivative <span class="math notranslate nohighlight">\(d:\Lambda^k(\Omega)\to\Lambda^{k+1}(\Omega)\)</span> is defined by its action on vector fields <span class="math notranslate nohighlight">\(X_0,\dots,X_k\in\mathfrak{X}(\Omega)\)</span></p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+(d\alpha)(X_0,\dots,X_k) = \sum_{i=0}^k (-1)^i X_i\big(\alpha(X_0,\dots,\hat{X_i},\dots,X_k)\big)
+ + \sum_{0\leq i&lt;j\leq k} (-1)^{i+j} \alpha([X_i,X_j],X_0,\dots,\hat{X_i},\dots,\hat{X_j},\dots,X_k),
+\end{align*}\]</div>
+<p>which in coordinates reduces to the alternating sum of partial derivatives of the coefficients. Here, <span class="math notranslate nohighlight">\([X,Y]\)</span> denotes the Lie-bracket (or commutator), which is defined by the identity <span class="math notranslate nohighlight">\([X,Y]f = X(Y(f))-Y(X(f))\)</span> for all functions <span class="math notranslate nohighlight">\(f\)</span>. Further, <span class="math notranslate nohighlight">\(\hat
+X\)</span> means that this argument gets skipped.</p>
+<p>Applying the exterior derivative twice yields zero, <span class="math notranslate nohighlight">\(dd \alpha = 0\)</span> for <span class="math notranslate nohighlight">\(\alpha\in\Lambda^k(\Omega)\)</span>, i.e., <span class="math notranslate nohighlight">\(d\)</span> is nilpotent. Further, there holds the following Leibnitz rule with the wedge product</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+d(\alpha\wedge\beta) = d\alpha\wedge\beta + (-1)^k\alpha\wedge d\beta,\quad\alpha\in\Lambda^k(\Omega),\beta\in\Lambda^l(\Omega).
+\end{align*}\]</div>
+<p>For 1-forms there also holds <span class="math notranslate nohighlight">\(d \alpha = \nabla \alpha - (\nabla\alpha)^T\)</span> with <span class="math notranslate nohighlight">\(\nabla\)</span> denoting the Levi-Civita connection (covariant derivative) as the involved Christoffel symbols cancel out due to their symmetry.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">ScalarField</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mf">0.3</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="p">)))</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mf">0.3</span> <span class="o">*</span> <span class="n">z</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)))</span>
+
+<span class="n">dg_g</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="n">expected_dg_g</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="n">y</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span> <span class="n">x</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;|d g - expected||_L2: </span><span class="si">{</span><span class="n">l2_norm</span><span class="p">(</span><span class="n">dg_g</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">expected_dg_g</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">ddg_g</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">dg_g</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;d^2 g = </span><span class="si">{</span><span class="n">l2_norm</span><span class="p">(</span><span class="n">ddg_g</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">dalpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span>
+<span class="n">expected_dalpha</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">-</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span><span class="o">.</span><span class="n">trans</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;||d alpha - expected||_L2: </span><span class="si">{</span><span class="n">l2_norm</span><span class="p">(</span><span class="n">dalpha</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">expected_dalpha</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">ddalpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">dalpha</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;d^2 alpha = </span><span class="si">{</span><span class="n">l2_norm</span><span class="p">(</span><span class="n">ddalpha</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">d_a_w_b</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">))</span>
+<span class="n">expected_d_a_w_b</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">dalpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span> <span class="o">-</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">beta</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;||d(alpha^beta) - expected||_L2: </span><span class="si">{</span><span class="n">l2_norm</span><span class="p">(</span><span class="n">d_a_w_b</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">expected_d_a_w_b</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+|d g - expected||_L2: 4.393179724146992e-13
+d^2 g = 6.784498103170912e-12
+||d alpha - expected||_L2: 0.0
+d^2 alpha = 1.4297389571717514e-11
+||d(alpha^beta) - expected||_L2: 4.361929452269937e-13
+</pre></div></div>
+</div>
+<p>For a vector field <span class="math notranslate nohighlight">\(X\in\mathfrak{X}(\Omega)\)</span> the covariant divergence and curl (in 3D) can be written in terms of the exterior derivative, Hodge star, and the musical isomorphisms relating 1-forms with vector fields</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\mathrm{div}\, X = \star d\star (X^\flat),\qquad \mathrm{curl}\,X = (\star d(X^\flat))^\sharp.
+\end{align*}\]</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">Id</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">VectorField</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mf">0.3</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">z</span> <span class="o">+</span> <span class="mf">0.34</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">z</span><span class="p">)))</span>
+
+<span class="n">div_X</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Lower</span><span class="p">(</span><span class="n">X</span><span class="p">))))</span>
+<span class="n">div_X_expected</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;||div X - expected||_L2: </span><span class="si">{</span><span class="n">l2_norm</span><span class="p">(</span><span class="n">div_X</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">div_X_expected</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">curl_X</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Raise</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Lower</span><span class="p">(</span><span class="n">X</span><span class="p">))))</span>
+<span class="n">curl_X_expected</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;||curl X - expected||_L2: </span><span class="si">{</span><span class="n">l2_norm</span><span class="p">(</span><span class="n">curl_X</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">curl_X_expected</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+||div X - expected||_L2: 5.89205360310681e-17
+||curl X - expected||_L2: 0.0
+</pre></div></div>
+</div>
+<p>Further, there holds the Stokes theorem for <span class="math notranslate nohighlight">\(\alpha\in \Lambda^{N-1}(\Omega)\)</span></p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\int_{\Omega}d\alpha = \int_{\partial\Omega}\iota^*\alpha,
+\end{align*}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\iota^*\)</span> is the pullback of the inclusion <span class="math notranslate nohighlight">\(\iota:\partial\Omega\to\Omega\)</span>. We use that <span class="math notranslate nohighlight">\(d\alpha = \star(d\alpha)\omega\)</span> and <span class="math notranslate nohighlight">\(\iota^*\alpha = \star_\partial(\iota^*\alpha)\omega_{\partial}\)</span> for <span class="math notranslate nohighlight">\(\alpha\in \Lambda^{N-1}(\Omega)\)</span>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ngsolve</span>
+
+<span class="n">mf</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">Id</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TwoForm</span><span class="p">(</span>
+    <span class="n">CF</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="n">y</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="o">-</span><span class="p">(</span><span class="n">y</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mf">0.2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">0.2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+
+<span class="n">left</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">beta</span><span class="p">))</span> <span class="o">*</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span> <span class="n">mesh3</span><span class="p">)</span>
+<span class="n">right</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">BND</span><span class="p">)</span> <span class="o">*</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">mesh3</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Left integral: </span><span class="si">{</span><span class="n">left</span><span class="si">}</span><span class="s2">, right integral: </span><span class="si">{</span><span class="n">right</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Left integral: 0.5999999999999476, right integral: 0.5999999999999948
+</pre></div></div>
+</div>
+<p>The exterior coderivative <span class="math notranslate nohighlight">\(\delta:\Lambda^k(\Omega)\to\Lambda^{k-1}(\Omega)\)</span> is defined as the adjoint of the exterior derivative with respect to the <span class="math notranslate nohighlight">\(L^2\)</span> inner product, i.e., for all <span class="math notranslate nohighlight">\(\alpha\in\Lambda^k(\Omega)\)</span> and <span class="math notranslate nohighlight">\(\beta\in \Lambda^{k+1}(\Omega)\)</span> with compact support there holds</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\int_{\Omega}\frac{1}{(k+1)!}\langle d\alpha,\beta\rangle\,\omega = \int_{\Omega}\frac{1}{k!}\langle \alpha,\delta\beta\rangle\,\omega,
+\end{align*}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\omega\)</span> and <span class="math notranslate nohighlight">\(\langle\cdot,\cdot\rangle\)</span> are again the volume form and the inner product for <span class="math notranslate nohighlight">\(k\)</span>-tensor fields. There holds the identity <span class="math notranslate nohighlight">\(\delta = (-1)^{N(k+1)+1}\,\star d \star\)</span>. From it, there follows that <span class="math notranslate nohighlight">\(\delta\)</span> is also nilpotent, <span class="math notranslate nohighlight">\(\delta\delta=0\)</span>.</p>
+<p>Using Stokes’ theorem together with yields the following integration-by-parts formula that holds for all <span class="math notranslate nohighlight">\(\alpha\in\Lambda^k(\Omega)\)</span> and <span class="math notranslate nohighlight">\(\beta\in \Lambda^{k+1}(\Omega)\)</span></p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\int_{\Omega}\frac{1}{(k+1)!}\langle d\alpha,\beta\rangle\,\omega = \int_{\Omega}\frac{1}{k!}\langle \alpha,\delta\beta\rangle\,\omega + \int_{\partial \Omega}\frac{1}{k!}\langle \alpha,\iota_n\beta\rangle\,\omega_{\partial},
+\end{align*}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\omega_{\partial}\)</span> is the volume form on the boundary, <span class="math notranslate nohighlight">\(n\)</span> the outer unit normal vector, and for a vector field <span class="math notranslate nohighlight">\(X\in\mathfrak{X}(\Omega)\)</span> the contraction is <span class="math notranslate nohighlight">\(\iota_X\)</span>. Further, the inner product in the boundary term has to be understood with respect to the tangential metric <span class="math notranslate nohighlight">\(g_F\)</span>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ngsolve</span>
+
+<span class="n">mf</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">Id</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+
+<span class="n">f</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">ScalarField</span><span class="p">(</span><span class="mi">200</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">z</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mf">0.3</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="p">)))</span>
+
+<span class="n">left</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span> <span class="o">*</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">mesh3</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">right</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">delta</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span>
+    <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">mesh3</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Compact support: left: </span><span class="si">{</span><span class="n">left</span><span class="si">}</span><span class="s2">, right: </span><span class="si">{</span><span class="n">right</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">f</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">ScalarField</span><span class="p">(</span><span class="mi">20</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mf">0.3</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="p">)))</span>
+
+<span class="n">left</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span> <span class="o">*</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">mesh3</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">right</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">delta</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span>
+    <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">mesh3</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">+</span> <span class="n">Integrate</span><span class="p">(</span>
+    <span class="n">f</span>
+    <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">Contraction</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">BND</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">mesh3</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Integration by parts: left: </span><span class="si">{</span><span class="n">left</span><span class="si">}</span><span class="s2">, right: </span><span class="si">{</span><span class="n">right</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mf">0.3</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="p">)))</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TwoForm</span><span class="p">(</span>
+    <span class="n">CF</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="n">y</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="o">-</span><span class="p">(</span><span class="n">y</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="n">x</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="o">-</span><span class="n">x</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="n">left</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
+    <span class="mf">0.5</span>
+    <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span>
+    <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">mesh3</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">right</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">delta</span><span class="p">(</span><span class="n">beta</span><span class="p">))</span>
+    <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">mesh3</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">+</span> <span class="n">Integrate</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">Contraction</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span> <span class="n">beta</span><span class="p">),</span> <span class="n">BND</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">BND</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">mesh3</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Integration by parts: left: </span><span class="si">{</span><span class="n">left</span><span class="si">}</span><span class="s2">, right: </span><span class="si">{</span><span class="n">right</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Compact support: left: -0.1388888888888557, right: -0.13888888888888784
+Integration by parts: left: 0.2361111111110747, right: 0.2361111111111209
+Integration by parts: left: -0.363333333333325, right: -0.36333333333333895
+</pre></div></div>
+</div>
+<p>The Laplace-Beltrami operator can be expressed by the exterior (co-)derivative</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\Delta \alpha = -(d\delta +\delta d)\alpha,\qquad \alpha\in \Lambda^k(\Omega).
+\end{align*}\]</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">Id</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+
+<span class="n">f</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">ScalarField</span><span class="p">(</span><span class="mi">20</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mf">0.3</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="p">)))</span>
+
+<span class="n">laplace_beltrami</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">delta</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">delta</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">f</span><span class="p">)))</span>
+<span class="n">expected</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovLaplace</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Delta f: </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">laplace_beltrami</span><span class="p">,</span><span class="w"> </span><span class="n">expected</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">laplace_beltrami</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">delta</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span> <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">delta</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">alpha</span><span class="p">)))</span>
+<span class="n">expected</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovLaplace</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Delta alpha: </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">laplace_beltrami</span><span class="p">,</span><span class="w"> </span><span class="n">expected</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Delta f: 1.6680628872667096e-15
+Delta alpha: 3.7287953906907904e-12
+</pre></div></div>
+</div>
+</section>
+<section id="3D-with-general-Riemannian-manifold">
+<h2>3D with general Riemannian manifold<a class="headerlink" href="#3D-with-general-Riemannian-manifold" title="Link to this heading"></a></h2>
+<p>Nest, we consider a general Riemannian manifold. Then the Hodge star and exterior co-derivative read in coordinates</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+.
+\end{align*}\]</div>
+<p>Adapting the volume forms, <span class="math notranslate nohighlight">\(\omega=\sqrt{\det g}\,dx\wedge dy\wedge dz\)</span>, <span class="math notranslate nohighlight">\(\omega_{\partial}=\sqrt{\|\mathrm{cof}(g)\|_F}\,dt_1\wedge dt_2\)</span>, the <span class="math notranslate nohighlight">\(g\)</span> inner product <span class="math notranslate nohighlight">\(\langle\cdot,\cdot\rangle= g(\cdot,\cdot)\)</span> extended from vector fields to general tensor fields, and the <span class="math notranslate nohighlight">\(g\)</span>-normal vector <span class="math notranslate nohighlight">\(n=n_g\)</span> the above identities hold analogously.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ngsolve</span>
+
+
+<span class="n">mf</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">WarpedProduct</span><span class="p">()</span><span class="o">.</span><span class="n">metric</span><span class="p">)</span>
+
+<span class="c1">################ covariant div and curl ################</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">VectorField</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mf">0.3</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">z</span> <span class="o">+</span> <span class="mf">0.34</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">z</span><span class="p">)))</span>
+
+<span class="n">div_X</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Lower</span><span class="p">(</span><span class="n">X</span><span class="p">))))</span>
+<span class="n">div_X_expected</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;||div X - expected||_L2: </span><span class="si">{</span><span class="n">l2_norm</span><span class="p">(</span><span class="n">div_X</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">div_X_expected</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">curl_X</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Raise</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Lower</span><span class="p">(</span><span class="n">X</span><span class="p">))))</span>
+<span class="n">curl_X_expected</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovCurl</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;||curl X - expected||_L2: </span><span class="si">{</span><span class="n">l2_norm</span><span class="p">(</span><span class="n">curl_X</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">curl_X_expected</span><span class="p">,</span><span class="w"> </span><span class="n">mesh3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1">################ exterior co-derivative and integration-by-parts ################</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">ScalarField</span><span class="p">(</span><span class="mi">200</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">z</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mf">0.3</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="p">)))</span>
+
+<span class="n">left</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span> <span class="o">*</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">mesh3</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">right</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">delta</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span>
+    <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">mesh3</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Compact support: left: </span><span class="si">{</span><span class="n">left</span><span class="si">}</span><span class="s2">, right: </span><span class="si">{</span><span class="n">right</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">f</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">ScalarField</span><span class="p">(</span><span class="mi">20</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mf">0.3</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="p">)))</span>
+
+<span class="n">left</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span> <span class="o">*</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">mesh3</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">right</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">delta</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span>
+    <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">mesh3</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">+</span> <span class="n">Integrate</span><span class="p">(</span>
+    <span class="n">f</span>
+    <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">Contraction</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">BND</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">mesh3</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Integration by parts: left: </span><span class="si">{</span><span class="n">left</span><span class="si">}</span><span class="s2">, right: </span><span class="si">{</span><span class="n">right</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mf">0.3</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="p">)))</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TwoForm</span><span class="p">(</span>
+    <span class="n">CF</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="n">y</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="o">-</span><span class="p">(</span><span class="n">y</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="n">x</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="o">-</span><span class="n">x</span> <span class="o">*</span> <span class="n">z</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="n">left</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
+    <span class="mf">0.5</span>
+    <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span>
+    <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">mesh3</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">right</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">delta</span><span class="p">(</span><span class="n">beta</span><span class="p">))</span>
+    <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">mesh3</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">+</span> <span class="n">Integrate</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">Contraction</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span> <span class="n">beta</span><span class="p">),</span> <span class="n">BND</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">BND</span><span class="p">)</span>
+    <span class="o">*</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">mesh3</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Integration by parts: left: </span><span class="si">{</span><span class="n">left</span><span class="si">}</span><span class="s2">, right: </span><span class="si">{</span><span class="n">right</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+||div X - expected||_L2: 6.905452584883968e-13
+||curl X - expected||_L2: 2.772920883478311e-16
+Compact support: left: 0.1388888889190244, right: 0.1388888887838926
+Integration by parts: left: 0.4799475610527776, right: 0.47994756104281605
+Integration by parts: left: -0.34122823096341104, right: -0.3412282309088117
+</pre></div></div>
+</div>
+</section>
+<section id="2D-Euclidean-case">
+<h2>2D Euclidean case<a class="headerlink" href="#2D-Euclidean-case" title="Link to this heading"></a></h2>
+<p>We also present some identities in the two-dimensional Euclidean.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mesh2</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">unit_square</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span><span class="n">maxh</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+
+<span class="n">dx</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+<span class="n">dy</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+
+<span class="n">dx_dy</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">)</span>
+
+<span class="n">dx_dy2</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TwoForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error dx_dy - dx_dy2 = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">dx_dy</span><span class="p">,</span><span class="w"> </span><span class="n">dx_dy2</span><span class="p">,</span><span class="w"> </span><span class="n">mesh2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+L2 error dx_dy - dx_dy2 = 0.0
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dy_dx</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">dy</span><span class="p">,</span> <span class="n">dx</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error dy^dx + dx^dy =&quot;</span><span class="p">,</span> <span class="n">l2_norm</span><span class="p">(</span><span class="n">dy_dx</span> <span class="o">+</span> <span class="n">dx_dy</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">))</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+L2 error dy^dx + dx^dy = 0.0
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">Id</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">one</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">ScalarField</span><span class="p">(</span><span class="n">CF</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">star_one</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">one</span><span class="p">)</span>
+<span class="n">star_dx</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+<span class="n">star_dy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">dy</span><span class="p">)</span>
+<span class="n">star_dx_dy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">dx_dy</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error star(1) - dx^dy = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">star_one</span><span class="p">,</span><span class="w"> </span><span class="n">dx_dy</span><span class="p">,</span><span class="w"> </span><span class="n">mesh2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error star(dx) - dy = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">star_dx</span><span class="p">,</span><span class="w"> </span><span class="n">dy</span><span class="p">,</span><span class="w"> </span><span class="n">mesh2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error star(dy) - -dx = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">star_dy</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">dx</span><span class="p">,</span><span class="w"> </span><span class="n">mesh2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error star(dx^dy) - 1 = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">star_dx_dy</span><span class="p">,</span><span class="w"> </span><span class="n">one</span><span class="p">,</span><span class="w"> </span><span class="n">mesh2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">left</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">star_dx</span><span class="p">)</span>
+<span class="n">right</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dx</span><span class="p">)</span> <span class="o">*</span> <span class="n">dx_dy</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L2 error dx^star(dx) - &lt;dx,dx&gt;*dx^dy = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">mesh2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mf">0.3</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="p">)))</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">dx_dy</span>
+
+<span class="n">star_star_alpha</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span>
+<span class="n">expected_star_star_alpha</span> <span class="o">=</span> <span class="o">-</span><span class="n">alpha</span>
+<span class="n">star_star_beta</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">beta</span><span class="p">))</span>
+<span class="n">expected_star_star_beta</span> <span class="o">=</span> <span class="n">beta</span>
+
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;L2 error star(star(alpha)) + alpha = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">star_star_alpha</span><span class="p">,</span><span class="w"> </span><span class="n">expected_star_star_alpha</span><span class="p">,</span><span class="w"> </span><span class="n">mesh2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;L2 error star(star(beta)) - beta = </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">star_star_beta</span><span class="p">,</span><span class="w"> </span><span class="n">expected_star_star_beta</span><span class="p">,</span><span class="w"> </span><span class="n">mesh2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+L2 error star(1) - dx^dy = 0.0
+L2 error star(dx) - dy = 0.0
+L2 error star(dy) - -dx = 0.0
+L2 error star(dx^dy) - 1 = 0.0
+L2 error dx^star(dx) - &lt;dx,dx&gt;*dx^dy = 0.0
+L2 error star(star(alpha)) + alpha = 0.0
+L2 error star(star(beta)) - beta = 0.0
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mesh2</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">unit_square</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span><span class="n">maxh</span><span class="o">=</span><span class="mf">0.25</span><span class="p">))</span>
+<span class="n">dim</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="c1"># scalar 0-form and 1-form</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">ScalarField</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)))</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="n">ddf</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;||d^2 f||_L2: </span><span class="si">{</span><span class="n">l2_norm</span><span class="p">(</span><span class="n">ddf</span><span class="p">,</span><span class="w"> </span><span class="n">mesh2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Leibniz rule d(f alpha) = df^alpha + f d alpha</span>
+<span class="n">left</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">alpha</span><span class="p">))</span>
+<span class="n">right</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">+</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dg</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Leibniz residual L2: </span><span class="si">{</span><span class="n">l2_error</span><span class="p">(</span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">right</span><span class="p">,</span><span class="w"> </span><span class="n">mesh2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Alternation of wedge of 1-forms</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)))</span>
+<span class="n">ab</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+<span class="n">ba</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;||alpha^beta + beta^alpha||_L2: </span><span class="si">{</span><span class="n">l2_norm</span><span class="p">(</span><span class="n">ab</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">ba</span><span class="p">,</span><span class="w"> </span><span class="n">mesh2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+||d^2 f||_L2: 5.836332447467308e-11
+Leibniz residual L2: 9.60282010194316e-13
+||alpha^beta + beta^alpha||_L2: 0.0
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="linearization_curvature_quantitites.html" class="btn btn-neutral float-left" title="Linearization of curvature quantities" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Michael Neunteufel.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
