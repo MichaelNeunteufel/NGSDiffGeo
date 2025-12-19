@@ -624,15 +624,32 @@ namespace ngfem
         return KFormCF(out, k + 1, dim);
     }
 
-    shared_ptr<KFormCoefficientFunction> HodgeStar(shared_ptr<KFormCoefficientFunction> a, const RiemannianManifold &M)
+    shared_ptr<KFormCoefficientFunction> HodgeStar(shared_ptr<KFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb)
     {
-        int n = M.Dimension();
+        int ambient_dim = M.Dimension();
+        if (vb == BBND)
+            throw Exception("HodgeStar: not implemented for BBND (codimension-2) yet");
+
+        int n = (vb == VOL) ? ambient_dim : ambient_dim - 1;
         int k = a->Degree();
         if (k > n)
             throw Exception("HodgeStar: form degree exceeds manifold dimension");
 
         if (a->IsZeroCF())
-            return ZeroKForm(n - k, n);
+            return ZeroKForm(n - k, vb == VOL ? n : ambient_dim);
+
+        // Boundary star via ambient star followed by contraction with the unit normal:
+        //   *star_bnd(alpha) = i_nu (star_vol(alpha))*
+        if (vb == BND)
+        {
+            auto star_vol = HodgeStar(a, M, VOL);
+            auto normal = M.GetNV();
+            if (!normal)
+                throw Exception("HodgeStar(BND): manifold normal vector is not available");
+
+            auto contracted = M.Contraction(star_vol, normal); // reduce degree by 1
+            return KFormCF(contracted->GetCoefficients(), n - k, ambient_dim);
+        }
 
         shared_ptr<TensorFieldCoefficientFunction> raised = a;
         for (int i = 0; i < k; ++i)
@@ -649,7 +666,7 @@ namespace ngfem
         if (alpha_sig.empty())
         {
             eins = eps_sig + "->" + out_sig;
-            args = {eps};
+            args = {a * eps};
         }
         else
         {
@@ -695,8 +712,8 @@ void ExportKForms(py::module m)
              { return Wedge(a, b); }, py::arg("b"))
         .def("d", [](shared_ptr<KFormCoefficientFunction> a)
              { return ExteriorDerivative(a); })
-        .def("star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M)
-             { return HodgeStar(a, *M); }, py::arg("M"))
+        .def("star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
+             { return HodgeStar(a, *M, vb); }, py::arg("M"), py::arg("vb") = VOL)
         .def_property_readonly("coef", &KFormCoefficientFunction::GetCoefficients);
 
     py::class_<ScalarFieldCoefficientFunction,
@@ -740,8 +757,8 @@ void ExportKForms(py::module m)
 
     m.def("d", [](shared_ptr<KFormCoefficientFunction> a)
           { return ExteriorDerivative(a); }, py::arg("a"));
-    m.def("star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M)
-          { return M->Star(a); }, py::arg("a"), py::arg("M"));
+    m.def("star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
+          { return M->Star(a, vb); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL);
 
     m.def("delta", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M)
           { return M->Coderivative(a); }, py::arg("a"), py::arg("M"));

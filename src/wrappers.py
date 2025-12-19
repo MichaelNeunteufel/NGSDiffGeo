@@ -405,8 +405,8 @@ def d(a):
     return as_kform(out, k=out.degree, dim=out.dim_space)
 
 
-def star(a, M):
-    out = _cpp.star(a, M)
+def star(a, M, vb=ngsolve.VOL):
+    out = _cpp.star(a, M, vb)
     return as_kform(out, k=out.degree, dim=M.dim)
 
 
@@ -498,8 +498,8 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         out = _CPP_RiemannianManifold.KForm(self, cf, k)
         return as_kform(out, k=k, dim=self.dim)
 
-    def star(self, a):
-        out = _CPP_RiemannianManifold.star(self, a)
+    def star(self, a, vb=ngsolve.VOL):
+        out = _CPP_RiemannianManifold.star(self, a, vb)
         return as_kform(out, k=out.degree, dim=self.dim)
 
     def delta(self, a):
@@ -570,11 +570,36 @@ class RiemannianManifold(_CPP_RiemannianManifold):
             out = _CPP_RiemannianManifold.Trace(self, tf, vb, index1, index2)
         return as_tensorfield(out)
 
-    def Contraction(self, tf, vf, slot):
-        out = _CPP_RiemannianManifold.Contraction(self, tf, vf, slot)
+    def Contraction(self, tf, vf, slot=0):
+        # Accept inputs where exactly one argument is a vector field; the other can be any tensor (including k-forms).
+        tf_wrapped = as_tensorfield(tf)
+        vf_wrapped = as_tensorfield(vf)
+
+        if isinstance(tf_wrapped, VectorField) and not isinstance(
+            vf_wrapped, VectorField
+        ):
+            tensor_arg, vector_arg = vf_wrapped, tf_wrapped
+        elif isinstance(vf_wrapped, VectorField) and not isinstance(
+            tf_wrapped, VectorField
+        ):
+            tensor_arg, vector_arg = tf_wrapped, vf_wrapped
+        else:
+            raise TypeError(
+                f"Contraction expects exactly one vector field and one tensor field, but received {type(tf)} and {type(vf)}"
+            )
+
+        out = _CPP_RiemannianManifold.Contraction(self, tensor_arg, vector_arg, slot)
+
+        # Preserve k-form typing/dimension when the tensor argument was a form.
+        if isinstance(
+            tensor_arg, (ScalarField, OneForm, TwoForm, ThreeForm, GenericKForm)
+        ):
+            k_in = getattr(tensor_arg, "degree", None)
+            if k_in is not None and k_in > 0:
+                return as_kform(out, k=k_in - 1, dim=self.dim)
         return as_tensorfield(out)
 
-    def Transpose(self, tf, index1, index2):
+    def Transpose(self, tf, index1=0, index2=1):
         out = _CPP_RiemannianManifold.Transpose(self, tf, index1, index2)
         return as_tensorfield(out)
 

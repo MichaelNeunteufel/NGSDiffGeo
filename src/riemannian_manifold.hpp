@@ -128,7 +128,7 @@ namespace ngfem
 
         // ------- Forms --------
         shared_ptr<KFormCoefficientFunction> MakeKForm(shared_ptr<CoefficientFunction> cf, int k) const;
-        shared_ptr<KFormCoefficientFunction> Star(shared_ptr<KFormCoefficientFunction> a) const;
+        shared_ptr<KFormCoefficientFunction> Star(shared_ptr<KFormCoefficientFunction> a, VorB vb = VOL) const;
         shared_ptr<KFormCoefficientFunction> Coderivative(shared_ptr<KFormCoefficientFunction> a) const;
 
         // ------- Covariant differential operators --------

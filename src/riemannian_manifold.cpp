@@ -125,7 +125,7 @@ namespace ngfem
                 Curvature = TensorFieldCF(g_proxy->GetAdditionalProxy("curvature"), "00");
                 Ricci = TensorFieldCF(g_proxy->GetAdditionalProxy("Ricci"), "11");
                 Einstein = TensorFieldCF(g_proxy->GetAdditionalProxy("Einstein"), "11");
-                Scalar = ScalarFieldCF(g_proxy->GetAdditionalProxy("scalar"));
+                Scalar = ScalarFieldCF(g_proxy->GetAdditionalProxy("scalar"), dim);
                 if (!g_deriv || !chr1 || !chr2 || !Riemann || !Curvature || !Ricci || !Einstein || !Scalar)
                     throw Exception("In RMF: Could not load all additional proxy functions");
                 SFF = TensorFieldCF(EinsumCF("ijk,k->ij", {chr1->Reshape(Array<int>({dim, dim, dim})), g_nv}), "11");
@@ -163,7 +163,7 @@ namespace ngfem
                 Curvature_gf->SetDimensions(diffop_curvature->Dimensions());
 
                 if (dim == 2)
-                    Curvature = ScalarFieldCF(Curvature_gf);
+                    Curvature = ScalarFieldCF(Curvature_gf, dim);
                 else
                     Curvature = TensorFieldCF(Curvature_gf, "00");
 
@@ -173,7 +173,7 @@ namespace ngfem
                 auto Einstein_gf = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop_Einstein);
                 Einstein_gf->SetDimensions(diffop_Einstein->Dimensions());
                 Einstein = TensorFieldCF(Einstein_gf, "11");
-                Scalar = ScalarFieldCF(make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop_scalar));
+                Scalar = ScalarFieldCF(make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop_scalar), dim);
                 SFF = TensorFieldCF(EinsumCF("ijk,k->ij", {chr1->Reshape(Array<int>({dim, dim, dim})), g_nv}), "11");
             }
         }
@@ -199,7 +199,7 @@ namespace ngfem
             auto LeviCivita = GetLeviCivitaSymbol(false);
             string signature = SIGNATURE.substr(0, 4) + "," + SIGNATURE.substr(4, dim - 2) + SIGNATURE.substr(0, 2) + "," + SIGNATURE.substr(2 + dim, dim - 2) + SIGNATURE.substr(2, 2) + "->" + SIGNATURE.substr(4, dim - 2) + SIGNATURE.substr(2 + dim, dim - 2);
             if (dim == 2)
-                Curvature = ScalarFieldCF(1 / 4 * EinsumCF(signature, {Riemann, LeviCivita, LeviCivita}));
+                Curvature = ScalarFieldCF(1 / 4 * EinsumCF(signature, {Riemann, LeviCivita, LeviCivita}), dim);
             else
                 Curvature = TensorFieldCF(1 / 4 * EinsumCF(signature, {Riemann, LeviCivita, LeviCivita}), "00");
             Ricci = Trace(Riemann, 0, 2);
@@ -306,7 +306,7 @@ namespace ngfem
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::GetCurvatureOperator() const
     {
         if (dim == 2)
-            return ScalarFieldCF(Curvature);
+            return ScalarFieldCF(Curvature, dim);
         else
             return TensorFieldCF(Curvature, "00");
     }
@@ -323,14 +323,14 @@ namespace ngfem
 
     shared_ptr<ScalarFieldCoefficientFunction> RiemannianManifold::GetScalarCurvature() const
     {
-        return ScalarFieldCF(Scalar);
+        return ScalarFieldCF(Scalar, dim);
     }
 
     shared_ptr<ScalarFieldCoefficientFunction> RiemannianManifold::GetGaussCurvature() const
     {
         if (dim != 2)
             throw Exception("In RMF: Gauss curvature only available in 2D");
-        return ScalarFieldCF(1 / DeterminantCF(g) * Curvature);
+        return ScalarFieldCF(1 / DeterminantCF(g) * Curvature, dim);
     }
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::GetSecondFundamentalForm() const
@@ -341,7 +341,7 @@ namespace ngfem
     {
         if (dim != 2)
             throw Exception("In RMF: Geodesic curvature only available in 2D");
-        return ScalarFieldCF(InnerProduct(SFF * g_tv, g_tv));
+        return ScalarFieldCF(InnerProduct(SFF * g_tv, g_tv), dim);
     }
 
     shared_ptr<ScalarFieldCoefficientFunction> RiemannianManifold::GetMeanCurvature() const
@@ -432,7 +432,7 @@ namespace ngfem
         {
             cfs[2 + i] = cov_ind1[position_same_index[i]] == '1' ? metric_inv : metric;
         }
-        return ScalarFieldCF(EinsumCF(signature_c1 + "," + signature_c2 + raise_lower_signatures, cfs));
+        return ScalarFieldCF(EinsumCF(signature_c1 + "," + signature_c2 + raise_lower_signatures, cfs), dim);
     }
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::Cross(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2) const
@@ -476,13 +476,13 @@ namespace ngfem
         return KFormCF(cf, k, dim);
     }
 
-    shared_ptr<KFormCoefficientFunction> RiemannianManifold::Star(shared_ptr<KFormCoefficientFunction> a) const
+    shared_ptr<KFormCoefficientFunction> RiemannianManifold::Star(shared_ptr<KFormCoefficientFunction> a, VorB vb) const
     {
         if (!a)
             throw Exception("Star: input must be non-null");
         if (a->DimensionOfSpace() != dim)
             throw Exception("Star: form dimension does not match manifold dimension");
-        return HodgeStar(a, *this);
+        return HodgeStar(a, *this, vb);
     }
 
     shared_ptr<KFormCoefficientFunction> RiemannianManifold::Coderivative(shared_ptr<KFormCoefficientFunction> a) const
@@ -601,11 +601,11 @@ namespace ngfem
 
             if (auto of = dynamic_pointer_cast<OneFormCoefficientFunction>(c1))
             {
-                return ScalarFieldCF(EinsumCF("ij,ij->", {GetLeviCivitaSymbol(false), GradCF(c1, dim)}));
+                return ScalarFieldCF(EinsumCF("ij,ij->", {GetLeviCivitaSymbol(false), GradCF(c1, dim)}), dim);
             }
             else if (auto vf = dynamic_pointer_cast<VectorFieldCoefficientFunction>(c1))
             {
-                return ScalarFieldCF(EinsumCF("ij,ij->", {GetLeviCivitaSymbol(false), GradCF(Lower(c1), dim)}));
+                return ScalarFieldCF(EinsumCF("ij,ij->", {GetLeviCivitaSymbol(false), GradCF(Lower(c1), dim)}), dim);
             }
             else if (c1->Dimensions().Size() == 2 && c1->GetCovariantIndices() == "11")
             {
@@ -759,7 +759,7 @@ namespace ngfem
         }
 
         return mout.rank ? TensorFieldCF(result, mout.CovString())
-                         : ScalarFieldCF(result);
+                         : ScalarFieldCF(result, dim);
     }
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::Contraction(shared_ptr<TensorFieldCoefficientFunction> tf, shared_ptr<VectorFieldCoefficientFunction> vf, size_t slot) const
@@ -787,7 +787,7 @@ namespace ngfem
             out_cf = EinsumCF(eins, {tf, g, vf});
         }
 
-        return m.Erased(slot).rank ? TensorFieldCF(out_cf, m.Erased(slot).CovString()) : ScalarFieldCF(out_cf);
+        return m.Erased(slot).rank ? TensorFieldCF(out_cf, m.Erased(slot).CovString()) : ScalarFieldCF(out_cf, dim);
     }
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::Transpose(shared_ptr<TensorFieldCoefficientFunction> tf, size_t index1, size_t index2) const
@@ -878,8 +878,8 @@ void ExportRiemannianManifold(py::module m)
         .def_property_readonly("MeanCurvature", &RiemannianManifold::GetMeanCurvature, "return the mean curvature")
         .def("KForm", [](shared_ptr<RiemannianManifold> self, shared_ptr<CoefficientFunction> cf, int k)
              { return self->MakeKForm(cf, k); }, "Wrap a CoefficientFunction as a k-form using the manifold dimension", py::arg("cf"), py::arg("k"))
-        .def("star", [](shared_ptr<RiemannianManifold> self, shared_ptr<KFormCoefficientFunction> a)
-             { return self->Star(a); }, "Hodge star of a k-form using the manifold metric", py::arg("a"))
+        .def("star", [](shared_ptr<RiemannianManifold> self, shared_ptr<KFormCoefficientFunction> a, VorB vb)
+             { return self->Star(a, vb); }, "Hodge star of a k-form using the manifold metric", py::arg("a"), py::arg("vb") = VOL)
         .def("delta", [](shared_ptr<RiemannianManifold> self, shared_ptr<KFormCoefficientFunction> a)
              { return self->Coderivative(a); }, "Exterior coderivative of a k-form using the manifold metric", py::arg("a"))
         .def("InnerProduct", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf1, shared_ptr<TensorFieldCoefficientFunction> tf2, VorB vb)
