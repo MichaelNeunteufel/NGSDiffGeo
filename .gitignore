@@ -32,7 +32,11 @@
 *.app
 
 __pycache__/
+dist/
 build/
+logs/
+suggestions/
+src/_version.py
 
 .coverage
 
