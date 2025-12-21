@@ -14,7 +14,7 @@ def test_tensorfield_constructors_and_metadata():
     v = CF((x + y**2, sin(x * y)))
     A = CF((x, y, sin(x), cos(y)), dims=(2, 2))
 
-    fs = dg.ScalarField(f)
+    fs = dg.ScalarField(f, dim=2)
     vv = dg.VectorField(v)
     oo = dg.OneForm(v)
     A00 = dg.TensorField(A, "00")

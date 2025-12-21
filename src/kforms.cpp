@@ -193,6 +193,8 @@ namespace ngfem
         int dim;
         std::vector<std::array<int, 4>> perms;
         std::vector<int> signs;
+        std::vector<int> valid_indices;
+        std::vector<int> lin_table;
 
     public:
         AlternationCoefficientFunction(shared_ptr<CoefficientFunction> ac1, int arank, int adim)
@@ -221,18 +223,44 @@ namespace ngfem
             for (size_t i = 0; i < perms.size(); ++i)
                 signs[i] = PermutationSign(perms[i], rank);
 
-            // cout << "perms for rank " << rank << " in dim " << dim << endl;
-            // for (size_t i = 0; i < perms.size(); ++i)
-            // {
-            //     cout << "[";
-            //     for (int j = 0; j < rank; ++j)
-            //     {
-            //         cout << perms[i][j];
-            //         if (j < rank - 1)
-            //             cout << ",";
-            //     }
-            //     cout << "] -> " << signs[i] << endl;
-            // }
+            int comp_dim = this->Dimension();
+            valid_indices.reserve(comp_dim);
+            lin_table.resize(size_t(comp_dim) * perms.size(), -1);
+
+            std::array<int, 4> multi = {0, 0, 0, 0};
+            for (int idx = 0; idx < comp_dim; ++idx)
+            {
+                int rem = idx;
+                bool repeated = false;
+                for (int j = 0; j < rank; ++j)
+                {
+                    multi[j] = rem % dim;
+                    rem /= dim;
+                }
+                for (int a = 0; a < rank && !repeated; ++a)
+                    for (int b = a + 1; b < rank; ++b)
+                        if (multi[a] == multi[b])
+                        {
+                            repeated = true;
+                            break;
+                        }
+
+                if (repeated)
+                    continue;
+
+                valid_indices.push_back(idx);
+                for (size_t p = 0; p < perms.size(); ++p)
+                {
+                    int lin = 0;
+                    int stride = 1;
+                    for (int j = 0; j < rank; ++j)
+                    {
+                        lin += multi[perms[p][j]] * stride;
+                        stride *= dim;
+                    }
+                    lin_table[size_t(idx) * perms.size() + p] = lin;
+                }
+            }
         }
 
         virtual string GetDescription() const override
@@ -265,44 +293,13 @@ namespace ngfem
             Vector<AutoDiffDiff<1, NonZero>> input(values.Size());
             c1->NonZeroPattern(ud, input);
 
-            int comp_dim = this->Dimension();
-            std::array<int, 4> multi = {0, 0, 0, 0};
-
-            for (int idx = 0; idx < comp_dim; ++idx)
+            values = AutoDiffDiff<1, NonZero>(false);
+            for (int idx : valid_indices)
             {
-                int rem = idx;
-                bool repeated = false;
-                for (int j = 0; j < rank; ++j)
-                {
-                    multi[j] = rem % dim;
-                    rem /= dim;
-                }
-                for (int a = 0; a < rank && !repeated; ++a)
-                    for (int b = a + 1; b < rank; ++b)
-                        if (multi[a] == multi[b])
-                        {
-                            repeated = true;
-                            break;
-                        }
-
-                if (repeated)
-                {
-                    values(idx) = AutoDiffDiff<1, NonZero>(false);
-                    continue;
-                }
-
                 auto accum = AutoDiffDiff<1, NonZero>(false);
+                const size_t base = size_t(idx) * perms.size();
                 for (size_t p = 0; p < perms.size(); ++p)
-                {
-                    int lin = 0;
-                    int stride = 1;
-                    for (int j = 0; j < rank; ++j)
-                    {
-                        lin += multi[perms[p][j]] * stride;
-                        stride *= dim;
-                    }
-                    accum = accum + input(lin); // logical or of contributing entries
-                }
+                    accum = accum + input(lin_table[base + p]);
                 values(idx) = accum;
             }
         }
@@ -330,120 +327,29 @@ namespace ngfem
         template <typename MIR, typename T, ORDERING ORD>
         void T_Evaluate(const MIR &mir, BareSliceMatrix<T, ORD> values) const
         {
-            // cout << "AlternationCF: T_Evaluate called for rank " << rank << " in dim " << dim << endl;
-
-            // // hd = dim
-            // c1->Evaluate(mir, values);
-            // int comp_dim = this->Dimension();
-
-            // STACK_ARRAY(T, hmem, comp_dim);
-            // // Array<T> temp(comp_dim * mir.Size());
-            // // FlatMatrix<T, ORD> input(comp_dim, mir.Size(), temp.Data());
-
-            // std::array<int, 4> multi = {0, 0, 0, 0};
-            // for (size_t ip = 0; ip < mir.Size(); ++ip)
-            // {
-            //     for (int idx = 0; idx < comp_dim; ++idx)
-            //     {
-            //         int rem = idx;
-            //         for (int j = 0; j < rank; ++j)
-            //         {
-            //             multi[j] = rem % dim;
-            //             rem /= dim;
-            //         }
-            //         cout << "multi = [";
-            //         for (int j = 0; j < rank; ++j)
-            //         {
-            //             cout << multi[j];
-            //             if (j < rank - 1)
-            //                 cout << ",";
-            //         }
-            //         cout << "]" << endl;
-
-            //         // T accum = T(0);
-            //         hmem[idx] = T(0);
-            //         for (size_t p = 0; p < perms.size(); ++p)
-            //         {
-            //             int lin = 0;
-            //             int stride = 1;
-            //             for (int j = 0; j < rank; ++j)
-            //             {
-            //                 lin += multi[perms[p][j]] * stride;
-            //                 stride *= dim;
-            //             }
-            //             if (lin < 0 || lin >= comp_dim)
-            //                 throw Exception("AlternationCF: lin out of bounds");
-            //             cout << "lin: " << lin << " value = " << T(signs[p]) * values(lin, ip) << endl;
-            //             hmem[idx] += T(signs[p]) * values(lin, ip);
-            //         }
-            //         values(idx, ip) = hmem[idx];
-            //     }
-            // }
-
             int comp_dim = this->Dimension();
 
             Array<T> temp(comp_dim * mir.Size());
             FlatMatrix<T, ORD> input(comp_dim, mir.Size(), temp.Data());
             c1->Evaluate(mir, input);
 
-            std::array<int, 4> multi = {0, 0, 0, 0};
             for (size_t ip = 0; ip < mir.Size(); ++ip)
             {
                 for (int idx = 0; idx < comp_dim; ++idx)
+                    values(idx, ip) = T(0);
+
+                for (int idx : valid_indices)
                 {
-                    // int rem = idx;
-                    // for (int j = rank - 1; j >= 0; --j)
-                    // {
-                    //     multi[j] = rem % dim;
-                    //     rem /= dim;
-                    // }
-
-                    // T accum = T(0);
-                    // for (size_t p = 0; p < perms.size(); ++p)
-                    // {
-                    //     int lin = 0;
-                    //     for (int j = 0; j < rank; ++j)
-                    //         lin = lin * dim + multi[perms[p][j]];
-                    //     if (lin < 0 || lin >= comp_dim)
-                    //         throw Exception("AlternationCF: lin out of bounds");
-
-                    //     accum += T(signs[p]) * input(lin, ip);
-                    // }
-                    int rem = idx;
-                    for (int j = 0; j < rank; ++j)
-                    {
-                        multi[j] = rem % dim;
-                        rem /= dim;
-                    }
-                    // cout << "multi = [";
-                    // for (int j = 0; j < rank; ++j)
-                    // {
-                    //     cout << multi[j];
-                    //     if (j < rank - 1)
-                    //         cout << ",";
-                    // }
-                    // cout << "]" << endl;
-
                     T accum = T(0);
+                    const size_t base = size_t(idx) * perms.size();
                     for (size_t p = 0; p < perms.size(); ++p)
                     {
-                        int lin = 0;
-                        int stride = 1;
-                        for (int j = 0; j < rank; ++j)
-                        {
-                            lin += multi[perms[p][j]] * stride;
-                            stride *= dim;
-                        }
-                        if (lin < 0 || lin >= comp_dim)
-                            throw Exception("AlternationCF: lin out of bounds");
-                        // cout << "lin: " << lin << " value = " << T(signs[p]) * input(lin, ip) << endl;
+                        int lin = lin_table[base + p];
                         accum += T(signs[p]) * input(lin, ip);
                     }
                     values(idx, ip) = accum;
                 }
             }
-            // cout << "AlternationCF: T_Evaluate completed" << endl;
-            // cout << values << endl;
         }
 
         template <typename MIR, typename T, ORDERING ORD>
@@ -485,8 +391,6 @@ namespace ngfem
 
     shared_ptr<KFormCoefficientFunction> KFormCF(shared_ptr<CoefficientFunction> cf, int k, int dim)
     {
-        if (!cf)
-            throw Exception("KFormCF: input coefficient is null");
         if (k < 0)
             throw Exception("KFormCF: degree must be non-negative");
         if (k > 8)
@@ -498,10 +402,12 @@ namespace ngfem
                 return dim;
             if (cf->Dimensions().Size() > 0)
                 return int(cf->Dimensions()[0]);
-            return 1; // fallback for scalar CFs
+            return 0;
         };
 
         int used_dim = deduce_dim();
+        if (k == 0 && used_dim <= 0)
+            throw Exception("KFormCF: dim must be provided for scalar forms");
 
         if (k == 0)
         {
@@ -528,16 +434,14 @@ namespace ngfem
             return make_shared<ThreeFormCoefficientFunction>(cf, used_dim);
         }
 
-        // if (auto kf = dynamic_pointer_cast<KFormCoefficientFunction>(cf))
-        //     if (kf->Degree() == k && kf->DimensionOfSpace() == used_dim)
-        //         return kf;
-
         return make_shared<KFormCoefficientFunction>(cf, uint8_t(k), uint8_t(used_dim));
     }
 
     shared_ptr<ScalarFieldCoefficientFunction> ScalarFieldCF(shared_ptr<CoefficientFunction> cf, int dim)
     {
-        int used_dim = dim > 0 ? dim : 1;
+        if (dim <= 0)
+            throw Exception("ScalarFieldCF: dim must be provided for scalar forms");
+        int used_dim = dim;
         if (cf->Dimension() > 1)
             throw Exception("ScalarFieldCF: input coefficient must be scalar valued");
 
@@ -588,8 +492,6 @@ namespace ngfem
 
     shared_ptr<KFormCoefficientFunction> Wedge(shared_ptr<KFormCoefficientFunction> a, shared_ptr<KFormCoefficientFunction> b)
     {
-        if (!a || !b)
-            throw Exception("Wedge: inputs must be non-null k-forms");
         if (a->DimensionOfSpace() != b->DimensionOfSpace())
             throw Exception("Wedge: input forms must have the same dimension of space");
         int dim = a->DimensionOfSpace();
@@ -609,8 +511,6 @@ namespace ngfem
 
     shared_ptr<KFormCoefficientFunction> ExteriorDerivative(shared_ptr<KFormCoefficientFunction> a)
     {
-        if (!a)
-            throw Exception("ExteriorDerivative: input must be a k-form");
         int dim = a->DimensionOfSpace();
         int k = a->Degree();
         if (k + 1 > dim)
@@ -644,8 +544,6 @@ namespace ngfem
         {
             auto star_vol = HodgeStar(a, M, VOL);
             auto normal = M.GetNV();
-            if (!normal)
-                throw Exception("HodgeStar(BND): manifold normal vector is not available");
 
             auto contracted = M.Contraction(star_vol, normal); // reduce degree by 1
             return KFormCF(contracted->GetCoefficients(), n - k, ambient_dim);
@@ -673,7 +571,6 @@ namespace ngfem
             eins = alpha_sig + "," + eps_sig + "->" + out_sig;
             args = {raised, eps};
         }
-        // cout << "Hodge star k = " << k << ", n = " << n << ", einsum: " << eins << endl;
 
         auto contracted = EinsumCF(eins, args);
         auto scaled = 1 / double(Factorial(k)) * contracted;

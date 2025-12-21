@@ -372,7 +372,7 @@ class TensorField(_CPP_TensorField):
         return self._wrap(_CPP_TensorField.__truediv__(self, other))
 
 
-def as_tensorfield(cf, *, covariant_indices=None):
+def as_tensorfield(cf, *, covariant_indices=None, dim=-1):
     if isinstance(cf, TensorField):
         return cf
     if covariant_indices is None:
@@ -384,7 +384,7 @@ def as_tensorfield(cf, *, covariant_indices=None):
     #     return TensorField(cf, covariant_indices=covariant_indices)
     # return TensorField(cf, covariant_indices=covariant_indices)
     if covariant_indices == "":
-        return ScalarField(cf)
+        return ScalarField(cf, dim=dim)
     elif covariant_indices == "0":
         return VectorField(cf)
     elif covariant_indices == "1":
@@ -445,8 +445,6 @@ class RiemannianManifold(_CPP_RiemannianManifold):
 
     @property
     def G_deriv(self):
-        # out = _CPP_RiemannianManifold.G_deriv.__get__(self)
-        # return as_tensorfield(out)
         return _CPP_RiemannianManifold.G_deriv.__get__(self)
 
     @property
@@ -457,7 +455,7 @@ class RiemannianManifold(_CPP_RiemannianManifold):
     @property
     def Curvature(self):
         out = _CPP_RiemannianManifold.Curvature.__get__(self)
-        return as_tensorfield(out)
+        return as_tensorfield(out, dim=self.dim)
 
     @property
     def Gauss(self):
@@ -530,11 +528,11 @@ class RiemannianManifold(_CPP_RiemannianManifold):
 
     def CovCurl(self, tf):
         out = _CPP_RiemannianManifold.CovCurl(self, tf)
-        return as_tensorfield(out)
+        return as_tensorfield(out, dim=self.dim)
 
     def CovInc(self, tf, matrix=False):
         out = _CPP_RiemannianManifold.CovInc(self, tf, matrix)
-        return as_tensorfield(out)
+        return as_tensorfield(out, dim=self.dim)
 
     def CovEin(self, tf):
         out = _CPP_RiemannianManifold.CovEin(self, tf)
@@ -542,11 +540,11 @@ class RiemannianManifold(_CPP_RiemannianManifold):
 
     def CovLaplace(self, tf):
         out = _CPP_RiemannianManifold.CovLaplace(self, tf)
-        return as_tensorfield(out)
+        return as_tensorfield(out, dim=self.dim)
 
     def LichnerowiczLaplacian(self, tf):
         out = _CPP_RiemannianManifold.LichnerowiczLaplacian(self, tf)
-        return as_tensorfield(out)
+        return as_tensorfield(out, dim=self.dim)
 
     def CovDef(self, tf):
         out = _CPP_RiemannianManifold.CovDef(self, tf)
@@ -561,14 +559,14 @@ class RiemannianManifold(_CPP_RiemannianManifold):
             out = _CPP_RiemannianManifold.CovDiv(self, tf)
         else:
             out = _CPP_RiemannianManifold.CovDiv(self, tf, vb)
-        return as_tensorfield(out)
+        return as_tensorfield(out, dim=self.dim)
 
     def Trace(self, tf, vb=None, index1=0, index2=1):
         if vb is None:
             out = _CPP_RiemannianManifold.Trace(self, tf, index1=index1, index2=index2)
         else:
             out = _CPP_RiemannianManifold.Trace(self, tf, vb, index1, index2)
-        return as_tensorfield(out)
+        return as_tensorfield(out, dim=self.dim)
 
     def Contraction(self, tf, vf, slot=0):
         # Accept inputs where exactly one argument is a vector field; the other can be any tensor (including k-forms).
@@ -597,7 +595,7 @@ class RiemannianManifold(_CPP_RiemannianManifold):
             k_in = getattr(tensor_arg, "degree", None)
             if k_in is not None and k_in > 0:
                 return as_kform(out, k=k_in - 1, dim=self.dim)
-        return as_tensorfield(out)
+        return as_tensorfield(out, dim=self.dim)
 
     def Transpose(self, tf, index1=0, index2=1):
         out = _CPP_RiemannianManifold.Transpose(self, tf, index1, index2)

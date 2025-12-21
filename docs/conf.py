@@ -24,7 +24,7 @@ extensions = [
 # evaluate_notebooks = True  # Default: True
 
 # actually used by nbsphinx (evaluate_notebooks = True is ignored)
-nbsphinx_execute = "auto"  # or "always" to force execution
+nbsphinx_execute = "always"  # or "auto" to skip existing output execution
 
 # START nbsphinx stuff
 # increase timeout for cell execution, since some files take long to execute

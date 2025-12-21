@@ -297,8 +297,8 @@ def test_inner_product(interpolate):
     f = CoefficientFunction(x**2 * y - 0.1 * y * x)
     g = CoefficientFunction(x * y**2 + 0.1 * y * x - 0.73 * x)
 
-    fs = dg.ScalarField(f)
-    gs = dg.ScalarField(g)
+    fs = dg.ScalarField(f, dim=2)
+    gs = dg.ScalarField(g, dim=2)
 
     v = CF((10 * x * y**3 - x**2, y**4 * x - y))
     w = CF((y**2 * x - 0.1 * y * x**2, 10 * x * y**3 + x**2 - y))

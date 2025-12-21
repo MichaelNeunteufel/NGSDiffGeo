@@ -57,7 +57,7 @@ def test_cov_der_scal():
     gf_metric.Set(metric, dual=True)
 
     f = CoefficientFunction(x**2 * y - 0.1 * y * x)
-    sf = dg.ScalarField(f)
+    sf = dg.ScalarField(f, dim=2)
 
     term1 = CovDerS(f, mesh, gf_metric, cov=True)
     term2 = mf.CovDeriv(sf)
@@ -124,11 +124,11 @@ def test_integration_by_parts_2d():
     metric = dg.CigarSoliton().metric
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.15))
     mf = dg.RiemannianManifold(metric)
-    omega_T = dg.ScalarField(mf.VolumeForm(VOL))
-    omega_S = dg.ScalarField(mf.VolumeForm(BND))
+    omega_T = dg.ScalarField(mf.VolumeForm(VOL), dim=2)
+    omega_S = dg.ScalarField(mf.VolumeForm(BND), dim=2)
 
-    f = dg.ScalarField(CF(x**2 * y - 0.1 * y * x))
-    g = dg.ScalarField(CF(x * y**2 + 0.1 * y * x - 0.73 * x))
+    f = dg.ScalarField(CF(x**2 * y - 0.1 * y * x), dim=2)
+    g = dg.ScalarField(CF(x * y**2 + 0.1 * y * x - 0.73 * x), dim=2)
 
     X = dg.VectorField(CF((10 * x * y**3 - x**2, y**4 * x - y)))
     # Y = dg.VectorField(CF((y**2 * x - 0.1 * y * x**2, 10 * x * y**3 + x**2 - y)))
