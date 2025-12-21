@@ -344,7 +344,7 @@ err = 0.0000092677, order = 1.996
 <span class="n">tv</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">tangential</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
 <span class="n">nv</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
 
-<span class="n">nv_g</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">VectorField</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">normal</span><span class="p">)</span>
+<span class="n">nv_g</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">normal</span>
 <span class="n">tv_g</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">tangent</span>
 
 <span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
@@ -355,9 +355,7 @@ err = 0.0000092677, order = 1.996
         <span class="o">*</span> <span class="p">(</span>
             <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">S</span><span class="p">(</span><span class="n">sigma</span><span class="p">)),</span> <span class="n">nv_g</span><span class="p">)</span>
             <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span>
-                <span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span>
-                    <span class="n">dg</span><span class="o">.</span><span class="n">ScalarField</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">nv_g</span><span class="p">,</span> <span class="n">tv_g</span><span class="p">)))</span>
-                <span class="p">),</span>
+                <span class="n">mf</span><span class="o">.</span><span class="n">CovDeriv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">nv_g</span><span class="p">,</span> <span class="n">tv_g</span><span class="p">))),</span>
                 <span class="n">tv_g</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
@@ -630,7 +628,7 @@ err = 0.0000164664, order = 1.996
 <span class="n">tv</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">tangential</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
 <span class="n">nv</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
 
-<span class="n">nv_g</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">VectorField</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">normal</span><span class="p">)</span>
+<span class="n">nv_g</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">normal</span>
 <span class="n">tv_g</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">tangent</span>
 
 <span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
