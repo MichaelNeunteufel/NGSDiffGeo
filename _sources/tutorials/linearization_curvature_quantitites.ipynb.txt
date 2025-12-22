@@ -67,7 +67,10 @@
     "\n",
     "sigma = dg.TensorField(gfsigma, \"11\")\n",
     "\n",
-    "mf = dg.RiemannianManifold(gfG)"
+    "mf = dg.RiemannianManifold(gfG)\n",
+    "\n",
+    "# quadratic convergence rate is expected\n",
+    "rate_tol = 1.75"
    ]
   },
   {
@@ -111,9 +114,9 @@
     "\n",
     "        errold = err\n",
     "        err = sqrt(Integrate((term_t - term_0 - t * variation) ** 2, mesh))\n",
-    "        print(\n",
-    "            f\"err = {err:.10f}, order = {round(log2(errold / err), 3) if errold else '-'}\"\n",
-    "        )\n",
+    "        rate = round(log2(errold / err), 3) if errold else \"-\"\n",
+    "        print(f\"err = {err:.10f}, order = {rate}\")\n",
+    "        assert rate == \"-\" or rate > rate_tol\n",
     "\n",
     "\n",
     "print(\"\\nomega_F:\")\n",
@@ -139,9 +142,9 @@
     "                (term_t - term_0 - t * variation) ** 2 * dx(element_boundary=True), mesh\n",
     "            )\n",
     "        )\n",
-    "        print(\n",
-    "            f\"err = {err:.10f}, order = {round(log2(errold / err), 3) if errold else '-'}\"\n",
-    "        )"
+    "        rate = round(log2(errold / err), 3) if errold else \"-\"\n",
+    "        print(f\"err = {err:.10f}, order = {rate}\")\n",
+    "        assert rate == \"-\" or rate > rate_tol"
    ]
   },
   {
@@ -187,9 +190,9 @@
     "\n",
     "        errold = err\n",
     "        err = sqrt(Integrate((term_t - term_0 - t * variation) ** 2, mesh))\n",
-    "        print(\n",
-    "            f\"err = {err:.10f}, order = {round(log2(errold / err), 3) if errold else '-'}\"\n",
-    "        )\n",
+    "        rate = round(log2(errold / err), 3) if errold else \"-\"\n",
+    "        print(f\"err = {err:.10f}, order = {rate}\")\n",
+    "        assert rate == \"-\" or rate > rate_tol\n",
     "\n",
     "\n",
     "print(\"\\nK omega_T:\")\n",
@@ -211,9 +214,9 @@
     "\n",
     "        errold = err\n",
     "        err = sqrt(Integrate((term_t - term_0 - t * variation) ** 2, mesh))\n",
-    "        print(\n",
-    "            f\"err = {err:.10f}, order = {round(log2(errold / err), 3) if errold else '-'}\"\n",
-    "        )"
+    "        rate = round(log2(errold / err), 3) if errold else \"-\"\n",
+    "        print(f\"err = {err:.10f}, order = {rate}\")\n",
+    "        assert rate == \"-\" or rate > rate_tol"
    ]
   },
   {
@@ -274,9 +277,9 @@
     "                (term_t - term_0 - t * variation) ** 2 * dx(element_boundary=True), mesh\n",
     "            )\n",
     "        )\n",
-    "        print(\n",
-    "            f\"err = {err:.10f}, order = {round(log2(errold / err), 3) if errold else '-'}\"\n",
-    "        )"
+    "        rate = round(log2(errold / err), 3) if errold else \"-\"\n",
+    "        print(f\"err = {err:.10f}, order = {rate}\")\n",
+    "        assert rate == \"-\" or rate > rate_tol"
    ]
   },
   {
@@ -395,9 +398,9 @@
     "        )\n",
     "        errold = err\n",
     "        err = sqrt(f.Energy(gfsigma.vec))\n",
-    "        print(\n",
-    "            f\"err = {err:.10f}, order = {round(log2(errold / err), 3) if errold else '-'}\"\n",
-    "        )"
+    "        rate = round(log2(errold / err), 3) if errold else \"-\"\n",
+    "        print(f\"err = {err:.10f}, order = {rate}\")\n",
+    "        assert rate == \"-\" or rate > rate_tol"
    ]
   },
   {
@@ -444,9 +447,9 @@
     "\n",
     "        errold = err\n",
     "        err = sqrt(Integrate((term_t - term_0 - t * variation) ** 2, mesh))\n",
-    "        print(\n",
-    "            f\"err = {err:.10f}, order = {round(log2(errold / err), 3) if errold else '-'}\"\n",
-    "        )\n",
+    "        rate = round(log2(errold / err), 3) if errold else \"-\"\n",
+    "        print(f\"err = {err:.10f}, order = {rate}\")\n",
+    "        assert rate == \"-\" or rate > rate_tol\n",
     "\n",
     "\n",
     "print(\"\\nscalar omega_T:\")\n",
@@ -468,9 +471,9 @@
     "        term_t = mf_t.Scalar * mf_t.VolumeForm(VOL)\n",
     "        errold = err\n",
     "        err = sqrt(Integrate((term_t - term_0 - t * variation) ** 2, mesh))\n",
-    "        print(\n",
-    "            f\"err = {err:.10f}, order = {round(log2(errold / err), 3) if errold else '-'}\"\n",
-    "        )"
+    "        rate = round(log2(errold / err), 3) if errold else \"-\"\n",
+    "        print(f\"err = {err:.10f}, order = {rate}\")\n",
+    "        assert rate == \"-\" or rate > rate_tol"
    ]
   },
   {
@@ -528,9 +531,9 @@
     "                (term_t - term_0 - t * variation) ** 2 * dx(element_boundary=True), mesh\n",
     "            )\n",
     "        )\n",
-    "        print(\n",
-    "            f\"err = {err:.10f}, order = {round(log2(errold / err), 3) if errold else '-'}\"\n",
-    "        )\n",
+    "        rate = round(log2(errold / err), 3) if errold else \"-\"\n",
+    "        print(f\"err = {err:.10f}, order = {rate}\")\n",
+    "        assert rate == \"-\" or rate > rate_tol\n",
     "\n",
     "\n",
     "print(\"\\nmean curvature omega_F:\")\n",
@@ -564,9 +567,9 @@
     "                (term_t - term_0 - t * variation) ** 2 * dx(element_boundary=True), mesh\n",
     "            )\n",
     "        )\n",
-    "        print(\n",
-    "            f\"err = {err:.10f}, order = {round(log2(errold / err), 3) if errold else '-'}\"\n",
-    "        )"
+    "        rate = round(log2(errold / err), 3) if errold else \"-\"\n",
+    "        print(f\"err = {err:.10f}, order = {rate}\")\n",
+    "        assert rate == \"-\" or rate > rate_tol"
    ]
   },
   {
@@ -620,9 +623,9 @@
     "                mesh,\n",
     "            )\n",
     "        )\n",
-    "        print(\n",
-    "            f\"err = {err:.10f}, order = {round(log2(errold / err), 3) if errold else '-'}\"\n",
-    "        )"
+    "        rate = round(log2(errold / err), 3) if errold else \"-\"\n",
+    "        print(f\"err = {err:.10f}, order = {rate}\")\n",
+    "        assert rate == \"-\" or rate > rate_tol"
    ]
   },
   {
@@ -685,9 +688,9 @@
     "                mesh,\n",
     "            )\n",
     "        )\n",
-    "        print(\n",
-    "            f\"err = {err:.10f}, order = {round(log2(errold / err), 3) if errold else '-'}\"\n",
-    "        )\n",
+    "        rate = round(log2(errold / err), 3) if errold else \"-\"\n",
+    "        print(f\"err = {err:.10f}, order = {rate}\")\n",
+    "        assert rate == \"-\" or rate > rate_tol\n",
     "\n",
     "\n",
     "print(\"\\nEinstein omega_T:\")\n",
@@ -723,9 +726,9 @@
     "                mesh,\n",
     "            )\n",
     "        )\n",
-    "        print(\n",
-    "            f\"err = {err:.10f}, order = {round(log2(errold / err), 3) if errold else '-'}\"\n",
-    "        )\n"
+    "        rate = round(log2(errold / err), 3) if errold else \"-\"\n",
+    "        print(f\"err = {err:.10f}, order = {rate}\")\n",
+    "        assert rate == \"-\" or rate > rate_tol"
    ]
   },
   {
@@ -779,9 +782,9 @@
     "                mesh,\n",
     "            )\n",
     "        )\n",
-    "        print(\n",
-    "            f\"err = {err:.10f}, order = {round(log2(errold / err), 3) if errold else '-'}\"\n",
-    "        )"
+    "        rate = round(log2(errold / err), 3) if errold else \"-\"\n",
+    "        print(f\"err = {err:.10f}, order = {rate}\")\n",
+    "        assert rate == \"-\" or rate > rate_tol"
    ]
   },
   {
@@ -841,9 +844,9 @@
     "                mesh,\n",
     "            )\n",
     "        )\n",
-    "        print(\n",
-    "            f\"err = {err:.10f}, order = {round(log2(errold / err), 3) if errold else '-'}\"\n",
-    "        )"
+    "        rate = round(log2(errold / err), 3) if errold else \"-\"\n",
+    "        print(f\"err = {err:.10f}, order = {rate}\")\n",
+    "        assert rate == \"-\" or rate > rate_tol"
    ]
   },
   {

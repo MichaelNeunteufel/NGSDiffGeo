@@ -148,6 +148,9 @@
 <span class="n">sigma</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorField</span><span class="p">(</span><span class="n">gfsigma</span><span class="p">,</span> <span class="s2">&quot;11&quot;</span><span class="p">)</span>
 
 <span class="n">mf</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfG</span><span class="p">)</span>
+
+<span class="c1"># quadratic convergence rate is expected</span>
+<span class="n">rate_tol</span> <span class="o">=</span> <span class="mf">1.75</span>
 </pre></div>
 </div>
 </div>
@@ -180,9 +183,9 @@
 
         <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
         <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">mesh</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">err</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">errold</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
 
 
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">omega_F:&quot;</span><span class="p">)</span>
@@ -208,9 +211,9 @@
                 <span class="p">(</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">mesh</span>
             <span class="p">)</span>
         <span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">err</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">errold</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
 </pre></div>
 </div>
 </div>
@@ -271,9 +274,9 @@ err = 0.0000013170, order = 1.998
 
         <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
         <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">mesh</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">err</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">errold</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
 
 
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">K omega_T:&quot;</span><span class="p">)</span>
@@ -295,9 +298,9 @@ err = 0.0000013170, order = 1.998
 
         <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
         <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">mesh</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">err</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">errold</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
 </pre></div>
 </div>
 </div>
@@ -374,9 +377,9 @@ err = 0.0000092677, order = 1.996
                 <span class="p">(</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">mesh</span>
             <span class="p">)</span>
         <span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">err</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">errold</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
 </pre></div>
 </div>
 </div>
@@ -494,9 +497,9 @@ err = 0.0000130097, order = 1.997
         <span class="p">)</span>
         <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
         <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">Energy</span><span class="p">(</span><span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">err</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">errold</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
 </pre></div>
 </div>
 </div>
@@ -551,9 +554,9 @@ err = 0.0000001421, order = 2.0
 
         <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
         <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">mesh</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">err</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">errold</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
 
 
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">scalar omega_T:&quot;</span><span class="p">)</span>
@@ -575,9 +578,9 @@ err = 0.0000001421, order = 2.0
         <span class="n">term_t</span> <span class="o">=</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">Scalar</span> <span class="o">*</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span>
         <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
         <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">mesh</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">err</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">errold</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
 </pre></div>
 </div>
 </div>
@@ -652,9 +655,9 @@ err = 0.0000164664, order = 1.996
                 <span class="p">(</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">mesh</span>
             <span class="p">)</span>
         <span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">err</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">errold</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
 
 
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">mean curvature omega_F:&quot;</span><span class="p">)</span>
@@ -688,9 +691,9 @@ err = 0.0000164664, order = 1.996
                 <span class="p">(</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">mesh</span>
             <span class="p">)</span>
         <span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">err</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">errold</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
 </pre></div>
 </div>
 </div>
@@ -760,9 +763,9 @@ err = 0.0000105671, order = 1.996
                 <span class="n">mesh</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">err</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">errold</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
 </pre></div>
 </div>
 </div>
@@ -823,9 +826,9 @@ err = 0.0000150708, order = 1.995
                 <span class="n">mesh</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">err</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">errold</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
 
 
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Einstein omega_T:&quot;</span><span class="p">)</span>
@@ -861,10 +864,10 @@ err = 0.0000150708, order = 1.995
                 <span class="n">mesh</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">err</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">errold</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
-<br/></pre></div>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
+</pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -932,9 +935,9 @@ err = 0.0000111798, order = 1.996
                 <span class="n">mesh</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">err</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">errold</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
 </pre></div>
 </div>
 </div>
@@ -1001,9 +1004,9 @@ err = 0.0000134869, order = 1.996
                 <span class="n">mesh</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">err</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">errold</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
 </pre></div>
 </div>
 </div>
