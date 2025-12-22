@@ -35,6 +35,7 @@ namespace ngfem
         // metric tensor, its inverse, derivative, and volume forms
         shared_ptr<CoefficientFunction> g;
         shared_ptr<CoefficientFunction> g_inv;
+        shared_ptr<CoefficientFunction> det_g;
         shared_ptr<CoefficientFunction> g_F;
         shared_ptr<CoefficientFunction> g_F_inv;
         shared_ptr<CoefficientFunction> g_E;
@@ -63,6 +64,9 @@ namespace ngfem
 
         shared_ptr<CoefficientFunction> P_n;
         shared_ptr<CoefficientFunction> P_F;
+
+        mutable shared_ptr<TensorFieldCoefficientFunction> levi_civita_cov;
+        mutable shared_ptr<TensorFieldCoefficientFunction> levi_civita_contra;
 
     public:
         /**

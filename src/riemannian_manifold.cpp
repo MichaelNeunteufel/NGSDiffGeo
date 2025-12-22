@@ -22,7 +22,7 @@ namespace ngfem
 
     using namespace std;
     RiemannianManifold::RiemannianManifold(shared_ptr<CoefficientFunction> _g)
-        : is_regge(false), is_proxy(false), regge_proxy(nullptr), regge_space(nullptr), g(_g)
+        : has_trial(false), is_regge(false), is_proxy(false), regge_proxy(nullptr), regge_space(nullptr), g(_g)
     {
         if (_g->Dimensions().Size() != 2 || _g->Dimensions()[0] != _g->Dimensions()[1])
             throw Exception("In RMF: input must be a square matrix");
@@ -67,7 +67,8 @@ namespace ngfem
         g_inv = InverseCF(g);
 
         // Volume forms on VOL, BND, BBND, and BBBND
-        vol[VOL] = sqrt(DeterminantCF(g));
+        det_g = DeterminantCF(g);
+        vol[VOL] = sqrt(det_g);
         auto one_cf = make_shared<ConstantCoefficientFunction>(1.0);
         tv = TangentialVectorCF(dim, false);
         nv = NormalVectorCF(dim);
@@ -78,6 +79,8 @@ namespace ngfem
         vol[BND] = one_cf;
         vol[BBND] = one_cf;
         vol[BBBND] = one_cf;
+        g_E = one_cf;
+        g_E_inv = one_cf;
         if (dim == 2)
         {
             vol[BND] = sqrt(InnerProduct(g * tv, tv));
@@ -91,6 +94,8 @@ namespace ngfem
 
             g_F = P_F * g * P_F;
             g_F_inv = P_F * InverseCF(g_F + P_n) * P_F;
+            g_E = one_cf;
+            g_E_inv = one_cf;
         }
         else if (dim == 3)
         {
@@ -193,7 +198,8 @@ namespace ngfem
             chr1 = tmp->Reshape(Array<int>({dim, dim, dim}));
             chr2 = EinsumCF("ijl,lk->ijk", {chr1, g_inv});
 
-            auto lin_part = EinsumCF("ijkl->kilj", {GradCF(chr1, dim)}) - EinsumCF("ijkl->likj", {GradCF(chr1, dim)});
+            auto chr1_grad = GradCF(chr1, dim);
+            auto lin_part = EinsumCF("ijkl->kilj", {chr1_grad}) - EinsumCF("ijkl->likj", {chr1_grad});
             auto non_lin_part = EinsumCF("ijm,klm->iklj", {chr1, chr2}) - EinsumCF("ijm,klm->ilkj", {chr2, chr1});
             Riemann = TensorFieldCF(lin_part + non_lin_part, "1111");
             auto LeviCivita = GetLeviCivitaSymbol(false);
@@ -283,9 +289,22 @@ namespace ngfem
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::GetLeviCivitaSymbol(bool covariant) const
     {
-        auto levi_civita_symbol = LeviCivitaCF(dim);
+        if (covariant)
+        {
+            if (!levi_civita_cov)
+            {
+                auto levi_civita_symbol = LeviCivitaCF(dim);
+                levi_civita_cov = TensorFieldCF(GetVolumeForm(VOL) * levi_civita_symbol, string(dim, '1'));
+            }
+            return levi_civita_cov;
+        }
 
-        return covariant ? TensorFieldCF(GetVolumeForm(VOL) * levi_civita_symbol, string(dim, '1')) : TensorFieldCF(make_shared<ConstantCoefficientFunction>(1.0) / GetVolumeForm(VOL) * levi_civita_symbol, string(dim, '0'));
+        if (!levi_civita_contra)
+        {
+            auto levi_civita_symbol = LeviCivitaCF(dim);
+            levi_civita_contra = TensorFieldCF(make_shared<ConstantCoefficientFunction>(1.0) / GetVolumeForm(VOL) * levi_civita_symbol, string(dim, '0'));
+        }
+        return levi_civita_contra;
     }
 
     shared_ptr<CoefficientFunction> RiemannianManifold::GetMetricDerivative() const
@@ -330,7 +349,7 @@ namespace ngfem
     {
         if (dim != 2)
             throw Exception("In RMF: Gauss curvature only available in 2D");
-        return ScalarFieldCF(1 / DeterminantCF(g) * Curvature, dim);
+        return ScalarFieldCF(1 / det_g * Curvature, dim);
     }
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::GetSecondFundamentalForm() const
@@ -807,7 +826,7 @@ namespace ngfem
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::S_op(shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb) const
     {
-        if (tf->Dimensions().Size() != 2 && tf->Dimensions()[0] != tf->Dimensions()[1])
+        if (tf->Dimensions().Size() != 2 || tf->Dimensions()[0] != tf->Dimensions()[1])
             throw Exception("S_op: only available for 2-tensors");
         if (tf->GetCovariantIndices() != "11")
             throw Exception("S_op: currently only implemented for (2,0)-tensors!");
@@ -824,7 +843,7 @@ namespace ngfem
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::J_op(shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb) const
     {
-        if (tf->Dimensions().Size() != 2 && tf->Dimensions()[0] != tf->Dimensions()[1])
+        if (tf->Dimensions().Size() != 2 || tf->Dimensions()[0] != tf->Dimensions()[1])
             throw Exception("J_op: only available for 2-tensors");
         if (tf->GetCovariantIndices() != "11")
             throw Exception("J_op: currently only implemented for (2,0)-tensors!");
