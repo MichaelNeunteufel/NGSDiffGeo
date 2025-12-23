@@ -94,6 +94,13 @@ jobs:
     # Publish every commit to main to TestPyPI (setuptools_scm will generate a new .devN version per commit)
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
+    environment:
+      name: publish-testpypi
+      url: https://test.pypi.org/p/ngsdiffgeo
+
+    permissions:
+      id-token: write
+
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -107,7 +114,7 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
           skip-existing: true
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          # password: ${{ secrets.TEST_PYPI_API_TOKEN }}
 
   publish_pypi:
     name: Publish to PyPI
