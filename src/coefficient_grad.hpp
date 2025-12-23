@@ -18,9 +18,9 @@ namespace ngfem
     class GradCoefficientFunction : public T_CoefficientFunction<GradCoefficientFunction<D>>
     {
         shared_ptr<CoefficientFunction> c1;
-        double eps = 1e-4;
 
     public:
+        static constexpr double eps() { return 1e-4; }
         /**
          * @brief Constructs a GradCoefficientFunction object.
          *
@@ -128,20 +128,20 @@ namespace ngfem
                     HeapReset hr(lh);
                     IntegrationPoint ipts[4];
                     ipts[0] = ip;
-                    ipts[0](j) -= eps;
+                    ipts[0](j) -= eps();
                     ipts[1] = ip;
-                    ipts[1](j) += eps;
+                    ipts[1](j) += eps();
                     ipts[2] = ip;
-                    ipts[2](j) -= 2 * eps;
+                    ipts[2](j) -= 2 * eps();
                     ipts[3] = ip;
-                    ipts[3](j) += 2 * eps;
+                    ipts[3](j) += 2 * eps();
 
                     IntegrationRule ir_j(4, ipts);
                     MappedIntegrationRule<D, D, T> mir_j(ir_j, eltrans, lh);
 
                     c1->Evaluate(mir_j, values_c1);
 
-                    dshape_ref.Col(j) = (1.0 / (12.0 * eps)) * (8.0 * values_c1.Col(1) - 8.0 * values_c1.Col(0) - values_c1.Col(3) + values_c1.Col(2));
+                    dshape_ref.Col(j) = (1.0 / (12.0 * eps())) * (8.0 * values_c1.Col(1) - 8.0 * values_c1.Col(0) - values_c1.Col(3) + values_c1.Col(2));
                 }
 
                 dshape = dshape_ref * mir[i].GetJacobianInverse();
@@ -199,9 +199,8 @@ namespace ngfem
         ProxyFunction *proxy;
         bool testfunction;
 
-        double eps = 1e-4;
-
     public:
+        static constexpr double eps() { return 1e-4; }
         GradDiffOp(shared_ptr<CoefficientFunction> afunc, bool atestfunction);
 
         void

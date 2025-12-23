@@ -20,6 +20,8 @@ namespace ngfem
   shared_ptr<TensorFieldCoefficientFunction> TensorFieldCF(const shared_ptr<CoefficientFunction> &cf,
                                                            const string &covariant_indices)
   {
+    if (!cf)
+      throw Exception("TensorFieldCF: input coefficient is null");
     auto meta = TensorMeta::FromCovString(covariant_indices);
     if (auto tf = dynamic_pointer_cast<TensorFieldCoefficientFunction>(cf))
       if (tf->Meta() == meta)
@@ -30,6 +32,8 @@ namespace ngfem
   shared_ptr<TensorFieldCoefficientFunction> TensorFieldCF(const shared_ptr<CoefficientFunction> &cf,
                                                            const TensorMeta &meta)
   {
+    if (!cf)
+      throw Exception("TensorFieldCF: input coefficient is null");
     if (auto tf = dynamic_pointer_cast<TensorFieldCoefficientFunction>(cf))
       if (tf->Meta() == meta)
         return tf;
@@ -41,6 +45,8 @@ namespace ngfem
   {
     if (cf->Dimensions().Size() != 1)
       throw Exception("VectorFieldCF: input must be a vector-valued CoefficientFunction");
+    if (cf->Dimension() != cf->Dimensions()[0])
+      throw Exception("VectorFieldCF: dimension metadata mismatch");
     // if (cf->IsZeroCF())
     //     return cf;
     if (auto vf = dynamic_pointer_cast<VectorFieldCoefficientFunction>(cf))
@@ -54,11 +60,17 @@ namespace ngfem
     auto m2 = c2->Meta();
     auto mout = m1.Concatenated(m2);
 
-    std::string sig1 = SIGNATURE.substr(0, m1.rank);
-    std::string sig2 = SIGNATURE.substr(m1.rank, m2.rank);
-    std::string sigout = SIGNATURE.substr(0, mout.rank);
-
-    std::string eins = sig1 + "," + sig2 + "->" + sigout;
+    auto make_eins = [](int r1, int r2) -> std::string
+    {
+      const std::string sig1 = SIGNATURE.substr(0, r1);
+      const std::string sig2 = SIGNATURE.substr(r1, r2);
+      const std::string sigout = SIGNATURE.substr(0, r1 + r2);
+      return sig1 + "," + sig2 + "->" + sigout;
+    };
+    static std::array<std::array<std::string, 53>, 53> eins_cache;
+    if (eins_cache[m1.rank][m2.rank].empty())
+      eins_cache[m1.rank][m2.rank] = make_eins(m1.rank, m2.rank);
+    const std::string &eins = eins_cache[m1.rank][m2.rank];
 
     auto out_cf = EinsumCF(eins, {c1, c2});
     return TensorFieldCF(out_cf, mout);

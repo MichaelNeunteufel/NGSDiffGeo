@@ -29,6 +29,9 @@ namespace ngfem
                   has_trial = true;
             } });
 
+        if (dim < 1 || dim > 3)
+            throw Exception("GradCF: only dimensions 1,2,3 supported");
+
         // If the input coefficient function includes a trial or test function, we need to use
         // a proxy function to calculate the gradient via a differential operator.
         // Otherwise, we can directly calculate the gradient using the CoefficientFunction.
@@ -72,6 +75,8 @@ namespace ngfem
                            {
             if (dynamic_cast<ProxyFunction *>(&nodecf))
                 proxy = dynamic_cast<ProxyFunction *>(&nodecf); });
+        if (!proxy)
+            throw Exception("GradDiffOp: no ProxyFunction found");
     }
 
     template <int D>
@@ -101,13 +106,13 @@ namespace ngfem
                 HeapReset hr(lh);
                 IntegrationPoint ipts[4];
                 ipts[0] = ip;
-                ipts[0](j) -= eps;
+                ipts[0](j) -= eps();
                 ipts[1] = ip;
-                ipts[1](j) += eps;
+                ipts[1](j) += eps();
                 ipts[2] = ip;
-                ipts[2](j) -= 2 * eps;
+                ipts[2](j) -= 2 * eps();
                 ipts[3] = ip;
-                ipts[3](j) += 2 * eps;
+                ipts[3](j) += 2 * eps();
 
                 IntegrationRule ir_j(4, ipts);
                 MappedIntegrationRule<D, D, double> mir_j(ir_j, eltrans, lh);
@@ -117,7 +122,7 @@ namespace ngfem
                 // cout << "bbmat = " << bbmat << endl;
 
                 // dshape_ref.Col(j) = (1.0 / (12.0 * eps)) * (8.0 * bbmat.Cols(proxy_dim, 2 * proxy_dim).AsVector() - 8.0 * bbmat.Cols(0, proxy_dim).AsVector() - bbmat.Cols(3 * proxy_dim, 4 * proxy_dim).AsVector() + bbmat.Cols(2 * proxy_dim, 3 * proxy_dim).AsVector());
-                dshape_ref.Col(j) = (1.0 / (12.0 * eps)) * (8.0 * bbmat.Col(1) - 8.0 * bbmat.Col(0) - bbmat.Col(3) + bbmat.Col(2));
+                dshape_ref.Col(j) = (1.0 / (12.0 * eps())) * (8.0 * bbmat.Cols(proxy_dim, 2 * proxy_dim).AsVector() - 8.0 * bbmat.Cols(0, proxy_dim).AsVector() - bbmat.Cols(3 * proxy_dim, 4 * proxy_dim).AsVector() + bbmat.Cols(2 * proxy_dim, 3 * proxy_dim).AsVector());
                 // if (j == D - 1)
                 //     cout << "dshape_ref = " << dshape_ref << endl;
             }
