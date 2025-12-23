@@ -156,14 +156,14 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           pattern: cibw-wheels-ubuntu*
-          path: $GITHUB_WORKSPACE/wheels
+          path: wheels
           merge-multiple: true
 
       - name: list wheels
         run: |
-          ls -R $GITHUB_WORKSPACE/wheels
+          ls -R wheels
       - name: install ngsdiffgeo
-        run: pip install "$(ls $GITHUB_WORKSPACE/wheels/*cp312*.whl | head -n 1)"
+        run: python -m pip install "$(ls wheels/*cp312*.whl | head -n 1)"
 
       - name: Build docs with Sphinx
         working-directory: NGSDiffGeo/docs
