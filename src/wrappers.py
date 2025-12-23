@@ -18,7 +18,6 @@ _CPP_KForm = _cpp.KForm
 _CPP_VectorField = _cpp.VectorField
 _CPP_TensorField = _cpp.TensorField
 _CPP_RiemannianManifold = _cpp.RiemannianManifold
-_CPP_RiemannianManifold = _cpp.RiemannianManifold
 
 
 # ---------------- helpers ----------------
@@ -30,6 +29,8 @@ def _call_if_callable(x):
 
 def _infer_dim(obj):
     """Try to infer dimension. Returns int or None."""
+    if hasattr(obj, "_dim") and isinstance(obj._dim, int) and obj._dim > 0:
+        return obj._dim
     for attr in ("dim_space", "_dim", "dim"):
         if hasattr(obj, attr):
             try:
@@ -74,6 +75,8 @@ class KForm(metaclass=_KFormMeta):
             raise TypeError("KForm: missing required argument k")
         if dim is None:
             dim = _infer_dim(cf)
+        if dim is None:
+            raise TypeError("KForm: dim must be provided or inferable")
         return as_kform(cf, k=int(k), dim=dim)
 
 
@@ -286,6 +289,9 @@ def as_kform(cf, *, k, dim=None):
     if dim is None:
         dim = _infer_dim(cf)
     if dim is None:
+        raise TypeError("as_kform: dim must be provided or inferable")
+
+    if hasattr(cf, "_k") and hasattr(cf, "_dim") and cf._k == k and cf._dim == dim:
         return cf
 
     k = int(k)
@@ -384,6 +390,10 @@ def as_tensorfield(cf, *, covariant_indices=None, dim=-1):
     #     return TensorField(cf, covariant_indices=covariant_indices)
     # return TensorField(cf, covariant_indices=covariant_indices)
     if covariant_indices == "":
+        if dim is None or dim < 1:
+            dim = _infer_dim(cf)
+        if dim is None:
+            raise TypeError("as_tensorfield: dim must be provided or inferable for scalars")
         return ScalarField(cf, dim=dim)
     elif covariant_indices == "0":
         return VectorField(cf)
