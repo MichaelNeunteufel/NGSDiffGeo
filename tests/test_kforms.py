@@ -1,6 +1,7 @@
 import pytest
 from netgen.occ import unit_square, unit_cube
 from ngsolve import *
+from ngsolve.fem import Einsum
 
 import ngsdiffgeo as dg
 
@@ -236,6 +237,131 @@ def test_hodge_star_zero_preserves_degree():
     assert isinstance(starred, dg.KForm)
     assert starred.degree == 1
     assert l2_norm(starred, mesh) == pytest.approx(0)
+
+
+def test_doubleform_construction_metadata():
+    dim = 2
+    alpha = dg.OneForm(CF((x, y)))
+    beta = dg.OneForm(CF((x**2, y**2)))
+    df = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+
+    assert df.degree_left == 1
+    assert df.degree_right == 1
+    assert df.dim_space == dim
+    assert df.covariant_indices == "11"
+
+
+def test_doubleform_wedge_blockwise_2d():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+
+    alpha = dg.OneForm(CF((x, y)))
+    beta = dg.OneForm(CF((x**2, y**2)))
+    gamma = dg.OneForm(CF((y, x)))
+    delta = dg.OneForm(CF((1 + x, 1 + y)))
+
+    left = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+    right = dg.DoubleForm(Einsum("i,j->ij", gamma, delta), p=1, q=1, dim=dim)
+
+    wedged = dg.Wedge(left, right)
+
+    expected_left = dg.Wedge(alpha, gamma)
+    expected_right = dg.Wedge(beta, delta)
+    expected = dg.DoubleForm(
+        Einsum("ij,kl->ijkl", expected_left, expected_right), p=2, q=2, dim=dim
+    )
+
+    assert wedged.degree_left == 2
+    assert wedged.degree_right == 2
+    assert l2_error(wedged, expected, mesh) == pytest.approx(0)
+
+    left_big = dg.DoubleForm(
+        Einsum("ij,k->ijk", expected_left, beta), p=2, q=1, dim=dim
+    )
+    overflow = dg.Wedge(left_big, right)
+    assert overflow.degree_left == 3
+    assert overflow.degree_right == 2
+    assert l2_norm(overflow, mesh) == pytest.approx(0)
+
+
+def test_doubleform_hodge_star_involution():
+    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.6))
+    dim = 3
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.OneForm(CF((x, y, z)))
+    beta = dg.OneForm(CF((1 + x, 2 + y, 3 + z)))
+    df = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+
+    ss = dg.star(dg.star(df, rm), rm)
+    assert l2_error(ss, df, mesh) == pytest.approx(0)
+
+
+def test_doubleform_inner_product_factorizes():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    a1 = dg.OneForm(CF((x, y)))
+    b1 = dg.OneForm(CF((1 + x, 1 + y)))
+    a2 = dg.OneForm(CF((x**2, y**2)))
+    b2 = dg.OneForm(CF((2 + x, 3 + y)))
+
+    df1 = dg.DoubleForm(Einsum("i,j->ij", a1, b1), p=1, q=1, dim=dim)
+    df2 = dg.DoubleForm(Einsum("i,j->ij", a2, b2), p=1, q=1, dim=dim)
+
+    ip_df = rm.InnerProduct(df1, df2)
+    ip_expected = rm.InnerProduct(a1, a2) * rm.InnerProduct(b1, b2)
+
+    assert l2_error(ip_df, ip_expected, mesh) == pytest.approx(0)
+
+
+def test_doubleform_trace_contracts_first_slots():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    a = dg.OneForm(CF((x, y)))
+    b = dg.OneForm(CF((1 + x, 1 + y)))
+    df = dg.DoubleForm(Einsum("i,j->ij", a, b), p=1, q=1, dim=dim)
+
+    traced = rm.Trace(df)
+    expected = rm.InnerProduct(a, b)
+
+    assert traced.degree_left == 0
+    assert traced.degree_right == 0
+    assert l2_error(traced, expected, mesh) == pytest.approx(0)
+
+
+def test_doubleform_slot_inner_product_full_contraction():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.OneForm(CF((x, y)))
+    beta = dg.OneForm(CF((1 + x, 2 + y)))
+    df = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+
+    sip = dg.slot_inner_product(df, rm)
+    expected = rm.InnerProduct(alpha, beta)
+
+    assert l2_error(sip, expected, mesh) == pytest.approx(0)
+
+
+def test_doubleform_transpose_swaps_slots():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+
+    alpha = dg.OneForm(CF((x, y)))
+    beta = dg.OneForm(CF((1 + x, 1 + y)))
+    df = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+
+    df_t = df.trans
+    expected = dg.DoubleForm(Einsum("i,j->ij", beta, alpha), p=1, q=1, dim=dim)
+
+    assert df_t.degree_left == 1
+    assert df_t.degree_right == 1
+    assert l2_error(df_t, expected, mesh) == pytest.approx(0)
 
 
 if __name__ == "__main__":

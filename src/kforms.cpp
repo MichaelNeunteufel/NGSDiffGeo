@@ -93,6 +93,81 @@ namespace ngfem
             }
             }
         }
+
+        std::string FreshSignature(std::string_view used, int count)
+        {
+            if (count < 0)
+                throw Exception("FreshSignature: count must be non-negative");
+            std::string out;
+            out.reserve(size_t(count));
+            for (char c : SIGNATURE)
+            {
+                if (used.find(c) == std::string_view::npos)
+                {
+                    out.push_back(c);
+                    if (int(out.size()) == count)
+                        break;
+                }
+            }
+            if (int(out.size()) != count)
+                throw Exception("FreshSignature: not enough signature labels available");
+            return out;
+        }
+
+        shared_ptr<TensorFieldCoefficientFunction> PermuteTensorCF(shared_ptr<TensorFieldCoefficientFunction> tf, const std::vector<int> &order)
+        {
+            int rank = int(order.size());
+            if (int(tf->Dimensions().Size()) != rank)
+                throw Exception("PermuteTensorCF: rank mismatch");
+
+            std::string sig = tf->GetSignature();
+            std::string cov = tf->GetCovariantIndices();
+            std::string out_sig(rank, 'a');
+            std::string out_cov(rank, '1');
+
+            for (int i = 0; i < rank; ++i)
+            {
+                if (order[i] < 0 || order[i] >= rank)
+                    throw Exception("PermuteTensorCF: permutation index out of range");
+                out_sig[i] = sig[size_t(order[i])];
+                out_cov[i] = cov[size_t(order[i])];
+            }
+
+            auto out_cf = EinsumCF(sig + "->" + out_sig, {tf});
+            return TensorFieldCF(out_cf, out_cov);
+        }
+
+        shared_ptr<CoefficientFunction> BlockHodgeStar(shared_ptr<TensorFieldCoefficientFunction> tf, int block_start, int block_len, int n, const RiemannianManifold &M)
+        {
+            if (block_len < 0 || block_start < 0)
+                throw Exception("BlockHodgeStar: invalid block parameters");
+            if (block_len > n)
+                throw Exception("BlockHodgeStar: block degree exceeds dimension");
+
+            shared_ptr<TensorFieldCoefficientFunction> raised = tf;
+            for (int i = 0; i < block_len; ++i)
+                raised = M.Raise(raised, size_t(block_start + i));
+
+            auto eps = M.GetLeviCivitaSymbol(true);
+            std::string sig = raised->GetSignature();
+            if (block_start + block_len > int(sig.size()))
+                throw Exception("BlockHodgeStar: block range out of bounds");
+            if (sig.empty())
+                return raised * eps;
+
+            std::string pre = sig.substr(0, size_t(block_start));
+            std::string block = sig.substr(size_t(block_start), size_t(block_len));
+            std::string post = sig.substr(size_t(block_start + block_len));
+            std::string new_block = FreshSignature(sig, n - block_len);
+
+            std::string eps_sig = block + new_block;
+            std::string out_sig = pre + new_block + post;
+
+            std::string eins = sig + "," + eps_sig + "->" + out_sig;
+            auto contracted = EinsumCF(eins, {raised, eps});
+            double scale = 1.0 / double(Factorial(block_len));
+            return scale * contracted;
+        }
     } // namespace
 
     KFormCoefficientFunction::KFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, uint8_t ak, uint8_t adim)
@@ -154,6 +229,69 @@ namespace ngfem
             return IdentityCF(this->Dimensions());
 
         auto res = KFormCF(GetCoefficients()->DiffJacobi(var, cache), degree, dim);
+        cache[thisptr] = res;
+        return res;
+    }
+
+    DoubleFormCoefficientFunction::DoubleFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, uint8_t ap, uint8_t aq, uint8_t adim)
+        : TensorFieldCoefficientFunction(ac1, std::string(size_t(ap + aq), '1')), degree_left(ap), degree_right(aq), dim(adim)
+    {
+        if (!((adim >= 1 && adim <= 4) || (adim == 0 && ap == 0 && aq == 0)))
+            throw Exception("DoubleFormCF: dim must be in {1,2,3,4} (or 0 for scalar forms)");
+        if (ap + aq > 8)
+            throw Exception("DoubleFormCF: only ranks up to 8 are supported");
+
+        const auto &dims = ac1->Dimensions();
+        if (dims.Size() != ap + aq)
+            throw Exception("DoubleFormCF: underlying coefficient must have rank " + ToString(int(ap + aq)));
+        for (auto d : dims)
+            if (dim > 0 && d != dim)
+            {
+                throw Exception("DoubleFormCF: tensor dimensions must all equal dim. dim = " + ToString(int(dim)) + ", but found dimension " + ToString(int(d)));
+            }
+
+        if (dim > 0 && (ap > dim || aq > dim) && !ac1->IsZeroCF())
+            throw Exception("DoubleFormCF: degree exceeds dimension (only zero forms allowed in that case)");
+
+        auto meta = Meta();
+        if (meta.rank != ap + aq)
+            throw Exception("DoubleFormCF: rank mismatch");
+        uint64_t expected_covmask = (meta.rank == 0) ? 0 : ((uint64_t(1) << meta.rank) - 1);
+        if (meta.covmask != expected_covmask)
+            throw Exception("DoubleFormCF: double-forms must be fully covariant");
+    }
+
+    shared_ptr<CoefficientFunction>
+    DoubleFormCoefficientFunction::Transform(CoefficientFunction::T_Transform &transformation) const
+    {
+        auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
+        if (transformation.cache.count(thisptr))
+            return transformation.cache[thisptr];
+        if (transformation.replace.count(thisptr))
+            return transformation.replace[thisptr];
+        auto newcf = DoubleFormCF(GetCoefficients()->Transform(transformation), degree_left, degree_right, dim);
+        transformation.cache[thisptr] = newcf;
+        return newcf;
+    }
+
+    shared_ptr<CoefficientFunction> DoubleFormCoefficientFunction::Diff(const CoefficientFunction *var,
+                                                                         shared_ptr<CoefficientFunction> dir) const
+    {
+        if (this == var)
+            return dir;
+        return DoubleFormCF(GetCoefficients()->Diff(var, dir), degree_left, degree_right, dim);
+    }
+
+    shared_ptr<CoefficientFunction> DoubleFormCoefficientFunction::DiffJacobi(const CoefficientFunction *var, T_DJC &cache) const
+    {
+        auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
+        if (cache.find(thisptr) != cache.end())
+            return cache[thisptr];
+
+        if (this == var)
+            return IdentityCF(this->Dimensions());
+
+        auto res = DoubleFormCF(GetCoefficients()->DiffJacobi(var, cache), degree_left, degree_right, dim);
         cache[thisptr] = res;
         return res;
     }
@@ -389,6 +527,218 @@ namespace ngfem
         return make_shared<AlternationCoefficientFunction>(T, rank, dim);
     }
 
+    class BlockAlternationCoefficientFunction : public T_CoefficientFunction<BlockAlternationCoefficientFunction>
+    {
+        shared_ptr<CoefficientFunction> c1;
+        int rank_total;
+        int block_start;
+        int block_len;
+        int dim;
+        std::vector<std::array<int, 4>> perms;
+        std::vector<int> signs;
+        std::vector<int> valid_indices;
+        std::vector<int> lin_table;
+
+    public:
+        BlockAlternationCoefficientFunction(shared_ptr<CoefficientFunction> ac1, int arank, int ablock_start, int ablock_len, int adim)
+            : T_CoefficientFunction<BlockAlternationCoefficientFunction>(ac1->Dimension(), ac1->IsComplex()),
+              c1(ac1), rank_total(arank), block_start(ablock_start), block_len(ablock_len), dim(adim)
+        {
+            if (rank_total < 0 || rank_total > 8)
+                throw Exception("BlockAlternationCF: only ranks 0-8 supported");
+            if (block_len < 0 || block_len > 4)
+                throw Exception("BlockAlternationCF: block size must be in [0, 4]");
+            if (block_start < 0 || block_start + block_len > rank_total)
+                throw Exception("BlockAlternationCF: block range out of bounds");
+            if (dim < 1 || dim > 4)
+                throw Exception("BlockAlternationCF: dim must be in {1,2,3,4}");
+
+            if (c1->Dimensions().Size() != size_t(rank_total))
+                throw Exception("BlockAlternationCF: tensor rank mismatch");
+            for (auto d : c1->Dimensions())
+                if (d != dim)
+                    throw Exception("BlockAlternationCF: tensor dimensions must equal dim");
+
+            this->SetDimensions(c1->Dimensions());
+
+            perms = GeneratePermutations(block_len);
+            if ((int)perms.size() != Factorial(block_len))
+                throw Exception("BlockAlternationCF: permutation generation broken");
+
+            signs.resize(perms.size());
+            for (size_t i = 0; i < perms.size(); ++i)
+                signs[i] = PermutationSign(perms[i], block_len);
+
+            int comp_dim = this->Dimension();
+            valid_indices.reserve(comp_dim);
+            lin_table.resize(size_t(comp_dim) * perms.size(), -1);
+
+            std::vector<int> multi(size_t(rank_total), 0);
+            for (int idx = 0; idx < comp_dim; ++idx)
+            {
+                int rem = idx;
+                for (int j = 0; j < rank_total; ++j)
+                {
+                    multi[size_t(j)] = rem % dim;
+                    rem /= dim;
+                }
+
+                bool repeated = false;
+                for (int a = 0; a < block_len && !repeated; ++a)
+                    for (int b = a + 1; b < block_len; ++b)
+                        if (multi[size_t(block_start + a)] == multi[size_t(block_start + b)])
+                        {
+                            repeated = true;
+                            break;
+                        }
+
+                if (repeated)
+                    continue;
+
+                valid_indices.push_back(idx);
+                for (size_t p = 0; p < perms.size(); ++p)
+                {
+                    int lin = 0;
+                    int stride = 1;
+                    for (int j = 0; j < rank_total; ++j)
+                    {
+                        int val = multi[size_t(j)];
+                        if (j >= block_start && j < block_start + block_len)
+                        {
+                            int rel = j - block_start;
+                            val = multi[size_t(block_start + perms[p][rel])];
+                        }
+                        lin += val * stride;
+                        stride *= dim;
+                    }
+                    lin_table[size_t(idx) * perms.size() + p] = lin;
+                }
+            }
+        }
+
+        virtual string GetDescription() const override
+        {
+            return "BlockAlternationCF";
+        }
+
+        auto GetCArgs() const { return tuple{c1}; }
+
+        void DoArchive(Archive &ar) override
+        {
+        }
+        virtual void TraverseTree(const function<void(CoefficientFunction &)> &func) override
+        {
+            c1->TraverseTree(func);
+            func(*this);
+        }
+
+        virtual Array<shared_ptr<CoefficientFunction>> InputCoefficientFunctions() const override
+        {
+            return Array<shared_ptr<CoefficientFunction>>({c1});
+        }
+
+        virtual void NonZeroPattern(const class ProxyUserData &ud,
+                                    FlatVector<AutoDiffDiff<1, NonZero>> values) const override
+        {
+            Vector<AutoDiffDiff<1, NonZero>> input(values.Size());
+            c1->NonZeroPattern(ud, input);
+
+            values = AutoDiffDiff<1, NonZero>(false);
+            for (int idx : valid_indices)
+            {
+                auto accum = AutoDiffDiff<1, NonZero>(false);
+                const size_t base = size_t(idx) * perms.size();
+                for (size_t p = 0; p < perms.size(); ++p)
+                    accum = accum + input(lin_table[base + p]);
+                values(idx) = accum;
+            }
+        }
+
+        shared_ptr<CoefficientFunction>
+        Transform(CoefficientFunction::T_Transform &transformation) const override
+        {
+            auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
+            if (transformation.cache.count(thisptr))
+                return transformation.cache[thisptr];
+            if (transformation.replace.count(thisptr))
+                return transformation.replace[thisptr];
+            auto newcf = make_shared<BlockAlternationCoefficientFunction>(c1->Transform(transformation), rank_total, block_start, block_len, dim);
+            transformation.cache[thisptr] = newcf;
+            return newcf;
+        }
+
+        using T_CoefficientFunction<BlockAlternationCoefficientFunction>::Evaluate;
+
+        virtual double Evaluate(const BaseMappedIntegrationPoint &ip) const override
+        {
+            throw Exception("BlockAlternationCF:: scalar evaluate called");
+        }
+
+        template <typename MIR, typename T, ORDERING ORD>
+        void T_Evaluate(const MIR &mir, BareSliceMatrix<T, ORD> values) const
+        {
+            int comp_dim = this->Dimension();
+
+            Array<T> temp(comp_dim * mir.Size());
+            FlatMatrix<T, ORD> input(comp_dim, mir.Size(), temp.Data());
+            c1->Evaluate(mir, input);
+
+            for (size_t ip = 0; ip < mir.Size(); ++ip)
+            {
+                for (int idx = 0; idx < comp_dim; ++idx)
+                    values(idx, ip) = T(0);
+
+                for (int idx : valid_indices)
+                {
+                    T accum = T(0);
+                    const size_t base = size_t(idx) * perms.size();
+                    for (size_t p = 0; p < perms.size(); ++p)
+                    {
+                        int lin = lin_table[base + p];
+                        accum += T(signs[p]) * input(lin, ip);
+                    }
+                    values(idx, ip) = accum;
+                }
+            }
+        }
+
+        template <typename MIR, typename T, ORDERING ORD>
+        void T_Evaluate(const MIR &ir, FlatArray<BareSliceMatrix<T, ORD>> input,
+                        BareSliceMatrix<T, ORD> values) const
+        {
+            this->T_Evaluate(ir, values);
+        }
+
+        shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
+                                             shared_ptr<CoefficientFunction> dir) const override
+        {
+            if (this == var)
+                return dir;
+            return make_shared<BlockAlternationCoefficientFunction>(c1->Diff(var, dir), rank_total, block_start, block_len, dim);
+        }
+
+        shared_ptr<CoefficientFunction> DiffJacobi(const CoefficientFunction *var, T_DJC &cache) const override
+        {
+            auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
+            if (cache.find(thisptr) != cache.end())
+                return cache[thisptr];
+
+            if (this == var)
+                return IdentityCF(this->Dimensions());
+
+            auto res = make_shared<BlockAlternationCoefficientFunction>(c1->DiffJacobi(var, cache), rank_total, block_start, block_len, dim);
+            cache[thisptr] = res;
+            return res;
+        }
+
+        virtual bool IsZeroCF() const override { return c1->IsZeroCF(); }
+    };
+
+    shared_ptr<CoefficientFunction> BlockAlternationCF(shared_ptr<CoefficientFunction> T, int rank, int block_start, int block_len, int dim)
+    {
+        return make_shared<BlockAlternationCoefficientFunction>(T, rank, block_start, block_len, dim);
+    }
+
     shared_ptr<KFormCoefficientFunction> KFormCF(shared_ptr<CoefficientFunction> cf, int k, int dim)
     {
         if (k < 0)
@@ -435,6 +785,35 @@ namespace ngfem
         }
 
         return make_shared<KFormCoefficientFunction>(cf, uint8_t(k), uint8_t(used_dim));
+    }
+
+    shared_ptr<DoubleFormCoefficientFunction> DoubleFormCF(shared_ptr<CoefficientFunction> cf, int p, int q, int dim)
+    {
+        if (p < 0 || q < 0)
+            throw Exception("DoubleFormCF: degrees must be non-negative");
+        if (p + q > 8)
+            throw Exception("DoubleFormCF: only ranks up to 8 are supported");
+
+        auto deduce_dim = [&]()
+        {
+            if (dim > 0)
+                return dim;
+            if (cf->Dimensions().Size() > 0)
+                return int(cf->Dimensions()[0]);
+            return 0;
+        };
+
+        int used_dim = deduce_dim();
+        if (p + q == 0 && used_dim <= 0)
+            throw Exception("DoubleFormCF: dim must be provided for scalar forms");
+
+        if (auto df = dynamic_pointer_cast<DoubleFormCoefficientFunction>(cf))
+        {
+            if (df->LeftDegree() == p && df->RightDegree() == q && (used_dim <= 0 || df->DimensionOfSpace() == used_dim))
+                return df;
+        }
+
+        return make_shared<DoubleFormCoefficientFunction>(cf, uint8_t(p), uint8_t(q), uint8_t(used_dim));
     }
 
     shared_ptr<ScalarFieldCoefficientFunction> ScalarFieldCF(shared_ptr<CoefficientFunction> cf, int dim)
@@ -490,6 +869,15 @@ namespace ngfem
         return KFormCF(zero_cf, k, dim);
     }
 
+    shared_ptr<DoubleFormCoefficientFunction> ZeroDoubleForm(int p, int q, int dim)
+    {
+        Array<int> dims;
+        for (int i = 0; i < p + q; ++i)
+            dims.Append(dim);
+        auto zero_cf = ZeroCF(dims);
+        return DoubleFormCF(zero_cf, p, q, dim);
+    }
+
     shared_ptr<KFormCoefficientFunction> Wedge(shared_ptr<KFormCoefficientFunction> a, shared_ptr<KFormCoefficientFunction> b)
     {
         if (a->DimensionOfSpace() != b->DimensionOfSpace())
@@ -507,6 +895,46 @@ namespace ngfem
         double scale = 1.0 / double(Factorial(k) * Factorial(l));
         auto out = scale * alt;
         return KFormCF(out, k + l, dim);
+    }
+
+    shared_ptr<DoubleFormCoefficientFunction> Wedge(shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<DoubleFormCoefficientFunction> b)
+    {
+        if (a->DimensionOfSpace() != b->DimensionOfSpace())
+            throw Exception("Wedge: input double-forms must have the same dimension of space");
+        int dim = a->DimensionOfSpace();
+        int p = a->LeftDegree();
+        int q = a->RightDegree();
+        int r = b->LeftDegree();
+        int s = b->RightDegree();
+
+        if (p + r > dim || q + s > dim)
+            return ZeroDoubleForm(p + r, q + s, dim);
+
+        auto T = TensorProduct(a, b);
+        int total = p + q + r + s;
+        std::vector<int> order;
+        order.reserve(total);
+        for (int i = 0; i < p; ++i)
+            order.push_back(i);
+        for (int i = 0; i < r; ++i)
+            order.push_back(p + q + i);
+        for (int i = 0; i < q; ++i)
+            order.push_back(p + i);
+        for (int i = 0; i < s; ++i)
+            order.push_back(p + q + r + i);
+
+        auto reordered = PermuteTensorCF(T, order);
+        shared_ptr<CoefficientFunction> alt_left = reordered;
+        if (p + r > 1)
+            alt_left = BlockAlternationCF(reordered, total, 0, p + r, dim);
+
+        shared_ptr<CoefficientFunction> alt_both = alt_left;
+        if (q + s > 1)
+            alt_both = BlockAlternationCF(alt_left, total, p + r, q + s, dim);
+
+        double scale = 1.0 / double(Factorial(p) * Factorial(r) * Factorial(q) * Factorial(s));
+        auto out = scale * alt_both;
+        return DoubleFormCF(out, p + r, q + s, dim);
     }
 
     shared_ptr<KFormCoefficientFunction> ExteriorDerivative(shared_ptr<KFormCoefficientFunction> a)
@@ -577,6 +1005,80 @@ namespace ngfem
 
         return KFormCF(scaled, n - k, n);
     }
+
+    shared_ptr<KFormCoefficientFunction> InverseHodgeStar(shared_ptr<KFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb)
+    {
+        int n = (vb == VOL) ? M.Dimension() : M.Dimension() - 1;
+        int k = a->Degree();
+        int exponent = k * (n - k);
+        int sign = (exponent % 2 == 0) ? 1 : -1;
+
+        auto star = HodgeStar(a, M, vb);
+        if (sign == 1)
+            return star;
+        return KFormCF((-1.0) * star->GetCoefficients(), n - k, vb == VOL ? n : M.Dimension());
+    }
+
+    shared_ptr<DoubleFormCoefficientFunction> HodgeStar(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb)
+    {
+        if (vb != VOL)
+            throw Exception("HodgeStar (double-form): only VOL supported");
+
+        int n = M.Dimension();
+        int p = a->LeftDegree();
+        int q = a->RightDegree();
+        if (p > n || q > n)
+            throw Exception("HodgeStar (double-form): form degree exceeds manifold dimension");
+
+        if (a->IsZeroCF())
+            return ZeroDoubleForm(n - p, n - q, n);
+
+        auto left_star = BlockHodgeStar(a, 0, p, n, M);
+        auto left_tf = TensorFieldCF(left_star, std::string(size_t(n - p + q), '1'));
+        auto right_star = BlockHodgeStar(left_tf, n - p, q, n, M);
+
+        return DoubleFormCF(right_star, n - p, n - q, n);
+    }
+
+    shared_ptr<DoubleFormCoefficientFunction> InverseHodgeStar(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb)
+    {
+        if (vb != VOL)
+            throw Exception("InverseHodgeStar (double-form): only VOL supported");
+
+        int n = M.Dimension();
+        int p = a->LeftDegree();
+        int q = a->RightDegree();
+        int exponent = p * (n - p) + q * (n - q);
+        int sign = (exponent % 2 == 0) ? 1 : -1;
+
+        auto star = HodgeStar(a, M, vb);
+        if (sign == 1)
+            return star;
+        return DoubleFormCF((-1.0) * star->GetCoefficients(), n - p, n - q, n);
+    }
+
+    shared_ptr<ScalarFieldCoefficientFunction> SlotInnerProduct(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb)
+    {
+        return M.SlotInnerProduct(a, vb);
+    }
+
+    shared_ptr<DoubleFormCoefficientFunction> SwapDoubleFormSlots(shared_ptr<DoubleFormCoefficientFunction> a)
+    {
+        int p = a->LeftDegree();
+        int q = a->RightDegree();
+        int dim = a->DimensionOfSpace();
+        int total = p + q;
+
+        std::vector<int> order;
+        order.reserve(total);
+        for (int i = 0; i < q; ++i)
+            order.push_back(p + i);
+        for (int i = 0; i < p; ++i)
+            order.push_back(i);
+
+        auto reordered = PermuteTensorCF(a, order);
+        return DoubleFormCF(reordered, q, p, dim);
+    }
 }
 
 void ExportKForms(py::module m)
@@ -611,7 +1113,28 @@ void ExportKForms(py::module m)
              { return ExteriorDerivative(a); })
         .def("star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
              { return HodgeStar(a, *M, vb); }, py::arg("M"), py::arg("vb") = VOL)
+        .def("inv_star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
+             { return InverseHodgeStar(a, *M, vb); }, py::arg("M"), py::arg("vb") = VOL)
         .def_property_readonly("coef", &KFormCoefficientFunction::GetCoefficients);
+
+    py::class_<DoubleFormCoefficientFunction,
+               TensorFieldCoefficientFunction,
+               shared_ptr<DoubleFormCoefficientFunction>>(m, "DoubleForm")
+        .def(py::init([](shared_ptr<CoefficientFunction> cf, int p, int q, int dim)
+                      { return DoubleFormCF(cf, p, q, dim); }),
+             py::arg("cf"), py::arg("p"), py::arg("q"), py::arg("dim"))
+        .def_property_readonly("degree_left", &DoubleFormCoefficientFunction::LeftDegree)
+        .def_property_readonly("degree_right", &DoubleFormCoefficientFunction::RightDegree)
+        .def_property_readonly("dim_space", &DoubleFormCoefficientFunction::DimensionOfSpace)
+        .def("wedge", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<DoubleFormCoefficientFunction> b)
+             { return Wedge(a, b); }, py::arg("b"))
+        .def("star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
+             { return HodgeStar(a, *M, vb); }, py::arg("M"), py::arg("vb") = VOL)
+        .def("inv_star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
+             { return InverseHodgeStar(a, *M, vb); }, py::arg("M"), py::arg("vb") = VOL)
+        .def_property_readonly("trans", [](shared_ptr<DoubleFormCoefficientFunction> a)
+                               { return SwapDoubleFormSlots(a); })
+        .def_property_readonly("coef", &DoubleFormCoefficientFunction::GetCoefficients);
 
     py::class_<ScalarFieldCoefficientFunction,
                KFormCoefficientFunction,
@@ -651,11 +1174,21 @@ void ExportKForms(py::module m)
 
     m.def("Wedge", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<KFormCoefficientFunction> b)
           { return Wedge(a, b); }, py::arg("a"), py::arg("b"));
+    m.def("Wedge", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<DoubleFormCoefficientFunction> b)
+          { return Wedge(a, b); }, py::arg("a"), py::arg("b"));
 
     m.def("d", [](shared_ptr<KFormCoefficientFunction> a)
           { return ExteriorDerivative(a); }, py::arg("a"));
     m.def("star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
           { return M->Star(a, vb); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL);
+    m.def("inv_star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
+          { return InverseHodgeStar(a, *M, vb); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL);
+    m.def("star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
+          { return HodgeStar(a, *M, vb); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL);
+    m.def("inv_star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
+          { return InverseHodgeStar(a, *M, vb); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL);
+    m.def("slot_inner_product", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
+          { return SlotInnerProduct(a, *M, vb); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL);
 
     m.def("delta", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M)
           { return M->Coderivative(a); }, py::arg("a"), py::arg("M"));

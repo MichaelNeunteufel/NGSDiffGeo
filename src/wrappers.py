@@ -15,6 +15,7 @@ _CPP_OneForm = _cpp.OneForm
 _CPP_TwoForm = _cpp.TwoForm
 _CPP_ThreeForm = _cpp.ThreeForm
 _CPP_KForm = _cpp.KForm
+_CPP_DoubleForm = _cpp.DoubleForm
 _CPP_VectorField = _cpp.VectorField
 _CPP_TensorField = _cpp.TensorField
 _CPP_RiemannianManifold = _cpp.RiemannianManifold
@@ -247,6 +248,35 @@ class GenericKForm(_CPP_KForm):
         return self._wrap(_CPP_KForm.__truediv__(self, other))
 
 
+class DoubleForm(_CPP_DoubleForm):
+    def __init__(self, cf, *, p, q, dim):
+        _CPP_DoubleForm.__init__(self, cf, p=int(p), q=int(q), dim=int(dim))
+        self._p = int(p)
+        self._q = int(q)
+        self._dim = int(dim)
+
+    def _wrap(self, cf):
+        return as_doubleform(cf, p=self._p, q=self._q, dim=self._dim)
+
+    def __add__(self, other):
+        return self._wrap(_CPP_DoubleForm.__add__(self, other))
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __sub__(self, other):
+        return self._wrap(_CPP_DoubleForm.__sub__(self, other))
+
+    def __mul__(self, other):
+        return self._wrap(_CPP_DoubleForm.__mul__(self, other))
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __truediv__(self, other):
+        return self._wrap(_CPP_DoubleForm.__truediv__(self, other))
+
+
 # ---------------- as_* functions ----------------
 
 
@@ -305,6 +335,32 @@ def as_kform(cf, *, k, dim=None):
         return as_threeform(cf, dim=dim)
 
     return GenericKForm(cf, k=k, dim=dim)
+
+
+def as_doubleform(cf, *, p=None, q=None, dim=None):
+    if isinstance(cf, DoubleForm):
+        return cf
+
+    if p is None and hasattr(cf, "degree_left"):
+        try:
+            p = int(cf.degree_left)
+        except Exception:
+            p = None
+    if q is None and hasattr(cf, "degree_right"):
+        try:
+            q = int(cf.degree_right)
+        except Exception:
+            q = None
+
+    if p is None or q is None:
+        raise TypeError("as_doubleform: p and q must be provided or inferable")
+
+    if dim is None:
+        dim = _infer_dim(cf)
+    if dim is None:
+        raise TypeError("as_doubleform: dim must be provided or inferable")
+
+    return DoubleForm(cf, p=p, q=q, dim=dim)
 
 
 # ---------------- VectorField / TensorField ----------------
@@ -393,7 +449,9 @@ def as_tensorfield(cf, *, covariant_indices=None, dim=-1):
         if dim is None or dim < 1:
             dim = _infer_dim(cf)
         if dim is None:
-            raise TypeError("as_tensorfield: dim must be provided or inferable for scalars")
+            raise TypeError(
+                "as_tensorfield: dim must be provided or inferable for scalars"
+            )
         return ScalarField(cf, dim=dim)
     elif covariant_indices == "0":
         return VectorField(cf)
@@ -407,6 +465,10 @@ def as_tensorfield(cf, *, covariant_indices=None, dim=-1):
 
 def Wedge(a, b):
     out = _cpp.Wedge(a, b)
+    if isinstance(out, _CPP_DoubleForm):
+        return as_doubleform(
+            out, p=out.degree_left, q=out.degree_right, dim=out.dim_space
+        )
     return as_kform(out, k=out.degree, dim=out.dim_space)
 
 
@@ -417,7 +479,21 @@ def d(a):
 
 def star(a, M, vb=ngsolve.VOL):
     out = _cpp.star(a, M, vb)
+    if isinstance(out, _CPP_DoubleForm):
+        return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=M.dim)
     return as_kform(out, k=out.degree, dim=M.dim)
+
+
+def inv_star(a, M, vb=ngsolve.VOL):
+    out = _cpp.inv_star(a, M, vb)
+    if isinstance(out, _CPP_DoubleForm):
+        return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=M.dim)
+    return as_kform(out, k=out.degree, dim=M.dim)
+
+
+def slot_inner_product(a, M, vb=ngsolve.VOL):
+    out = _cpp.slot_inner_product(a, M, vb)
+    return as_scalarfield(out, dim=M.dim)
 
 
 def delta(a, M):
@@ -507,7 +583,19 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         return as_kform(out, k=k, dim=self.dim)
 
     def star(self, a, vb=ngsolve.VOL):
-        out = _CPP_RiemannianManifold.star(self, a, vb)
+        out = _cpp.star(a, self, vb)
+        if isinstance(out, _CPP_DoubleForm):
+            return as_doubleform(
+                out, p=out.degree_left, q=out.degree_right, dim=self.dim
+            )
+        return as_kform(out, k=out.degree, dim=self.dim)
+
+    def inv_star(self, a, vb=ngsolve.VOL):
+        out = _CPP_RiemannianManifold.inv_star(self, a, vb)
+        if isinstance(out, _CPP_DoubleForm):
+            return as_doubleform(
+                out, p=out.degree_left, q=out.degree_right, dim=self.dim
+            )
         return as_kform(out, k=out.degree, dim=self.dim)
 
     def delta(self, a):
@@ -572,11 +660,24 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         return as_tensorfield(out, dim=self.dim)
 
     def Trace(self, tf, vb=None, index1=0, index2=1):
+        if isinstance(tf, DoubleForm):
+            if vb is None:
+                out = _CPP_RiemannianManifold.Trace(self, tf)
+            else:
+                out = _CPP_RiemannianManifold.Trace(self, tf, vb)
+            return as_doubleform(
+                out, p=out.degree_left, q=out.degree_right, dim=self.dim
+            )
+
         if vb is None:
             out = _CPP_RiemannianManifold.Trace(self, tf, index1=index1, index2=index2)
         else:
             out = _CPP_RiemannianManifold.Trace(self, tf, vb, index1, index2)
         return as_tensorfield(out, dim=self.dim)
+
+    def SlotInnerProduct(self, tf, vb=ngsolve.VOL):
+        out = _CPP_RiemannianManifold.SlotInnerProduct(self, tf, vb)
+        return as_scalarfield(out, dim=self.dim)
 
     def Contraction(self, tf, vf, slot=0):
         # Accept inputs where exactly one argument is a vector field; the other can be any tensor (including k-forms).
@@ -629,6 +730,7 @@ class RiemannianManifold(_CPP_RiemannianManifold):
 __all__ = [
     "KForm",
     "GenericKForm",
+    "DoubleForm",
     "ScalarField",
     "OneForm",
     "TwoForm",
@@ -638,6 +740,7 @@ __all__ = [
     "as_twoform",
     "as_threeform",
     "as_kform",
+    "as_doubleform",
     "VectorField",
     "TensorField",
     "as_vectorfield",
@@ -645,6 +748,8 @@ __all__ = [
     "Wedge",
     "d",
     "star",
+    "inv_star",
+    "slot_inner_product",
     "delta",
     "RiemannianManifold",
 ]

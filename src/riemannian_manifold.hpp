@@ -13,6 +13,7 @@ namespace ngfem
     class VectorFieldCoefficientFunction;
     class ScalarFieldCoefficientFunction;
     class KFormCoefficientFunction;
+    class DoubleFormCoefficientFunction;
 
     /**
      * @class RiemannianManifold
@@ -127,12 +128,15 @@ namespace ngfem
 
         // ------- Tensor operations --------
         shared_ptr<ScalarFieldCoefficientFunction> IP(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2, VorB vb = VOL) const;
+        shared_ptr<ScalarFieldCoefficientFunction> IP(shared_ptr<DoubleFormCoefficientFunction> c1, shared_ptr<DoubleFormCoefficientFunction> c2, VorB vb = VOL) const;
 
         shared_ptr<TensorFieldCoefficientFunction> Cross(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2) const;
 
         // ------- Forms --------
         shared_ptr<KFormCoefficientFunction> MakeKForm(shared_ptr<CoefficientFunction> cf, int k) const;
         shared_ptr<KFormCoefficientFunction> Star(shared_ptr<KFormCoefficientFunction> a, VorB vb = VOL) const;
+        shared_ptr<KFormCoefficientFunction> InvStar(shared_ptr<KFormCoefficientFunction> a, VorB vb = VOL) const;
+        shared_ptr<DoubleFormCoefficientFunction> InvStar(shared_ptr<DoubleFormCoefficientFunction> a, VorB vb = VOL) const;
         shared_ptr<KFormCoefficientFunction> Coderivative(shared_ptr<KFormCoefficientFunction> a) const;
 
         // ------- Covariant differential operators --------
@@ -157,6 +161,8 @@ namespace ngfem
 
         // ------- Algebraic operations --------
         shared_ptr<TensorFieldCoefficientFunction> Trace(shared_ptr<TensorFieldCoefficientFunction> c1, size_t index1 = 0, size_t index2 = 1, VorB vb = VOL) const;
+        shared_ptr<DoubleFormCoefficientFunction> Trace(shared_ptr<DoubleFormCoefficientFunction> c1, VorB vb = VOL) const;
+        shared_ptr<ScalarFieldCoefficientFunction> SlotInnerProduct(shared_ptr<DoubleFormCoefficientFunction> c1, VorB vb = VOL) const;
 
         shared_ptr<TensorFieldCoefficientFunction> Contraction(shared_ptr<TensorFieldCoefficientFunction> tf, shared_ptr<VectorFieldCoefficientFunction> vf, size_t slot = 0) const;
 
