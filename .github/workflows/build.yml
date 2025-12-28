@@ -123,6 +123,13 @@ jobs:
     # Publish only version tags to PyPI (avoid pre-release tags like .devN or rcN)
     if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '.dev') && !contains(github.ref_name, 'rc') && !contains(github.ref_name, 'a') && !contains(github.ref_name, 'b')
 
+    environment:
+      name: publish_pypi
+
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -135,12 +142,6 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           skip-existing: false
-          password: ${{ secrets.PYPI_API_TOKEN }}
-
-      # Later when switched to Trusted Publishing (OIDC), remove the password line above and instead set:
-      # permissions:
-      #   id-token: write
-      # and configure the corresponding Trusted Publisher on PyPI for this repository/workflow.
 
   docs:
     name: Build and Deploy Documentation
