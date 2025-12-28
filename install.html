@@ -46,7 +46,17 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#install-from-pypi-recommended">Install from PyPI (recommended)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#build-from-source-advanced">Build from source (advanced)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#option-a-build-with-cmake">Option A: Build with CMake</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#option-b-build-and-install-with-pip">Option B: Build and install with pip</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#development-snapshots-testpypi">Development snapshots (TestPyPI)</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
@@ -92,22 +102,82 @@
              
   <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
-<p>The package will soon be available on PyPI, but for now you can install it from the GitHub repository if you have a self-compiled NGSolve.</p>
-<p>If you have a working NGSolve installation, you need to clone the GitHub repository, and then you can build it from source using CMake</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/MichaelNeunteufel/NGSDiffGeo.git
-<span class="nb">cd</span><span class="w"> </span>NGSDiffGeo
-mkdir<span class="w"> </span>build<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>build
-cmake<span class="w"> </span>..
-make<span class="w"> </span>install
+<p>NGSDiffGeo is distributed as a standard Python package and can be installed either</p>
+<ul class="simple">
+<li><p>from <a class="reference external" href="https://pypi.org/project/ngsdiffgeo/">PyPI</a> (recommended), or</p></li>
+<li><p>from source (advanced / developer setup).</p></li>
+</ul>
+<p>The package depends on <a class="reference external" href="https://ngsolve.org/">NGSolve</a>. When installing from PyPI, <code class="docutils literal notranslate"><span class="pre">pip</span></code> will also install
+<code class="docutils literal notranslate"><span class="pre">ngsolve</span></code> automatically <em>if</em> a compatible wheel is available for your platform. For details on NGSolve
+installation options (pip, conda, or building from source), see
+<a class="reference external" href="https://ngsolve.org/installation.html">the official NGSolve installation guide</a>.</p>
+<section id="install-from-pypi-recommended">
+<h2>Install from PyPI (recommended)<a class="headerlink" href="#install-from-pypi-recommended" title="Link to this heading"></a></h2>
+<p>We recommend installing NGSDiffGeo into a dedicated virtual environment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
+<span class="nb">source</span><span class="w"> </span>.venv/bin/activate<span class="w">  </span><span class="c1"># Linux/macOS</span>
+<span class="c1"># .venv\Scripts\activate # Windows (PowerShell)</span>
+
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>pip
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>ngsdiffgeo
 </pre></div>
 </div>
-<p>or using pip</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>scikit-build-core<span class="w"> </span>pybind11_stubgen<span class="w"> </span>toml
-git<span class="w"> </span>clone<span class="w"> </span>https://github.com/MichaelNeunteufel/NGSDiffGeo.git
+<p>If your platform does not provide a prebuilt <code class="docutils literal notranslate"><span class="pre">ngsolve</span></code> wheel, install NGSolve first (see the link above),
+then install NGSDiffGeo via <code class="docutils literal notranslate"><span class="pre">pip</span></code> as shown.</p>
+</section>
+<section id="build-from-source-advanced">
+<h2>Build from source (advanced)<a class="headerlink" href="#build-from-source-advanced" title="Link to this heading"></a></h2>
+<p>A source build is useful if you want to develop NGSDiffGeo or need to compile against a local NGSolve build.</p>
+<section id="prerequisites">
+<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p>A working NGSolve installation (pip-installed or self-compiled). See
+<a class="reference external" href="https://ngsolve.org/installation.html">NGSolve installation</a>.</p></li>
+<li><p>A C++ toolchain and CMake (Linux/macOS: GCC/Clang; Windows: Visual Studio).</p></li>
+<li><p>Standard Python build tooling (<code class="docutils literal notranslate"><span class="pre">pip</span></code>). Build requirements are declared in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>.</p></li>
+</ol>
+<p>Clone the repository:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/MichaelNeunteufel/NGSDiffGeo.git
 <span class="nb">cd</span><span class="w"> </span>NGSDiffGeo
+</pre></div>
+</div>
+</section>
+<section id="option-a-build-with-cmake">
+<h3>Option A: Build with CMake<a class="headerlink" href="#option-a-build-with-cmake" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>-p<span class="w"> </span>build
+<span class="nb">cd</span><span class="w"> </span>build
+cmake<span class="w"> </span>..
+make<span class="w"> </span>install<span class="w"> </span><span class="c1"># Linux/macOS</span>
+<span class="c1"># cmake --build . --config Release --target install # Windows</span>
+</pre></div>
+</div>
+<p>If CMake cannot locate your NGSolve installation, you may need to set <code class="docutils literal notranslate"><span class="pre">CMAKE_PREFIX_PATH</span></code> to the directory
+containing NGSolve/Netgen CMake package configuration files (platform-specific).</p>
+</section>
+<section id="option-b-build-and-install-with-pip">
+<h3>Option B: Build and install with pip<a class="headerlink" href="#option-b-build-and-install-with-pip" title="Link to this heading"></a></h3>
+<p>This uses the <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> build configuration and is typically the most convenient for development.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>pip
 python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--no-build-isolation<span class="w"> </span>.
 </pre></div>
 </div>
+<p>For editable development installs:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--no-build-isolation<span class="w"> </span>-e<span class="w"> </span>.
+</pre></div>
+</div>
+</section>
+</section>
+<section id="development-snapshots-testpypi">
+<h2>Development snapshots (TestPyPI)<a class="headerlink" href="#development-snapshots-testpypi" title="Link to this heading"></a></h2>
+<p>For testers and early adopters, development snapshots are published to TestPyPI. These builds can change
+frequently and may be unstable.</p>
+<p>To install from TestPyPI (while still resolving dependencies from PyPI):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-i<span class="w"> </span>https://test.pypi.org/simple/<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--extra-index-url<span class="w"> </span>https://pypi.org/simple<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>ngsdiffgeo
+</pre></div>
+</div>
+</section>
 </section>
 
 
