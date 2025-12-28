@@ -127,8 +127,8 @@ namespace ngfem
         shared_ptr<VectorFieldCoefficientFunction> GetEdgeTangent() const;
 
         // ------- Tensor operations --------
-        shared_ptr<ScalarFieldCoefficientFunction> IP(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2, VorB vb = VOL) const;
-        shared_ptr<ScalarFieldCoefficientFunction> IP(shared_ptr<DoubleFormCoefficientFunction> c1, shared_ptr<DoubleFormCoefficientFunction> c2, VorB vb = VOL) const;
+        shared_ptr<ScalarFieldCoefficientFunction> IP(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2, VorB vb = VOL, bool forms = false) const;
+        shared_ptr<ScalarFieldCoefficientFunction> IP(shared_ptr<DoubleFormCoefficientFunction> c1, shared_ptr<DoubleFormCoefficientFunction> c2, VorB vb = VOL, bool forms = false) const;
 
         shared_ptr<TensorFieldCoefficientFunction> Cross(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2) const;
 
@@ -161,14 +161,15 @@ namespace ngfem
 
         // ------- Algebraic operations --------
         shared_ptr<TensorFieldCoefficientFunction> Trace(shared_ptr<TensorFieldCoefficientFunction> c1, size_t index1 = 0, size_t index2 = 1, VorB vb = VOL) const;
-        shared_ptr<DoubleFormCoefficientFunction> Trace(shared_ptr<DoubleFormCoefficientFunction> c1, VorB vb = VOL) const;
-        shared_ptr<ScalarFieldCoefficientFunction> SlotInnerProduct(shared_ptr<DoubleFormCoefficientFunction> c1, VorB vb = VOL) const;
+        shared_ptr<CoefficientFunction> Trace(shared_ptr<DoubleFormCoefficientFunction> c1, size_t l = 1, VorB vb = VOL) const;
+        shared_ptr<ScalarFieldCoefficientFunction> SlotInnerProduct(shared_ptr<DoubleFormCoefficientFunction> c1, VorB vb = VOL, bool forms = true) const;
 
         shared_ptr<TensorFieldCoefficientFunction> Contraction(shared_ptr<TensorFieldCoefficientFunction> tf, shared_ptr<VectorFieldCoefficientFunction> vf, size_t slot = 0) const;
 
         shared_ptr<TensorFieldCoefficientFunction> Transpose(shared_ptr<TensorFieldCoefficientFunction> tf, size_t index1 = 0, size_t index2 = 1) const;
 
         shared_ptr<TensorFieldCoefficientFunction> S_op(shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb = VOL) const;
+        shared_ptr<DoubleFormCoefficientFunction> s_op(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL) const;
         shared_ptr<TensorFieldCoefficientFunction> J_op(shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb = VOL) const;
     };
 }

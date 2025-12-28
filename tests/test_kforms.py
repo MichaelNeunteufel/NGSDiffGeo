@@ -328,8 +328,7 @@ def test_doubleform_trace_contracts_first_slots():
     traced = rm.Trace(df)
     expected = rm.InnerProduct(a, b)
 
-    assert traced.degree_left == 0
-    assert traced.degree_right == 0
+    assert isinstance(traced, dg.ScalarField)
     assert l2_error(traced, expected, mesh) == pytest.approx(0)
 
 
@@ -362,6 +361,228 @@ def test_doubleform_transpose_swaps_slots():
     assert df_t.degree_left == 1
     assert df_t.degree_right == 1
     assert l2_error(df_t, expected, mesh) == pytest.approx(0)
+
+
+def test_doubleform_trace_l_parameter():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.TwoForm(
+        CF((0, x, -x, 0), dims=(2, 2)),
+        dim=dim,
+    )
+    beta = dg.TwoForm(
+        CF((0, 1 + y, -(1 + y), 0), dims=(2, 2)),
+        dim=dim,
+    )
+    df = dg.DoubleForm(Einsum("ij,kl->ijkl", alpha, beta), p=2, q=2, dim=dim)
+
+    trace1 = rm.Trace(df, l=1)
+    trace1_default = rm.Trace(df)
+    assert trace1.degree_left == 1
+    assert trace1.degree_right == 1
+    assert l2_error(trace1, trace1_default, mesh) == pytest.approx(0)
+
+    trace2 = rm.Trace(df, l=2)
+    expected2 = rm.InnerProduct(alpha, beta)
+    assert l2_error(trace2, expected2, mesh) == pytest.approx(0)
+
+    trace3 = rm.Trace(df, l=3)
+    assert l2_norm(trace3, mesh) == pytest.approx(0)
+
+
+def test_inner_product_forms_scaling_kforms():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.TwoForm(CF((0, x, -x, 0), dims=(2, 2)), dim=dim)
+    beta = dg.TwoForm(CF((0, 1 + y, -(1 + y), 0), dims=(2, 2)), dim=dim)
+
+    ip = rm.InnerProduct(alpha, beta)
+    ip_forms = rm.InnerProduct(alpha, beta, forms=True)
+
+    assert l2_error(ip_forms, 0.5 * ip, mesh) == pytest.approx(0)
+
+
+def test_inner_product_forms_scaling_doubleforms():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.TwoForm(CF((0, x, -x, 0), dims=(2, 2)), dim=dim)
+    beta = dg.TwoForm(CF((0, 1 + y, -(1 + y), 0), dims=(2, 2)), dim=dim)
+    gamma = dg.TwoForm(CF((0, 2 + x, -(2 + x), 0), dims=(2, 2)), dim=dim)
+    delta = dg.TwoForm(CF((0, 3 + y, -(3 + y), 0), dims=(2, 2)), dim=dim)
+
+    df1 = dg.DoubleForm(Einsum("ij,kl->ijkl", alpha, beta), p=2, q=2, dim=dim)
+    df2 = dg.DoubleForm(Einsum("ij,kl->ijkl", gamma, delta), p=2, q=2, dim=dim)
+
+    ip = rm.InnerProduct(df1, df2)
+    ip_forms = rm.InnerProduct(df1, df2, forms=True)
+
+    assert l2_error(ip_forms, 0.25 * ip, mesh) == pytest.approx(0)
+
+
+def test_doubleform_s_operator_matches_wedge():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.OneForm(CF((x, y)))
+    beta = dg.OneForm(CF((1 + x, 2 + y)))
+    df = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+
+    s_df = rm.s(df)
+    expected_form = dg.Wedge(beta, alpha)
+    expected = dg.DoubleForm(expected_form, p=2, q=0, dim=dim)
+
+    assert s_df.degree_left == 2
+    assert s_df.degree_right == 0
+    assert l2_error(s_df, expected, mesh) == pytest.approx(0)
+
+
+def test_wedge_tensor_with_doubleform():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+
+    g = dg.TensorField(CF((1, 0, 0, 1), dims=(2, 2)), covariant_indices="11")
+    alpha = dg.OneForm(CF((x, y)))
+    beta = dg.OneForm(CF((1 + x, 1 + y)))
+    df = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+
+    out = dg.Wedge(g, df)
+
+    assert out.degree_left == 2
+    assert out.degree_right == 2
+
+
+def test_wedge_tensor_tensor_as_doubleform():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+
+    g = dg.TensorField(CF((1, 0, 0, 1), dims=(2, 2)), covariant_indices="11")
+    h = dg.TensorField(CF((2, 0, 0, 3), dims=(2, 2)), covariant_indices="11")
+
+    out = dg.Wedge(g, h)
+
+    assert out.degree_left == 2
+    assert out.degree_right == 2
+
+
+def test_wedge_doubleform_tensor():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+
+    g = dg.TensorField(CF((1, 0, 0, 1), dims=(2, 2)), covariant_indices="11")
+    alpha = dg.OneForm(CF((x, y)))
+    beta = dg.OneForm(CF((1 + x, 1 + y)))
+    df = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+
+    out = dg.Wedge(df, g)
+
+    assert out.degree_left == 2
+    assert out.degree_right == 2
+
+
+def test_wedge_tensor_doubleform_tensor_combinations():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+
+    g = dg.TensorField(CF((1, 0, 0, 1), dims=(2, 2)), covariant_indices="11")
+    alpha = dg.OneForm(CF((x, y)))
+    beta = dg.OneForm(CF((1 + x, 1 + y)))
+    df = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+
+    out1 = dg.Wedge(g, df)
+    out2 = dg.Wedge(df, g)
+    out3 = dg.Wedge(g, g)
+
+    assert out1.degree_left == 2
+    assert out1.degree_right == 2
+    assert out2.degree_left == 2
+    assert out2.degree_right == 2
+    assert out3.degree_left == 2
+    assert out3.degree_right == 2
+
+
+def test_wedge_with_scalarfield_kform():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+
+    f = dg.ScalarField(x + y, dim=dim)
+    alpha = dg.OneForm(CF((x, y)))
+
+    out = dg.Wedge(f, alpha)
+    expected = f * alpha
+
+    assert isinstance(out, dg.KForm)
+    assert out.degree == 1
+    assert l2_error(out, expected, mesh) == pytest.approx(0)
+
+
+def test_wedge_with_scalarfield_doubleform():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+
+    f = dg.ScalarField(x + y, dim=dim)
+    alpha = dg.OneForm(CF((x, y)))
+    beta = dg.OneForm(CF((1 + x, 1 + y)))
+    df = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+
+    out = dg.Wedge(f, df)
+    expected = dg.DoubleForm(f * df, p=1, q=1, dim=dim)
+
+    assert out.degree_left == 1
+    assert out.degree_right == 1
+    assert l2_error(out, expected, mesh) == pytest.approx(0)
+
+
+def test_wedge_transposed_doubleform():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+
+    alpha = dg.OneForm(CF((x, y)))
+    beta = dg.OneForm(CF((1 + x, 1 + y)))
+    df = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+
+    out = dg.Wedge(df.trans, df)
+    expected = dg.Wedge(
+        dg.DoubleForm(Einsum("i,j->ij", beta, alpha), p=1, q=1, dim=dim), df
+    )
+
+    assert out.degree_left == 2
+    assert out.degree_right == 2
+    assert l2_error(out, expected, mesh) == pytest.approx(0)
+
+
+def test_star_doubleform_flag_from_scalar():
+    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.6))
+    dim = 3
+    rm = dg.RiemannianManifold(Id(dim))
+
+    one = dg.ScalarField(CF(1), dim=dim)
+    out = rm.star(one, double=True)
+
+    assert isinstance(out, dg.DoubleForm)
+    assert out.degree_left == dim
+    assert out.degree_right == dim
+    assert l2_norm(out, mesh) > 0
+
+
+def test_inv_star_doubleform_flag_from_scalar():
+    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.6))
+    dim = 3
+    rm = dg.RiemannianManifold(Id(dim))
+
+    one = dg.ScalarField(CF(1), dim=dim)
+    out = rm.inv_star(one, double=True)
+
+    assert isinstance(out, dg.DoubleForm)
+    assert out.degree_left == dim
+    assert out.degree_right == dim
+    assert l2_norm(out, mesh) > 0
 
 
 if __name__ == "__main__":

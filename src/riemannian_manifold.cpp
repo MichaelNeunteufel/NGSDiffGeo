@@ -18,6 +18,22 @@ namespace ngfem
             int exponent = n * (k + 1) + 1;
             return (exponent % 2 == 0) ? 1 : -1;
         }
+
+        inline int Factorial(int n)
+        {
+            int f = 1;
+            for (int i = 2; i <= n; ++i)
+                f *= i;
+            return f;
+        }
+
+        char FreshLabel(std::string_view used)
+        {
+            for (char c : SIGNATURE)
+                if (used.find(c) == std::string_view::npos)
+                    return c;
+            throw Exception("s_op (double-form): not enough signature labels available");
+        }
     } // namespace
 
     using namespace std;
@@ -378,7 +394,7 @@ namespace ngfem
         return g_tv;
     }
 
-    shared_ptr<ScalarFieldCoefficientFunction> RiemannianManifold::IP(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2, VorB vb) const
+    shared_ptr<ScalarFieldCoefficientFunction> RiemannianManifold::IP(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2, VorB vb, bool forms) const
     {
         string cov_ind1 = c1->GetCovariantIndices();
         string cov_ind2 = c2->GetCovariantIndices();
@@ -451,10 +467,22 @@ namespace ngfem
         {
             cfs[2 + i] = cov_ind1[position_same_index[i]] == '1' ? metric_inv : metric;
         }
-        return ScalarFieldCF(EinsumCF(signature_c1 + "," + signature_c2 + raise_lower_signatures, cfs), dim);
+        auto result = ScalarFieldCF(EinsumCF(signature_c1 + "," + signature_c2 + raise_lower_signatures, cfs), dim);
+        if (!forms)
+            return result;
+
+        auto k1 = dynamic_pointer_cast<KFormCoefficientFunction>(c1);
+        auto k2 = dynamic_pointer_cast<KFormCoefficientFunction>(c2);
+        if (!k1 || !k2)
+            throw Exception("IP: forms=true requires k-forms or double-forms");
+        if (k1->Degree() != k2->Degree())
+            throw Exception("IP: form degrees must match");
+
+        double scale = 1.0 / double(Factorial(k1->Degree()));
+        return ScalarFieldCF(scale * result->GetCoefficients(), dim);
     }
 
-    shared_ptr<ScalarFieldCoefficientFunction> RiemannianManifold::IP(shared_ptr<DoubleFormCoefficientFunction> c1, shared_ptr<DoubleFormCoefficientFunction> c2, VorB vb) const
+    shared_ptr<ScalarFieldCoefficientFunction> RiemannianManifold::IP(shared_ptr<DoubleFormCoefficientFunction> c1, shared_ptr<DoubleFormCoefficientFunction> c2, VorB vb, bool forms) const
     {
         if (!c1 || !c2)
             throw Exception("IP: inputs must be non-null");
@@ -465,7 +493,12 @@ namespace ngfem
 
         auto tf1 = static_pointer_cast<TensorFieldCoefficientFunction>(c1);
         auto tf2 = static_pointer_cast<TensorFieldCoefficientFunction>(c2);
-        return IP(tf1, tf2, vb);
+        auto result = IP(tf1, tf2, vb, false);
+        if (!forms)
+            return result;
+
+        double scale = 1.0 / double(Factorial(c1->LeftDegree()) * Factorial(c1->RightDegree()));
+        return ScalarFieldCF(scale * result->GetCoefficients(), dim);
     }
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::Cross(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2) const
@@ -813,7 +846,7 @@ namespace ngfem
                          : ScalarFieldCF(result, dim);
     }
 
-    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::Trace(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb) const
+    shared_ptr<CoefficientFunction> RiemannianManifold::Trace(shared_ptr<DoubleFormCoefficientFunction> tf, size_t l, VorB vb) const
     {
         if (!tf)
             throw Exception("Trace: input must be non-null");
@@ -822,14 +855,32 @@ namespace ngfem
 
         int p = tf->LeftDegree();
         int q = tf->RightDegree();
-        if (p == 0 || q == 0)
-            throw Exception("Trace: double-form must have positive degrees in both slots");
+        if (l == 0)
+            return tf;
 
-        auto traced = Trace(static_pointer_cast<TensorFieldCoefficientFunction>(tf), 0, size_t(p), vb);
-        return DoubleFormCF(traced, p - 1, q - 1, dim);
+        if (l > size_t(p) || l > size_t(q))
+        {
+            Array<int> dims;
+            auto zero_cf = ZeroCF(dims);
+            return ScalarFieldCF(zero_cf, dim);
+        }
+
+        auto current = tf;
+        for (size_t i = 0; i < l; ++i)
+        {
+            int lp = current->LeftDegree();
+            int lq = current->RightDegree();
+            auto traced = Trace(static_pointer_cast<TensorFieldCoefficientFunction>(current), 0, size_t(lp), vb);
+            current = DoubleFormCF(traced, lp - 1, lq - 1, dim);
+        }
+
+        if (current->LeftDegree() == 0 && current->RightDegree() == 0)
+            return ScalarFieldCF(current->GetCoefficients(), dim);
+
+        return current;
     }
 
-    shared_ptr<ScalarFieldCoefficientFunction> RiemannianManifold::SlotInnerProduct(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb) const
+    shared_ptr<ScalarFieldCoefficientFunction> RiemannianManifold::SlotInnerProduct(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb, bool forms) const
     {
         if (!tf)
             throw Exception("SlotInnerProduct: input must be non-null");
@@ -844,11 +895,19 @@ namespace ngfem
         if (p == 0)
             return ScalarFieldCF(tf->GetCoefficients(), dim);
 
-        auto current = tf;
-        for (int i = 0; i < p; ++i)
-            current = Trace(current, vb);
-
-        return ScalarFieldCF(current->GetCoefficients(), dim);
+        auto res = Trace(tf, size_t(p), vb);
+        if (auto sf = dynamic_pointer_cast<ScalarFieldCoefficientFunction>(res))
+        {
+            if (!forms)
+                return sf;
+            double scale = 1.0 / double(Factorial(p));
+            return ScalarFieldCF(scale * sf->GetCoefficients(), dim);
+        }
+        auto out = ScalarFieldCF(res, dim);
+        if (!forms)
+            return out;
+        double scale = 1.0 / double(Factorial(p));
+        return ScalarFieldCF(scale * out->GetCoefficients(), dim);
     }
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::Contraction(shared_ptr<TensorFieldCoefficientFunction> tf, shared_ptr<VectorFieldCoefficientFunction> vf, size_t slot) const
@@ -903,12 +962,63 @@ namespace ngfem
         switch (vb)
         {
         case VOL:
-            return TensorFieldCF(tf - this->Trace(tf, 0, 1, VOL) * g, "11");
+            return TensorFieldCF(Transpose(tf) - this->Trace(tf, 0, 1, VOL) * g, "11");
         case BND:
-            return TensorFieldCF(P_F * tf * P_F - this->Trace(tf, 0, 1, BND) * g_F, "11");
+            return TensorFieldCF(P_F * Transpose(tf) * P_F - this->Trace(tf, 0, 1, BND) * g_F, "11");
         default:
             throw Exception("S_op: Only implemented for VOL and BND");
         }
+    }
+
+    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::s_op(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb) const
+    {
+        if (!tf)
+            throw Exception("s_op: input must be non-null");
+        if (tf->DimensionOfSpace() != dim)
+            throw Exception("s_op: double-form dimension does not match manifold dimension");
+
+        int p = tf->LeftDegree();
+        int q = tf->RightDegree();
+        if (q < 1)
+            throw Exception("s_op: q must be at least 1");
+
+        shared_ptr<CoefficientFunction> metric_inv;
+        switch (vb)
+        {
+        case VOL:
+            metric_inv = g_inv;
+            break;
+        case BND:
+            metric_inv = g_F_inv;
+            break;
+        default:
+            throw Exception("s_op: only implemented for VOL and BND");
+        }
+
+        std::string sig = tf->GetSignature();
+        std::string left_sig = sig.substr(0, size_t(p));
+        std::string right_sig = sig.substr(size_t(p), size_t(q));
+        char new_left = FreshLabel(sig);
+
+        std::string out_sig;
+        out_sig.reserve(size_t(p + q));
+        out_sig.push_back(new_left);
+        out_sig += left_sig;
+        if (q > 1)
+            out_sig += right_sig.substr(1);
+
+        std::string gsig;
+        gsig.reserve(2);
+        gsig.push_back(new_left);
+        gsig.push_back(right_sig[0]);
+
+        std::string eins = gsig + "," + sig + "->" + out_sig;
+        auto contracted = EinsumCF(eins, {metric_inv, tf});
+        auto alt = BlockAlternationCF(contracted, p + q, 0, p + 1, dim);
+
+        double scale = 1.0 / double(Factorial(p));
+        auto out = scale * alt;
+        return DoubleFormCF(out, p + 1, q - 1, dim);
     }
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::J_op(shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb) const
@@ -920,9 +1030,9 @@ namespace ngfem
         switch (vb)
         {
         case VOL:
-            return TensorFieldCF(tf - 0.5 * this->Trace(tf, 0, 1, VOL) * g, "11");
+            return TensorFieldCF(Transpose(tf) - 0.5 * this->Trace(tf, 0, 1, VOL) * g, "11");
         case BND:
-            return TensorFieldCF(P_F * tf * P_F - 0.5 * this->Trace(tf, 0, 1, BND) * g_F, "11");
+            return TensorFieldCF(P_F * Transpose(tf) * P_F - 0.5 * this->Trace(tf, 0, 1, BND) * g_F, "11");
         default:
             throw Exception("J_op: Only implemented for VOL and BND");
         }
@@ -975,10 +1085,10 @@ void ExportRiemannianManifold(py::module m)
              { return self->InvStar(a, vb); }, "Inverse Hodge star of a double-form using the manifold metric", py::arg("a"), py::arg("vb") = VOL)
         .def("delta", [](shared_ptr<RiemannianManifold> self, shared_ptr<KFormCoefficientFunction> a)
              { return self->Coderivative(a); }, "Exterior coderivative of a k-form using the manifold metric", py::arg("a"))
-        .def("InnerProduct", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf1, shared_ptr<DoubleFormCoefficientFunction> tf2, VorB vb)
-             { return self->IP(tf1, tf2, vb); }, "InnerProduct of two DoubleForms", py::arg("tf1"), py::arg("tf2"), py::arg("vb") = VOL)
-        .def("InnerProduct", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf1, shared_ptr<TensorFieldCoefficientFunction> tf2, VorB vb)
-             { return self->IP(tf1, tf2, vb); }, "InnerProduct of two TensorFields", py::arg("tf1"), py::arg("tf2"), py::arg("vb") = VOL)
+        .def("InnerProduct", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf1, shared_ptr<DoubleFormCoefficientFunction> tf2, VorB vb, bool forms)
+             { return self->IP(tf1, tf2, vb, forms); }, "InnerProduct of two DoubleForms", py::arg("tf1"), py::arg("tf2"), py::arg("vb") = VOL, py::arg("forms") = false)
+        .def("InnerProduct", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf1, shared_ptr<TensorFieldCoefficientFunction> tf2, VorB vb, bool forms)
+             { return self->IP(tf1, tf2, vb, forms); }, "InnerProduct of two TensorFields", py::arg("tf1"), py::arg("tf2"), py::arg("vb") = VOL, py::arg("forms") = false)
         .def("Cross", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf1, shared_ptr<TensorFieldCoefficientFunction> tf2)
              { return self->Cross(tf1, tf2); }, "Cross product in 3D of two vector fields, 1-forms, or both mixed. Returns the resulting vector-field.", py::arg("tf1"), py::arg("tf2"))
         .def("CovDeriv", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb)
@@ -1001,10 +1111,10 @@ void ExportRiemannianManifold(py::module m)
              { return self->CovRot(tf); }, "Covariant rot of a TensorField of maximal order 1 in 2D. Returns a contravariant tensor field.", py::arg("tf"))
         .def("CovDiv", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb)
              { return self->CovDivergence(tf, vb); }, "Covariant divergence of a TensorField", py::arg("tf"), py::arg("vb") = VOL)
-        .def("Trace", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb)
-             { return self->Trace(tf, vb); }, "Trace of DoubleForm: contract first left/right slots", py::arg("tf"), py::arg("vb") = VOL)
-        .def("SlotInnerProduct", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb)
-             { return self->SlotInnerProduct(tf, vb); }, "Inner product of left/right slots for (p,p) DoubleForm", py::arg("tf"), py::arg("vb") = VOL)
+        .def("Trace", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, size_t l, VorB vb)
+             { return self->Trace(tf, l, vb); }, "Trace of DoubleForm: contract first l left/right slots", py::arg("tf"), py::arg("l") = 1, py::arg("vb") = VOL)
+        .def("SlotInnerProduct", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb, bool forms)
+             { return self->SlotInnerProduct(tf, vb, forms); }, "Inner product of left/right slots for (p,p) DoubleForm", py::arg("tf"), py::arg("vb") = VOL, py::arg("forms") = true)
         .def("Trace", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb, size_t index1, size_t index2)
              { return self->Trace(tf, index1, index2, vb); }, "Trace of TensorField in two indices. Default are the first two.", py::arg("tf"), py::arg("vb") = VOL, py::arg("index1") = 0, py::arg("index2") = 1)
         .def("Contraction", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, shared_ptr<VectorFieldCoefficientFunction> vf, size_t slot)
@@ -1013,6 +1123,8 @@ void ExportRiemannianManifold(py::module m)
              { return self->Transpose(tf, index1, index2); }, "Transpose of TensorField for given indices. Default indices are first and second.", py::arg("tf"), py::arg("index1") = 0, py::arg("index2") = 1)
         .def("S", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb)
              { return self->S_op(tf, vb); }, "S operator subtracting the trace.", py::arg("tf"), py::arg("vb") = VOL)
+        .def("s", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb)
+             { return self->s_op(tf, vb); }, "s operator for double forms: (p,q) -> (p+1,q-1)", py::arg("tf"), py::arg("vb") = VOL)
         .def("J", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb)
              { return self->J_op(tf, vb); }, "J operator subtracting half the trace.", py::arg("tf"), py::arg("vb") = VOL);
 }

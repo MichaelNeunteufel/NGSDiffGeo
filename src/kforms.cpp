@@ -98,6 +98,8 @@ namespace ngfem
         {
             if (count < 0)
                 throw Exception("FreshSignature: count must be non-negative");
+            if (count == 0)
+                return std::string();
             std::string out;
             out.reserve(size_t(count));
             for (char c : SIGNATURE)
@@ -1057,9 +1059,9 @@ namespace ngfem
         return DoubleFormCF((-1.0) * star->GetCoefficients(), n - p, n - q, n);
     }
 
-    shared_ptr<ScalarFieldCoefficientFunction> SlotInnerProduct(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb)
+    shared_ptr<ScalarFieldCoefficientFunction> SlotInnerProduct(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, bool forms)
     {
-        return M.SlotInnerProduct(a, vb);
+        return M.SlotInnerProduct(a, vb, forms);
     }
 
     shared_ptr<DoubleFormCoefficientFunction> SwapDoubleFormSlots(shared_ptr<DoubleFormCoefficientFunction> a)
@@ -1187,8 +1189,8 @@ void ExportKForms(py::module m)
           { return HodgeStar(a, *M, vb); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL);
     m.def("inv_star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
           { return InverseHodgeStar(a, *M, vb); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL);
-    m.def("slot_inner_product", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
-          { return SlotInnerProduct(a, *M, vb); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL);
+    m.def("slot_inner_product", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, bool forms)
+          { return SlotInnerProduct(a, *M, vb, forms); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL, py::arg("forms") = true);
 
     m.def("delta", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M)
           { return M->Coderivative(a); }, py::arg("a"), py::arg("M"));
