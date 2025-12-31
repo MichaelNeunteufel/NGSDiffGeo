@@ -755,8 +755,10 @@ class RiemannianManifold(_CPP_RiemannianManifold):
             out = _CPP_RiemannianManifold.CovDiv(self, tf, vb)
         return as_tensorfield(out, dim=self.dim)
 
-    def Trace(self, tf, vb=None, index1=0, index2=1, l=1):
+    def Trace(self, tf, vb=None, index1=0, index2=1, l=None):
         if isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
+            if l is None:
+                l = 1
             if vb is None:
                 out = _CPP_RiemannianManifold.Trace(self, tf, l)
             else:
@@ -764,6 +766,11 @@ class RiemannianManifold(_CPP_RiemannianManifold):
             if isinstance(out, _CPP_DoubleForm):
                 return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=self.dim)
             return as_scalarfield(out, dim=self.dim)
+
+        if l is not None:
+            if l == 0:
+                return as_tensorfield(tf, dim=self.dim)
+            raise ValueError("Trace: l is only supported for double-forms; use index1/index2 for tensor fields")
 
         if vb is None:
             out = _CPP_RiemannianManifold.Trace(self, tf, index1=index1, index2=index2)

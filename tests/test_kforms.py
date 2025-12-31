@@ -284,6 +284,71 @@ def test_doubleform_wedge_blockwise_2d():
     assert l2_norm(overflow, mesh) == pytest.approx(0)
 
 
+def test_doubleform_wedge_right_overflow_zero():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+
+    alpha = dg.OneForm(CF((x, y)))
+    beta = dg.TwoForm(CF((0, 1, -1, 0), dims=(2, 2)), dim=dim)
+    left = dg.DoubleForm(Einsum("i,jk->ijk", alpha, beta), p=1, q=2, dim=dim)
+
+    gamma = dg.OneForm(CF((y, x)))
+    delta = dg.OneForm(CF((1 + x, 1 + y)))
+    right = dg.DoubleForm(Einsum("i,j->ij", gamma, delta), p=1, q=1, dim=dim)
+
+    overflow = dg.Wedge(left, right)
+
+    assert overflow.degree_left == 2
+    assert overflow.degree_right == 3
+    assert l2_norm(overflow, mesh) == pytest.approx(0)
+
+
+def test_doubleform_wedge_right_slot_nonzero():
+    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.6))
+    dim = 3
+
+    rm = dg.RiemannianManifold(Id(dim))
+    g_11 = dg.DoubleForm(rm.G, p=1, q=1, dim=dim)
+    alpha = dg.OneForm(CF((0.3 * x * y, z**2, -0.1 * x)))
+    tmp = dg.DoubleForm(alpha, p=0, q=1, dim=dim)
+
+    wedged = dg.Wedge(g_11, tmp)
+    swapped = dg.DoubleForm(Einsum("ijk->ikj", wedged.coef), p=1, q=2, dim=dim)
+
+    assert wedged.degree_left == 1
+    assert wedged.degree_right == 2
+    assert l2_norm(wedged, mesh) > 1e-6
+    assert l2_norm(wedged + swapped, mesh) == pytest.approx(0)
+
+
+def test_doubleform_wedge_right_only_block():
+    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.6))
+    dim = 3
+
+    u = dg.OneForm(CF((x, y, z)))
+    v = dg.OneForm(CF((1 + x, 1 + y, 1 + z)))
+    du = dg.DoubleForm(u, p=0, q=1, dim=dim)
+    dv = dg.DoubleForm(v, p=0, q=1, dim=dim)
+
+    w = dg.Wedge(du, dv)
+    expected = dg.DoubleForm(
+        Einsum("i,j->ij", u, v) - Einsum("i,j->ji", u, v), p=0, q=2, dim=dim
+    )
+
+    assert l2_error(w, expected, mesh) == pytest.approx(0)
+
+
+def test_doubleform_right_slot_consistency():
+    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.6))
+    dim = 3
+
+    alpha = dg.OneForm(CF((0.3 * x * y, z**2, -0.1 * x)))
+    tmp01 = dg.DoubleForm(alpha, p=0, q=1, dim=dim)
+    tmp10 = dg.DoubleForm(alpha, p=1, q=0, dim=dim)
+
+    assert l2_error(tmp01, tmp10.trans, mesh) == pytest.approx(0)
+
+
 def test_doubleform_hodge_star_involution():
     mesh = Mesh(unit_cube.GenerateMesh(maxh=0.6))
     dim = 3
@@ -347,6 +412,18 @@ def test_doubleform_slot_inner_product_full_contraction():
     assert l2_error(sip, expected, mesh) == pytest.approx(0)
 
 
+def test_doubleform_slot_inner_product_degree_mismatch_raises():
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.OneForm(CF((x, y)))
+    beta = dg.TwoForm(CF((0, 1, -1, 0), dims=(2, 2)), dim=dim)
+    df = dg.DoubleForm(Einsum("i,jk->ijk", alpha, beta), p=1, q=2, dim=dim)
+
+    with pytest.raises(Exception):
+        dg.slot_inner_product(df, rm)
+
+
 def test_doubleform_transpose_swaps_slots():
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
     dim = 2
@@ -390,6 +467,22 @@ def test_doubleform_trace_l_parameter():
 
     trace3 = rm.Trace(df, l=3)
     assert l2_norm(trace3, mesh) == pytest.approx(0)
+
+
+def test_doubleform_trace_l0_identity():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.OneForm(CF((x, y)))
+    beta = dg.OneForm(CF((1 + x, 1 + y)))
+    df = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+
+    traced = rm.Trace(df, l=0)
+
+    assert traced.degree_left == 1
+    assert traced.degree_right == 1
+    assert l2_error(traced, df, mesh) == pytest.approx(0)
 
 
 def test_inner_product_forms_scaling_kforms():

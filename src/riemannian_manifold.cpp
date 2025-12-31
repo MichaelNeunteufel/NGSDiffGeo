@@ -1014,7 +1014,7 @@ namespace ngfem
 
         std::string eins = gsig + "," + sig + "->" + out_sig;
         auto contracted = EinsumCF(eins, {metric_inv, tf});
-        auto alt = BlockAlternationCF(contracted, p + q, 0, p + 1, dim);
+        auto alt = BlockAlternationByPermutationCF(contracted, p + q, 0, p + 1);
 
         double scale = 1.0 / double(Factorial(p));
         auto out = scale * alt;
@@ -1112,11 +1112,11 @@ void ExportRiemannianManifold(py::module m)
         .def("CovDiv", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb)
              { return self->CovDivergence(tf, vb); }, "Covariant divergence of a TensorField", py::arg("tf"), py::arg("vb") = VOL)
         .def("Trace", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, size_t l, VorB vb)
-             { return self->Trace(tf, l, vb); }, "Trace of DoubleForm: contract first l left/right slots", py::arg("tf"), py::arg("l") = 1, py::arg("vb") = VOL)
+             { return self->Trace(tf, l, vb); }, "Trace of DoubleForm: contract first l left/right slots (l=0 returns input).", py::arg("tf"), py::arg("l") = 1, py::arg("vb") = VOL)
         .def("SlotInnerProduct", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb, bool forms)
              { return self->SlotInnerProduct(tf, vb, forms); }, "Inner product of left/right slots for (p,p) DoubleForm", py::arg("tf"), py::arg("vb") = VOL, py::arg("forms") = true)
         .def("Trace", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb, size_t index1, size_t index2)
-             { return self->Trace(tf, index1, index2, vb); }, "Trace of TensorField in two indices. Default are the first two.", py::arg("tf"), py::arg("vb") = VOL, py::arg("index1") = 0, py::arg("index2") = 1)
+             { return self->Trace(tf, index1, index2, vb); }, "Trace of TensorField in two indices (l is only supported for DoubleForm).", py::arg("tf"), py::arg("vb") = VOL, py::arg("index1") = 0, py::arg("index2") = 1)
         .def("Contraction", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, shared_ptr<VectorFieldCoefficientFunction> vf, size_t slot)
              { return self->Contraction(tf, vf, slot); }, "Contraction of TensorField with a VectorField at given slot. Default slot is the first.", py::arg("tf"), py::arg("vf"), py::arg("slot") = 0)
         .def("Transpose", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, size_t index1, size_t index2)

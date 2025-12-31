@@ -12,8 +12,14 @@ namespace ngfem
     {
         inline int Factorial(int n)
         {
-            int f = 1;
-            for (int i = 2; i <= n; ++i)
+            static constexpr std::array<int, 9> table = {1, 1, 2, 6, 24, 120, 720, 5040, 40320};
+            if (n < 0)
+                throw Exception("Factorial: n must be non-negative");
+            if (n < int(table.size()))
+                return table[size_t(n)];
+
+            int f = table.back();
+            for (int i = int(table.size()); i <= n; ++i)
                 f *= i;
             return f;
         }
@@ -170,7 +176,53 @@ namespace ngfem
             double scale = 1.0 / double(Factorial(block_len));
             return scale * contracted;
         }
+
     } // namespace
+
+    shared_ptr<CoefficientFunction> BlockAlternationByPermutationCF(shared_ptr<CoefficientFunction> T, int rank_total, int block_start, int block_len)
+    {
+        if (!T)
+            throw Exception("BlockAlternationByPermutationCF: input coefficient is null");
+        if (rank_total < 0 || rank_total > 8)
+            throw Exception("BlockAlternationByPermutationCF: only ranks 0-8 supported");
+        if (block_len < 0 || block_len > 4)
+            throw Exception("BlockAlternationByPermutationCF: block size must be in [0, 4]");
+        if (block_start < 0 || block_start + block_len > rank_total)
+            throw Exception("BlockAlternationByPermutationCF: block range out of bounds");
+        if (block_len <= 1)
+            return T;
+
+        shared_ptr<TensorFieldCoefficientFunction> tf;
+        if (auto ttf = dynamic_pointer_cast<TensorFieldCoefficientFunction>(T))
+            tf = ttf;
+        else
+            tf = TensorFieldCF(T, std::string(size_t(rank_total), '1'));
+
+        if (int(tf->Dimensions().Size()) != rank_total)
+            throw Exception("BlockAlternationByPermutationCF: tensor rank mismatch");
+
+        const auto &perms = GeneratePermutations(block_len);
+        if ((int)perms.size() != Factorial(block_len))
+            throw Exception("BlockAlternationByPermutationCF: permutation generation broken");
+
+        shared_ptr<CoefficientFunction> accum;
+        std::vector<int> order;
+        order.resize(size_t(rank_total));
+        for (const auto &perm : perms)
+        {
+            for (int i = 0; i < rank_total; ++i)
+                order[size_t(i)] = i;
+            for (int i = 0; i < block_len; ++i)
+                order[size_t(block_start + i)] = block_start + perm[size_t(i)];
+
+            shared_ptr<CoefficientFunction> term = PermuteTensorCF(tf, order);
+            int sign = PermutationSign(perm, block_len);
+            if (sign == -1)
+                term = (-1.0) * term;
+            accum = accum ? (accum + term) : term;
+        }
+        return accum;
+    }
 
     KFormCoefficientFunction::KFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, uint8_t ak, uint8_t adim)
         : TensorFieldCoefficientFunction(ac1, std::string(size_t(ak), '1')), degree(ak), dim(adim)
@@ -277,7 +329,7 @@ namespace ngfem
     }
 
     shared_ptr<CoefficientFunction> DoubleFormCoefficientFunction::Diff(const CoefficientFunction *var,
-                                                                         shared_ptr<CoefficientFunction> dir) const
+                                                                        shared_ptr<CoefficientFunction> dir) const
     {
         if (this == var)
             return dir;
@@ -365,7 +417,8 @@ namespace ngfem
 
             int comp_dim = this->Dimension();
             valid_indices.reserve(comp_dim);
-            lin_table.resize(size_t(comp_dim) * perms.size(), -1);
+            lin_table.clear();
+            lin_table.reserve(size_t(comp_dim) * perms.size());
 
             std::array<int, 4> multi = {0, 0, 0, 0};
             for (int idx = 0; idx < comp_dim; ++idx)
@@ -398,7 +451,7 @@ namespace ngfem
                         lin += multi[perms[p][j]] * stride;
                         stride *= dim;
                     }
-                    lin_table[size_t(idx) * perms.size() + p] = lin;
+                    lin_table.push_back(lin);
                 }
             }
         }
@@ -434,10 +487,11 @@ namespace ngfem
             c1->NonZeroPattern(ud, input);
 
             values = AutoDiffDiff<1, NonZero>(false);
-            for (int idx : valid_indices)
+            for (size_t vi = 0; vi < valid_indices.size(); ++vi)
             {
+                int idx = valid_indices[vi];
                 auto accum = AutoDiffDiff<1, NonZero>(false);
-                const size_t base = size_t(idx) * perms.size();
+                const size_t base = vi * perms.size();
                 for (size_t p = 0; p < perms.size(); ++p)
                     accum = accum + input(lin_table[base + p]);
                 values(idx) = accum;
@@ -473,15 +527,14 @@ namespace ngfem
             FlatMatrix<T, ORD> input(comp_dim, mir.Size(), temp.Data());
             c1->Evaluate(mir, input);
 
+            values = T(0);
             for (size_t ip = 0; ip < mir.Size(); ++ip)
             {
-                for (int idx = 0; idx < comp_dim; ++idx)
-                    values(idx, ip) = T(0);
-
-                for (int idx : valid_indices)
+                for (size_t vi = 0; vi < valid_indices.size(); ++vi)
                 {
+                    int idx = valid_indices[vi];
                     T accum = T(0);
-                    const size_t base = size_t(idx) * perms.size();
+                    const size_t base = vi * perms.size();
                     for (size_t p = 0; p < perms.size(); ++p)
                     {
                         int lin = lin_table[base + p];
@@ -527,218 +580,6 @@ namespace ngfem
     shared_ptr<CoefficientFunction> AlternationCF(shared_ptr<CoefficientFunction> T, int rank, int dim)
     {
         return make_shared<AlternationCoefficientFunction>(T, rank, dim);
-    }
-
-    class BlockAlternationCoefficientFunction : public T_CoefficientFunction<BlockAlternationCoefficientFunction>
-    {
-        shared_ptr<CoefficientFunction> c1;
-        int rank_total;
-        int block_start;
-        int block_len;
-        int dim;
-        std::vector<std::array<int, 4>> perms;
-        std::vector<int> signs;
-        std::vector<int> valid_indices;
-        std::vector<int> lin_table;
-
-    public:
-        BlockAlternationCoefficientFunction(shared_ptr<CoefficientFunction> ac1, int arank, int ablock_start, int ablock_len, int adim)
-            : T_CoefficientFunction<BlockAlternationCoefficientFunction>(ac1->Dimension(), ac1->IsComplex()),
-              c1(ac1), rank_total(arank), block_start(ablock_start), block_len(ablock_len), dim(adim)
-        {
-            if (rank_total < 0 || rank_total > 8)
-                throw Exception("BlockAlternationCF: only ranks 0-8 supported");
-            if (block_len < 0 || block_len > 4)
-                throw Exception("BlockAlternationCF: block size must be in [0, 4]");
-            if (block_start < 0 || block_start + block_len > rank_total)
-                throw Exception("BlockAlternationCF: block range out of bounds");
-            if (dim < 1 || dim > 4)
-                throw Exception("BlockAlternationCF: dim must be in {1,2,3,4}");
-
-            if (c1->Dimensions().Size() != size_t(rank_total))
-                throw Exception("BlockAlternationCF: tensor rank mismatch");
-            for (auto d : c1->Dimensions())
-                if (d != dim)
-                    throw Exception("BlockAlternationCF: tensor dimensions must equal dim");
-
-            this->SetDimensions(c1->Dimensions());
-
-            perms = GeneratePermutations(block_len);
-            if ((int)perms.size() != Factorial(block_len))
-                throw Exception("BlockAlternationCF: permutation generation broken");
-
-            signs.resize(perms.size());
-            for (size_t i = 0; i < perms.size(); ++i)
-                signs[i] = PermutationSign(perms[i], block_len);
-
-            int comp_dim = this->Dimension();
-            valid_indices.reserve(comp_dim);
-            lin_table.resize(size_t(comp_dim) * perms.size(), -1);
-
-            std::vector<int> multi(size_t(rank_total), 0);
-            for (int idx = 0; idx < comp_dim; ++idx)
-            {
-                int rem = idx;
-                for (int j = 0; j < rank_total; ++j)
-                {
-                    multi[size_t(j)] = rem % dim;
-                    rem /= dim;
-                }
-
-                bool repeated = false;
-                for (int a = 0; a < block_len && !repeated; ++a)
-                    for (int b = a + 1; b < block_len; ++b)
-                        if (multi[size_t(block_start + a)] == multi[size_t(block_start + b)])
-                        {
-                            repeated = true;
-                            break;
-                        }
-
-                if (repeated)
-                    continue;
-
-                valid_indices.push_back(idx);
-                for (size_t p = 0; p < perms.size(); ++p)
-                {
-                    int lin = 0;
-                    int stride = 1;
-                    for (int j = 0; j < rank_total; ++j)
-                    {
-                        int val = multi[size_t(j)];
-                        if (j >= block_start && j < block_start + block_len)
-                        {
-                            int rel = j - block_start;
-                            val = multi[size_t(block_start + perms[p][rel])];
-                        }
-                        lin += val * stride;
-                        stride *= dim;
-                    }
-                    lin_table[size_t(idx) * perms.size() + p] = lin;
-                }
-            }
-        }
-
-        virtual string GetDescription() const override
-        {
-            return "BlockAlternationCF";
-        }
-
-        auto GetCArgs() const { return tuple{c1}; }
-
-        void DoArchive(Archive &ar) override
-        {
-        }
-        virtual void TraverseTree(const function<void(CoefficientFunction &)> &func) override
-        {
-            c1->TraverseTree(func);
-            func(*this);
-        }
-
-        virtual Array<shared_ptr<CoefficientFunction>> InputCoefficientFunctions() const override
-        {
-            return Array<shared_ptr<CoefficientFunction>>({c1});
-        }
-
-        virtual void NonZeroPattern(const class ProxyUserData &ud,
-                                    FlatVector<AutoDiffDiff<1, NonZero>> values) const override
-        {
-            Vector<AutoDiffDiff<1, NonZero>> input(values.Size());
-            c1->NonZeroPattern(ud, input);
-
-            values = AutoDiffDiff<1, NonZero>(false);
-            for (int idx : valid_indices)
-            {
-                auto accum = AutoDiffDiff<1, NonZero>(false);
-                const size_t base = size_t(idx) * perms.size();
-                for (size_t p = 0; p < perms.size(); ++p)
-                    accum = accum + input(lin_table[base + p]);
-                values(idx) = accum;
-            }
-        }
-
-        shared_ptr<CoefficientFunction>
-        Transform(CoefficientFunction::T_Transform &transformation) const override
-        {
-            auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
-            if (transformation.cache.count(thisptr))
-                return transformation.cache[thisptr];
-            if (transformation.replace.count(thisptr))
-                return transformation.replace[thisptr];
-            auto newcf = make_shared<BlockAlternationCoefficientFunction>(c1->Transform(transformation), rank_total, block_start, block_len, dim);
-            transformation.cache[thisptr] = newcf;
-            return newcf;
-        }
-
-        using T_CoefficientFunction<BlockAlternationCoefficientFunction>::Evaluate;
-
-        virtual double Evaluate(const BaseMappedIntegrationPoint &ip) const override
-        {
-            throw Exception("BlockAlternationCF:: scalar evaluate called");
-        }
-
-        template <typename MIR, typename T, ORDERING ORD>
-        void T_Evaluate(const MIR &mir, BareSliceMatrix<T, ORD> values) const
-        {
-            int comp_dim = this->Dimension();
-
-            Array<T> temp(comp_dim * mir.Size());
-            FlatMatrix<T, ORD> input(comp_dim, mir.Size(), temp.Data());
-            c1->Evaluate(mir, input);
-
-            for (size_t ip = 0; ip < mir.Size(); ++ip)
-            {
-                for (int idx = 0; idx < comp_dim; ++idx)
-                    values(idx, ip) = T(0);
-
-                for (int idx : valid_indices)
-                {
-                    T accum = T(0);
-                    const size_t base = size_t(idx) * perms.size();
-                    for (size_t p = 0; p < perms.size(); ++p)
-                    {
-                        int lin = lin_table[base + p];
-                        accum += T(signs[p]) * input(lin, ip);
-                    }
-                    values(idx, ip) = accum;
-                }
-            }
-        }
-
-        template <typename MIR, typename T, ORDERING ORD>
-        void T_Evaluate(const MIR &ir, FlatArray<BareSliceMatrix<T, ORD>> input,
-                        BareSliceMatrix<T, ORD> values) const
-        {
-            this->T_Evaluate(ir, values);
-        }
-
-        shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
-                                             shared_ptr<CoefficientFunction> dir) const override
-        {
-            if (this == var)
-                return dir;
-            return make_shared<BlockAlternationCoefficientFunction>(c1->Diff(var, dir), rank_total, block_start, block_len, dim);
-        }
-
-        shared_ptr<CoefficientFunction> DiffJacobi(const CoefficientFunction *var, T_DJC &cache) const override
-        {
-            auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
-            if (cache.find(thisptr) != cache.end())
-                return cache[thisptr];
-
-            if (this == var)
-                return IdentityCF(this->Dimensions());
-
-            auto res = make_shared<BlockAlternationCoefficientFunction>(c1->DiffJacobi(var, cache), rank_total, block_start, block_len, dim);
-            cache[thisptr] = res;
-            return res;
-        }
-
-        virtual bool IsZeroCF() const override { return c1->IsZeroCF(); }
-    };
-
-    shared_ptr<CoefficientFunction> BlockAlternationCF(shared_ptr<CoefficientFunction> T, int rank, int block_start, int block_len, int dim)
-    {
-        return make_shared<BlockAlternationCoefficientFunction>(T, rank, block_start, block_len, dim);
     }
 
     shared_ptr<KFormCoefficientFunction> KFormCF(shared_ptr<CoefficientFunction> cf, int k, int dim)
@@ -928,11 +769,11 @@ namespace ngfem
         auto reordered = PermuteTensorCF(T, order);
         shared_ptr<CoefficientFunction> alt_left = reordered;
         if (p + r > 1)
-            alt_left = BlockAlternationCF(reordered, total, 0, p + r, dim);
+            alt_left = BlockAlternationByPermutationCF(reordered, total, 0, p + r);
 
         shared_ptr<CoefficientFunction> alt_both = alt_left;
         if (q + s > 1)
-            alt_both = BlockAlternationCF(alt_left, total, p + r, q + s, dim);
+            alt_both = BlockAlternationByPermutationCF(alt_left, total, p + r, q + s);
 
         double scale = 1.0 / double(Factorial(p) * Factorial(r) * Factorial(q) * Factorial(s));
         auto out = scale * alt_both;
@@ -1143,9 +984,9 @@ void ExportKForms(py::module m)
                shared_ptr<ScalarFieldCoefficientFunction>>(m, "ScalarField")
         .def(py::init([](shared_ptr<CoefficientFunction> cf, int dim)
                       { return ScalarFieldCF(cf, dim); }),
-             py::arg("cf"), py::arg("dim") = -1)
+             py::arg("cf"), py::arg("dim"))
         .def_static("from_cf", [](shared_ptr<CoefficientFunction> cf, int dim)
-                    { return ScalarFieldCF(cf, dim); }, py::arg("cf"), py::arg("dim") = -1);
+                    { return ScalarFieldCF(cf, dim); }, py::arg("cf"), py::arg("dim"));
 
     py::class_<OneFormCoefficientFunction,
                KFormCoefficientFunction,
