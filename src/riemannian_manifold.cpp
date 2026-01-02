@@ -8,6 +8,7 @@
 // #include <fem.hpp>
 #include <integratorcf.hpp>
 #include <hcurlcurlfespace.hpp>
+#include <vector>
 
 namespace ngfem
 {
@@ -21,6 +22,10 @@ namespace ngfem
 
         inline int Factorial(int n)
         {
+            static const int facts[] = {
+                1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880};
+            if (n >= 0 && n < int(sizeof(facts) / sizeof(facts[0])))
+                return facts[n];
             int f = 1;
             for (int i = 2; i <= n; ++i)
                 f *= i;
@@ -33,6 +38,30 @@ namespace ngfem
                 if (used.find(c) == std::string_view::npos)
                     return c;
             throw Exception("s_op (double-form): not enough signature labels available");
+        }
+
+        shared_ptr<TensorFieldCoefficientFunction> PermuteTensorSlots(shared_ptr<TensorFieldCoefficientFunction> tf,
+                                                                       const std::vector<int> &order)
+        {
+            int rank = int(order.size());
+            if (int(tf->Dimensions().Size()) != rank)
+                throw Exception("PermuteTensorSlots: rank mismatch");
+
+            std::string sig = tf->GetSignature();
+            std::string cov = tf->GetCovariantIndices();
+            std::string out_sig(size_t(rank), 'a');
+            std::string out_cov(size_t(rank), '1');
+
+            for (int i = 0; i < rank; ++i)
+            {
+                if (order[size_t(i)] < 0 || order[size_t(i)] >= rank)
+                    throw Exception("PermuteTensorSlots: permutation index out of range");
+                out_sig[size_t(i)] = sig[size_t(order[size_t(i)])];
+                out_cov[size_t(i)] = cov[size_t(order[size_t(i)])];
+            }
+
+            auto out_cf = EinsumCF(sig + "->" + out_sig, {tf});
+            return TensorFieldCF(out_cf, out_cov);
         }
     } // namespace
 
@@ -99,7 +128,8 @@ namespace ngfem
         g_E_inv = one_cf;
         if (dim == 2)
         {
-            vol[BND] = sqrt(InnerProduct(g * tv, tv));
+            auto g_tv_norm = InnerProduct(g * tv, tv);
+            vol[BND] = sqrt(g_tv_norm);
             g_tv = VectorFieldCF(1 / vol[BND] * tv);
 
             // more efficient?
@@ -116,7 +146,8 @@ namespace ngfem
         else if (dim == 3)
         {
             vol[BND] = sqrt(InnerProduct(CofactorCF(g) * nv, nv));
-            vol[BBND] = sqrt(InnerProduct(g * tv, tv));
+            auto g_tv_norm = InnerProduct(g * tv, tv);
+            vol[BBND] = sqrt(g_tv_norm);
 
             g_tv = VectorFieldCF(1 / vol[BBND] * tv);
 
@@ -126,8 +157,8 @@ namespace ngfem
 
             auto tv_mat = tv->Reshape(Array<int>({dim, 1}));
             auto P_E = tv_mat * TransposeCF(tv_mat);
-            g_E = InnerProduct(g * tv, tv) * P_E;
-            g_E_inv = 1 / InnerProduct(g * tv, tv) * P_E;
+            g_E = g_tv_norm * P_E;
+            g_E_inv = 1 / g_tv_norm * P_E;
         }
 
         g_nv = VectorFieldCF(vol[VOL] / vol[BND] * g_inv * nv);
@@ -503,11 +534,13 @@ namespace ngfem
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::Cross(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2) const
     {
+        if (!c1 || !c2)
+            throw Exception("Cross: inputs must be non-null");
         string cov_ind1 = c1->GetCovariantIndices();
         string cov_ind2 = c2->GetCovariantIndices();
         if (cov_ind1.size() != 1 || cov_ind2.size() != 1)
             throw Exception("Cross: only available for vector fields and 1-forms yet.");
-        if (c1->Dimensions()[0] != 3)
+        if (c1->Dimensions()[0] != 3 || c2->Dimensions()[0] != 3)
         {
             throw Exception("Cross: only available for 3D yet.");
         }
@@ -592,6 +625,100 @@ namespace ngfem
         return KFormCF(signed_cf, k - 1, dim);
     }
 
+    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::CovExteriorDerivative1(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb) const
+    {
+        if (!tf)
+            throw Exception("CovExteriorDerivative1: input must be non-null");
+        if (vb != VOL)
+            throw Exception("CovExteriorDerivative1: only implemented for vb=VOL yet.");
+        if (tf->DimensionOfSpace() != dim)
+            throw Exception("CovExteriorDerivative1: double-form dimension does not match manifold dimension");
+
+        int p = tf->LeftDegree();
+        int q = tf->RightDegree();
+        if (p + 1 > dim)
+            return ZeroDoubleForm(p + 1, q, dim);
+
+        auto cov_der = CovDerivative(tf, vb); // [0 | I | J]
+        int total = p + q + 1;
+        auto alt = BlockAlternationByPermutationCF(cov_der, total, 0, p + 1);
+        double scale = 1.0 / double(Factorial(p));
+        auto out = scale * alt;
+        return DoubleFormCF(out, p + 1, q, dim);
+    }
+
+    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::CovExteriorDerivative2(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb) const
+    {
+        if (!tf)
+            throw Exception("CovExteriorDerivative2: input must be non-null");
+        if (vb != VOL)
+            throw Exception("CovExteriorDerivative2: only implemented for vb=VOL yet.");
+        if (tf->DimensionOfSpace() != dim)
+            throw Exception("CovExteriorDerivative2: double-form dimension does not match manifold dimension");
+
+        int p = tf->LeftDegree();
+        int q = tf->RightDegree();
+        if (q + 1 > dim)
+            return ZeroDoubleForm(p, q + 1, dim);
+
+        auto cov_der = CovDerivative(tf, vb); // [0 | I | J]
+        int total = p + q + 1;
+
+        std::vector<int> order;
+        order.reserve(size_t(total));
+        for (int i = 0; i < p; ++i)
+            order.push_back(1 + i);
+        order.push_back(0);
+        for (int i = 0; i < q; ++i)
+            order.push_back(1 + p + i);
+
+        auto reordered = PermuteTensorSlots(cov_der, order); // [I | 0 | J]
+        auto alt = BlockAlternationByPermutationCF(reordered, total, p, q + 1);
+        double scale = 1.0 / double(Factorial(q));
+        auto out = scale * alt;
+        return DoubleFormCF(out, p, q + 1, dim);
+    }
+
+    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::CovCodifferential1(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb) const
+    {
+        if (!tf)
+            throw Exception("CovCodifferential1: input must be non-null");
+        if (vb != VOL)
+            throw Exception("CovCodifferential1: only implemented for vb=VOL yet.");
+        if (tf->DimensionOfSpace() != dim)
+            throw Exception("CovCodifferential1: double-form dimension does not match manifold dimension");
+
+        int p = tf->LeftDegree();
+        int q = tf->RightDegree();
+        if (p == 0)
+            return ZeroDoubleForm(0, q, dim);
+
+        auto cov_der = CovDerivative(tf, vb); // [0 | I | J]
+        auto traced = Trace(cov_der, 0, 1, vb);
+        auto out = (-1.0) * traced;
+        return DoubleFormCF(out, p - 1, q, dim);
+    }
+
+    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::CovCodifferential2(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb) const
+    {
+        if (!tf)
+            throw Exception("CovCodifferential2: input must be non-null");
+        if (vb != VOL)
+            throw Exception("CovCodifferential2: only implemented for vb=VOL yet.");
+        if (tf->DimensionOfSpace() != dim)
+            throw Exception("CovCodifferential2: double-form dimension does not match manifold dimension");
+
+        int p = tf->LeftDegree();
+        int q = tf->RightDegree();
+        if (q == 0)
+            return ZeroDoubleForm(p, 0, dim);
+
+        auto cov_der = CovDerivative(tf, vb); // [0 | I | J]
+        auto traced = Trace(cov_der, 0, size_t(p + 1), vb);
+        auto out = (-1.0) * traced;
+        return DoubleFormCF(out, p, q - 1, dim);
+    }
+
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::CovDerivative(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb) const
     {
         if (vb != VOL)
@@ -617,15 +744,15 @@ namespace ngfem
 
         // General tensor field
         string signature = c1->GetSignature();
-        string tmp_signature = c1->GetSignature();
+        string tmp_signature = signature;
         string cov_ind = c1->GetCovariantIndices();
-        char new_char = SIGNATURE[signature.size()];
+        char new_char = FreshLabel(signature);
 
         auto result = GradCF(c1->GetCoefficients(), dim);
         for (size_t i = 0; i < signature.size(); i++)
         {
-            tmp_signature = c1->GetSignature();
-            tmp_signature[i] = SIGNATURE[signature.size() + 1];
+            tmp_signature = signature;
+            tmp_signature[i] = FreshLabel(signature + std::string(1, new_char));
             if (cov_ind[i] == '1')
             {
                 // covariant
@@ -1085,6 +1212,64 @@ void ExportRiemannianManifold(py::module m)
              { return self->InvStar(a, vb); }, "Inverse Hodge star of a double-form using the manifold metric", py::arg("a"), py::arg("vb") = VOL)
         .def("delta", [](shared_ptr<RiemannianManifold> self, shared_ptr<KFormCoefficientFunction> a)
              { return self->Coderivative(a); }, "Exterior coderivative of a k-form using the manifold metric", py::arg("a"))
+        .def("d_cov", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, py::object slot, VorB vb)
+             {
+                 int slot_id = 0;
+                 if (py::isinstance<py::str>(slot))
+                 {
+                     std::string s = py::cast<std::string>(slot);
+                     if (s == "left" || s == "0")
+                         slot_id = 0;
+                     else if (s == "right" || s == "1")
+                         slot_id = 1;
+                     else
+                         throw Exception("d_cov: slot must be 'left'/'right' or 0/1");
+                 }
+                 else if (py::isinstance<py::int_>(slot))
+                 {
+                     slot_id = py::cast<int>(slot);
+                 }
+                 else
+                 {
+                     throw Exception("d_cov: slot must be 'left'/'right' or 0/1");
+                 }
+
+                 if (slot_id == 0)
+                     return self->CovExteriorDerivative1(tf, vb);
+                 if (slot_id == 1)
+                     return self->CovExteriorDerivative2(tf, vb);
+                 throw Exception("d_cov: slot must be 0/1 or 'left'/'right'");
+             },
+             "Exterior covariant derivative of a double-form", py::arg("tf"), py::arg("slot") = "left", py::arg("vb") = VOL)
+        .def("delta_cov", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, py::object slot, VorB vb)
+             {
+                 int slot_id = 0;
+                 if (py::isinstance<py::str>(slot))
+                 {
+                     std::string s = py::cast<std::string>(slot);
+                     if (s == "left" || s == "0")
+                         slot_id = 0;
+                     else if (s == "right" || s == "1")
+                         slot_id = 1;
+                     else
+                         throw Exception("delta_cov: slot must be 'left'/'right' or 0/1");
+                 }
+                 else if (py::isinstance<py::int_>(slot))
+                 {
+                     slot_id = py::cast<int>(slot);
+                 }
+                 else
+                 {
+                     throw Exception("delta_cov: slot must be 'left'/'right' or 0/1");
+                 }
+
+                 if (slot_id == 0)
+                     return self->CovCodifferential1(tf, vb);
+                 if (slot_id == 1)
+                     return self->CovCodifferential2(tf, vb);
+                 throw Exception("delta_cov: slot must be 0/1 or 'left'/'right'");
+             },
+             "Exterior covariant codifferential of a double-form", py::arg("tf"), py::arg("slot") = "left", py::arg("vb") = VOL)
         .def("InnerProduct", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf1, shared_ptr<DoubleFormCoefficientFunction> tf2, VorB vb, bool forms)
              { return self->IP(tf1, tf2, vb, forms); }, "InnerProduct of two DoubleForms", py::arg("tf1"), py::arg("tf2"), py::arg("vb") = VOL, py::arg("forms") = false)
         .def("InnerProduct", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf1, shared_ptr<TensorFieldCoefficientFunction> tf2, VorB vb, bool forms)
