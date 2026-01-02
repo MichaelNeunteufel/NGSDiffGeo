@@ -2,8 +2,35 @@
 
 #include <tensorcoefficient.hpp>
 
+#include <array>
+#include <mutex>
+
 namespace ngfem
 {
+  namespace
+  {
+    using EinsumCache = std::array<std::array<std::string, 53>, 53>;
+
+    std::string MakeEinsumSignature(int r1, int r2)
+    {
+      const std::string sig1 = SIGNATURE.substr(0, r1);
+      const std::string sig2 = SIGNATURE.substr(r1, r2);
+      const std::string sigout = SIGNATURE.substr(0, r1 + r2);
+      return sig1 + "," + sig2 + "->" + sigout;
+    }
+
+    EinsumCache &GetEinsumCache()
+    {
+      static EinsumCache cache;
+      static std::once_flag flag;
+      std::call_once(flag, [&]()
+                     {
+        for (int r1 = 0; r1 <= 52; ++r1)
+          for (int r2 = 0; r2 <= 52; ++r2)
+            cache[size_t(r1)][size_t(r2)] = MakeEinsumSignature(r1, r2); });
+      return cache;
+    }
+  } // namespace
 
   bool IsVectorField(const TensorFieldCoefficientFunction &t)
   {
@@ -54,23 +81,52 @@ namespace ngfem
     return make_shared<VectorFieldCoefficientFunction>(cf);
   }
 
+  shared_ptr<TensorFieldCoefficientFunction> PermuteTensorCF(shared_ptr<TensorFieldCoefficientFunction> tf,
+                                                             const std::vector<int> &order)
+  {
+    int rank = int(order.size());
+    if (int(tf->Dimensions().Size()) != rank)
+      throw Exception("PermuteTensorCF: rank mismatch");
+
+    std::string sig = tf->GetSignature();
+    std::string cov = tf->GetCovariantIndices();
+    std::string out_sig(size_t(rank), 'a');
+    std::string out_cov(size_t(rank), '1');
+
+    for (int i = 0; i < rank; ++i)
+    {
+      if (order[size_t(i)] < 0 || order[size_t(i)] >= rank)
+        throw Exception("PermuteTensorCF: permutation index out of range");
+      out_sig[size_t(i)] = sig[size_t(order[size_t(i)])];
+      out_cov[size_t(i)] = cov[size_t(order[size_t(i)])];
+    }
+
+    auto out_cf = EinsumCF(sig + "->" + out_sig, {tf});
+    return TensorFieldCF(out_cf, out_cov);
+  }
+
+  int Factorial(int n)
+  {
+    static constexpr std::array<int, 13> table = {
+        1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600};
+    if (n < 0)
+      throw Exception("Factorial: n must be non-negative");
+    if (n < int(table.size()))
+      return table[size_t(n)];
+
+    int f = table.back();
+    for (int i = int(table.size()); i <= n; ++i)
+      f *= i;
+    return f;
+  }
+
   shared_ptr<TensorFieldCoefficientFunction> TensorProduct(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2)
   {
     auto m1 = c1->Meta();
     auto m2 = c2->Meta();
     auto mout = m1.Concatenated(m2);
 
-    auto make_eins = [](int r1, int r2) -> std::string
-    {
-      const std::string sig1 = SIGNATURE.substr(0, r1);
-      const std::string sig2 = SIGNATURE.substr(r1, r2);
-      const std::string sigout = SIGNATURE.substr(0, r1 + r2);
-      return sig1 + "," + sig2 + "->" + sigout;
-    };
-    static std::array<std::array<std::string, 53>, 53> eins_cache;
-    if (eins_cache[m1.rank][m2.rank].empty())
-      eins_cache[m1.rank][m2.rank] = make_eins(m1.rank, m2.rank);
-    const std::string &eins = eins_cache[m1.rank][m2.rank];
+    const auto &eins = GetEinsumCache()[m1.rank][m2.rank];
 
     auto out_cf = EinsumCF(eins, {c1, c2});
     return TensorFieldCF(out_cf, mout);

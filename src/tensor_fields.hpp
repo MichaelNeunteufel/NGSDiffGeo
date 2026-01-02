@@ -5,6 +5,7 @@
 #include <coefficient.hpp>
 #include <cstdint>
 #include <string_view>
+#include <vector>
 
 /**
  * @file tensor_fields.hpp
@@ -194,6 +195,9 @@ namespace ngfem
      * @return A shared pointer to the created vector field coefficient function.
      */
     shared_ptr<VectorFieldCoefficientFunction> VectorFieldCF(const shared_ptr<CoefficientFunction> &cf);
+    shared_ptr<TensorFieldCoefficientFunction> PermuteTensorCF(shared_ptr<TensorFieldCoefficientFunction> tf,
+                                                                const std::vector<int> &order);
+    int Factorial(int n);
 
     /**
      * @class TensorFieldCoefficientFunction

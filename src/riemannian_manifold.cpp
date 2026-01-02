@@ -20,18 +20,6 @@ namespace ngfem
             return (exponent % 2 == 0) ? 1 : -1;
         }
 
-        inline int Factorial(int n)
-        {
-            static const int facts[] = {
-                1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880};
-            if (n >= 0 && n < int(sizeof(facts) / sizeof(facts[0])))
-                return facts[n];
-            int f = 1;
-            for (int i = 2; i <= n; ++i)
-                f *= i;
-            return f;
-        }
-
         char FreshLabel(std::string_view used)
         {
             for (char c : SIGNATURE)
@@ -40,29 +28,6 @@ namespace ngfem
             throw Exception("s_op (double-form): not enough signature labels available");
         }
 
-        shared_ptr<TensorFieldCoefficientFunction> PermuteTensorSlots(shared_ptr<TensorFieldCoefficientFunction> tf,
-                                                                       const std::vector<int> &order)
-        {
-            int rank = int(order.size());
-            if (int(tf->Dimensions().Size()) != rank)
-                throw Exception("PermuteTensorSlots: rank mismatch");
-
-            std::string sig = tf->GetSignature();
-            std::string cov = tf->GetCovariantIndices();
-            std::string out_sig(size_t(rank), 'a');
-            std::string out_cov(size_t(rank), '1');
-
-            for (int i = 0; i < rank; ++i)
-            {
-                if (order[size_t(i)] < 0 || order[size_t(i)] >= rank)
-                    throw Exception("PermuteTensorSlots: permutation index out of range");
-                out_sig[size_t(i)] = sig[size_t(order[size_t(i)])];
-                out_cov[size_t(i)] = cov[size_t(order[size_t(i)])];
-            }
-
-            auto out_cf = EinsumCF(sig + "->" + out_sig, {tf});
-            return TensorFieldCF(out_cf, out_cov);
-        }
     } // namespace
 
     using namespace std;
@@ -672,7 +637,7 @@ namespace ngfem
         for (int i = 0; i < q; ++i)
             order.push_back(1 + p + i);
 
-        auto reordered = PermuteTensorSlots(cov_der, order); // [I | 0 | J]
+        auto reordered = PermuteTensorCF(cov_der, order); // [I | 0 | J]
         auto alt = BlockAlternationByPermutationCF(reordered, total, p, q + 1);
         double scale = 1.0 / double(Factorial(q));
         auto out = scale * alt;
@@ -1171,6 +1136,22 @@ void ExportRiemannianManifold(py::module m)
 {
     using namespace ngfem;
 
+    auto parse_slot = [](py::object slot, const std::string &name) -> int
+    {
+        if (py::isinstance<py::str>(slot))
+        {
+            std::string s = py::cast<std::string>(slot);
+            if (s == "left" || s == "0")
+                return 0;
+            if (s == "right" || s == "1")
+                return 1;
+            throw Exception(name + ": slot must be 'left'/'right' or 0/1");
+        }
+        if (py::isinstance<py::int_>(slot))
+            return py::cast<int>(slot);
+        throw Exception(name + ": slot must be 'left'/'right' or 0/1");
+    };
+
     py::class_<RiemannianManifold, shared_ptr<RiemannianManifold>>(m, "RiemannianManifold")
         .def(py::init<shared_ptr<CoefficientFunction>>(), "constructor", py::arg("metric"))
         .def("VolumeForm", &RiemannianManifold::GetVolumeForm, "return the volume form of given dimension", py::arg("vb"))
@@ -1212,28 +1193,9 @@ void ExportRiemannianManifold(py::module m)
              { return self->InvStar(a, vb); }, "Inverse Hodge star of a double-form using the manifold metric", py::arg("a"), py::arg("vb") = VOL)
         .def("delta", [](shared_ptr<RiemannianManifold> self, shared_ptr<KFormCoefficientFunction> a)
              { return self->Coderivative(a); }, "Exterior coderivative of a k-form using the manifold metric", py::arg("a"))
-        .def("d_cov", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, py::object slot, VorB vb)
+        .def("d_cov", [parse_slot](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, py::object slot, VorB vb)
              {
-                 int slot_id = 0;
-                 if (py::isinstance<py::str>(slot))
-                 {
-                     std::string s = py::cast<std::string>(slot);
-                     if (s == "left" || s == "0")
-                         slot_id = 0;
-                     else if (s == "right" || s == "1")
-                         slot_id = 1;
-                     else
-                         throw Exception("d_cov: slot must be 'left'/'right' or 0/1");
-                 }
-                 else if (py::isinstance<py::int_>(slot))
-                 {
-                     slot_id = py::cast<int>(slot);
-                 }
-                 else
-                 {
-                     throw Exception("d_cov: slot must be 'left'/'right' or 0/1");
-                 }
-
+                 int slot_id = parse_slot(slot, "d_cov");
                  if (slot_id == 0)
                      return self->CovExteriorDerivative1(tf, vb);
                  if (slot_id == 1)
@@ -1241,28 +1203,9 @@ void ExportRiemannianManifold(py::module m)
                  throw Exception("d_cov: slot must be 0/1 or 'left'/'right'");
              },
              "Exterior covariant derivative of a double-form", py::arg("tf"), py::arg("slot") = "left", py::arg("vb") = VOL)
-        .def("delta_cov", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, py::object slot, VorB vb)
+        .def("delta_cov", [parse_slot](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, py::object slot, VorB vb)
              {
-                 int slot_id = 0;
-                 if (py::isinstance<py::str>(slot))
-                 {
-                     std::string s = py::cast<std::string>(slot);
-                     if (s == "left" || s == "0")
-                         slot_id = 0;
-                     else if (s == "right" || s == "1")
-                         slot_id = 1;
-                     else
-                         throw Exception("delta_cov: slot must be 'left'/'right' or 0/1");
-                 }
-                 else if (py::isinstance<py::int_>(slot))
-                 {
-                     slot_id = py::cast<int>(slot);
-                 }
-                 else
-                 {
-                     throw Exception("delta_cov: slot must be 'left'/'right' or 0/1");
-                 }
-
+                 int slot_id = parse_slot(slot, "delta_cov");
                  if (slot_id == 0)
                      return self->CovCodifferential1(tf, vb);
                  if (slot_id == 1)

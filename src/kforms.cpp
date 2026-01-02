@@ -4,26 +4,13 @@
 #include <algorithm>
 #include <array>
 #include <numeric>
+#include <mutex>
 #include <vector>
 
 namespace ngfem
 {
     namespace
     {
-        inline int Factorial(int n)
-        {
-            static constexpr std::array<int, 9> table = {1, 1, 2, 6, 24, 120, 720, 5040, 40320};
-            if (n < 0)
-                throw Exception("Factorial: n must be non-negative");
-            if (n < int(table.size()))
-                return table[size_t(n)];
-
-            int f = table.back();
-            for (int i = int(table.size()); i <= n; ++i)
-                f *= i;
-            return f;
-        }
-
         const std::vector<std::array<int, 4>> &GeneratePermutations(int rank)
         {
             if (rank < 0 || rank > 4)
@@ -100,6 +87,37 @@ namespace ngfem
             }
         }
 
+        struct PermOrderCacheEntry
+        {
+            bool ready = false;
+            std::vector<std::vector<int>> orders;
+        };
+
+        const std::vector<std::vector<int>> &GetBlockPermutationOrders(int rank_total, int block_start, int block_len,
+                                                                        const std::vector<std::array<int, 4>> &perms)
+        {
+            static std::mutex cache_mutex;
+            static std::array<std::array<std::array<PermOrderCacheEntry, 5>, 9>, 9> cache;
+
+            std::lock_guard<std::mutex> lock(cache_mutex);
+            auto &entry = cache[size_t(rank_total)][size_t(block_start)][size_t(block_len)];
+            if (!entry.ready)
+            {
+                entry.orders.resize(perms.size());
+                for (size_t p = 0; p < perms.size(); ++p)
+                {
+                    auto &order = entry.orders[p];
+                    order.resize(size_t(rank_total));
+                    for (int i = 0; i < rank_total; ++i)
+                        order[size_t(i)] = i;
+                    for (int i = 0; i < block_len; ++i)
+                        order[size_t(block_start + i)] = block_start + perms[p][size_t(i)];
+                }
+                entry.ready = true;
+            }
+            return entry.orders;
+        }
+
         std::string FreshSignature(std::string_view used, int count)
         {
             if (count < 0)
@@ -120,29 +138,6 @@ namespace ngfem
             if (int(out.size()) != count)
                 throw Exception("FreshSignature: not enough signature labels available");
             return out;
-        }
-
-        shared_ptr<TensorFieldCoefficientFunction> PermuteTensorCF(shared_ptr<TensorFieldCoefficientFunction> tf, const std::vector<int> &order)
-        {
-            int rank = int(order.size());
-            if (int(tf->Dimensions().Size()) != rank)
-                throw Exception("PermuteTensorCF: rank mismatch");
-
-            std::string sig = tf->GetSignature();
-            std::string cov = tf->GetCovariantIndices();
-            std::string out_sig(rank, 'a');
-            std::string out_cov(rank, '1');
-
-            for (int i = 0; i < rank; ++i)
-            {
-                if (order[i] < 0 || order[i] >= rank)
-                    throw Exception("PermuteTensorCF: permutation index out of range");
-                out_sig[i] = sig[size_t(order[i])];
-                out_cov[i] = cov[size_t(order[i])];
-            }
-
-            auto out_cf = EinsumCF(sig + "->" + out_sig, {tf});
-            return TensorFieldCF(out_cf, out_cov);
         }
 
         shared_ptr<CoefficientFunction> BlockHodgeStar(shared_ptr<TensorFieldCoefficientFunction> tf, int block_start, int block_len, int n, const RiemannianManifold &M)
@@ -194,7 +189,12 @@ namespace ngfem
 
         shared_ptr<TensorFieldCoefficientFunction> tf;
         if (auto ttf = dynamic_pointer_cast<TensorFieldCoefficientFunction>(T))
+        {
             tf = ttf;
+            for (char c : tf->GetCovariantIndices())
+                if (c != '1')
+                    throw Exception("BlockAlternationByPermutationCF: only covariant tensors are supported");
+        }
         else
             tf = TensorFieldCF(T, std::string(size_t(rank_total), '1'));
 
@@ -206,17 +206,11 @@ namespace ngfem
             throw Exception("BlockAlternationByPermutationCF: permutation generation broken");
 
         shared_ptr<CoefficientFunction> accum;
-        std::vector<int> order;
-        order.resize(size_t(rank_total));
-        for (const auto &perm : perms)
+        const auto &orders = GetBlockPermutationOrders(rank_total, block_start, block_len, perms);
+        for (size_t p = 0; p < perms.size(); ++p)
         {
-            for (int i = 0; i < rank_total; ++i)
-                order[size_t(i)] = i;
-            for (int i = 0; i < block_len; ++i)
-                order[size_t(block_start + i)] = block_start + perm[size_t(i)];
-
-            shared_ptr<CoefficientFunction> term = PermuteTensorCF(tf, order);
-            int sign = PermutationSign(perm, block_len);
+            shared_ptr<CoefficientFunction> term = PermuteTensorCF(tf, orders[p]);
+            int sign = PermutationSign(perms[p], block_len);
             if (sign == -1)
                 term = (-1.0) * term;
             accum = accum ? (accum + term) : term;
