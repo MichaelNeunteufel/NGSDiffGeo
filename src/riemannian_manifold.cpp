@@ -8,6 +8,8 @@
 // #include <fem.hpp>
 #include <integratorcf.hpp>
 #include <hcurlcurlfespace.hpp>
+#include <algorithm>
+#include <cctype>
 #include <vector>
 
 namespace ngfem
@@ -28,11 +30,31 @@ namespace ngfem
             throw Exception("s_op (double-form): not enough signature labels available");
         }
 
+        shared_ptr<TensorFieldCoefficientFunction> ApplyProjectorToIndex(shared_ptr<TensorFieldCoefficientFunction> tf,
+                                                                         shared_ptr<CoefficientFunction> proj,
+                                                                         size_t index)
+        {
+            if (!tf || !proj)
+                throw Exception("ApplyProjectorToIndex: inputs must be non-null");
+            std::string sig = tf->GetSignature();
+            if (index >= sig.size())
+                throw Exception("ApplyProjectorToIndex: index out of range");
+
+            char old_label = sig[index];
+            char new_label = FreshLabel(sig);
+            std::string sigmod = sig;
+            sigmod[index] = new_label;
+
+            std::string eins = ToString(new_label) + old_label + "," + sigmod + "->" + sig;
+            auto result = EinsumCF(eins, {proj, tf});
+            return TensorFieldCF(result, tf->GetCovariantIndices());
+        }
+
     } // namespace
 
     using namespace std;
-    RiemannianManifold::RiemannianManifold(shared_ptr<CoefficientFunction> _g)
-        : has_trial(false), is_regge(false), is_proxy(false), regge_proxy(nullptr), regge_space(nullptr), g(_g)
+    RiemannianManifold::RiemannianManifold(shared_ptr<CoefficientFunction> _g, double normal_sign_, double riemann_sign_)
+        : has_trial(false), is_regge(false), is_proxy(false), normal_sign(normal_sign_), riemann_sign(riemann_sign_), regge_proxy(nullptr), regge_space(nullptr), g(_g)
     {
         if (_g->Dimensions().Size() != 2 || _g->Dimensions()[0] != _g->Dimensions()[1])
             throw Exception("In RMF: input must be a square matrix");
@@ -81,7 +103,7 @@ namespace ngfem
         vol[VOL] = sqrt(det_g);
         auto one_cf = make_shared<ConstantCoefficientFunction>(1.0);
         tv = TangentialVectorCF(dim, false);
-        nv = NormalVectorCF(dim);
+        nv = normal_sign * NormalVectorCF(dim);
         auto nv_mat = nv->Reshape(Array<int>({dim, 1}));
         P_n = nv_mat * TransposeCF(nv_mat);
         P_F = IdentityCF(dim) - P_n;
@@ -91,6 +113,7 @@ namespace ngfem
         vol[BBBND] = one_cf;
         g_E = one_cf;
         g_E_inv = one_cf;
+
         if (dim == 2)
         {
             auto g_tv_norm = InnerProduct(g * tv, tv);
@@ -128,6 +151,8 @@ namespace ngfem
 
         g_nv = VectorFieldCF(vol[VOL] / vol[BND] * g_inv * nv);
 
+        P_F_g = IdentityCF(dim) - TensorProduct(g_nv, Lower(g_nv));
+
         if (is_regge)
         {
             if (is_proxy)
@@ -145,7 +170,7 @@ namespace ngfem
                 Scalar = ScalarFieldCF(g_proxy->GetAdditionalProxy("scalar"), dim);
                 if (!g_deriv || !chr1 || !chr2 || !Riemann || !Curvature || !Ricci || !Einstein || !Scalar)
                     throw Exception("In RMF: Could not load all additional proxy functions");
-                SFF = TensorFieldCF(EinsumCF("ijk,k->ij", {chr1->Reshape(Array<int>({dim, dim, dim})), g_nv}), "11");
+                SFF = TensorFieldCF(EinsumCF("ia,ijk,k,jb->ab", {P_F_g, chr1->Reshape(Array<int>({dim, dim, dim})), g_nv, P_F_g}), "11");
             }
             else
             {
@@ -191,7 +216,7 @@ namespace ngfem
                 Einstein_gf->SetDimensions(diffop_Einstein->Dimensions());
                 Einstein = TensorFieldCF(Einstein_gf, "11");
                 Scalar = ScalarFieldCF(make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop_scalar), dim);
-                SFF = TensorFieldCF(EinsumCF("ijk,k->ij", {chr1->Reshape(Array<int>({dim, dim, dim})), g_nv}), "11");
+                SFF = TensorFieldCF(EinsumCF("ia,ijk,k,jb->ab", {P_F_g, chr1->Reshape(Array<int>({dim, dim, dim})), g_nv, P_F_g}), "11");
             }
         }
         else
@@ -211,24 +236,72 @@ namespace ngfem
             chr2 = EinsumCF("ijl,lk->ijk", {chr1, g_inv});
 
             auto chr1_grad = GradCF(chr1, dim);
-            auto lin_part = EinsumCF("ijkl->kilj", {chr1_grad}) - EinsumCF("ijkl->likj", {chr1_grad});
-            auto non_lin_part = EinsumCF("ijm,klm->iklj", {chr1, chr2}) - EinsumCF("ijm,klm->ilkj", {chr2, chr1});
+            auto lin_part = chr1_grad - EinsumCF("ijkl->jikl", {chr1_grad});
+            auto non_lin_part = EinsumCF("jlm,ikm->ijkl", {chr1, chr2}) - EinsumCF("ilm,jkm->ijkl", {chr2, chr1});
             Riemann = TensorFieldCF(lin_part + non_lin_part, "1111");
             auto LeviCivita = GetLeviCivitaSymbol(false);
             string signature = SIGNATURE.substr(0, 4) + "," + SIGNATURE.substr(4, dim - 2) + SIGNATURE.substr(0, 2) + "," + SIGNATURE.substr(2 + dim, dim - 2) + SIGNATURE.substr(2, 2) + "->" + SIGNATURE.substr(4, dim - 2) + SIGNATURE.substr(2 + dim, dim - 2);
             if (dim == 2)
-                Curvature = ScalarFieldCF(1 / 4 * EinsumCF(signature, {Riemann, LeviCivita, LeviCivita}), dim);
+                Curvature = ScalarFieldCF(-0.25 * EinsumCF(signature, {Riemann, LeviCivita, LeviCivita}), dim);
             else
-                Curvature = TensorFieldCF(1 / 4 * EinsumCF(signature, {Riemann, LeviCivita, LeviCivita}), "00");
-            Ricci = Trace(Riemann, 0, 2);
+                Curvature = TensorFieldCF(-0.25 * EinsumCF(signature, {Riemann, LeviCivita, LeviCivita}), "00");
+            Ricci = Trace(Riemann, 0, 3);
             Scalar = Trace(Ricci, 0, 1);
             Einstein = TensorFieldCF(Ricci - 0.5 * Scalar * g, "11");
+            SFF = TensorFieldCF(EinsumCF("ia,ijk,k,jb->ab", {P_F_g, chr1->Reshape(Array<int>({dim, dim, dim})), g_nv, P_F_g}), "11");
+        }
+
+        if (riemann_sign != 1.0)
+        {
+            if (Riemann)
+                Riemann = TensorFieldCF(riemann_sign * Riemann->GetCoefficients(), "1111");
+            if (Curvature)
+            {
+                if (auto curv_scalar = dynamic_pointer_cast<ScalarFieldCoefficientFunction>(Curvature))
+                    Curvature = ScalarFieldCF(riemann_sign * curv_scalar->GetCoefficients(), dim);
+                else
+                    Curvature = TensorFieldCF(riemann_sign * Curvature->GetCoefficients(), "00");
+            }
+            if (Ricci)
+                Ricci = TensorFieldCF(riemann_sign * Ricci->GetCoefficients(), "11");
+            if (Einstein)
+                Einstein = TensorFieldCF(riemann_sign * Einstein->GetCoefficients(), "11");
+            if (Scalar)
+                Scalar = ScalarFieldCF(riemann_sign * Scalar->GetCoefficients(), dim);
         }
     }
 
     shared_ptr<CoefficientFunction> RiemannianManifold::GetMetric() const
     {
         return TensorFieldCF(g, "11");
+    }
+
+    shared_ptr<CoefficientFunction> RiemannianManifold::GetMetricF() const
+    {
+        if (g_F->Dimensions().Size() == 0)
+            return ScalarFieldCF(g_F, dim);
+        return TensorFieldCF(g_F, "11");
+    }
+
+    shared_ptr<CoefficientFunction> RiemannianManifold::GetMetricFInverse() const
+    {
+        if (g_F_inv->Dimensions().Size() == 0)
+            return ScalarFieldCF(g_F_inv, dim);
+        return TensorFieldCF(g_F_inv, "00");
+    }
+
+    shared_ptr<CoefficientFunction> RiemannianManifold::GetMetricE() const
+    {
+        if (g_E->Dimensions().Size() == 0)
+            return ScalarFieldCF(g_E, dim);
+        return TensorFieldCF(g_E, "11");
+    }
+
+    shared_ptr<CoefficientFunction> RiemannianManifold::GetMetricEInverse() const
+    {
+        if (g_E_inv->Dimensions().Size() == 0)
+            return ScalarFieldCF(g_E_inv, dim);
+        return TensorFieldCF(g_E_inv, "00");
     }
 
     shared_ptr<CoefficientFunction> RiemannianManifold::GetMetricInverse() const
@@ -336,10 +409,11 @@ namespace ngfem
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::GetCurvatureOperator() const
     {
-        if (dim == 2)
-            return ScalarFieldCF(Curvature, dim);
-        else
-            return TensorFieldCF(Curvature, "00");
+        // if (dim == 2)
+        //     return ScalarFieldCF(Curvature, dim);
+        // else
+        //     return TensorFieldCF(Curvature, "00");
+        return Curvature;
     }
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::GetRicciTensor() const
@@ -594,14 +668,15 @@ namespace ngfem
     {
         if (!tf)
             throw Exception("CovExteriorDerivative1: input must be non-null");
-        if (vb != VOL)
-            throw Exception("CovExteriorDerivative1: only implemented for vb=VOL yet.");
+        if (vb != VOL && vb != BND)
+            throw Exception("CovExteriorDerivative1: only implemented for vb=VOL and vb=BND.");
         if (tf->DimensionOfSpace() != dim)
             throw Exception("CovExteriorDerivative1: double-form dimension does not match manifold dimension");
 
         int p = tf->LeftDegree();
         int q = tf->RightDegree();
-        if (p + 1 > dim)
+        int surface_dim = (vb == BND) ? dim - 1 : dim;
+        if (p + 1 > surface_dim)
             return ZeroDoubleForm(p + 1, q, dim);
 
         auto cov_der = CovDerivative(tf, vb); // [0 | I | J]
@@ -616,14 +691,15 @@ namespace ngfem
     {
         if (!tf)
             throw Exception("CovExteriorDerivative2: input must be non-null");
-        if (vb != VOL)
-            throw Exception("CovExteriorDerivative2: only implemented for vb=VOL yet.");
+        if (vb != VOL && vb != BND)
+            throw Exception("CovExteriorDerivative2: only implemented for vb=VOL and vb=BND.");
         if (tf->DimensionOfSpace() != dim)
             throw Exception("CovExteriorDerivative2: double-form dimension does not match manifold dimension");
 
         int p = tf->LeftDegree();
         int q = tf->RightDegree();
-        if (q + 1 > dim)
+        int surface_dim = (vb == BND) ? dim - 1 : dim;
+        if (q + 1 > surface_dim)
             return ZeroDoubleForm(p, q + 1, dim);
 
         auto cov_der = CovDerivative(tf, vb); // [0 | I | J]
@@ -648,8 +724,8 @@ namespace ngfem
     {
         if (!tf)
             throw Exception("CovCodifferential1: input must be non-null");
-        if (vb != VOL)
-            throw Exception("CovCodifferential1: only implemented for vb=VOL yet.");
+        if (vb != VOL && vb != BND)
+            throw Exception("CovCodifferential1: only implemented for vb=VOL and vb=BND.");
         if (tf->DimensionOfSpace() != dim)
             throw Exception("CovCodifferential1: double-form dimension does not match manifold dimension");
 
@@ -668,8 +744,8 @@ namespace ngfem
     {
         if (!tf)
             throw Exception("CovCodifferential2: input must be non-null");
-        if (vb != VOL)
-            throw Exception("CovCodifferential2: only implemented for vb=VOL yet.");
+        if (vb != VOL && vb != BND)
+            throw Exception("CovCodifferential2: only implemented for vb=VOL and vb=BND.");
         if (tf->DimensionOfSpace() != dim)
             throw Exception("CovCodifferential2: double-form dimension does not match manifold dimension");
 
@@ -686,53 +762,66 @@ namespace ngfem
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::CovDerivative(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb) const
     {
-        if (vb != VOL)
-            throw Exception("CovDerivative: only implemented for vb=VOL yet.");
+        if (vb != VOL && vb != BND)
+            throw Exception("CovDerivative: only implemented for vb=VOL and vb=BND.");
+
+        shared_ptr<TensorFieldCoefficientFunction> result;
 
         // scalar field
         if (c1->Dimensions().Size() == 0)
         {
-            return OneFormCF(GradCF(c1, dim));
+            result = OneFormCF(GradCF(c1, dim));
         }
 
         // vector field
-        if (auto vf = dynamic_pointer_cast<VectorFieldCoefficientFunction>(c1))
+        else if (auto vf = dynamic_pointer_cast<VectorFieldCoefficientFunction>(c1))
         {
-            return TensorFieldCF(GradCF(vf->GetCoefficients(), dim) + EinsumCF("ikj,k->ij", {chr2, vf->GetCoefficients()}), "10");
+            result = TensorFieldCF(GradCF(vf->GetCoefficients(), dim) + EinsumCF("ikj,k->ij", {chr2, vf->GetCoefficients()}), "10");
         }
 
         // one-form field
-        if (auto of = dynamic_pointer_cast<OneFormCoefficientFunction>(c1))
+        else if (auto of = dynamic_pointer_cast<OneFormCoefficientFunction>(c1))
         {
-            return TensorFieldCF(GradCF(of->GetCoefficients(), dim) - EinsumCF("ijk,k->ij", {chr2, of->GetCoefficients()}), "11");
+            result = TensorFieldCF(GradCF(of->GetCoefficients(), dim) - EinsumCF("ijk,k->ij", {chr2, of->GetCoefficients()}), "11");
         }
 
         // General tensor field
-        string signature = c1->GetSignature();
-        string tmp_signature = signature;
-        string cov_ind = c1->GetCovariantIndices();
-        char new_char = FreshLabel(signature);
-
-        auto result = GradCF(c1->GetCoefficients(), dim);
-        for (size_t i = 0; i < signature.size(); i++)
+        else
         {
-            tmp_signature = signature;
-            tmp_signature[i] = FreshLabel(signature + std::string(1, new_char));
-            if (cov_ind[i] == '1')
+            string signature = c1->GetSignature();
+            string tmp_signature = signature;
+            string cov_ind = c1->GetCovariantIndices();
+            char new_char = FreshLabel(signature);
+
+            auto result_cf = GradCF(c1->GetCoefficients(), dim);
+            for (size_t i = 0; i < signature.size(); i++)
             {
-                // covariant
-                string einsum_signature = ToString(new_char) + signature[i] + tmp_signature[i] + "," + tmp_signature + "->" + new_char + signature;
-                result = result - EinsumCF(einsum_signature, {chr2, c1->GetCoefficients()});
+                tmp_signature = signature;
+                tmp_signature[i] = FreshLabel(signature + std::string(1, new_char));
+                if (cov_ind[i] == '1')
+                {
+                    // covariant
+                    string einsum_signature = ToString(new_char) + signature[i] + tmp_signature[i] + "," + tmp_signature + "->" + new_char + signature;
+                    result_cf = result_cf - EinsumCF(einsum_signature, {chr2, c1->GetCoefficients()});
+                }
+                else
+                {
+                    // contravariant
+                    string einsum_signature = ToString(new_char) + tmp_signature[i] + signature[i] + "," + tmp_signature + "->" + new_char + signature;
+                    result_cf = result_cf + EinsumCF(einsum_signature, {chr2, c1->GetCoefficients()});
+                }
             }
-            else
-            {
-                // contravariant
-                string einsum_signature = ToString(new_char) + tmp_signature[i] + signature[i] + "," + tmp_signature + "->" + new_char + signature;
-                result = result + EinsumCF(einsum_signature, {chr2, c1->GetCoefficients()});
-            }
+            result = TensorFieldCF(result_cf, "1" + cov_ind);
         }
 
-        return TensorFieldCF(result, "1" + cov_ind);
+        if (vb == BND)
+        {
+            auto m = result->Meta();
+            for (size_t i = 0; i < m.rank; ++i)
+                result = ApplyProjectorToIndex(result, P_F_g, i);
+        }
+
+        return result;
     }
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::CovHessian(shared_ptr<TensorFieldCoefficientFunction> c1) const
@@ -1002,6 +1091,89 @@ namespace ngfem
         return ScalarFieldCF(scale * out->GetCoefficients(), dim);
     }
 
+    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::ProjectDoubleForm(shared_ptr<DoubleFormCoefficientFunction> tf, int left_mode, int right_mode) const
+    {
+        if (!tf)
+            throw Exception("ProjectDoubleForm: input must be non-null");
+        if (tf->DimensionOfSpace() != dim)
+            throw Exception("ProjectDoubleForm: double-form dimension does not match manifold dimension");
+
+        int p = tf->LeftDegree();
+        int q = tf->RightDegree();
+
+        auto current = static_pointer_cast<TensorFieldCoefficientFunction>(tf);
+
+        auto apply_slot = [&](int slot, int mode)
+        {
+            if (mode == 0)
+                return;
+
+            int count = (slot == 0) ? p : q;
+            if (count == 0)
+                throw Exception("ProjectDoubleForm: cannot project empty slot");
+
+            size_t start = (slot == 0) ? 0 : size_t(p);
+
+            if (mode == 2)
+            {
+                for (size_t i = start + 1; i < start + size_t(count); ++i)
+                    current = ApplyProjectorToIndex(current, P_F_g, i);
+                current = Contraction(current, g_nv, start);
+                if (slot == 0)
+                    --p;
+                else
+                    --q;
+                return;
+            }
+
+            if (mode == 1)
+            {
+                for (size_t i = start; i < start + size_t(count); ++i)
+                    current = ApplyProjectorToIndex(current, P_F_g, i);
+                return;
+            }
+
+            throw Exception("ProjectDoubleForm: mode must be 0 (none), 1 (tangent), or 2 (normal)");
+        };
+
+        apply_slot(0, left_mode);
+        apply_slot(1, right_mode);
+
+        return DoubleFormCF(current, p, q, dim);
+    }
+
+    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::ContractSlot(shared_ptr<DoubleFormCoefficientFunction> tf, shared_ptr<VectorFieldCoefficientFunction> vf, int slot) const
+    {
+        if (!tf || !vf)
+            throw Exception("ContractSlot: inputs must be non-null");
+        if (tf->DimensionOfSpace() != dim)
+            throw Exception("ContractSlot: double-form dimension does not match manifold dimension");
+
+        int p = tf->LeftDegree();
+        int q = tf->RightDegree();
+        size_t index = 0;
+
+        if (slot == 0)
+        {
+            if (p == 0)
+                throw Exception("ContractSlot: left slot degree is zero");
+            index = 0;
+        }
+        else if (slot == 1)
+        {
+            if (q == 0)
+                throw Exception("ContractSlot: right slot degree is zero");
+            index = size_t(p);
+        }
+        else
+        {
+            throw Exception("ContractSlot: slot must be 0/1 or 'left'/'right'");
+        }
+
+        auto out = Contraction(static_pointer_cast<TensorFieldCoefficientFunction>(tf), vf, index);
+        return DoubleFormCF(out, slot == 0 ? p - 1 : p, slot == 1 ? q - 1 : q, dim);
+    }
+
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::Contraction(shared_ptr<TensorFieldCoefficientFunction> tf, shared_ptr<VectorFieldCoefficientFunction> vf, size_t slot) const
     {
 
@@ -1152,12 +1324,40 @@ void ExportRiemannianManifold(py::module m)
         throw Exception(name + ": slot must be 'left'/'right' or 0/1");
     };
 
+    auto parse_proj = [](py::object mode, const std::string &name) -> int
+    {
+        if (py::isinstance<py::str>(mode))
+        {
+            std::string s = py::cast<std::string>(mode);
+            std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c)
+                           { return static_cast<char>(std::tolower(c)); });
+            if (s == "f" || s == "tangent" || s == "tan" || s == "1")
+                return 1;
+            if (s == "n" || s == "normal" || s == "2")
+                return 2;
+            if (s == "none" || s == "0")
+                return 0;
+            throw Exception(name + ": mode must be 'F'/'tangent', 'n'/'normal', or 'none'");
+        }
+        if (py::isinstance<py::int_>(mode))
+            return py::cast<int>(mode);
+        throw Exception(name + ": mode must be string or int");
+    };
+
     py::class_<RiemannianManifold, shared_ptr<RiemannianManifold>>(m, "RiemannianManifold")
-        .def(py::init<shared_ptr<CoefficientFunction>>(), "constructor", py::arg("metric"))
+        .def(py::init<shared_ptr<CoefficientFunction>, double, double>(), "constructor", py::arg("metric"), py::arg("normal_sign") = 1.0, py::arg("riemann_sign") = 1.0)
         .def("VolumeForm", &RiemannianManifold::GetVolumeForm, "return the volume form of given dimension", py::arg("vb"))
         .def_property_readonly("dim", &RiemannianManifold::GetDimension, "return the manifold dimension")
         .def_property_readonly("G", [](shared_ptr<RiemannianManifold> self)
                                { return self->GetMetric(); }, "return the metric tensor")
+        .def_property_readonly("G_F", [](shared_ptr<RiemannianManifold> self)
+                               { return self->GetMetricF(); }, "return the metric tensor g_F")
+        .def_property_readonly("G_F_inv", [](shared_ptr<RiemannianManifold> self)
+                               { return self->GetMetricFInverse(); }, "return the inverse of the metric tensor g_F")
+        .def_property_readonly("G_E", [](shared_ptr<RiemannianManifold> self)
+                               { return self->GetMetricE(); }, "return the metric tensor g_E")
+        .def_property_readonly("G_E_inv", [](shared_ptr<RiemannianManifold> self)
+                               { return self->GetMetricEInverse(); }, "return the inverse of the metric tensor g_E")
         .def_property_readonly("G_inv", [](shared_ptr<RiemannianManifold> self)
                                { return self->GetMetricInverse(); }, "return the inverse of the metric tensor")
         .def_property_readonly("normal", [](shared_ptr<RiemannianManifold> self)
@@ -1200,9 +1400,7 @@ void ExportRiemannianManifold(py::module m)
                      return self->CovExteriorDerivative1(tf, vb);
                  if (slot_id == 1)
                      return self->CovExteriorDerivative2(tf, vb);
-                 throw Exception("d_cov: slot must be 0/1 or 'left'/'right'");
-             },
-             "Exterior covariant derivative of a double-form", py::arg("tf"), py::arg("slot") = "left", py::arg("vb") = VOL)
+                 throw Exception("d_cov: slot must be 0/1 or 'left'/'right'"); }, "Exterior covariant derivative of a double-form", py::arg("tf"), py::arg("slot") = "left", py::arg("vb") = VOL)
         .def("delta_cov", [parse_slot](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, py::object slot, VorB vb)
              {
                  int slot_id = parse_slot(slot, "delta_cov");
@@ -1210,9 +1408,16 @@ void ExportRiemannianManifold(py::module m)
                      return self->CovCodifferential1(tf, vb);
                  if (slot_id == 1)
                      return self->CovCodifferential2(tf, vb);
-                 throw Exception("delta_cov: slot must be 0/1 or 'left'/'right'");
-             },
-             "Exterior covariant codifferential of a double-form", py::arg("tf"), py::arg("slot") = "left", py::arg("vb") = VOL)
+                 throw Exception("delta_cov: slot must be 0/1 or 'left'/'right'"); }, "Exterior covariant codifferential of a double-form", py::arg("tf"), py::arg("slot") = "left", py::arg("vb") = VOL)
+        .def("ProjectDoubleForm", [parse_proj](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, py::object left, py::object right)
+             {
+                 int left_mode = parse_proj(left, "ProjectDoubleForm");
+                 int right_mode = parse_proj(right, "ProjectDoubleForm");
+                 return self->ProjectDoubleForm(tf, left_mode, right_mode); }, "Project a double-form in left/right slots onto tangent or normal components (normal reduces slot degree by one)", py::arg("tf"), py::arg("left") = "none", py::arg("right") = "none")
+        .def("ContractSlot", [parse_slot](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, shared_ptr<VectorFieldCoefficientFunction> vf, py::object slot)
+             {
+                 int slot_id = parse_slot(slot, "ContractSlot");
+                 return self->ContractSlot(tf, vf, slot_id); }, "Contract a double-form with a vector in the left or right slot, reducing the corresponding degree", py::arg("tf"), py::arg("vf"), py::arg("slot") = "left")
         .def("InnerProduct", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf1, shared_ptr<DoubleFormCoefficientFunction> tf2, VorB vb, bool forms)
              { return self->IP(tf1, tf2, vb, forms); }, "InnerProduct of two DoubleForms", py::arg("tf1"), py::arg("tf2"), py::arg("vb") = VOL, py::arg("forms") = false)
         .def("InnerProduct", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf1, shared_ptr<TensorFieldCoefficientFunction> tf2, VorB vb, bool forms)

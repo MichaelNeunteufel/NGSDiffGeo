@@ -73,6 +73,14 @@ def GetDiffOp(name, cf):
         )
 
 
+def l2_norm(cf, mesh):
+    return sqrt(Integrate(InnerProduct(cf, cf), mesh))
+
+
+def l2_norm_bnd(cf, mesh):
+    return sqrt(Integrate(InnerProduct(cf, cf) * dx(element_boundary=True), mesh))
+
+
 @pytest.mark.parametrize("interpolate", [True, False])
 def test_volume_forms_vectors_2D(interpolate):
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.2))
@@ -151,6 +159,23 @@ def test_volume_forms_vectors_3D(interpolate):
     # TODO: test tangent
 
     return
+
+
+def test_normal_sign_flips_boundary_normal():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    mf_pos = dg.RiemannianManifold(Id(dim), normal_sign=1.0)
+    mf_neg = dg.RiemannianManifold(Id(dim), normal_sign=-1.0)
+    assert l2_norm_bnd(mf_pos.normal + mf_neg.normal, mesh) < 1e-8
+
+
+def test_riemann_sign_flips_tensor():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    metric = dg.Sphere2().metric
+    mf_pos = dg.RiemannianManifold(metric, riemann_sign=1.0)
+    mf_neg = dg.RiemannianManifold(metric, riemann_sign=-1.0)
+    diff = mf_pos.Riemann + mf_neg.Riemann
+    assert sqrt(Integrate(mf_pos.InnerProduct(diff, diff), mesh)) < 1e-8
 
 
 @pytest.mark.parametrize("interpolate", [True, False])

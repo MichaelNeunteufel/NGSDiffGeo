@@ -5,6 +5,7 @@ Python-side wrappers for ngsdiffgeo pybind classes.
 from __future__ import annotations
 
 import importlib
+import numbers
 import ngsolve
 
 _cpp = importlib.import_module(".ngsdiffgeo", __package__)
@@ -544,6 +545,32 @@ def Wedge(a, b):
     return as_kform(out, k=out.degree, dim=out.dim_space)
 
 
+def WedgePower(df, l):
+    if not isinstance(l, numbers.Integral):
+        raise TypeError("WedgePower: l must be a non-negative integer")
+    if l < 0:
+        raise ValueError("WedgePower: l must be non-negative")
+
+    dim = _infer_dim(df)
+    if isinstance(df, TensorField):
+        tf_dim = _tensorfield_dim(df)
+        if tf_dim is not None:
+            dim = tf_dim
+    if l == 0:
+        if dim is None:
+            raise TypeError("WedgePower: dim must be provided or inferable for l=0")
+        return as_scalarfield(1, dim=dim)
+
+    df = _as_doubleform_like(df, dim=dim)
+    if df.degree_left != 1 or df.degree_right != 1:
+        raise ValueError("WedgePower: expected a (1,1) double form")
+
+    out = df
+    for _ in range(1, int(l)):
+        out = Wedge(out, df)
+    return out
+
+
 def d(a):
     out = _cpp.d(a)
     return as_kform(out, k=out.degree, dim=out.dim_space)
@@ -587,13 +614,33 @@ def delta(a, M):
 
 
 class RiemannianManifold(_CPP_RiemannianManifold):
-    def __init__(self, metric):
-        super().__init__(metric)
+    def __init__(self, metric, normal_sign=1.0, riemann_sign=1.0):
+        super().__init__(metric, normal_sign, riemann_sign)
 
     # properties
     @property
     def G(self):
         out = _CPP_RiemannianManifold.G.__get__(self)
+        return as_tensorfield(out)
+
+    @property
+    def G_F(self):
+        out = _CPP_RiemannianManifold.G_F.__get__(self)
+        return as_tensorfield(out)
+
+    @property
+    def G_F_inv(self):
+        out = _CPP_RiemannianManifold.G_F_inv.__get__(self)
+        return as_tensorfield(out)
+
+    @property
+    def G_E(self):
+        out = _CPP_RiemannianManifold.G_E.__get__(self)
+        return as_tensorfield(out)
+
+    @property
+    def G_E_inv(self):
+        out = _CPP_RiemannianManifold.G_E_inv.__get__(self)
         return as_tensorfield(out)
 
     @property
@@ -697,6 +744,19 @@ class RiemannianManifold(_CPP_RiemannianManifold):
     def delta(self, a):
         out = _CPP_RiemannianManifold.delta(self, a)
         return as_kform(out, k=out.degree, dim=self.dim)
+
+    def ProjectDoubleForm(self, tf, left="none", right="none"):
+        if not isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
+            raise TypeError("ProjectDoubleForm expects a DoubleForm")
+        out = _CPP_RiemannianManifold.ProjectDoubleForm(self, tf, left, right)
+        return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=self.dim)
+
+    def ContractSlot(self, tf, vf, slot="left"):
+        if not isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
+            raise TypeError("ContractSlot expects a DoubleForm")
+        vf_wrapped = as_vectorfield(vf)
+        out = _CPP_RiemannianManifold.ContractSlot(self, tf, vf_wrapped, slot)
+        return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=self.dim)
 
     def InnerProduct(self, tf1, tf2, vb=None, forms=False):
         if vb is None:

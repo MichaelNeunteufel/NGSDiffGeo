@@ -14,6 +14,15 @@ def l2_norm(a, mesh):
     return sqrt(Integrate(InnerProduct(a, a) * dx(bonus_intorder=3), mesh))
 
 
+def l2_error_bnd(a, b, mesh):
+    return sqrt(
+        Integrate(
+            InnerProduct(a - b, a - b) * dx(element_boundary=True, bonus_intorder=3),
+            mesh,
+        )
+    )
+
+
 def test_kform_construction_and_metadata():
     dim = 2
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.35))
@@ -89,6 +98,22 @@ def test_wedge_algebra_and_overflow_zero_3d():
     assert overflow.degree == 4
     assert overflow.covariant_indices == "1111"
     assert l2_norm(overflow, mesh) < 1e-11
+
+
+def test_wedge_power_doubleform_edge_cases():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+
+    alpha = dg.OneForm(CF((x, y)))
+    beta = dg.OneForm(CF((1 + x, 1 + y)))
+    df = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+
+    out0 = dg.WedgePower(df, 0)
+    expected0 = dg.ScalarField(CF(1), dim=dim)
+    assert l2_error(out0, expected0, mesh) == pytest.approx(0)
+
+    out1 = dg.WedgePower(df, 1)
+    assert l2_error(out1, df, mesh) == pytest.approx(0)
 
 
 def test_exterior_derivative_basic_identities_2d():
@@ -360,6 +385,32 @@ def test_doubleform_hodge_star_involution():
 
     ss = dg.star(dg.star(df, rm), rm)
     assert l2_error(ss, df, mesh) == pytest.approx(0)
+
+
+def test_doubleform_hodge_star_boundary_matches_contraction():
+    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.6))
+    dim = 3
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.OneForm(CF((x, y, z)))
+    beta = dg.OneForm(CF((1 + x, 2 + y, 3 + z)))
+    df = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+
+    star_bnd = dg.star(df, rm, vb=BND)
+
+    star_vol = dg.star(df, rm, vb=VOL)
+    normal = rm.normal
+    left_deg = star_vol.degree_left
+    contracted_left = rm.Contraction(star_vol, normal, slot=0)
+    contracted_right = rm.Contraction(contracted_left, normal, slot=left_deg - 1)
+    expected = dg.DoubleForm(
+        contracted_right,
+        p=left_deg - 1,
+        q=star_vol.degree_right - 1,
+        dim=dim,
+    )
+
+    assert l2_error_bnd(star_bnd, expected, mesh) == pytest.approx(0)
 
 
 def test_doubleform_inner_product_factorizes():

@@ -30,6 +30,8 @@ namespace ngfem
         bool has_trial;
         bool is_regge;
         bool is_proxy;
+        double normal_sign;
+        double riemann_sign;
         shared_ptr<ProxyFunction> regge_proxy;
         shared_ptr<ngcomp::FESpace> regge_space;
 
@@ -66,6 +68,8 @@ namespace ngfem
         shared_ptr<CoefficientFunction> P_n;
         shared_ptr<CoefficientFunction> P_F;
 
+        shared_ptr<CoefficientFunction> P_F_g;
+
         mutable shared_ptr<TensorFieldCoefficientFunction> levi_civita_cov;
         mutable shared_ptr<TensorFieldCoefficientFunction> levi_civita_contra;
 
@@ -75,12 +79,16 @@ namespace ngfem
          * @brief Constructor for RiemannianManifold.
          * @param _g The metric tensor.
          */
-        RiemannianManifold(shared_ptr<CoefficientFunction> _g);
+        RiemannianManifold(shared_ptr<CoefficientFunction> _g, double normal_sign = 1.0, double riemann_sign = 1.0);
 
         int GetDimension() const { return dim; }
 
         // ------- Metric tensor and related quantities --------
         shared_ptr<CoefficientFunction> GetMetric() const;
+        shared_ptr<CoefficientFunction> GetMetricF() const;
+        shared_ptr<CoefficientFunction> GetMetricFInverse() const;
+        shared_ptr<CoefficientFunction> GetMetricE() const;
+        shared_ptr<CoefficientFunction> GetMetricEInverse() const;
 
         shared_ptr<CoefficientFunction> GetMetricInverse() const;
 
@@ -174,6 +182,8 @@ namespace ngfem
 
         shared_ptr<TensorFieldCoefficientFunction> S_op(shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb = VOL) const;
         shared_ptr<DoubleFormCoefficientFunction> s_op(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL) const;
+        shared_ptr<DoubleFormCoefficientFunction> ProjectDoubleForm(shared_ptr<DoubleFormCoefficientFunction> tf, int left_mode, int right_mode) const;
+        shared_ptr<DoubleFormCoefficientFunction> ContractSlot(shared_ptr<DoubleFormCoefficientFunction> tf, shared_ptr<VectorFieldCoefficientFunction> vf, int slot) const;
         shared_ptr<TensorFieldCoefficientFunction> J_op(shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb = VOL) const;
     };
 }

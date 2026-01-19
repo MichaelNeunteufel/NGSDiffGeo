@@ -13,6 +13,10 @@ def l2_norm(a, mesh):
     return sqrt(Integrate(InnerProduct(a, a), mesh))
 
 
+def l2_norm_bnd(a, mesh):
+    return sqrt(Integrate(InnerProduct(a, a) * dx(element_boundary=True), mesh))
+
+
 def test_double_form_covariant_derivatives_constant_zero():
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
     dim = 2
@@ -87,6 +91,26 @@ def test_double_form_covariant_codifferentials_divergence():
 
     assert l2_error(delta1, expected_delta1, mesh) < 1e-8
     assert l2_error(delta2, expected_delta2, mesh) < 1e-8
+
+
+def test_double_form_covariant_derivatives_boundary_constant_zero():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.OneForm(CF((1, 0)))
+    beta = dg.OneForm(CF((0, 1)))
+    A = dg.DoubleForm(dg.TensorProduct(alpha, beta), p=1, q=1, dim=dim)
+
+    d1 = rm.d_cov(A, slot="left", vb=BND)
+    d2 = rm.d_cov(A, slot="right", vb=BND)
+    delta1 = rm.delta_cov(A, slot="left", vb=BND)
+    delta2 = rm.delta_cov(A, slot="right", vb=BND)
+
+    assert l2_norm_bnd(d1, mesh) < 1e-12
+    assert l2_norm_bnd(d2, mesh) < 1e-12
+    assert l2_norm_bnd(delta1, mesh) < 1e-12
+    assert l2_norm_bnd(delta2, mesh) < 1e-12
 
 
 if __name__ == "__main__":

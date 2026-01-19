@@ -858,17 +858,29 @@ namespace ngfem
 
     shared_ptr<DoubleFormCoefficientFunction> HodgeStar(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb)
     {
-        if (vb != VOL)
-            throw Exception("HodgeStar (double-form): only VOL supported");
+        int ambient_dim = M.Dimension();
+        if (vb == BBND)
+            throw Exception("HodgeStar (double-form): not implemented for BBND (codimension-2) yet");
 
-        int n = M.Dimension();
+        int n = (vb == VOL) ? ambient_dim : ambient_dim - 1;
         int p = a->LeftDegree();
         int q = a->RightDegree();
         if (p > n || q > n)
             throw Exception("HodgeStar (double-form): form degree exceeds manifold dimension");
 
         if (a->IsZeroCF())
-            return ZeroDoubleForm(n - p, n - q, n);
+            return ZeroDoubleForm(n - p, n - q, vb == VOL ? n : ambient_dim);
+
+        if (vb == BND)
+        {
+            auto star_vol = HodgeStar(a, M, VOL);
+            auto normal = M.GetNV();
+
+            int left_deg = star_vol->LeftDegree();
+            auto contracted_left = M.Contraction(star_vol, normal, 0);
+            auto contracted_right = M.Contraction(contracted_left, normal, size_t(left_deg - 1));
+            return DoubleFormCF(contracted_right, n - p, n - q, ambient_dim);
+        }
 
         auto left_star = BlockHodgeStar(a, 0, p, n, M);
         auto left_tf = TensorFieldCF(left_star, std::string(size_t(n - p + q), '1'));
@@ -879,10 +891,10 @@ namespace ngfem
 
     shared_ptr<DoubleFormCoefficientFunction> InverseHodgeStar(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb)
     {
-        if (vb != VOL)
-            throw Exception("InverseHodgeStar (double-form): only VOL supported");
+        if (vb == BBND)
+            throw Exception("InverseHodgeStar (double-form): not implemented for BBND (codimension-2) yet");
 
-        int n = M.Dimension();
+        int n = (vb == VOL) ? M.Dimension() : M.Dimension() - 1;
         int p = a->LeftDegree();
         int q = a->RightDegree();
         int exponent = p * (n - p) + q * (n - q);
@@ -891,7 +903,7 @@ namespace ngfem
         auto star = HodgeStar(a, M, vb);
         if (sign == 1)
             return star;
-        return DoubleFormCF((-1.0) * star->GetCoefficients(), n - p, n - q, n);
+        return DoubleFormCF((-1.0) * star->GetCoefficients(), n - p, n - q, vb == VOL ? n : M.Dimension());
     }
 
     shared_ptr<ScalarFieldCoefficientFunction> SlotInnerProduct(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, bool forms)

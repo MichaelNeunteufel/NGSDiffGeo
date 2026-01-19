@@ -24,6 +24,7 @@ from .wrappers import (
     VectorField,
     TensorField,
     Wedge,
+    WedgePower,
     d,
     star,
     inv_star,
