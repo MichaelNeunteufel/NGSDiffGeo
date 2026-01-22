@@ -327,6 +327,9 @@ class DoubleForm(_CPP_DoubleForm):
     def __truediv__(self, other):
         return self._wrap(_CPP_DoubleForm.__truediv__(self, other))
 
+    def __pow__(self, power):
+        return WedgePower(self, power)
+
 
 # ---------------- as_* functions ----------------
 
@@ -484,6 +487,11 @@ class TensorField(_CPP_TensorField):
     def __truediv__(self, other):
         return self._wrap(_CPP_TensorField.__truediv__(self, other))
 
+    def __pow__(self, power):
+        if self._covariant_indices != "11":
+            return NotImplemented
+        return WedgePower(self, power)
+
 
 def as_tensorfield(cf, *, covariant_indices=None, dim=-1):
     if isinstance(cf, TensorField):
@@ -576,31 +584,33 @@ def d(a):
     return as_kform(out, k=out.degree, dim=out.dim_space)
 
 
-def star(a, M, vb=ngsolve.VOL, double=False):
+def star(a, M, vb=ngsolve.VOL, double=False, extended=True):
     if double:
         if not isinstance(a, (DoubleForm, _CPP_DoubleForm)):
             a = DoubleForm(a, p=0, q=0, dim=M.dim)
-        out = _cpp.star(a, M, vb)
+        out = _cpp.star(a, M, vb, extended)
         return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=M.dim)
-    out = _cpp.star(a, M, vb)
+    out = _cpp.star(a, M, vb, extended)
     if isinstance(out, _CPP_DoubleForm):
         return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=M.dim)
     return as_kform(out, k=out.degree, dim=M.dim)
 
 
-def inv_star(a, M, vb=ngsolve.VOL, double=False):
+def inv_star(a, M, vb=ngsolve.VOL, double=False, extended=True):
     if double:
         if not isinstance(a, (DoubleForm, _CPP_DoubleForm)):
             a = DoubleForm(a, p=0, q=0, dim=M.dim)
-        out = _cpp.inv_star(a, M, vb)
+        out = _cpp.inv_star(a, M, vb, extended)
         return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=M.dim)
-    out = _cpp.inv_star(a, M, vb)
+    out = _cpp.inv_star(a, M, vb, extended)
     if isinstance(out, _CPP_DoubleForm):
         return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=M.dim)
     return as_kform(out, k=out.degree, dim=M.dim)
 
 
 def slot_inner_product(a, M, vb=ngsolve.VOL, forms=True):
+    if _is_scalarfield_like(a):
+        return as_scalarfield(a * a, dim=M.dim)
     out = _cpp.slot_inner_product(a, M, vb, forms)
     return as_scalarfield(out, dim=M.dim)
 
@@ -692,9 +702,16 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         out = _CPP_RiemannianManifold.Scalar.__get__(self)
         return as_scalarfield(out, dim=self.dim)
 
-    @property
-    def SFF(self):
-        out = _CPP_RiemannianManifold.SFF.__get__(self)
+    def SFF(self, extended=False):
+        out = _CPP_RiemannianManifold.SFF(self, extended)
+        return as_tensorfield(out)
+
+    def Raise(self, tf, index=0, vb=ngsolve.VOL):
+        out = _CPP_RiemannianManifold.Raise(self, tf, index, vb)
+        return as_tensorfield(out)
+
+    def Lower(self, tf, index=0, vb=ngsolve.VOL):
+        out = _CPP_RiemannianManifold.Lower(self, tf, index, vb)
         return as_tensorfield(out)
 
     @property
@@ -711,35 +728,11 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         out = _CPP_RiemannianManifold.KForm(self, cf, k)
         return as_kform(out, k=k, dim=self.dim)
 
-    def star(self, a, vb=ngsolve.VOL, double=False):
-        if double:
-            if not isinstance(a, (DoubleForm, _CPP_DoubleForm)):
-                a = DoubleForm(a, p=0, q=0, dim=self.dim)
-            out = _cpp.star(a, self, vb)
-            return as_doubleform(
-                out, p=out.degree_left, q=out.degree_right, dim=self.dim
-            )
-        out = _cpp.star(a, self, vb)
-        if isinstance(out, _CPP_DoubleForm):
-            return as_doubleform(
-                out, p=out.degree_left, q=out.degree_right, dim=self.dim
-            )
-        return as_kform(out, k=out.degree, dim=self.dim)
+    def star(self, a, vb=ngsolve.VOL, double=False, extended=True):
+        return star(a, self, vb=vb, double=double, extended=extended)
 
-    def inv_star(self, a, vb=ngsolve.VOL, double=False):
-        if double:
-            if not isinstance(a, (DoubleForm, _CPP_DoubleForm)):
-                a = DoubleForm(a, p=0, q=0, dim=self.dim)
-            out = _CPP_RiemannianManifold.inv_star(self, a, vb)
-            return as_doubleform(
-                out, p=out.degree_left, q=out.degree_right, dim=self.dim
-            )
-        out = _CPP_RiemannianManifold.inv_star(self, a, vb)
-        if isinstance(out, _CPP_DoubleForm):
-            return as_doubleform(
-                out, p=out.degree_left, q=out.degree_right, dim=self.dim
-            )
-        return as_kform(out, k=out.degree, dim=self.dim)
+    def inv_star(self, a, vb=ngsolve.VOL, double=False, extended=True):
+        return inv_star(a, self, vb=vb, double=double, extended=extended)
 
     def delta(self, a):
         out = _CPP_RiemannianManifold.delta(self, a)
@@ -769,11 +762,11 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         out = _CPP_RiemannianManifold.Cross(self, tf1, tf2)
         return as_vectorfield(out)
 
-    def CovDeriv(self, tf, vb=None):
+    def CovDeriv(self, tf, vb=None, extended=False):
         if vb is None:
             out = _CPP_RiemannianManifold.CovDeriv(self, tf)
         else:
-            out = _CPP_RiemannianManifold.CovDeriv(self, tf, vb)
+            out = _CPP_RiemannianManifold.CovDeriv(self, tf, vb, extended)
         return as_tensorfield(out)
 
     def CovHesse(self, tf):
@@ -808,11 +801,11 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         out = _CPP_RiemannianManifold.CovRot(self, tf)
         return as_tensorfield(out)
 
-    def CovDiv(self, tf, vb=None):
+    def CovDiv(self, tf, vb=None, extended=False):
         if vb is None:
             out = _CPP_RiemannianManifold.CovDiv(self, tf)
         else:
-            out = _CPP_RiemannianManifold.CovDiv(self, tf, vb)
+            out = _CPP_RiemannianManifold.CovDiv(self, tf, vb, extended)
         return as_tensorfield(out, dim=self.dim)
 
     def Trace(self, tf, vb=None, index1=0, index2=1, l=None):
@@ -838,7 +831,21 @@ class RiemannianManifold(_CPP_RiemannianManifold):
             out = _CPP_RiemannianManifold.Trace(self, tf, vb, index1, index2)
         return as_tensorfield(out, dim=self.dim)
 
+    def TraceSigma(self, tf, sigma, vb=ngsolve.VOL):
+        if not isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
+            raise TypeError("TraceSigma expects a DoubleForm")
+        try:
+            sigma_df = _as_doubleform_like(sigma, dim=self.dim)
+        except TypeError:
+            sigma_df = DoubleForm(sigma, p=1, q=1, dim=self.dim)
+        out = _CPP_RiemannianManifold.TraceSigma(self, tf, sigma_df, vb)
+        if isinstance(out, _CPP_DoubleForm):
+            return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=self.dim)
+        return as_scalarfield(out, dim=self.dim)
+
     def SlotInnerProduct(self, tf, vb=ngsolve.VOL, forms=True):
+        if _is_scalarfield_like(tf):
+            return as_scalarfield(tf * tf, dim=self.dim)
         out = _CPP_RiemannianManifold.SlotInnerProduct(self, tf, vb, forms)
         return as_scalarfield(out, dim=self.dim)
 

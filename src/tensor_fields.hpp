@@ -197,6 +197,9 @@ namespace ngfem
     shared_ptr<VectorFieldCoefficientFunction> VectorFieldCF(const shared_ptr<CoefficientFunction> &cf);
     shared_ptr<TensorFieldCoefficientFunction> PermuteTensorCF(shared_ptr<TensorFieldCoefficientFunction> tf,
                                                                 const std::vector<int> &order);
+    shared_ptr<TensorFieldCoefficientFunction> ApplyProjectorToIndex(shared_ptr<TensorFieldCoefficientFunction> tf,
+                                                                     shared_ptr<CoefficientFunction> proj,
+                                                                     size_t index);
     int Factorial(int n);
 
     /**

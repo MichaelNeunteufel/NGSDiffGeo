@@ -131,6 +131,26 @@ namespace ngfem
     auto out_cf = EinsumCF(eins, {c1, c2});
     return TensorFieldCF(out_cf, mout);
   }
+
+  shared_ptr<TensorFieldCoefficientFunction> ApplyProjectorToIndex(shared_ptr<TensorFieldCoefficientFunction> tf,
+                                                                   shared_ptr<CoefficientFunction> proj,
+                                                                   size_t index)
+  {
+    if (!tf || !proj)
+      throw Exception("ApplyProjectorToIndex: inputs must be non-null");
+    std::string sig = tf->GetSignature();
+    if (index >= sig.size())
+      throw Exception("ApplyProjectorToIndex: index out of range");
+
+    char old_label = sig[index];
+    char new_label = tf->Meta().FreshLabel();
+    std::string sigmod = sig;
+    sigmod[index] = new_label;
+
+    std::string eins = ToString(new_label) + old_label + "," + sigmod + "->" + sig;
+    auto result = EinsumCF(eins, {proj, tf});
+    return TensorFieldCF(result, tf->GetCovariantIndices());
+  }
 }
 
 void CheckCovariantIndices(const std::string &s)
