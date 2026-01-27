@@ -6,7 +6,7 @@ namespace ngfem
 {
 
     using namespace ngcomp;
-    shared_ptr<CoefficientFunction> GradCF(const shared_ptr<CoefficientFunction> &cf, size_t dim)
+    shared_ptr<CoefficientFunction> GradCF(const shared_ptr<CoefficientFunction> &cf, size_t dim, bool surface)
     {
         // create new ZeroCF with updated dimensions
         if (cf->IsZeroCF())
@@ -31,10 +31,14 @@ namespace ngfem
 
         if (dim < 1 || dim > 3)
             throw Exception("GradCF: only dimensions 1,2,3 supported");
+        if (surface && dim < 2)
+            throw Exception("GradCF(surface): only dimensions 2,3 supported");
 
         // If the input coefficient function includes a trial or test function, we need to use
         // a proxy function to calculate the gradient via a differential operator.
         // Otherwise, we can directly calculate the gradient using the CoefficientFunction.
+        if (surface && has_trial != has_test)
+            throw Exception("GradCF(surface): trial/test functions not supported yet");
         if (has_trial != has_test)
             switch (dim)
             {
@@ -49,11 +53,11 @@ namespace ngfem
             switch (dim)
             {
             case 1:
-                return make_shared<GradCoefficientFunction<1>>(cf);
+                return make_shared<GradCoefficientFunction<1>>(cf, surface);
             case 2:
-                return make_shared<GradCoefficientFunction<2>>(cf);
+                return make_shared<GradCoefficientFunction<2>>(cf, surface);
             default:
-                return make_shared<GradCoefficientFunction<3>>(cf);
+                return make_shared<GradCoefficientFunction<3>>(cf, surface);
             }
     }
 
@@ -233,6 +237,8 @@ void ExportGradCF(py::module m)
     using namespace ngfem;
 
     py::class_<GradProxy, shared_ptr<GradProxy>, ProxyFunction>(m, "GradProxy");
-    m.def("GradCF", [](shared_ptr<CoefficientFunction> cf, int dim)
-          { return GradCF(cf, dim); }, "Create a GradientCoefficientFunction. Uses numerical differentiation to compute the gradient of a given CoefficientFunction");
+    m.def("GradCF", [](shared_ptr<CoefficientFunction> cf, int dim, bool surface)
+          { return GradCF(cf, dim, surface); },
+          "Create a GradientCoefficientFunction. Uses numerical differentiation to compute the gradient of a given CoefficientFunction. Set surface=True for tangential surface gradients.",
+          py::arg("cf"), py::arg("dim"), py::arg("surface") = false);
 }

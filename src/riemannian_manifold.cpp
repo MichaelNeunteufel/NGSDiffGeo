@@ -155,8 +155,7 @@ namespace ngfem
                                                                       shared_ptr<DoubleFormCoefficientFunction> tf,
                                                                       int slot,
                                                                       CovOp op,
-                                                                      VorB vb,
-                                                                      bool extended)
+                                                                      VorB vb)
         {
             const char *name = nullptr;
             if (op == CovOp::Exterior)
@@ -179,11 +178,11 @@ namespace ngfem
             if (slot != 0 && slot != 1)
                 throw Exception(string(name) + ": slot must be 0/1 or 'left'/'right'");
 
-            auto cov_der = M.CovDerivative(tf, vb, extended); // [0 | I | J]
+            auto cov_der = M.CovDerivative(tf, vb); // [0 | I | J]
 
             auto project_if_needed = [&](shared_ptr<DoubleFormCoefficientFunction> df)
             {
-                if (vb != BND || extended || df->Meta().rank == 0)
+                if (vb != BND || df->Meta().rank == 0)
                     return df;
                 auto projected = M.ProjectTensorToEuclideanTangent(static_pointer_cast<TensorFieldCoefficientFunction>(df));
                 return DoubleFormCF(projected, df->LeftDegree(), df->RightDegree(), dim);
@@ -313,9 +312,13 @@ namespace ngfem
             // auto P_F = tv_mat * TransposeCF(tv_mat);
             // g_F = InnerProduct(g * tv, tv) * P_F;
             // g_F_inv = 1/InnerProduct(g * tv, tv) * P_F;
+            shared_ptr<OneFormCoefficientFunction> g_nv_lower = OneFormCF(vol[VOL] / vol[BND] * nv);
+            g_nv = dynamic_pointer_cast<VectorFieldCoefficientFunction>(Raise(g_nv_lower));
 
-            g_F = P_F * g * P_F;
-            g_F_inv = P_F * InverseCF(g_F + P_n) * P_F;
+            // g_F = P_F * g * P_F;
+            // g_F_inv = P_F * InverseCF(g_F + P_n) * P_F;
+            g_F = g - TensorProduct(g_nv_lower, g_nv_lower);
+            g_F_inv = g_inv - TensorProduct(g_nv, g_nv);
             g_E = one_cf;
             g_E_inv = one_cf;
         }
@@ -327,20 +330,19 @@ namespace ngfem
 
             g_tv = VectorFieldCF(1 / vol[BBND] * tv);
 
-            auto g_nv_lower = vol[VOL] / vol[BND] * nv_mat;
+            shared_ptr<OneFormCoefficientFunction> g_nv_lower = OneFormCF(vol[VOL] / vol[BND] * nv);
+            g_nv = dynamic_pointer_cast<VectorFieldCoefficientFunction>(Raise(g_nv_lower));
 
-            g_F = P_F * g * P_F;
-            // g_F = g - g_nv_lower * TransposeCF(g_nv_lower);
-            g_F_inv = P_F * InverseCF(g_F + P_n) * P_F;
-            // g_F_inv = g_inv - OuterProduct(g_nv,g_nv);
+            // g_F = P_F * g * P_F;
+            // g_F_inv = P_F * InverseCF(g_F + P_n) * P_F;
+            g_F = g - TensorProduct(g_nv_lower, g_nv_lower);
+            g_F_inv = g_inv - TensorProduct(g_nv, g_nv);
 
             auto tv_mat = tv->Reshape(Array<int>({dim, 1}));
             auto P_E = tv_mat * TransposeCF(tv_mat);
             g_E = g_tv_norm * P_E;
             g_E_inv = 1 / g_tv_norm * P_E;
         }
-
-        g_nv = VectorFieldCF(vol[VOL] / vol[BND] * g_inv * nv);
 
         P_F_g = IdentityCF(dim) - TensorProduct(g_nv, Lower(g_nv));
 
@@ -372,7 +374,7 @@ namespace ngfem
         Einstein = sources.Einstein;
         Scalar = sources.Scalar;
         SFF = TensorFieldCF(EinsumCF("ia,ijk,k,jb->ab", {P_F_g, chr1->Reshape(Array<int>({dim, dim, dim})), g_nv, P_F_g}), "11");
-        SFF_restricted = TensorFieldCF(EinsumCF("ia,ijk,k,jb->ab", {P_F, chr1->Reshape(Array<int>({dim, dim, dim})), g_nv, P_F}), "11");
+        // SFF_restricted = TensorFieldCF(EinsumCF("ia,ijk,k,jb->ab", {P_F, chr1->Reshape(Array<int>({dim, dim, dim})), g_nv, P_F}), "11");
 
         if (riemann_sign != 1.0)
         {
@@ -585,15 +587,16 @@ namespace ngfem
         return ScalarFieldCF(1 / det_g * Curvature, dim);
     }
 
-    shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::GetSecondFundamentalForm(bool extended) const
+    shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::GetSecondFundamentalForm() const
     {
-        return TensorFieldCF(extended ? SFF : SFF_restricted, "11");
+        return TensorFieldCF(SFF, "11");
     }
     shared_ptr<ScalarFieldCoefficientFunction> RiemannianManifold::GetGeodesicCurvature() const
     {
         if (dim != 2)
             throw Exception("In RMF: Geodesic curvature only available in 2D");
-        return ScalarFieldCF(InnerProduct(SFF_restricted * g_tv, g_tv), dim);
+        // return ScalarFieldCF(InnerProduct(SFF_restricted * g_tv, g_tv), dim);
+        return ScalarFieldCF(InnerProduct(SFF * g_tv, g_tv), dim);
     }
 
     shared_ptr<ScalarFieldCoefficientFunction> RiemannianManifold::GetMeanCurvature() const
@@ -610,9 +613,56 @@ namespace ngfem
             return tf;
 
         auto current = tf;
+        const auto &cov_ind = tf->GetCovariantIndices();
+        auto P_F_g_T = TransposeCF(P_F_g);
         for (size_t i = 0; i < m.rank; ++i)
-            current = ApplyProjectorToIndex(current, P_F, i);
+        {
+            auto proj = (cov_ind[i] == '1') ? P_F_g : P_F_g_T;
+            current = ApplyProjectorToIndex(current, proj, i);
+        }
         return current;
+    }
+
+    shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::ProjectTensor(shared_ptr<TensorFieldCoefficientFunction> tf, int mode) const
+    {
+        if (!tf)
+            throw Exception("ProjectTensor: input must be non-null");
+        auto m = tf->Meta();
+        if (m.rank == 0)
+        {
+            if (mode == 2)
+                throw Exception("ProjectTensor: cannot take normal component of rank-0 tensor");
+            return tf;
+        }
+
+        if (mode == 0)
+            return tf;
+
+        auto current = tf;
+        const auto &cov_ind = tf->GetCovariantIndices();
+        auto P_F_g_T = TransposeCF(P_F_g);
+
+        if (mode == 1)
+        {
+            for (size_t i = 0; i < m.rank; ++i)
+            {
+                auto proj = (cov_ind[i] == '1') ? P_F_g : P_F_g_T;
+                current = ApplyProjectorToIndex(current, proj, i);
+            }
+            return current;
+        }
+
+        if (mode == 2)
+        {
+            for (size_t i = 1; i < m.rank; ++i)
+            {
+                auto proj = (cov_ind[i] == '1') ? P_F_g : P_F_g_T;
+                current = ApplyProjectorToIndex(current, proj, i);
+            }
+            return Contraction(current, g_nv, 0);
+        }
+
+        throw Exception("ProjectTensor: mode must be 0 (none), 1 (tangent), or 2 (normal)");
     }
 
     shared_ptr<VectorFieldCoefficientFunction> RiemannianManifold::GetNV() const
@@ -775,31 +825,31 @@ namespace ngfem
         return KFormCF(cf, k, dim);
     }
 
-    shared_ptr<KFormCoefficientFunction> RiemannianManifold::Star(shared_ptr<KFormCoefficientFunction> a, VorB vb, bool extended) const
+    shared_ptr<KFormCoefficientFunction> RiemannianManifold::Star(shared_ptr<KFormCoefficientFunction> a, VorB vb) const
     {
         if (!a)
             throw Exception("Star: input must be non-null");
         if (a->DimensionOfSpace() != dim)
             throw Exception("Star: form dimension does not match manifold dimension");
-        return HodgeStar(a, *this, vb, extended);
+        return HodgeStar(a, *this, vb);
     }
 
-    shared_ptr<KFormCoefficientFunction> RiemannianManifold::InvStar(shared_ptr<KFormCoefficientFunction> a, VorB vb, bool extended) const
+    shared_ptr<KFormCoefficientFunction> RiemannianManifold::InvStar(shared_ptr<KFormCoefficientFunction> a, VorB vb) const
     {
         if (!a)
             throw Exception("InvStar: input must be non-null");
         if (a->DimensionOfSpace() != dim)
             throw Exception("InvStar: form dimension does not match manifold dimension");
-        return InverseHodgeStar(a, *this, vb, extended);
+        return InverseHodgeStar(a, *this, vb);
     }
 
-    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::InvStar(shared_ptr<DoubleFormCoefficientFunction> a, VorB vb, bool extended) const
+    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::InvStar(shared_ptr<DoubleFormCoefficientFunction> a, VorB vb) const
     {
         if (!a)
             throw Exception("InvStar: input must be non-null");
         if (a->DimensionOfSpace() != dim)
             throw Exception("InvStar: double-form dimension does not match manifold dimension");
-        return InverseHodgeStar(a, *this, vb, extended);
+        return InverseHodgeStar(a, *this, vb);
     }
 
     shared_ptr<KFormCoefficientFunction> RiemannianManifold::Coderivative(shared_ptr<KFormCoefficientFunction> a) const
@@ -825,27 +875,27 @@ namespace ngfem
         return KFormCF(signed_cf, k - 1, dim);
     }
 
-    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::CovExteriorDerivative1(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb, bool extended) const
+    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::CovExteriorDerivative1(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb) const
     {
-        return CovExteriorOrCodiff(*this, tf, 0, CovOp::Exterior, vb, extended);
+        return CovExteriorOrCodiff(*this, tf, 0, CovOp::Exterior, vb);
     }
 
-    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::CovExteriorDerivative2(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb, bool extended) const
+    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::CovExteriorDerivative2(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb) const
     {
-        return CovExteriorOrCodiff(*this, tf, 1, CovOp::Exterior, vb, extended);
+        return CovExteriorOrCodiff(*this, tf, 1, CovOp::Exterior, vb);
     }
 
-    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::CovCodifferential1(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb, bool extended) const
+    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::CovCodifferential1(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb) const
     {
-        return CovExteriorOrCodiff(*this, tf, 0, CovOp::Codifferential, vb, extended);
+        return CovExteriorOrCodiff(*this, tf, 0, CovOp::Codifferential, vb);
     }
 
-    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::CovCodifferential2(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb, bool extended) const
+    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::CovCodifferential2(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb) const
     {
-        return CovExteriorOrCodiff(*this, tf, 1, CovOp::Codifferential, vb, extended);
+        return CovExteriorOrCodiff(*this, tf, 1, CovOp::Codifferential, vb);
     }
 
-    shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::CovDerivative(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb, bool extended) const
+    shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::CovDerivative(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb) const
     {
         if (vb != VOL && vb != BND)
             throw Exception("CovDerivative: only implemented for vb=VOL and vb=BND.");
@@ -901,7 +951,15 @@ namespace ngfem
 
         if (vb == BND)
         {
-            result = ApplyProjectorToIndex(result, extended ? P_F_g : P_F, 0);
+            const auto &cov_ind = result->GetCovariantIndices();
+            auto P_F_g_T = TransposeCF(P_F_g);
+            for (size_t i = 0; i < cov_ind.size(); ++i)
+            {
+                if (cov_ind[i] == '1')
+                    result = ApplyProjectorToIndex(result, P_F_g, i);
+                else
+                    result = ApplyProjectorToIndex(result, P_F_g_T, i);
+            }
         }
 
         return result;
@@ -915,12 +973,12 @@ namespace ngfem
             return CovDerivative(CovDerivative(c1));
     }
 
-    shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::CovDivergence(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb, bool extended) const
+    shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::CovDivergence(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb) const
     {
         if (c1->Dimensions().Size() == 0)
             throw Exception("CovDivergence: TensorField must have at least one index");
 
-        return this->Trace(this->CovDerivative(c1, vb, extended), 0, 1, vb);
+        return this->Trace(this->CovDerivative(c1, vb), 0, 1, vb);
     }
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::CovCurl(shared_ptr<TensorFieldCoefficientFunction> c1) const
@@ -1386,7 +1444,7 @@ namespace ngfem
         case VOL:
             return TensorFieldCF(Transpose(tf) - this->Trace(tf, 0, 1, VOL) * g, "11");
         case BND:
-            return TensorFieldCF(P_F * Transpose(tf) * P_F - this->Trace(tf, 0, 1, BND) * g_F, "11");
+            return TensorFieldCF(P_F_g * Transpose(tf) * P_F_g - this->Trace(tf, 0, 1, BND) * g_F, "11");
         default:
             throw Exception("S_op: Only implemented for VOL and BND");
         }
@@ -1454,7 +1512,7 @@ namespace ngfem
         case VOL:
             return TensorFieldCF(Transpose(tf) - 0.5 * this->Trace(tf, 0, 1, VOL) * g, "11");
         case BND:
-            return TensorFieldCF(P_F * Transpose(tf) * P_F - 0.5 * this->Trace(tf, 0, 1, BND) * g_F, "11");
+            return TensorFieldCF(P_F_g * Transpose(tf) * P_F_g - 0.5 * this->Trace(tf, 0, 1, BND) * g_F, "11");
         default:
             throw Exception("J_op: Only implemented for VOL and BND");
         }
@@ -1538,21 +1596,20 @@ void ExportRiemannianManifold(py::module m)
         .def_property_readonly("Ricci", &RiemannianManifold::GetRicciTensor, "return the Ricci tensor")
         .def_property_readonly("Einstein", &RiemannianManifold::GetEinsteinTensor, "return the Einstein tensor")
         .def_property_readonly("Scalar", &RiemannianManifold::GetScalarCurvature, "return the scalar curvature")
-        .def("SFF", [](shared_ptr<RiemannianManifold> self, bool extended)
-             { return self->GetSecondFundamentalForm(extended); }, "return the second fundamental form (extended=false returns tangential form)", py::arg("extended") = false)
+        .def_property_readonly("SFF", &RiemannianManifold::GetSecondFundamentalForm, "return the second fundamental form")
         .def_property_readonly("GeodesicCurvature", &RiemannianManifold::GetGeodesicCurvature, "return the geodesic curvature")
         .def_property_readonly("MeanCurvature", &RiemannianManifold::GetMeanCurvature, "return the mean curvature")
         .def("KForm", [](shared_ptr<RiemannianManifold> self, shared_ptr<CoefficientFunction> cf, int k)
              { return self->MakeKForm(cf, k); }, "Wrap a CoefficientFunction as a k-form using the manifold dimension", py::arg("cf"), py::arg("k"))
-        .def("star", [](shared_ptr<RiemannianManifold> self, shared_ptr<KFormCoefficientFunction> a, VorB vb, bool extended)
-             { return self->Star(a, vb, extended); }, "Hodge star of a k-form using the manifold metric", py::arg("a"), py::arg("vb") = VOL, py::arg("extended") = true)
-        .def("inv_star", [](shared_ptr<RiemannianManifold> self, shared_ptr<KFormCoefficientFunction> a, VorB vb, bool extended)
-             { return self->InvStar(a, vb, extended); }, "Inverse Hodge star of a k-form using the manifold metric", py::arg("a"), py::arg("vb") = VOL, py::arg("extended") = true)
-        .def("inv_star", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> a, VorB vb, bool extended)
-             { return self->InvStar(a, vb, extended); }, "Inverse Hodge star of a double-form using the manifold metric", py::arg("a"), py::arg("vb") = VOL, py::arg("extended") = true)
+        .def("star", [](shared_ptr<RiemannianManifold> self, shared_ptr<KFormCoefficientFunction> a, VorB vb)
+             { return self->Star(a, vb); }, "Hodge star of a k-form using the manifold metric", py::arg("a"), py::arg("vb") = VOL)
+        .def("inv_star", [](shared_ptr<RiemannianManifold> self, shared_ptr<KFormCoefficientFunction> a, VorB vb)
+             { return self->InvStar(a, vb); }, "Inverse Hodge star of a k-form using the manifold metric", py::arg("a"), py::arg("vb") = VOL)
+        .def("inv_star", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> a, VorB vb)
+             { return self->InvStar(a, vb); }, "Inverse Hodge star of a double-form using the manifold metric", py::arg("a"), py::arg("vb") = VOL)
         .def("delta", [](shared_ptr<RiemannianManifold> self, shared_ptr<KFormCoefficientFunction> a)
              { return self->Coderivative(a); }, "Exterior coderivative of a k-form using the manifold metric", py::arg("a"))
-        .def("d_cov", [parse_slot](shared_ptr<RiemannianManifold> self, shared_ptr<CoefficientFunction> tf, py::object slot, VorB vb, bool extended)
+        .def("d_cov", [parse_slot](shared_ptr<RiemannianManifold> self, shared_ptr<CoefficientFunction> tf, py::object slot, VorB vb)
              {
                  shared_ptr<DoubleFormCoefficientFunction> df;
                  if (auto dform = dynamic_pointer_cast<DoubleFormCoefficientFunction>(tf))
@@ -1563,11 +1620,11 @@ void ExportRiemannianManifold(py::module m)
                      throw Exception("d_cov: expected DoubleForm or scalar field");
                  int slot_id = parse_slot(slot, "d_cov");
                  if (slot_id == 0)
-                     return self->CovExteriorDerivative1(df, vb, extended);
+                     return self->CovExteriorDerivative1(df, vb);
                  if (slot_id == 1)
-                     return self->CovExteriorDerivative2(df, vb, extended);
-                 throw Exception("d_cov: slot must be 0/1 or 'left'/'right'"); }, "Exterior covariant derivative of a double-form", py::arg("tf"), py::arg("slot") = "left", py::arg("vb") = VOL, py::arg("extended") = false)
-        .def("delta_cov", [parse_slot](shared_ptr<RiemannianManifold> self, shared_ptr<CoefficientFunction> tf, py::object slot, VorB vb, bool extended)
+                     return self->CovExteriorDerivative2(df, vb);
+                 throw Exception("d_cov: slot must be 0/1 or 'left'/'right'"); }, "Exterior covariant derivative of a double-form", py::arg("tf"), py::arg("slot") = "left", py::arg("vb") = VOL)
+        .def("delta_cov", [parse_slot](shared_ptr<RiemannianManifold> self, shared_ptr<CoefficientFunction> tf, py::object slot, VorB vb)
              {
                  shared_ptr<DoubleFormCoefficientFunction> df;
                  if (auto dform = dynamic_pointer_cast<DoubleFormCoefficientFunction>(tf))
@@ -1578,15 +1635,19 @@ void ExportRiemannianManifold(py::module m)
                      throw Exception("delta_cov: expected DoubleForm or scalar field");
                  int slot_id = parse_slot(slot, "delta_cov");
                  if (slot_id == 0)
-                     return self->CovCodifferential1(df, vb, extended);
+                     return self->CovCodifferential1(df, vb);
                  if (slot_id == 1)
-                     return self->CovCodifferential2(df, vb, extended);
-                 throw Exception("delta_cov: slot must be 0/1 or 'left'/'right'"); }, "Exterior covariant codifferential of a double-form", py::arg("tf"), py::arg("slot") = "left", py::arg("vb") = VOL, py::arg("extended") = false)
+                     return self->CovCodifferential2(df, vb);
+                 throw Exception("delta_cov: slot must be 0/1 or 'left'/'right'"); }, "Exterior covariant codifferential of a double-form", py::arg("tf"), py::arg("slot") = "left", py::arg("vb") = VOL)
         .def("ProjectDoubleForm", [parse_proj](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, py::object left, py::object right)
              {
                  int left_mode = parse_proj(left, "ProjectDoubleForm");
                  int right_mode = parse_proj(right, "ProjectDoubleForm");
                  return self->ProjectDoubleForm(tf, left_mode, right_mode); }, "Project a double-form in left/right slots onto tangent or normal components (normal reduces slot degree by one)", py::arg("tf"), py::arg("left") = "none", py::arg("right") = "none")
+        .def("ProjectTensor", [parse_proj](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, py::object mode)
+             {
+                 int proj_mode = parse_proj(mode, "ProjectTensor");
+                 return self->ProjectTensor(tf, proj_mode); }, "Project a tensor field onto tangent or normal components (normal contracts the first index)", py::arg("tf"), py::arg("mode") = "none")
         .def("ContractSlot", [parse_slot](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, shared_ptr<VectorFieldCoefficientFunction> vf, py::object slot)
              {
                  int slot_id = parse_slot(slot, "ContractSlot");
@@ -1597,8 +1658,8 @@ void ExportRiemannianManifold(py::module m)
              { return self->IP(tf1, tf2, vb, forms); }, "InnerProduct of two TensorFields", py::arg("tf1"), py::arg("tf2"), py::arg("vb") = VOL, py::arg("forms") = false)
         .def("Cross", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf1, shared_ptr<TensorFieldCoefficientFunction> tf2)
              { return self->Cross(tf1, tf2); }, "Cross product in 3D of two vector fields, 1-forms, or both mixed. Returns the resulting vector-field.", py::arg("tf1"), py::arg("tf2"))
-        .def("CovDeriv", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb, bool extended)
-             { return self->CovDerivative(tf, vb, extended); }, "Covariant derivative of a TensorField", py::arg("tf"), py::arg("vb") = VOL, py::arg("extended") = false)
+        .def("CovDeriv", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb)
+             { return self->CovDerivative(tf, vb); }, "Covariant derivative of a TensorField", py::arg("tf"), py::arg("vb") = VOL)
         .def("CovHesse", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf)
              { return self->CovHessian(tf); }, "Covariant Hessian of a TensorField.", py::arg("tf"))
         .def("CovCurl", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf)
@@ -1615,8 +1676,8 @@ void ExportRiemannianManifold(py::module m)
              { return self->CovDef(tf); }, "Covariant Def (symmetric derivative) of a 1-form", py::arg("tf"))
         .def("CovRot", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf)
              { return self->CovRot(tf); }, "Covariant rot of a TensorField of maximal order 1 in 2D. Returns a contravariant tensor field.", py::arg("tf"))
-        .def("CovDiv", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb, bool extended)
-             { return self->CovDivergence(tf, vb, extended); }, "Covariant divergence of a TensorField", py::arg("tf"), py::arg("vb") = VOL, py::arg("extended") = false)
+        .def("CovDiv", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb)
+             { return self->CovDivergence(tf, vb); }, "Covariant divergence of a TensorField", py::arg("tf"), py::arg("vb") = VOL)
         .def("Trace", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, size_t l, VorB vb)
              { return self->Trace(tf, l, vb); }, "Trace of DoubleForm: contract first l left/right slots (l=0 returns input).", py::arg("tf"), py::arg("l") = 1, py::arg("vb") = VOL)
         .def("TraceSigma", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, shared_ptr<DoubleFormCoefficientFunction> sigma, VorB vb)

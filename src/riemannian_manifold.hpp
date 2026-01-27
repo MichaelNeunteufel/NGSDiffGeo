@@ -127,11 +127,12 @@ namespace ngfem
         shared_ptr<TensorFieldCoefficientFunction> GetCurvatureOperator() const;
 
         // ------- second fundamental form --------
-        shared_ptr<TensorFieldCoefficientFunction> GetSecondFundamentalForm(bool extended = false) const;
+        shared_ptr<TensorFieldCoefficientFunction> GetSecondFundamentalForm() const;
         shared_ptr<ScalarFieldCoefficientFunction> GetGeodesicCurvature() const;
         shared_ptr<ScalarFieldCoefficientFunction> GetMeanCurvature() const;
 
         shared_ptr<TensorFieldCoefficientFunction> ProjectTensorToEuclideanTangent(shared_ptr<TensorFieldCoefficientFunction> tf) const;
+        shared_ptr<TensorFieldCoefficientFunction> ProjectTensor(shared_ptr<TensorFieldCoefficientFunction> tf, int mode) const;
 
         // ------- Normal and tangent vectors --------
         shared_ptr<VectorFieldCoefficientFunction> GetNV() const;
@@ -145,21 +146,21 @@ namespace ngfem
 
         // ------- Forms --------
         shared_ptr<KFormCoefficientFunction> MakeKForm(shared_ptr<CoefficientFunction> cf, int k) const;
-        shared_ptr<KFormCoefficientFunction> Star(shared_ptr<KFormCoefficientFunction> a, VorB vb = VOL, bool extended = true) const;
-        shared_ptr<KFormCoefficientFunction> InvStar(shared_ptr<KFormCoefficientFunction> a, VorB vb = VOL, bool extended = true) const;
-        shared_ptr<DoubleFormCoefficientFunction> InvStar(shared_ptr<DoubleFormCoefficientFunction> a, VorB vb = VOL, bool extended = true) const;
+        shared_ptr<KFormCoefficientFunction> Star(shared_ptr<KFormCoefficientFunction> a, VorB vb = VOL) const;
+        shared_ptr<KFormCoefficientFunction> InvStar(shared_ptr<KFormCoefficientFunction> a, VorB vb = VOL) const;
+        shared_ptr<DoubleFormCoefficientFunction> InvStar(shared_ptr<DoubleFormCoefficientFunction> a, VorB vb = VOL) const;
         shared_ptr<KFormCoefficientFunction> Coderivative(shared_ptr<KFormCoefficientFunction> a) const;
-        shared_ptr<DoubleFormCoefficientFunction> CovExteriorDerivative1(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL, bool extended = false) const;
-        shared_ptr<DoubleFormCoefficientFunction> CovExteriorDerivative2(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL, bool extended = false) const;
-        shared_ptr<DoubleFormCoefficientFunction> CovCodifferential1(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL, bool extended = false) const;
-        shared_ptr<DoubleFormCoefficientFunction> CovCodifferential2(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL, bool extended = false) const;
+        shared_ptr<DoubleFormCoefficientFunction> CovExteriorDerivative1(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL) const;
+        shared_ptr<DoubleFormCoefficientFunction> CovExteriorDerivative2(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL) const;
+        shared_ptr<DoubleFormCoefficientFunction> CovCodifferential1(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL) const;
+        shared_ptr<DoubleFormCoefficientFunction> CovCodifferential2(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL) const;
 
         // ------- Covariant differential operators --------
-        shared_ptr<TensorFieldCoefficientFunction> CovDerivative(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb = VOL, bool extended = false) const;
+        shared_ptr<TensorFieldCoefficientFunction> CovDerivative(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb = VOL) const;
 
         shared_ptr<TensorFieldCoefficientFunction> CovHessian(shared_ptr<TensorFieldCoefficientFunction> c1) const;
 
-        shared_ptr<TensorFieldCoefficientFunction> CovDivergence(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb = VOL, bool extended = false) const;
+        shared_ptr<TensorFieldCoefficientFunction> CovDivergence(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb = VOL) const;
 
         shared_ptr<TensorFieldCoefficientFunction> CovCurl(shared_ptr<TensorFieldCoefficientFunction> c1) const;
 

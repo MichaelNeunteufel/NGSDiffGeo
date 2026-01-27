@@ -116,6 +116,39 @@ def test_wedge_power_doubleform_edge_cases():
     assert l2_error(out1, df, mesh) == pytest.approx(0)
 
 
+def test_pow_operator_doubleform_and_tensorfield():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+
+    alpha = dg.OneForm(CF((x, y)))
+    beta = dg.OneForm(CF((1 + x, 1 + y)))
+    df = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+
+    out0 = df**0
+    expected0 = dg.ScalarField(CF(1), dim=dim)
+    assert l2_error(out0, expected0, mesh) == pytest.approx(0)
+
+    out1 = df**1
+    assert l2_error(out1, df, mesh) == pytest.approx(0)
+
+    out2 = df**2
+    expected2 = dg.WedgePower(df, 2)
+    assert l2_error(out2, expected2, mesh) == pytest.approx(0)
+
+    g = dg.TensorField(CF((1, 0, 0, 1), dims=(2, 2)), covariant_indices="11")
+    g0 = g**0
+    assert l2_error(g0, expected0, mesh) == pytest.approx(0)
+
+    g1 = g**1
+    expected_g1 = dg.WedgePower(g, 1)
+    assert isinstance(g1, dg.DoubleForm)
+    assert l2_error(g1, expected_g1, mesh) == pytest.approx(0)
+
+    g2 = g**2
+    expected_g2 = dg.WedgePower(g, 2)
+    assert l2_error(g2, expected_g2, mesh) == pytest.approx(0)
+
+
 def test_exterior_derivative_basic_identities_2d():
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
 
@@ -387,6 +420,64 @@ def test_doubleform_hodge_star_involution():
     assert l2_error(ss, df, mesh) == pytest.approx(0)
 
 
+def test_doubleform_hodge_star_left_right_inverse():
+    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.6))
+    dim = 3
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.OneForm(CF((x, y, z)))
+    beta = dg.OneForm(CF((1 + x, 2 + y, 3 + z)))
+    df = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+
+    star_left = dg.star(df, rm, slot="left")
+    assert star_left.degree_left == dim - 1
+    assert star_left.degree_right == 1
+    back_left = dg.inv_star(star_left, rm, slot="left")
+    assert l2_error(back_left, df, mesh) == pytest.approx(0)
+
+    star_right = dg.star(df, rm, slot="right")
+    assert star_right.degree_left == 1
+    assert star_right.degree_right == dim - 1
+    back_right = dg.inv_star(star_right, rm, slot="right")
+    assert l2_error(back_right, df, mesh) == pytest.approx(0)
+
+
+def test_project_tensor_tangent_and_normal():
+    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.6))
+    dim = 3
+    rm = dg.RiemannianManifold(Id(dim))
+
+    v = dg.VectorField(CF((x, y, z)))
+    v_tan = rm.ProjectTensor(v, "F")
+    vn = rm.ProjectTensor(v, "n")
+
+    assert isinstance(v_tan, dg.VectorField)
+    assert isinstance(vn, dg.ScalarField)
+
+    # Tangential projection should be orthogonal to the normal on the boundary
+    ip_tan = rm.InnerProduct(v_tan, rm.normal, vb=VOL)
+    assert l2_error_bnd(ip_tan, CF(0), mesh) == pytest.approx(0)
+
+    # Normal component should equal inner product with the normal
+    ip_vn = rm.InnerProduct(v, rm.normal, vb=VOL)
+    assert l2_error_bnd(vn, ip_vn, mesh) == pytest.approx(0)
+
+    alpha = dg.OneForm(CF((x, y, z)))
+    alpha_tan = rm.ProjectTensor(alpha, "F")
+    alpha_n = rm.ProjectTensor(alpha, "n")
+
+    assert isinstance(alpha_tan, dg.OneForm)
+    assert isinstance(alpha_n, dg.ScalarField)
+
+    beta = dg.OneForm(CF((1 + x, 2 + y, 3 + z)))
+    df = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+    df_tan = rm.ProjectTensor(df, "F")
+    df_n = rm.ProjectTensor(df, "n")
+
+    assert isinstance(df_tan, dg.DoubleForm)
+    assert isinstance(df_n, dg.DoubleForm)
+
+
 def test_doubleform_hodge_star_boundary_matches_contraction():
     mesh = Mesh(unit_cube.GenerateMesh(maxh=0.6))
     dim = 3
@@ -448,6 +539,22 @@ def test_doubleform_trace_contracts_first_slots():
     assert l2_error(traced, expected, mesh) == pytest.approx(0)
 
 
+def test_doubleform_trace_sigma_raises_indices():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    metric = CF((2, 0, 0, 3), dims=(2, 2))
+    rm = dg.RiemannianManifold(metric)
+
+    alpha = dg.OneForm(CF((1 + x, 2 + y)))
+    beta = dg.OneForm(CF((2 - x, 3 - y)))
+    df = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+
+    traced = rm.TraceSigma(df, rm.G)
+    expected = rm.InnerProduct(alpha, beta)
+
+    assert l2_error(traced, expected, mesh) == pytest.approx(0)
+
+
 def test_doubleform_slot_inner_product_full_contraction():
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
     dim = 2
@@ -473,6 +580,21 @@ def test_doubleform_slot_inner_product_degree_mismatch_raises():
 
     with pytest.raises(Exception):
         dg.slot_inner_product(df, rm)
+
+
+def test_slot_inner_product_scalar_field():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    f = dg.ScalarField(x + y, dim=dim)
+    expected = f * f
+
+    sip_function = dg.slot_inner_product(f, rm)
+    sip_method = rm.SlotInnerProduct(f)
+
+    assert l2_error(sip_function, expected, mesh) == pytest.approx(0)
+    assert l2_error(sip_method, expected, mesh) == pytest.approx(0)
 
 
 def test_doubleform_transpose_swaps_slots():

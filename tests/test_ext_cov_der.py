@@ -113,5 +113,25 @@ def test_double_form_covariant_derivatives_boundary_constant_zero():
     assert l2_norm_bnd(delta2, mesh) < 1e-12
 
 
+def test_scalar_d_cov_promotes_to_double_form():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    f = dg.ScalarField(CF(x + y), dim=dim)
+    d_left = rm.d_cov(f, slot="left")
+    d_right = rm.d_cov(f, slot="right")
+
+    expected_left = dg.DoubleForm(dg.d(f), p=1, q=0, dim=dim)
+    expected_right = dg.DoubleForm(dg.d(f), p=0, q=1, dim=dim)
+
+    assert d_left.degree_left == 1
+    assert d_left.degree_right == 0
+    assert d_right.degree_left == 0
+    assert d_right.degree_right == 1
+    assert l2_error(d_left, expected_left, mesh) < 1e-8
+    assert l2_error(d_right, expected_right, mesh) < 1e-8
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

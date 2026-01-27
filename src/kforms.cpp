@@ -11,6 +11,17 @@ namespace ngfem
 {
     namespace
     {
+        int ParseDoubleFormSlot(const std::string &slot)
+        {
+            if (slot == "both" || slot == "all")
+                return -1;
+            if (slot == "left" || slot == "0")
+                return 0;
+            if (slot == "right" || slot == "1")
+                return 1;
+            throw Exception("slot must be 'left', 'right', or 'both'");
+        }
+
         const std::vector<std::array<int, 4>> &GeneratePermutations(int rank)
         {
             if (rank < 0 || rank > 4)
@@ -94,7 +105,7 @@ namespace ngfem
         };
 
         const std::vector<std::vector<int>> &GetBlockPermutationOrders(int rank_total, int block_start, int block_len,
-                                                                        const std::vector<std::array<int, 4>> &perms)
+                                                                       const std::vector<std::array<int, 4>> &perms)
         {
             static std::mutex cache_mutex;
             static std::array<std::array<std::array<PermOrderCacheEntry, 5>, 9>, 9> cache;
@@ -173,45 +184,45 @@ namespace ngfem
         }
 
         shared_ptr<KFormCoefficientFunction> BoundaryHodgeStarKForm(shared_ptr<KFormCoefficientFunction> a,
-                                                                    const RiemannianManifold &M,
-                                                                    bool extended)
+                                                                    const RiemannianManifold &M)
         {
             int ambient_dim = M.Dimension();
             int n = ambient_dim - 1;
             int k = a->Degree();
 
-            auto star_vol = HodgeStar(a, M, VOL, extended);
+            auto star_vol = HodgeStar(a, M, VOL);
             auto normal = M.GetNV();
             auto contracted = M.Contraction(star_vol, normal); // reduce degree by 1
-            if (!extended && (n - k) > 0)
-            {
-                auto projected = M.ProjectTensorToEuclideanTangent(contracted);
-                return KFormCF(projected, n - k, ambient_dim);
-            }
-            return KFormCF(contracted->GetCoefficients(), n - k, ambient_dim);
+            // if (!extended && (n - k) > 0)
+            // {
+            //     auto projected = M.ProjectTensorToEuclideanTangent(contracted);
+            //     return KFormCF(projected, n - k, ambient_dim);
+            // }
+            double sign = (k % 2 == 0) ? 1.0 : -1.0;
+            return KFormCF(sign * contracted->GetCoefficients(), n - k, ambient_dim);
         }
 
         shared_ptr<DoubleFormCoefficientFunction> BoundaryHodgeStarDoubleForm(shared_ptr<DoubleFormCoefficientFunction> a,
-                                                                              const RiemannianManifold &M,
-                                                                              bool extended)
+                                                                              const RiemannianManifold &M)
         {
             int ambient_dim = M.Dimension();
             int n = ambient_dim - 1;
             int p = a->LeftDegree();
             int q = a->RightDegree();
 
-            auto star_vol = HodgeStar(a, M, VOL, extended);
+            auto star_vol = HodgeStar(a, M, VOL);
             auto normal = M.GetNV();
 
             int left_deg = star_vol->LeftDegree();
             auto contracted_left = M.Contraction(star_vol, normal, 0);
             auto contracted_right = M.Contraction(contracted_left, normal, size_t(left_deg - 1));
-            if (!extended && (n - p + n - q) > 0)
-            {
-                auto projected = M.ProjectTensorToEuclideanTangent(contracted_right);
-                return DoubleFormCF(projected, n - p, n - q, ambient_dim);
-            }
-            return DoubleFormCF(contracted_right, n - p, n - q, ambient_dim);
+            // if (!extended && (n - p + n - q) > 0)
+            // {
+            //     auto projected = M.ProjectTensorToEuclideanTangent(contracted_right);
+            //     return DoubleFormCF(projected, n - p, n - q, ambient_dim);
+            // }
+            double sign = ((p + q) % 2 == 0) ? 1.0 : -1.0;
+            return DoubleFormCF(sign * contracted_right->GetCoefficients(), n - p, n - q, ambient_dim);
         }
 
     } // namespace
@@ -831,7 +842,7 @@ namespace ngfem
         return KFormCF(out, k + 1, dim);
     }
 
-    shared_ptr<KFormCoefficientFunction> HodgeStar(shared_ptr<KFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, bool extended)
+    shared_ptr<KFormCoefficientFunction> HodgeStar(shared_ptr<KFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb)
     {
         int ambient_dim = M.Dimension();
         if (vb == BBND)
@@ -846,7 +857,7 @@ namespace ngfem
             return ZeroKForm(n - k, vb == VOL ? n : ambient_dim);
 
         if (vb == BND)
-            return BoundaryHodgeStarKForm(a, M, extended);
+            return BoundaryHodgeStarKForm(a, M);
 
         shared_ptr<TensorFieldCoefficientFunction> raised = a;
         for (int i = 0; i < k; ++i)
@@ -877,20 +888,20 @@ namespace ngfem
         return KFormCF(scaled, n - k, n);
     }
 
-    shared_ptr<KFormCoefficientFunction> InverseHodgeStar(shared_ptr<KFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, bool extended)
+    shared_ptr<KFormCoefficientFunction> InverseHodgeStar(shared_ptr<KFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb)
     {
         int n = (vb == VOL) ? M.Dimension() : M.Dimension() - 1;
         int k = a->Degree();
         int exponent = k * (n - k);
         int sign = (exponent % 2 == 0) ? 1 : -1;
 
-        auto star = HodgeStar(a, M, vb, extended);
+        auto star = HodgeStar(a, M, vb);
         if (sign == 1)
             return star;
         return KFormCF((-1.0) * star->GetCoefficients(), n - k, vb == VOL ? n : M.Dimension());
     }
 
-    shared_ptr<DoubleFormCoefficientFunction> HodgeStar(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, bool extended)
+    shared_ptr<DoubleFormCoefficientFunction> HodgeStar(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, int slot)
     {
         int ambient_dim = M.Dimension();
         if (vb == BBND)
@@ -905,8 +916,36 @@ namespace ngfem
         if (a->IsZeroCF())
             return ZeroDoubleForm(n - p, n - q, vb == VOL ? n : ambient_dim);
 
+        if (slot == 0)
+        {
+            if (vb == BND)
+            {
+                auto star_vol_left = BlockHodgeStar(a, 0, p, ambient_dim, M);
+                auto left_tf = TensorFieldCF(star_vol_left, std::string(size_t(ambient_dim - p + q), '1'));
+                auto contracted = M.Contraction(left_tf, M.GetNV(), 0);
+                double sign = (p % 2 == 0) ? 1.0 : -1.0;
+                return DoubleFormCF(sign * contracted->GetCoefficients(), n - p, q, ambient_dim);
+            }
+            auto left_star = BlockHodgeStar(a, 0, p, n, M);
+            return DoubleFormCF(left_star, n - p, q, n);
+        }
+
+        if (slot == 1)
+        {
+            if (vb == BND)
+            {
+                auto star_vol_right = BlockHodgeStar(a, p, q, ambient_dim, M);
+                auto right_tf = TensorFieldCF(star_vol_right, std::string(size_t(p + ambient_dim - q), '1'));
+                auto contracted = M.Contraction(right_tf, M.GetNV(), size_t(p));
+                double sign = (q % 2 == 0) ? 1.0 : -1.0;
+                return DoubleFormCF(sign * contracted->GetCoefficients(), p, n - q, ambient_dim);
+            }
+            auto right_star = BlockHodgeStar(a, p, q, n, M);
+            return DoubleFormCF(right_star, p, n - q, n);
+        }
+
         if (vb == BND)
-            return BoundaryHodgeStarDoubleForm(a, M, extended);
+            return BoundaryHodgeStarDoubleForm(a, M);
 
         auto left_star = BlockHodgeStar(a, 0, p, n, M);
         auto left_tf = TensorFieldCF(left_star, std::string(size_t(n - p + q), '1'));
@@ -915,7 +954,7 @@ namespace ngfem
         return DoubleFormCF(right_star, n - p, n - q, n);
     }
 
-    shared_ptr<DoubleFormCoefficientFunction> InverseHodgeStar(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, bool extended)
+    shared_ptr<DoubleFormCoefficientFunction> InverseHodgeStar(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, int slot)
     {
         if (vb == BBND)
             throw Exception("InverseHodgeStar (double-form): not implemented for BBND (codimension-2) yet");
@@ -923,10 +962,16 @@ namespace ngfem
         int n = (vb == VOL) ? M.Dimension() : M.Dimension() - 1;
         int p = a->LeftDegree();
         int q = a->RightDegree();
-        int exponent = p * (n - p) + q * (n - q);
+        int exponent = 0;
+        if (slot == 0)
+            exponent = p * (n - p);
+        else if (slot == 1)
+            exponent = q * (n - q);
+        else
+            exponent = p * (n - p) + q * (n - q);
         int sign = (exponent % 2 == 0) ? 1 : -1;
 
-        auto star = HodgeStar(a, M, vb, extended);
+        auto star = HodgeStar(a, M, vb, slot);
         if (sign == 1)
             return star;
         return DoubleFormCF((-1.0) * star->GetCoefficients(), n - p, n - q, vb == VOL ? n : M.Dimension());
@@ -986,10 +1031,10 @@ void ExportKForms(py::module m)
              { return Wedge(a, b); }, py::arg("b"))
         .def("d", [](shared_ptr<KFormCoefficientFunction> a)
              { return ExteriorDerivative(a); })
-        .def("star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, bool extended)
-             { return HodgeStar(a, *M, vb, extended); }, py::arg("M"), py::arg("vb") = VOL, py::arg("extended") = true)
-        .def("inv_star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, bool extended)
-             { return InverseHodgeStar(a, *M, vb, extended); }, py::arg("M"), py::arg("vb") = VOL, py::arg("extended") = true)
+        .def("star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
+             { return HodgeStar(a, *M, vb); }, py::arg("M"), py::arg("vb") = VOL)
+        .def("inv_star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
+             { return InverseHodgeStar(a, *M, vb); }, py::arg("M"), py::arg("vb") = VOL)
         .def_property_readonly("coef", &KFormCoefficientFunction::GetCoefficients);
 
     py::class_<DoubleFormCoefficientFunction,
@@ -1003,10 +1048,10 @@ void ExportKForms(py::module m)
         .def_property_readonly("dim_space", &DoubleFormCoefficientFunction::DimensionOfSpace)
         .def("wedge", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<DoubleFormCoefficientFunction> b)
              { return Wedge(a, b); }, py::arg("b"))
-        .def("star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, bool extended)
-             { return HodgeStar(a, *M, vb, extended); }, py::arg("M"), py::arg("vb") = VOL, py::arg("extended") = true)
-        .def("inv_star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, bool extended)
-             { return InverseHodgeStar(a, *M, vb, extended); }, py::arg("M"), py::arg("vb") = VOL, py::arg("extended") = true)
+        .def("star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, const std::string &slot)
+             { return HodgeStar(a, *M, vb, ParseDoubleFormSlot(slot)); }, py::arg("M"), py::arg("vb") = VOL, py::arg("slot") = "both")
+        .def("inv_star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, const std::string &slot)
+             { return InverseHodgeStar(a, *M, vb, ParseDoubleFormSlot(slot)); }, py::arg("M"), py::arg("vb") = VOL, py::arg("slot") = "both")
         .def_property_readonly("trans", [](shared_ptr<DoubleFormCoefficientFunction> a)
                                { return SwapDoubleFormSlots(a); })
         .def_property_readonly("coef", &DoubleFormCoefficientFunction::GetCoefficients);
@@ -1054,14 +1099,14 @@ void ExportKForms(py::module m)
 
     m.def("d", [](shared_ptr<KFormCoefficientFunction> a)
           { return ExteriorDerivative(a); }, py::arg("a"));
-    m.def("star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, bool extended)
-          { return M->Star(a, vb, extended); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL, py::arg("extended") = true);
-    m.def("inv_star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, bool extended)
-          { return InverseHodgeStar(a, *M, vb, extended); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL, py::arg("extended") = true);
-    m.def("star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, bool extended)
-          { return HodgeStar(a, *M, vb, extended); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL, py::arg("extended") = true);
-    m.def("inv_star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, bool extended)
-          { return InverseHodgeStar(a, *M, vb, extended); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL, py::arg("extended") = true);
+    m.def("star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
+          { return M->Star(a, vb); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL);
+    m.def("inv_star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
+          { return InverseHodgeStar(a, *M, vb); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL);
+    m.def("star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, const std::string &slot)
+          { return HodgeStar(a, *M, vb, ParseDoubleFormSlot(slot)); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL, py::arg("slot") = "both");
+    m.def("inv_star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, const std::string &slot)
+          { return InverseHodgeStar(a, *M, vb, ParseDoubleFormSlot(slot)); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL, py::arg("slot") = "both");
     m.def("slot_inner_product", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, bool forms)
           { return SlotInnerProduct(a, *M, vb, forms); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL, py::arg("forms") = true);
 
