@@ -5,6 +5,7 @@
 #include <coefficient.hpp>
 #include <fespace.hpp>
 #include <symbolicintegrator.hpp>
+#include <vector>
 
 namespace ngfem
 {
@@ -31,7 +32,7 @@ namespace ngfem
         bool is_regge;
         bool is_proxy;
         double normal_sign;
-        double riemann_sign;
+        bool change_riemann_sign;
         shared_ptr<ProxyFunction> regge_proxy;
         shared_ptr<ngcomp::FESpace> regge_space;
 
@@ -51,25 +52,29 @@ namespace ngfem
         shared_ptr<CoefficientFunction> chr2;
 
         // curvature quantities
-        shared_ptr<TensorFieldCoefficientFunction> Riemann;
+        shared_ptr<DoubleFormCoefficientFunction> Riemann;
         shared_ptr<TensorFieldCoefficientFunction> Curvature;
-        shared_ptr<TensorFieldCoefficientFunction> Ricci;
-        shared_ptr<TensorFieldCoefficientFunction> Einstein;
+        shared_ptr<DoubleFormCoefficientFunction> Ricci;
+        shared_ptr<DoubleFormCoefficientFunction> Einstein;
         shared_ptr<TensorFieldCoefficientFunction> Scalar;
 
-        shared_ptr<TensorFieldCoefficientFunction> SFF;
-        shared_ptr<TensorFieldCoefficientFunction> SFF_restricted;
+        shared_ptr<DoubleFormCoefficientFunction> SFF;
+        shared_ptr<DoubleFormCoefficientFunction> SFF_restricted;
 
         // Euclidean and g-normalized normal and tangent vectors
         shared_ptr<CoefficientFunction> nv;
         shared_ptr<CoefficientFunction> tv;
+        shared_ptr<CoefficientFunction> cnv[2];
         shared_ptr<VectorFieldCoefficientFunction> g_nv;
         shared_ptr<VectorFieldCoefficientFunction> g_tv;
+        shared_ptr<VectorFieldCoefficientFunction> g_nv_BBND[2];
+        shared_ptr<VectorFieldCoefficientFunction> g_cnv[2];
 
         shared_ptr<CoefficientFunction> P_n;
         shared_ptr<CoefficientFunction> P_F;
 
         shared_ptr<CoefficientFunction> P_F_g;
+        shared_ptr<CoefficientFunction> P_E_g;
 
         mutable shared_ptr<TensorFieldCoefficientFunction> levi_civita_cov;
         mutable shared_ptr<TensorFieldCoefficientFunction> levi_civita_contra;
@@ -80,7 +85,7 @@ namespace ngfem
          * @brief Constructor for RiemannianManifold.
          * @param _g The metric tensor.
          */
-        RiemannianManifold(shared_ptr<CoefficientFunction> _g, double normal_sign = 1.0, double riemann_sign = 1.0);
+        RiemannianManifold(shared_ptr<CoefficientFunction> _g, double normal_sign = 1.0, bool change_riemann_sign = false);
 
         int GetDimension() const { return dim; }
 
@@ -98,8 +103,10 @@ namespace ngfem
 
         // -------  musical isomorphisms -------
         shared_ptr<TensorFieldCoefficientFunction> Raise(shared_ptr<TensorFieldCoefficientFunction> c1, size_t index = 0, VorB vb = VOL) const;
+        shared_ptr<TensorFieldCoefficientFunction> Raise(shared_ptr<TensorFieldCoefficientFunction> c1, const std::vector<size_t> &indices, VorB vb = VOL) const;
 
         shared_ptr<TensorFieldCoefficientFunction> Lower(shared_ptr<TensorFieldCoefficientFunction> c1, size_t index = 0, VorB vb = VOL) const;
+        shared_ptr<TensorFieldCoefficientFunction> Lower(shared_ptr<TensorFieldCoefficientFunction> c1, const std::vector<size_t> &indices, VorB vb = VOL) const;
 
         shared_ptr<TensorFieldCoefficientFunction> GetLeviCivitaSymbol(bool covariant) const;
 
@@ -108,13 +115,13 @@ namespace ngfem
         shared_ptr<CoefficientFunction> GetChristoffelSymbol(bool second_kind) const;
 
         // Full 4th order Riemann curvature tensor
-        shared_ptr<TensorFieldCoefficientFunction> GetRiemannCurvatureTensor() const;
+        shared_ptr<DoubleFormCoefficientFunction> GetRiemannCurvatureTensor() const;
 
         // Ricci tensor, symmetric dim x dim matrix
-        shared_ptr<TensorFieldCoefficientFunction> GetRicciTensor() const;
+        shared_ptr<DoubleFormCoefficientFunction> GetRicciTensor() const;
 
         // Einstein tensor, 0 for dim < 3, otherwise symmetric dim x dim matrix
-        shared_ptr<TensorFieldCoefficientFunction> GetEinsteinTensor() const;
+        shared_ptr<DoubleFormCoefficientFunction> GetEinsteinTensor() const;
 
         // Scalar curvature (twice contracted Riemann tensor; trace of Ricci tensor)
         shared_ptr<ScalarFieldCoefficientFunction> GetScalarCurvature() const;
@@ -127,7 +134,7 @@ namespace ngfem
         shared_ptr<TensorFieldCoefficientFunction> GetCurvatureOperator() const;
 
         // ------- second fundamental form --------
-        shared_ptr<TensorFieldCoefficientFunction> GetSecondFundamentalForm() const;
+        shared_ptr<DoubleFormCoefficientFunction> GetSecondFundamentalForm() const;
         shared_ptr<ScalarFieldCoefficientFunction> GetGeodesicCurvature() const;
         shared_ptr<ScalarFieldCoefficientFunction> GetMeanCurvature() const;
 
@@ -137,6 +144,8 @@ namespace ngfem
         // ------- Normal and tangent vectors --------
         shared_ptr<VectorFieldCoefficientFunction> GetNV() const;
         shared_ptr<VectorFieldCoefficientFunction> GetEdgeTangent() const;
+        shared_ptr<VectorFieldCoefficientFunction> GetEdgeNormal(int i) const;
+        shared_ptr<VectorFieldCoefficientFunction> GetEdgeConormal(int i) const;
 
         // ------- Tensor operations --------
         shared_ptr<ScalarFieldCoefficientFunction> IP(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2, VorB vb = VOL, bool forms = false) const;
@@ -187,7 +196,9 @@ namespace ngfem
 
         shared_ptr<TensorFieldCoefficientFunction> S_op(shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb = VOL) const;
         shared_ptr<DoubleFormCoefficientFunction> s_op(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL) const;
-        shared_ptr<DoubleFormCoefficientFunction> ProjectDoubleForm(shared_ptr<DoubleFormCoefficientFunction> tf, int left_mode, int right_mode) const;
+        shared_ptr<DoubleFormCoefficientFunction> ProjectDoubleForm(shared_ptr<DoubleFormCoefficientFunction> tf, int left_mode, int right_mode,
+                                                                    shared_ptr<VectorFieldCoefficientFunction> normal = nullptr,
+                                                                    shared_ptr<VectorFieldCoefficientFunction> conormal = nullptr) const;
         shared_ptr<DoubleFormCoefficientFunction> ContractSlot(shared_ptr<DoubleFormCoefficientFunction> tf, shared_ptr<VectorFieldCoefficientFunction> vf, int slot) const;
         shared_ptr<TensorFieldCoefficientFunction> J_op(shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb = VOL) const;
     };

@@ -638,7 +638,7 @@ def inv_star(a, M, vb=ngsolve.VOL, double=False, slot="both"):
 
 def slot_inner_product(a, M, vb=ngsolve.VOL, forms=True):
     if _is_scalarfield_like(a):
-        return as_scalarfield(a * a, dim=M.dim)
+        return as_scalarfield(a, dim=M.dim)
     out = _cpp.slot_inner_product(a, M, vb, forms)
     return as_scalarfield(out, dim=M.dim)
 
@@ -652,8 +652,8 @@ def delta(a, M):
 
 
 class RiemannianManifold(_CPP_RiemannianManifold):
-    def __init__(self, metric, normal_sign=1.0, riemann_sign=1.0):
-        super().__init__(metric, normal_sign, riemann_sign)
+    def __init__(self, metric, normal_sign=1.0, change_riemann_sign=False):
+        super().__init__(metric, normal_sign, change_riemann_sign)
 
     # properties
     @property
@@ -696,6 +696,22 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         out = _CPP_RiemannianManifold.tangent.__get__(self)
         return as_tensorfield(out)
 
+    def edge_conormal(self, i):
+        out = _CPP_RiemannianManifold.EdgeConormal(self, i)
+        return as_vectorfield(out)
+
+    def edge_normal(self, i):
+        out = _CPP_RiemannianManifold.EdgeNormal(self, i)
+        return as_vectorfield(out)
+
+    @property
+    def edge_conormals(self):
+        return [self.edge_conormal(0), self.edge_conormal(1)]
+
+    @property
+    def edge_normals(self):
+        return [self.edge_normal(0), self.edge_normal(1)]
+
     @property
     def G_deriv(self):
         return _CPP_RiemannianManifold.G_deriv.__get__(self)
@@ -703,7 +719,7 @@ class RiemannianManifold(_CPP_RiemannianManifold):
     @property
     def Riemann(self):
         out = _CPP_RiemannianManifold.Riemann.__get__(self)
-        return as_tensorfield(out)
+        return as_doubleform(out, p=2, q=2, dim=self.dim)
 
     @property
     def Curvature(self):
@@ -718,12 +734,12 @@ class RiemannianManifold(_CPP_RiemannianManifold):
     @property
     def Ricci(self):
         out = _CPP_RiemannianManifold.Ricci.__get__(self)
-        return as_tensorfield(out)
+        return as_doubleform(out, p=1, q=1, dim=self.dim)
 
     @property
     def Einstein(self):
         out = _CPP_RiemannianManifold.Einstein.__get__(self)
-        return as_tensorfield(out)
+        return as_doubleform(out, p=1, q=1, dim=self.dim)
 
     @property
     def Scalar(self):
@@ -733,14 +749,20 @@ class RiemannianManifold(_CPP_RiemannianManifold):
     @property
     def SFF(self):
         out = _CPP_RiemannianManifold.SFF.__get__(self)
-        return as_tensorfield(out)
+        return as_doubleform(out, p=1, q=1, dim=self.dim)
 
     def Raise(self, tf, index=0, vb=ngsolve.VOL):
-        out = _CPP_RiemannianManifold.Raise(self, tf, index, vb)
+        if isinstance(index, (list, tuple)):
+            out = _CPP_RiemannianManifold.Raise(self, tf, list(index), vb)
+        else:
+            out = _CPP_RiemannianManifold.Raise(self, tf, index, vb)
         return as_tensorfield(out)
 
     def Lower(self, tf, index=0, vb=ngsolve.VOL):
-        out = _CPP_RiemannianManifold.Lower(self, tf, index, vb)
+        if isinstance(index, (list, tuple)):
+            out = _CPP_RiemannianManifold.Lower(self, tf, list(index), vb)
+        else:
+            out = _CPP_RiemannianManifold.Lower(self, tf, index, vb)
         return as_tensorfield(out)
 
     @property
@@ -775,10 +797,50 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         out = _CPP_RiemannianManifold.delta_cov(self, tf, slot, vb)
         return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=self.dim)
 
-    def ProjectDoubleForm(self, tf, left="none", right="none"):
+    def ProjectDoubleForm(
+        self, tf, left="none", right="none", normal=None, conormal=None
+    ):
+        if isinstance(tf, (ScalarField, _CPP_ScalarField)):
+
+            def _parse_proj_mode(mode):
+                if isinstance(mode, str):
+                    s = mode.lower()
+                    if s in ("f", "tangent", "tan", "1"):
+                        return 1
+                    if s in ("n", "normal", "2"):
+                        return 2
+                    if s in ("e", "edge", "3"):
+                        return 3
+                    if s in ("m", "conormal", "4"):
+                        return 4
+                    if s in ("none", "0"):
+                        return 0
+                    raise ValueError(
+                        "ProjectDoubleForm: mode must be 'F'/'tangent', 'n'/'normal', "
+                        "'E'/'edge', 'm'/'conormal', or 'none'"
+                    )
+                if isinstance(mode, int):
+                    if mode in (0, 1, 2, 3, 4):
+                        return mode
+                    raise ValueError(
+                        "ProjectDoubleForm: mode must be 0 (none), 1 (F/tangent), "
+                        "2 (n/normal), 3 (E/edge), or 4 (m/conormal)"
+                    )
+                raise ValueError("ProjectDoubleForm: mode must be string or int")
+
+            left_mode = _parse_proj_mode(left)
+            right_mode = _parse_proj_mode(right)
+            if left_mode in (2, 4) or right_mode in (2, 4):
+                raise ValueError(
+                    "ProjectDoubleForm: cannot project ScalarField with 'n'/'m' modes"
+                )
+            return as_scalarfield(tf, dim=self.dim)
+
         if not isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
             raise TypeError("ProjectDoubleForm expects a DoubleForm")
-        out = _CPP_RiemannianManifold.ProjectDoubleForm(self, tf, left, right)
+        out = _CPP_RiemannianManifold.ProjectDoubleForm(
+            self, tf, left, right, normal, conormal
+        )
         return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=self.dim)
 
     def ProjectTensor(self, tf, mode="none"):
@@ -935,7 +997,7 @@ class RiemannianManifold(_CPP_RiemannianManifold):
 
     def SlotInnerProduct(self, tf, vb=ngsolve.VOL, forms=True):
         if _is_scalarfield_like(tf):
-            return as_scalarfield(tf * tf, dim=self.dim)
+            return as_scalarfield(tf, dim=self.dim)
         out = _CPP_RiemannianManifold.SlotInnerProduct(self, tf, vb, forms)
         return as_scalarfield(out, dim=self.dim)
 
