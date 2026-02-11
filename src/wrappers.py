@@ -29,6 +29,13 @@ def _call_if_callable(x):
     return x() if callable(x) else x
 
 
+def _unwrap_cf(obj):
+    try:
+        return obj.coef
+    except Exception:
+        return obj
+
+
 def _infer_dim(obj):
     """Try to infer dimension. Returns int or None."""
     if hasattr(obj, "_dim") and isinstance(obj._dim, int) and obj._dim > 0:
@@ -145,16 +152,16 @@ class ScalarField(_CPP_ScalarField):
         return as_kform(cf, k=k, dim=self._dim)
 
     def __add__(self, other):
-        return self._wrap(_CPP_ScalarField.__add__(self, other))
+        return self._wrap(self.coef + _unwrap_cf(other))
 
     def __radd__(self, other):
         return self.__add__(other)
 
     def __sub__(self, other):
-        return self._wrap(_CPP_ScalarField.__sub__(self, other))
+        return self._wrap(self.coef - _unwrap_cf(other))
 
     def __neg__(self):
-        return self._wrap(_CPP_ScalarField.__neg__(self))
+        return self._wrap(-self.coef)
 
     def __mul__(self, other):
         if isinstance(other, KForm) or (
@@ -163,13 +170,13 @@ class ScalarField(_CPP_ScalarField):
             k = 0
             if hasattr(other, "degree"):
                 k = other.degree
-            return self._wrap(_CPP_ScalarField.__mul__(self, other), k=k)
+            return self._wrap(self.coef * _unwrap_cf(other), k=k)
         elif isinstance(other, (int, float, complex)):
             # keep scalar * ScalarField results typed as ScalarField
-            return self._wrap(_CPP_ScalarField.__mul__(self, other))
+            return self._wrap(self.coef * other)
         elif isinstance(other, (VectorField, TensorField)):
             return as_tensorfield(
-                _CPP_ScalarField.__mul__(self, other),
+                self.coef * _unwrap_cf(other),
                 covariant_indices=other._covariant_indices,
             )
         return _CPP_ScalarField.__mul__(self, other)
@@ -187,7 +194,7 @@ class ScalarField(_CPP_ScalarField):
         return self.__mul__(other)
 
     def __truediv__(self, other):
-        return self._wrap(_CPP_ScalarField.__truediv__(self, other))
+        return self._wrap(self.coef / _unwrap_cf(other))
 
 
 class OneForm(_CPP_OneForm):
@@ -200,25 +207,25 @@ class OneForm(_CPP_OneForm):
         return as_kform(cf, k=1, dim=self._dim)
 
     def __add__(self, other):
-        return self._wrap(_CPP_OneForm.__add__(self, other))
+        return self._wrap(self.coef + _unwrap_cf(other))
 
     def __radd__(self, other):
         return self.__add__(other)
 
     def __sub__(self, other):
-        return self._wrap(_CPP_OneForm.__sub__(self, other))
+        return self._wrap(self.coef - _unwrap_cf(other))
 
     def __neg__(self):
-        return self._wrap(_CPP_OneForm.__neg__(self))
+        return self._wrap(-self.coef)
 
     def __mul__(self, other):
-        return self._wrap(_CPP_OneForm.__mul__(self, other))
+        return self._wrap(self.coef * _unwrap_cf(other))
 
     def __rmul__(self, other):
         return self.__mul__(other)
 
     def __truediv__(self, other):
-        return self._wrap(_CPP_OneForm.__truediv__(self, other))
+        return self._wrap(self.coef / _unwrap_cf(other))
 
 
 class TwoForm(_CPP_TwoForm):
@@ -231,25 +238,25 @@ class TwoForm(_CPP_TwoForm):
         return as_kform(cf, k=2, dim=self._dim)
 
     def __add__(self, other):
-        return self._wrap(_CPP_TwoForm.__add__(self, other))
+        return self._wrap(self.coef + _unwrap_cf(other))
 
     def __radd__(self, other):
         return self.__add__(other)
 
     def __sub__(self, other):
-        return self._wrap(_CPP_TwoForm.__sub__(self, other))
+        return self._wrap(self.coef - _unwrap_cf(other))
 
     def __neg__(self):
-        return self._wrap(_CPP_TwoForm.__neg__(self))
+        return self._wrap(-self.coef)
 
     def __mul__(self, other):
-        return self._wrap(_CPP_TwoForm.__mul__(self, other))
+        return self._wrap(self.coef * _unwrap_cf(other))
 
     def __rmul__(self, other):
         return self.__mul__(other)
 
     def __truediv__(self, other):
-        return self._wrap(_CPP_TwoForm.__truediv__(self, other))
+        return self._wrap(self.coef / _unwrap_cf(other))
 
 
 class ThreeForm(_CPP_ThreeForm):
@@ -262,25 +269,25 @@ class ThreeForm(_CPP_ThreeForm):
         return as_kform(cf, k=3, dim=self._dim)
 
     def __add__(self, other):
-        return self._wrap(_CPP_ThreeForm.__add__(self, other))
+        return self._wrap(self.coef + _unwrap_cf(other))
 
     def __radd__(self, other):
         return self.__add__(other)
 
     def __sub__(self, other):
-        return self._wrap(_CPP_ThreeForm.__sub__(self, other))
+        return self._wrap(self.coef - _unwrap_cf(other))
 
     def __neg__(self):
-        return self._wrap(_CPP_ThreeForm.__neg__(self))
+        return self._wrap(-self.coef)
 
     def __mul__(self, other):
-        return self._wrap(_CPP_ThreeForm.__mul__(self, other))
+        return self._wrap(self.coef * _unwrap_cf(other))
 
     def __rmul__(self, other):
         return self.__mul__(other)
 
     def __truediv__(self, other):
-        return self._wrap(_CPP_ThreeForm.__truediv__(self, other))
+        return self._wrap(self.coef / _unwrap_cf(other))
 
 
 class GenericKForm(_CPP_KForm):
@@ -293,25 +300,25 @@ class GenericKForm(_CPP_KForm):
         return as_kform(cf, k=self._k, dim=self._dim)
 
     def __add__(self, other):
-        return self._wrap(_CPP_KForm.__add__(self, other))
+        return self._wrap(self.coef + _unwrap_cf(other))
 
     def __radd__(self, other):
         return self.__add__(other)
 
     def __sub__(self, other):
-        return self._wrap(_CPP_KForm.__sub__(self, other))
+        return self._wrap(self.coef - _unwrap_cf(other))
 
     def __neg__(self):
-        return self._wrap(_CPP_KForm.__neg__(self))
+        return self._wrap(-self.coef)
 
     def __mul__(self, other):
-        return self._wrap(_CPP_KForm.__mul__(self, other))
+        return self._wrap(self.coef * _unwrap_cf(other))
 
     def __rmul__(self, other):
         return self.__mul__(other)
 
     def __truediv__(self, other):
-        return self._wrap(_CPP_KForm.__truediv__(self, other))
+        return self._wrap(self.coef / _unwrap_cf(other))
 
 
 class DoubleForm(_CPP_DoubleForm):
@@ -325,25 +332,25 @@ class DoubleForm(_CPP_DoubleForm):
         return as_doubleform(cf, p=self._p, q=self._q, dim=self._dim)
 
     def __add__(self, other):
-        return self._wrap(_CPP_DoubleForm.__add__(self, other))
+        return self._wrap(self.coef + _unwrap_cf(other))
 
     def __radd__(self, other):
         return self.__add__(other)
 
     def __sub__(self, other):
-        return self._wrap(_CPP_DoubleForm.__sub__(self, other))
+        return self._wrap(self.coef - _unwrap_cf(other))
 
     def __neg__(self):
-        return self._wrap(_CPP_DoubleForm.__neg__(self))
+        return self._wrap(-self.coef)
 
     def __mul__(self, other):
-        return self._wrap(_CPP_DoubleForm.__mul__(self, other))
+        return self._wrap(self.coef * _unwrap_cf(other))
 
     def __rmul__(self, other):
         return self.__mul__(other)
 
     def __truediv__(self, other):
-        return self._wrap(_CPP_DoubleForm.__truediv__(self, other))
+        return self._wrap(self.coef / _unwrap_cf(other))
 
     def __pow__(self, power):
         return WedgePower(self, power)
@@ -446,25 +453,25 @@ class VectorField(_CPP_VectorField):
         return as_vectorfield(cf)
 
     def __add__(self, other):
-        return self._wrap(_CPP_VectorField.__add__(self, other))
+        return self._wrap(self.coef + _unwrap_cf(other))
 
     def __radd__(self, other):
         return self.__add__(other)
 
     def __sub__(self, other):
-        return self._wrap(_CPP_VectorField.__sub__(self, other))
+        return self._wrap(self.coef - _unwrap_cf(other))
 
     def __neg__(self):
-        return self._wrap(_CPP_VectorField.__neg__(self))
+        return self._wrap(-self.coef)
 
     def __mul__(self, other):
-        return self._wrap(_CPP_VectorField.__mul__(self, other))
+        return self._wrap(self.coef * _unwrap_cf(other))
 
     def __rmul__(self, other):
         return self.__mul__(other)
 
     def __truediv__(self, other):
-        return self._wrap(_CPP_VectorField.__truediv__(self, other))
+        return self._wrap(self.coef / _unwrap_cf(other))
 
 
 def as_vectorfield(cf):
@@ -484,32 +491,32 @@ class TensorField(_CPP_TensorField):
         return as_tensorfield(cf, covariant_indices=self._covariant_indices)
 
     def __add__(self, other):
-        return self._wrap(_CPP_TensorField.__add__(self, other))
+        return self._wrap(self.coef + _unwrap_cf(other))
 
     def __radd__(self, other):
         return self.__add__(other)
 
     def __sub__(self, other):
-        return self._wrap(_CPP_TensorField.__sub__(self, other))
+        return self._wrap(self.coef - _unwrap_cf(other))
 
     def __neg__(self):
-        return self._wrap(_CPP_TensorField.__neg__(self))
+        return self._wrap(-self.coef)
 
     def __mul__(self, other):
-        return self._wrap(_CPP_TensorField.__mul__(self, other))
+        return self._wrap(self.coef * _unwrap_cf(other))
 
     def __rmul__(self, other):
         # if other is a number or a ngsolve CoefficientFunction with dim=1:
         if isinstance(other, (int, float, ngsolve.CoefficientFunction)) and (
             not hasattr(other, "dim") or other.dim == 1
         ):
-            return self._wrap(_CPP_TensorField.__rmul__(self, other))
+            return self._wrap(self.coef * _unwrap_cf(other))
             # return self.__mul__(other)
         else:
             return NotImplemented
 
     def __truediv__(self, other):
-        return self._wrap(_CPP_TensorField.__truediv__(self, other))
+        return self._wrap(self.coef / _unwrap_cf(other))
 
     def __pow__(self, power):
         if self._covariant_indices != "11":

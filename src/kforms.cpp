@@ -49,6 +49,60 @@ namespace ngfem
             return cached_perms[rank];
         }
 
+        const std::vector<std::array<int, 4>> &GenerateShuffles(int left, int right)
+        {
+            int total = left + right;
+            if (left < 0 || right < 0 || total > 4)
+                throw Exception("GenerateShuffles: block sizes must be non-negative and sum to <= 4");
+
+            struct ShuffleCacheEntry
+            {
+                bool ready = false;
+                std::vector<std::array<int, 4>> perms;
+            };
+
+            static std::array<std::array<ShuffleCacheEntry, 5>, 5> cache;
+            auto &entry = cache[size_t(left)][size_t(right)];
+            if (!entry.ready)
+            {
+                const auto &perms = GeneratePermutations(total);
+                entry.perms.clear();
+                entry.perms.reserve(perms.size());
+                for (const auto &perm : perms)
+                {
+                    bool ok = true;
+                    int prev_left = -1;
+                    int prev_right = left - 1;
+                    for (int i = 0; i < total; ++i)
+                    {
+                        int v = perm[size_t(i)];
+                        if (v < left)
+                        {
+                            if (v < prev_left)
+                            {
+                                ok = false;
+                                break;
+                            }
+                            prev_left = v;
+                        }
+                        else
+                        {
+                            if (v < prev_right)
+                            {
+                                ok = false;
+                                break;
+                            }
+                            prev_right = v;
+                        }
+                    }
+                    if (ok)
+                        entry.perms.push_back(perm);
+                }
+                entry.ready = true;
+            }
+            return entry.perms;
+        }
+
         int PermutationSign(const std::array<int, 4> &perm, int rank)
         {
             switch (rank)
@@ -781,10 +835,20 @@ namespace ngfem
             return KFormCF(a->GetCoefficients() * b->GetCoefficients(), k + l, dim);
 
         auto T = TensorProduct(a, b);
-        auto alt = AlternationCF(T, k + l, dim);
-        double scale = 1.0 / double(Factorial(k) * Factorial(l));
-        auto out = scale * alt;
-        return KFormCF(out, k + l, dim);
+        const auto &shuffles = GenerateShuffles(k, l);
+        shared_ptr<CoefficientFunction> accum;
+        for (const auto &perm : shuffles)
+        {
+            std::vector<int> order(size_t(k + l));
+            for (int i = 0; i < k + l; ++i)
+                order[size_t(i)] = perm[size_t(i)];
+            shared_ptr<CoefficientFunction> term = PermuteTensorCF(T, order);
+            int sign = PermutationSign(perm, k + l);
+            if (sign == -1)
+                term = (-1.0) * term;
+            accum = accum ? (accum + term) : term;
+        }
+        return KFormCF(accum, k + l, dim);
     }
 
     shared_ptr<DoubleFormCoefficientFunction> Wedge(shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<DoubleFormCoefficientFunction> b)
@@ -814,17 +878,38 @@ namespace ngfem
             order.push_back(p + q + r + i);
 
         auto reordered = PermuteTensorCF(T, order);
-        shared_ptr<CoefficientFunction> alt_left = reordered;
-        if (p + r > 1)
-            alt_left = BlockAlternationByPermutationCF(reordered, total, 0, p + r);
+        const int left_len = p + r;
+        const int right_len = q + s;
+        const auto &left_shuffles = GenerateShuffles(p, r);
+        const auto &right_shuffles = GenerateShuffles(q, s);
 
-        shared_ptr<CoefficientFunction> alt_both = alt_left;
-        if (q + s > 1)
-            alt_both = BlockAlternationByPermutationCF(alt_left, total, p + r, q + s);
+        shared_ptr<CoefficientFunction> accum;
+        for (const auto &perm_left : left_shuffles)
+        {
+            auto order_left = std::vector<int>(size_t(total));
+            for (int i = 0; i < total; ++i)
+                order_left[size_t(i)] = i;
+            for (int i = 0; i < left_len; ++i)
+                order_left[size_t(i)] = perm_left[size_t(i)];
+            auto left_tf = PermuteTensorCF(reordered, order_left);
+            int sign_left = PermutationSign(perm_left, left_len);
 
-        double scale = 1.0 / double(Factorial(p) * Factorial(r) * Factorial(q) * Factorial(s));
-        auto out = scale * alt_both;
-        return DoubleFormCF(out, p + r, q + s, dim);
+            for (const auto &perm_right : right_shuffles)
+            {
+                auto order_right = std::vector<int>(size_t(total));
+                for (int i = 0; i < total; ++i)
+                    order_right[size_t(i)] = i;
+                for (int i = 0; i < right_len; ++i)
+                    order_right[size_t(left_len + i)] = left_len + perm_right[size_t(i)];
+                shared_ptr<CoefficientFunction> term = PermuteTensorCF(left_tf, order_right);
+                int sign = sign_left * PermutationSign(perm_right, right_len);
+                if (sign == -1)
+                    term = (-1.0) * term;
+                accum = accum ? (accum + term) : term;
+            }
+        }
+
+        return DoubleFormCF(accum, p + r, q + s, dim);
     }
 
     shared_ptr<KFormCoefficientFunction> ExteriorDerivative(shared_ptr<KFormCoefficientFunction> a)
