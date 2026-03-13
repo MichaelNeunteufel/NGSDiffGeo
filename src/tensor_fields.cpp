@@ -72,7 +72,7 @@ namespace ngfem
   {
     if (cf->Dimensions().Size() != 1)
       throw Exception("VectorFieldCF: input must be a vector-valued CoefficientFunction");
-    if (cf->Dimension() != cf->Dimensions()[0])
+    if (cf->Dimension() != (size_t)(cf->Dimensions()[0]))
       throw Exception("VectorFieldCF: dimension metadata mismatch");
     // if (cf->IsZeroCF())
     //     return cf;
@@ -101,7 +101,7 @@ namespace ngfem
       out_cov[size_t(i)] = cov[size_t(order[size_t(i)])];
     }
 
-    auto out_cf = EinsumCF(sig + "->" + out_sig, {tf});
+    auto out_cf = EinsumCF(sig + "->" + out_sig, {tf->GetCoefficients()});
     return TensorFieldCF(out_cf, out_cov);
   }
 
@@ -128,7 +128,7 @@ namespace ngfem
 
     const auto &eins = GetEinsumCache()[m1.rank][m2.rank];
 
-    auto out_cf = EinsumCF(eins, {c1, c2});
+    auto out_cf = EinsumCF(eins, {c1->GetCoefficients(), c2->GetCoefficients()});
     return TensorFieldCF(out_cf, mout);
   }
 
@@ -148,6 +148,7 @@ namespace ngfem
     sigmod[index] = new_label;
 
     std::string eins = ToString(new_label) + old_label + "," + sigmod + "->" + sig;
+
     auto result = EinsumCF(eins, {proj, tf});
     return TensorFieldCF(result, tf->GetCovariantIndices());
   }

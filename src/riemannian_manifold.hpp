@@ -170,6 +170,7 @@ namespace ngfem
         shared_ptr<TensorFieldCoefficientFunction> CovHessian(shared_ptr<TensorFieldCoefficientFunction> c1) const;
 
         shared_ptr<TensorFieldCoefficientFunction> CovDivergence(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb = VOL) const;
+        shared_ptr<DoubleFormCoefficientFunction> CovDivergence(shared_ptr<DoubleFormCoefficientFunction> c1, int slot = 0, VorB vb = VOL) const;
 
         shared_ptr<TensorFieldCoefficientFunction> CovCurl(shared_ptr<TensorFieldCoefficientFunction> c1) const;
 

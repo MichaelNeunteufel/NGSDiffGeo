@@ -238,7 +238,5 @@ void ExportGradCF(py::module m)
 
     py::class_<GradProxy, shared_ptr<GradProxy>, ProxyFunction>(m, "GradProxy");
     m.def("GradCF", [](shared_ptr<CoefficientFunction> cf, int dim, bool surface)
-          { return GradCF(cf, dim, surface); },
-          "Create a GradientCoefficientFunction. Uses numerical differentiation to compute the gradient of a given CoefficientFunction. Set surface=True for tangential surface gradients.",
-          py::arg("cf"), py::arg("dim"), py::arg("surface") = false);
+          { return GradCF(cf, dim, surface); }, "Create a GradientCoefficientFunction. Uses numerical differentiation to compute the gradient of a given CoefficientFunction. Set surface=True for tangential surface gradients.", py::arg("cf"), py::arg("dim"), py::arg("surface") = false);
 }

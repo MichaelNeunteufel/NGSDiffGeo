@@ -614,6 +614,16 @@ def WedgePower(df, l):
     return out
 
 
+def Sym(a):
+    df = _as_doubleform_like(a, dim=_infer_dim(a))
+    if df.degree_left != df.degree_right:
+        raise ValueError("Sym: expected a (k,k) double form")
+
+    tr = df.trans
+    out = 0.5 * (df.coef + tr.coef)
+    return as_doubleform(out, p=df.degree_left, q=df.degree_right, dim=df.dim_space)
+
+
 def d(a):
     out = _cpp.d(a)
     return as_kform(out, k=out.degree, dim=out.dim_space)
@@ -807,44 +817,50 @@ class RiemannianManifold(_CPP_RiemannianManifold):
     def ProjectDoubleForm(
         self, tf, left="none", right="none", normal=None, conormal=None
     ):
-        if isinstance(tf, (ScalarField, _CPP_ScalarField)):
-
-            def _parse_proj_mode(mode):
-                if isinstance(mode, str):
-                    s = mode.lower()
-                    if s in ("f", "tangent", "tan", "1"):
-                        return 1
-                    if s in ("n", "normal", "2"):
-                        return 2
-                    if s in ("e", "edge", "3"):
-                        return 3
-                    if s in ("m", "conormal", "4"):
-                        return 4
-                    if s in ("none", "0"):
-                        return 0
-                    raise ValueError(
-                        "ProjectDoubleForm: mode must be 'F'/'tangent', 'n'/'normal', "
-                        "'E'/'edge', 'm'/'conormal', or 'none'"
-                    )
-                if isinstance(mode, int):
-                    if mode in (0, 1, 2, 3, 4):
-                        return mode
-                    raise ValueError(
-                        "ProjectDoubleForm: mode must be 0 (none), 1 (F/tangent), "
-                        "2 (n/normal), 3 (E/edge), or 4 (m/conormal)"
-                    )
-                raise ValueError("ProjectDoubleForm: mode must be string or int")
-
-            left_mode = _parse_proj_mode(left)
-            right_mode = _parse_proj_mode(right)
-            if left_mode in (2, 4) or right_mode in (2, 4):
+        def _parse_proj_mode(mode):
+            if isinstance(mode, str):
+                s = mode.lower()
+                if s in ("f", "tangent", "tan", "1"):
+                    return 1
+                if s in ("n", "normal", "2"):
+                    return 2
+                if s in ("e", "edge", "3"):
+                    return 3
+                if s in ("m", "conormal", "4"):
+                    return 4
+                if s in ("none", "0"):
+                    return 0
                 raise ValueError(
-                    "ProjectDoubleForm: cannot project ScalarField with 'n'/'m' modes"
+                    "ProjectDoubleForm: mode must be 'F'/'tangent', 'n'/'normal', "
+                    "'E'/'edge', 'm'/'conormal', or 'none'"
                 )
+            if isinstance(mode, int):
+                if mode in (0, 1, 2, 3, 4):
+                    return mode
+                raise ValueError(
+                    "ProjectDoubleForm: mode must be 0 (none), 1 (F/tangent), "
+                    "2 (n/normal), 3 (E/edge), or 4 (m/conormal)"
+                )
+            raise ValueError("ProjectDoubleForm: mode must be string or int")
+
+        left_mode = _parse_proj_mode(left)
+        right_mode = _parse_proj_mode(right)
+
+        if isinstance(tf, (ScalarField, _CPP_ScalarField)):
+            if left_mode in (2, 4) or right_mode in (2, 4):
+                return as_scalarfield(0, dim=self.dim)
             return as_scalarfield(tf, dim=self.dim)
 
         if not isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
             raise TypeError("ProjectDoubleForm expects a DoubleForm")
+
+        if (
+            getattr(tf, "degree_left", None) == 0
+            and getattr(tf, "degree_right", None) == 0
+            and (left_mode in (2, 4) or right_mode in (2, 4))
+        ):
+            return as_doubleform(0, p=0, q=0, dim=self.dim)
+
         out = _CPP_RiemannianManifold.ProjectDoubleForm(
             self, tf, left, right, normal, conormal
         )
@@ -954,11 +970,25 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         out = _CPP_RiemannianManifold.CovRot(self, tf)
         return as_tensorfield(out)
 
-    def CovDiv(self, tf, vb=None):
+    def CovDiv(self, tf, slot="left", vb=None):
+        if isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
+            if vb is None:
+                vb = ngsolve.VOL
+            out = _CPP_RiemannianManifold.CovDiv(self, tf, slot, vb)
+            return as_doubleform(
+                out, p=out.degree_left, q=out.degree_right, dim=self.dim
+            )
+
+        # Backward compatibility for tensors: CovDiv(tf, vb=...) and CovDiv(tf, vb_positional)
         if vb is None:
-            out = _CPP_RiemannianManifold.CovDiv(self, tf)
-        else:
-            out = _CPP_RiemannianManifold.CovDiv(self, tf, vb)
+            if slot != "left":
+                vb = slot
+            else:
+                vb = ngsolve.VOL
+        elif slot != "left":
+            raise ValueError("CovDiv: 'slot' is only supported for DoubleForm inputs")
+
+        out = _CPP_RiemannianManifold.CovDiv(self, tf, vb)
         return as_tensorfield(out, dim=self.dim)
 
     def Trace(self, tf, vb=None, index1=0, index2=1, l=None):
@@ -1082,6 +1112,7 @@ __all__ = [
     "as_vectorfield",
     "as_tensorfield",
     "Wedge",
+    "Sym",
     "d",
     "star",
     "inv_star",

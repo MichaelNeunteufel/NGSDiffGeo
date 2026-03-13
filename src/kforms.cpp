@@ -49,6 +49,30 @@ namespace ngfem
             return cached_perms[rank];
         }
 
+        bool IsShuffle(const std::array<int, 4> &perm, int left, int right)
+        {
+            int total = left + right;
+            int prev_left = -1;
+            int prev_right = left - 1;
+
+            for (int i = 0; i < total; ++i)
+            {
+                int v = perm[size_t(i)];
+                if (v < left)
+                {
+                    if (v < prev_left)
+                        return false;
+                    prev_left = v;
+                }
+                else
+                {
+                    if (v < prev_right)
+                        return false;
+                    prev_right = v;
+                }
+            }
+            return true;
+        }
         const std::vector<std::array<int, 4>> &GenerateShuffles(int left, int right)
         {
             int total = left + right;
@@ -57,49 +81,21 @@ namespace ngfem
 
             struct ShuffleCacheEntry
             {
-                bool ready = false;
+                std::once_flag flag;
                 std::vector<std::array<int, 4>> perms;
             };
 
             static std::array<std::array<ShuffleCacheEntry, 5>, 5> cache;
             auto &entry = cache[size_t(left)][size_t(right)];
-            if (!entry.ready)
-            {
-                const auto &perms = GeneratePermutations(total);
-                entry.perms.clear();
-                entry.perms.reserve(perms.size());
-                for (const auto &perm : perms)
-                {
-                    bool ok = true;
-                    int prev_left = -1;
-                    int prev_right = left - 1;
-                    for (int i = 0; i < total; ++i)
-                    {
-                        int v = perm[size_t(i)];
-                        if (v < left)
-                        {
-                            if (v < prev_left)
-                            {
-                                ok = false;
-                                break;
-                            }
-                            prev_left = v;
-                        }
-                        else
-                        {
-                            if (v < prev_right)
-                            {
-                                ok = false;
-                                break;
-                            }
-                            prev_right = v;
-                        }
-                    }
-                    if (ok)
-                        entry.perms.push_back(perm);
-                }
-                entry.ready = true;
-            }
+
+            std::call_once(entry.flag, [&]()
+                           {
+            const auto &perms = GeneratePermutations(total);
+            entry.perms.reserve(perms.size());
+            for (const auto &perm : perms)
+                if (IsShuffle(perm, left, right))
+                    entry.perms.push_back(perm); });
+
             return entry.perms;
         }
 
@@ -277,6 +273,63 @@ namespace ngfem
             // }
             double sign = ((p + q) % 2 == 0) ? 1.0 : -1.0;
             return DoubleFormCF(sign * contracted_right->GetCoefficients(), n - p, n - q, ambient_dim);
+        }
+
+        shared_ptr<KFormCoefficientFunction> BBNDHodgeStarKForm(shared_ptr<KFormCoefficientFunction> a,
+                                                                const RiemannianManifold &M)
+        {
+            int ambient_dim = M.Dimension();
+            int n = ambient_dim - 2;
+            int k = a->Degree();
+
+            if (k > n)
+                throw Exception("HodgeStar (BBND): form degree exceeds codimension-2 manifold dimension");
+
+            if (a->IsZeroCF())
+                return ZeroKForm(n - k, ambient_dim);
+
+            if (n == 0)
+                return KFormCF(a->GetCoefficients(), 0, ambient_dim);
+
+            auto star_vol = HodgeStar(a, M, VOL);
+            auto n1 = M.GetEdgeNormal(0);
+            auto cn1 = M.GetEdgeConormal(0);
+            auto c1 = M.Contraction(star_vol, n1);
+            auto c2 = M.Contraction(c1, cn1);
+
+            // Codim-2 induced orientation uses two contractions; no extra k-dependent sign.
+            return KFormCF(c2->GetCoefficients(), n - k, ambient_dim);
+        }
+
+        shared_ptr<DoubleFormCoefficientFunction> BBNDHodgeStarDoubleForm(shared_ptr<DoubleFormCoefficientFunction> a,
+                                                                          const RiemannianManifold &M)
+        {
+            int ambient_dim = M.Dimension();
+            int n = ambient_dim - 2;
+            int p = a->LeftDegree();
+            int q = a->RightDegree();
+
+            if (p > n || q > n)
+                throw Exception("HodgeStar (double-form, BBND): form degree exceeds codimension-2 manifold dimension");
+
+            if (a->IsZeroCF())
+                return ZeroDoubleForm(n - p, n - q, ambient_dim);
+
+            if (n == 0)
+                return DoubleFormCF(a->GetCoefficients(), 0, 0, ambient_dim);
+
+            auto n1 = M.GetEdgeNormal(0);
+            auto cn1 = M.GetEdgeConormal(0);
+            auto star_vol = HodgeStar(a, M, VOL);
+
+            int left_deg = star_vol->LeftDegree();
+            auto c_l1 = M.Contraction(star_vol, n1, 0);
+            auto c_l2 = M.Contraction(c_l1, cn1, 0);
+            auto c_r1 = M.Contraction(c_l2, n1, size_t(left_deg - 2));
+            auto c_r2 = M.Contraction(c_r1, cn1, size_t(left_deg - 2));
+
+            // Codim-2 induced orientation uses two contractions per slot; no extra degree sign.
+            return DoubleFormCF(c_r2->GetCoefficients(), n - p, n - q, ambient_dim);
         }
 
     } // namespace
@@ -690,41 +743,50 @@ namespace ngfem
         if (k > 8)
             throw Exception("KFormCF: only ranks up to 8 are supported");
 
-        auto deduce_dim = [&]()
+        int used_dim = dim;
+        if (used_dim <= 0)
         {
-            if (dim > 0)
-                return dim;
             if (cf->Dimensions().Size() > 0)
-                return int(cf->Dimensions()[0]);
-            return 0;
-        };
-
-        int used_dim = deduce_dim();
+                used_dim = int(cf->Dimensions()[0]);
+            else
+                used_dim = 0;
+        }
         if (k == 0 && used_dim <= 0)
             throw Exception("KFormCF: dim must be provided for scalar forms");
+        if (cf->Dimensions().Size() != size_t(k))
+            throw Exception("KFormCF: degree k requires rank-k coefficient");
+
+        auto reuse_if_compatible = [&](auto existing) -> shared_ptr<KFormCoefficientFunction>
+        {
+            if (!existing)
+                return nullptr;
+            if (used_dim > 0 && existing->DimensionOfSpace() != used_dim)
+                throw Exception("KFormCF: requested dim does not match wrapped form dimension");
+            return existing;
+        };
 
         if (k == 0)
         {
             if (auto sf = dynamic_pointer_cast<ScalarFieldCoefficientFunction>(cf))
-                return sf;
+                return reuse_if_compatible(sf);
             return make_shared<ScalarFieldCoefficientFunction>(cf, used_dim);
         }
         if (k == 1)
         {
             if (auto of = dynamic_pointer_cast<OneFormCoefficientFunction>(cf))
-                return of;
+                return reuse_if_compatible(of);
             return make_shared<OneFormCoefficientFunction>(cf, used_dim);
         }
         if (k == 2)
         {
             if (auto tf = dynamic_pointer_cast<TwoFormCoefficientFunction>(cf))
-                return tf;
+                return reuse_if_compatible(tf);
             return make_shared<TwoFormCoefficientFunction>(cf, used_dim);
         }
         if (k == 3)
         {
             if (auto tf = dynamic_pointer_cast<ThreeFormCoefficientFunction>(cf))
-                return tf;
+                return reuse_if_compatible(tf);
             return make_shared<ThreeFormCoefficientFunction>(cf, used_dim);
         }
 
@@ -848,6 +910,7 @@ namespace ngfem
                 term = (-1.0) * term;
             accum = accum ? (accum + term) : term;
         }
+
         return KFormCF(accum, k + l, dim);
     }
 
@@ -930,10 +993,9 @@ namespace ngfem
     shared_ptr<KFormCoefficientFunction> HodgeStar(shared_ptr<KFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb)
     {
         int ambient_dim = M.Dimension();
-        if (vb == BBND)
-            throw Exception("HodgeStar: not implemented for BBND (codimension-2) yet");
-
-        int n = (vb == VOL) ? ambient_dim : ambient_dim - 1;
+        if (vb != VOL && vb != BND && vb != BBND)
+            throw Exception("HodgeStar: only implemented for VOL, BND, and BBND");
+        int n = (vb == VOL) ? ambient_dim : (vb == BND ? ambient_dim - 1 : ambient_dim - 2);
         int k = a->Degree();
         if (k > n)
             throw Exception("HodgeStar: form degree exceeds manifold dimension");
@@ -943,6 +1005,8 @@ namespace ngfem
 
         if (vb == BND)
             return BoundaryHodgeStarKForm(a, M);
+        if (vb == BBND)
+            return BBNDHodgeStarKForm(a, M);
 
         shared_ptr<TensorFieldCoefficientFunction> raised = a;
         for (int i = 0; i < k; ++i)
@@ -975,7 +1039,9 @@ namespace ngfem
 
     shared_ptr<KFormCoefficientFunction> InverseHodgeStar(shared_ptr<KFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb)
     {
-        int n = (vb == VOL) ? M.Dimension() : M.Dimension() - 1;
+        if (vb != VOL && vb != BND && vb != BBND)
+            throw Exception("InverseHodgeStar: only implemented for VOL, BND, and BBND");
+        int n = (vb == VOL) ? M.Dimension() : (vb == BND ? M.Dimension() - 1 : M.Dimension() - 2);
         int k = a->Degree();
         int exponent = k * (n - k);
         int sign = (exponent % 2 == 0) ? 1 : -1;
@@ -989,10 +1055,9 @@ namespace ngfem
     shared_ptr<DoubleFormCoefficientFunction> HodgeStar(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, int slot)
     {
         int ambient_dim = M.Dimension();
-        if (vb == BBND)
-            throw Exception("HodgeStar (double-form): not implemented for BBND (codimension-2) yet");
-
-        int n = (vb == VOL) ? ambient_dim : ambient_dim - 1;
+        if (vb != VOL && vb != BND && vb != BBND)
+            throw Exception("HodgeStar (double-form): only implemented for VOL, BND, and BBND");
+        int n = (vb == VOL) ? ambient_dim : (vb == BND ? ambient_dim - 1 : ambient_dim - 2);
         int p = a->LeftDegree();
         int q = a->RightDegree();
         if (p > n || q > n)
@@ -1003,6 +1068,18 @@ namespace ngfem
 
         if (slot == 0)
         {
+            if (vb == BBND)
+            {
+                if (n == 0)
+                    return DoubleFormCF(a->GetCoefficients(), 0, q, ambient_dim);
+                auto n1 = M.GetEdgeNormal(0);
+                auto n2 = M.GetEdgeConormal(0);
+                auto star_vol_left = BlockHodgeStar(a, 0, p, ambient_dim, M);
+                auto left_tf = TensorFieldCF(star_vol_left, std::string(size_t(ambient_dim - p + q), '1'));
+                auto c1 = M.Contraction(left_tf, n1, 0);
+                auto c2 = M.Contraction(c1, n2, 0);
+                return DoubleFormCF(c2->GetCoefficients(), n - p, q, ambient_dim);
+            }
             if (vb == BND)
             {
                 auto star_vol_left = BlockHodgeStar(a, 0, p, ambient_dim, M);
@@ -1017,6 +1094,18 @@ namespace ngfem
 
         if (slot == 1)
         {
+            if (vb == BBND)
+            {
+                if (n == 0)
+                    return DoubleFormCF(a->GetCoefficients(), p, 0, ambient_dim);
+                auto n1 = M.GetEdgeNormal(0);
+                auto n2 = M.GetEdgeConormal(0);
+                auto star_vol_right = BlockHodgeStar(a, p, q, ambient_dim, M);
+                auto right_tf = TensorFieldCF(star_vol_right, std::string(size_t(p + ambient_dim - q), '1'));
+                auto c1 = M.Contraction(right_tf, n1, size_t(p));
+                auto c2 = M.Contraction(c1, n2, size_t(p));
+                return DoubleFormCF(c2->GetCoefficients(), p, n - q, ambient_dim);
+            }
             if (vb == BND)
             {
                 auto star_vol_right = BlockHodgeStar(a, p, q, ambient_dim, M);
@@ -1028,6 +1117,9 @@ namespace ngfem
             auto right_star = BlockHodgeStar(a, p, q, n, M);
             return DoubleFormCF(right_star, p, n - q, n);
         }
+
+        if (vb == BBND)
+            return BBNDHodgeStarDoubleForm(a, M);
 
         if (vb == BND)
             return BoundaryHodgeStarDoubleForm(a, M);
@@ -1041,10 +1133,9 @@ namespace ngfem
 
     shared_ptr<DoubleFormCoefficientFunction> InverseHodgeStar(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, int slot)
     {
-        if (vb == BBND)
-            throw Exception("InverseHodgeStar (double-form): not implemented for BBND (codimension-2) yet");
-
-        int n = (vb == VOL) ? M.Dimension() : M.Dimension() - 1;
+        if (vb != VOL && vb != BND && vb != BBND)
+            throw Exception("InverseHodgeStar (double-form): only implemented for VOL, BND, and BBND");
+        int n = (vb == VOL) ? M.Dimension() : (vb == BND ? M.Dimension() - 1 : M.Dimension() - 2);
         int p = a->LeftDegree();
         int q = a->RightDegree();
         int exponent = 0;
@@ -1059,7 +1150,7 @@ namespace ngfem
         auto star = HodgeStar(a, M, vb, slot);
         if (sign == 1)
             return star;
-        return DoubleFormCF((-1.0) * star->GetCoefficients(), n - p, n - q, vb == VOL ? n : M.Dimension());
+        return DoubleFormCF((-1.0) * star->GetCoefficients(), star->LeftDegree(), star->RightDegree(), vb == VOL ? n : M.Dimension());
     }
 
     shared_ptr<ScalarFieldCoefficientFunction> SlotInnerProduct(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, bool forms)

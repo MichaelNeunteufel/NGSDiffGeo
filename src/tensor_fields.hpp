@@ -196,7 +196,7 @@ namespace ngfem
      */
     shared_ptr<VectorFieldCoefficientFunction> VectorFieldCF(const shared_ptr<CoefficientFunction> &cf);
     shared_ptr<TensorFieldCoefficientFunction> PermuteTensorCF(shared_ptr<TensorFieldCoefficientFunction> tf,
-                                                                const std::vector<int> &order);
+                                                               const std::vector<int> &order);
     shared_ptr<TensorFieldCoefficientFunction> ApplyProjectorToIndex(shared_ptr<TensorFieldCoefficientFunction> tf,
                                                                      shared_ptr<CoefficientFunction> proj,
                                                                      size_t index);
@@ -285,6 +285,13 @@ namespace ngfem
         virtual Array<shared_ptr<CoefficientFunction>> InputCoefficientFunctions() const override
         {
             return Array<shared_ptr<CoefficientFunction>>({c1});
+        }
+
+        virtual void GenerateCode(Code &code, FlatArray<int> inputs, int index) const override
+        {
+            // TensorFieldCF is metadata-only. Delegate code generation to the wrapped CF.
+            code.Declare(index, this->Dimensions(), this->IsComplex());
+            code.body += Var(index).Assign(Var(inputs[0]), false);
         }
 
         virtual void NonZeroPattern(const class ProxyUserData &ud,
