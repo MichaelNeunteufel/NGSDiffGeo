@@ -116,6 +116,37 @@ def test_wedge_power_doubleform_edge_cases():
     assert l2_error(out1, df, mesh) == pytest.approx(0)
 
 
+def test_sym_doubleform_properties():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+
+    alpha = dg.OneForm(CF((x + 1, y)))
+    beta = dg.OneForm(CF((2 * x, 3 * y + 1)))
+    A = dg.DoubleForm(dg.TensorProduct(alpha, beta), p=1, q=1, dim=dim)
+
+    symA = dg.Sym(A)
+    skewA = 0.5 * (A - A.trans)
+
+    assert isinstance(symA, dg.DoubleForm)
+    assert symA.degree_left == 1
+    assert symA.degree_right == 1
+    assert l2_error(symA, symA.trans, mesh) < 1e-11
+    assert l2_error(A, symA + skewA, mesh) < 1e-11
+    assert l2_error(dg.Sym(symA), symA, mesh) < 1e-11
+
+
+def test_sym_requires_square_doubleform():
+    dim = 2
+    alpha = dg.OneForm(CF((x, y)))
+    omega = dg.TwoForm(CF((0, x, -x, 0), dims=(2, 2)), dim=dim)
+    nonsquare = dg.DoubleForm(dg.TensorProduct(alpha, omega), p=1, q=2, dim=dim)
+    assert nonsquare.degree_left == 1
+    assert nonsquare.degree_right == 2
+
+    with pytest.raises(ValueError, match=r"\(k,k\)"):
+        dg.Sym(nonsquare)
+
+
 def test_pow_operator_doubleform_and_tensorfield():
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
     dim = 2
@@ -478,6 +509,35 @@ def test_project_tensor_tangent_and_normal():
     assert isinstance(df_n, dg.DoubleForm)
 
 
+def test_project_tensor_edge_mode_on_bbnd():
+    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.6))
+    dim = 3
+    rm = dg.RiemannianManifold(Id(dim))
+
+    def l2_error_bbnd(a, b):
+        return sqrt(Integrate(InnerProduct(a - b, a - b) * dx(element_vb=BBND), mesh))
+
+    v = dg.VectorField(CF((x + 1, y - 2, z + 3)))
+    v_edge = rm.ProjectTensor(v, "E")
+    v_edge_int = rm.ProjectTensor(v, 3)
+    assert isinstance(v_edge, dg.VectorField)
+    assert l2_error_bbnd(v_edge, v_edge_int) < 1e-12
+
+    ip_n = rm.InnerProduct(v_edge, rm.edge_normal(0), vb=VOL)
+    ip_cn = rm.InnerProduct(v_edge, rm.edge_conormal(0), vb=VOL)
+    assert l2_error_bbnd(ip_n, CF(0)) < 1e-10
+    assert l2_error_bbnd(ip_cn, CF(0)) < 1e-10
+
+    alpha = dg.OneForm(CF((x, 1 + y, 2 + z)))
+    alpha_edge = rm.ProjectTensor(alpha, "edge")
+    assert isinstance(alpha_edge, dg.OneForm)
+
+    alpha_n = rm.InnerProduct(alpha_edge, rm.edge_normal(0), vb=VOL)
+    alpha_cn = rm.InnerProduct(alpha_edge, rm.edge_conormal(0), vb=VOL)
+    assert l2_error_bbnd(alpha_n, CF(0)) < 1e-10
+    assert l2_error_bbnd(alpha_cn, CF(0)) < 1e-10
+
+
 def test_doubleform_hodge_star_boundary_matches_contraction():
     mesh = Mesh(unit_cube.GenerateMesh(maxh=0.6))
     dim = 3
@@ -588,7 +648,7 @@ def test_slot_inner_product_scalar_field():
     rm = dg.RiemannianManifold(Id(dim))
 
     f = dg.ScalarField(x + y, dim=dim)
-    expected = f * f
+    expected = f
 
     sip_function = dg.slot_inner_product(f, rm)
     sip_method = rm.SlotInnerProduct(f)

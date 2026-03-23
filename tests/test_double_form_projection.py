@@ -101,5 +101,27 @@ def test_double_form_contract_slot_right_matches_tensor_contraction():
     assert l2_error_bnd(contracted, expected, mesh) < 1e-8
 
 
+def test_project_doubleform_scalar_with_normal_returns_zero():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    v = dg.ScalarField(x + y, dim=dim)
+    proj = rm.ProjectDoubleForm(v, left="n", right="F")
+    assert l2_norm_bnd(proj, mesh) < 1e-10
+
+
+def test_project_doubleform_00_with_normal_returns_zero():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    v00 = dg.DoubleForm(x + y, p=0, q=0, dim=dim)
+    proj = rm.ProjectDoubleForm(v00, left="n", right="F")
+    assert proj.degree_left == 0
+    assert proj.degree_right == 0
+    assert l2_norm_bnd(proj, mesh) < 1e-10
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

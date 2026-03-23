@@ -81,6 +81,10 @@ def l2_norm_bnd(cf, mesh):
     return sqrt(Integrate(InnerProduct(cf, cf) * dx(element_boundary=True), mesh))
 
 
+def l2_inner(a, b, mesh):
+    return sqrt(Integrate(InnerProduct(a - b, a - b), mesh))
+
+
 @pytest.mark.parametrize("interpolate", [True, False])
 def test_volume_forms_vectors_2D(interpolate):
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.2))
@@ -122,6 +126,47 @@ def test_volume_forms_vectors_2D(interpolate):
     ) == pytest.approx(0)
 
     return
+
+
+def test_raise_lower_multiple_indices_identity_metric():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.35))
+    mf = dg.RiemannianManifold(Id(2))
+
+    A = CF((x + y, x - y, x**2, sin(y)), dims=(2, 2))
+    A11 = dg.TensorField(A, "11")
+
+    raised = mf.Raise(A11, [0, 1])
+    assert raised.covariant_indices == "00"
+    assert l2_inner(raised.coef, A, mesh) == pytest.approx(0)
+
+    lowered = mf.Lower(raised, [0, 1])
+    assert lowered.covariant_indices == "11"
+    assert l2_inner(lowered.coef, A, mesh) == pytest.approx(0)
+
+
+def test_raise_lower_multiple_indices_errors():
+    mf = dg.RiemannianManifold(Id(2))
+    A = CF((x, y, x + y, x - y), dims=(2, 2))
+    A11 = dg.TensorField(A, "11")
+    A00 = dg.TensorField(A, "00")
+
+    with pytest.raises(Exception):
+        mf.Raise(A11, [0, 1, 2])
+
+    with pytest.raises(Exception):
+        mf.Raise(A11, [2])
+
+    with pytest.raises(Exception):
+        mf.Raise(mf.Raise(A11, 0), [0])
+
+    with pytest.raises(Exception):
+        mf.Lower(A00, [0, 1, 2])
+
+    with pytest.raises(Exception):
+        mf.Lower(A00, [2])
+
+    with pytest.raises(Exception):
+        mf.Lower(A11, [0])
 
 
 @pytest.mark.parametrize("interpolate", [True, False])
@@ -172,9 +217,9 @@ def test_normal_sign_flips_boundary_normal():
 def test_riemann_sign_flips_tensor():
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
     metric = dg.Sphere2().metric
-    mf_pos = dg.RiemannianManifold(metric, riemann_sign=1.0)
-    mf_neg = dg.RiemannianManifold(metric, riemann_sign=-1.0)
-    diff = mf_pos.Riemann + mf_neg.Riemann
+    mf_pos = dg.RiemannianManifold(metric, change_riemann_sign=False)
+    mf_neg = dg.RiemannianManifold(metric, change_riemann_sign=True)
+    diff = mf_pos.Riemann - dg.Einsum("ijkl->ijlk", mf_neg.Riemann)
     assert sqrt(Integrate(mf_pos.InnerProduct(diff, diff), mesh)) < 1e-8
 
 

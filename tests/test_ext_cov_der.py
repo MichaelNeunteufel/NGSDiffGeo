@@ -133,5 +133,53 @@ def test_scalar_d_cov_promotes_to_double_form():
     assert l2_error(d_right, expected_right, mesh) < 1e-8
 
 
+def test_double_form_covdiv_slot_degrees():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.OneForm(CF((x, y)))
+    beta = dg.OneForm(CF((1 + x, 1 - y)))
+    A = dg.DoubleForm(dg.TensorProduct(alpha, beta), p=1, q=1, dim=dim)
+
+    div_left = rm.CovDiv(A, slot="left")
+    div_right = rm.CovDiv(A, slot="right")
+    div_left_int = rm.CovDiv(A, slot=0)
+    div_right_int = rm.CovDiv(A, slot=1)
+
+    assert div_left.degree_left == 0
+    assert div_left.degree_right == 1
+    assert div_right.degree_left == 1
+    assert div_right.degree_right == 0
+    assert l2_error(div_left, div_left_int, mesh) < 1e-12
+    assert l2_error(div_right, div_right_int, mesh) < 1e-12
+
+
+def test_double_form_covdiv_slot_degree_zero_errors():
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.OneForm(CF((x, y)))
+    A01 = dg.DoubleForm(alpha, p=0, q=1, dim=dim)
+    A10 = dg.DoubleForm(alpha, p=1, q=0, dim=dim)
+
+    with pytest.raises(Exception, match="left slot degree is zero"):
+        rm.CovDiv(A01, slot="left")
+    with pytest.raises(Exception, match="right slot degree is zero"):
+        rm.CovDiv(A10, slot="right")
+
+
+def test_covdiv_tensor_backward_compatibility_positional_vb():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    X = dg.VectorField(CF((x + y, x - y)))
+    div_positional = rm.CovDiv(X, VOL)
+    div_keyword = rm.CovDiv(X, vb=VOL)
+
+    assert l2_error(div_positional, div_keyword, mesh) < 1e-12
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

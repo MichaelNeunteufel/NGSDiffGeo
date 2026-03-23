@@ -326,5 +326,53 @@ def test_integration_by_parts_3d():
     return
 
 
+def test_covcurl_rowwise_covariant_tensor_3d_euclidean():
+    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.3))
+    mf = dg.RiemannianManifold(Id(3))
+
+    T = dg.TensorField(
+        CF(
+            (
+                0,
+                -z,
+                y,
+                z,
+                0,
+                -x,
+                -y,
+                x,
+                0,
+            ),
+            dims=(3, 3),
+        ),
+        "11",
+    )
+
+    out = mf.CovCurl(T)
+    expected = dg.TensorField(
+        CF(
+            (
+                2,
+                0,
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                2,
+            ),
+            dims=(3, 3),
+        ),
+        "10",
+    )
+
+    assert out.covariant_indices == "10"
+    assert (
+        sqrt(Integrate(InnerProduct(out.coef - expected.coef, out.coef - expected.coef), mesh))
+        < 1e-10
+    )
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

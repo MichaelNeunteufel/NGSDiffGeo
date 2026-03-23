@@ -1,6 +1,7 @@
 import pytest
 from netgen.occ import unit_square, unit_cube
 from ngsolve import *
+from ngsolve.fem import Einsum
 
 import ngsdiffgeo as dg
 
@@ -11,6 +12,10 @@ def l2_error(a, b, mesh):
 
 def l2_norm(a, mesh):
     return sqrt(Integrate(InnerProduct(a, a), mesh))
+
+
+def l2_error_bbnd(a, b, mesh):
+    return sqrt(Integrate(InnerProduct(a - b, a - b) * dx(element_vb=BBND), mesh))
 
 
 def test_hodge_star_2d_euclidean():
@@ -106,6 +111,24 @@ def test_star_star_identity(dim):
 
 
 @pytest.mark.parametrize("dim", [2, 3])
+def test_inv_star_is_inverse(dim):
+    mesh = (
+        Mesh(unit_square.GenerateMesh(maxh=0.3))
+        if dim == 2
+        else Mesh(unit_cube.GenerateMesh(maxh=0.35))
+    )
+    rm = dg.RiemannianManifold(Id(dim))
+
+    if dim == 2:
+        form = dg.OneForm(CF((1, 0)))
+    else:
+        form = dg.OneForm(CF((1, 0, 0)))
+
+    back = rm.star(rm.inv_star(form))
+    assert l2_error(back, form, mesh) < 1e-10
+
+
+@pytest.mark.parametrize("dim", [2, 3])
 def test_coderivative_degrees_and_zero(dim):
     mesh = (
         Mesh(unit_square.GenerateMesh(maxh=0.3))
@@ -139,6 +162,54 @@ def test_coderivative_degrees_and_zero(dim):
     delta_top = rm.delta(top)
     assert delta_top.degree == top.degree - 1
     assert l2_norm(delta_top, mesh) < 1e-12
+
+
+def test_hodge_star_bbnd_star_star_identity_3d():
+    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.35))
+    dim = 3
+    rm = dg.RiemannianManifold(Id(dim))
+
+    f = dg.ScalarField(1 + x + 2 * y - 0.5 * z, dim=dim)
+    sf = dg.star(f, rm, vb=BBND)
+    assert sf.degree == 1
+    ssf = dg.star(sf, rm, vb=BBND)
+    assert l2_error_bbnd(ssf, f, mesh) < 1e-10
+
+    alpha = dg.OneForm(rm.tangent)
+    sa = dg.star(alpha, rm, vb=BBND)
+    assert sa.degree == 0
+    ssa = dg.star(sa, rm, vb=BBND)
+    assert l2_error_bbnd(ssa, alpha, mesh) < 1e-10
+
+    back = dg.inv_star(sf, rm, vb=BBND)
+    assert l2_error_bbnd(back, f, mesh) < 1e-10
+
+
+def test_hodge_star_bbnd_doubleform_and_slots_3d():
+    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.35))
+    dim = 3
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.OneForm(rm.tangent)
+    df = dg.DoubleForm(Einsum("i,j->ij", alpha, alpha), p=1, q=1, dim=dim)
+
+    star_df = dg.star(df, rm, vb=BBND)
+    assert star_df.degree_left == 0
+    assert star_df.degree_right == 0
+    back_df = dg.inv_star(star_df, rm, vb=BBND)
+    assert l2_error_bbnd(back_df, df, mesh) < 1e-10
+
+    star_left = dg.star(df, rm, vb=BBND, slot="left")
+    assert star_left.degree_left == 0
+    assert star_left.degree_right == 1
+    back_left = dg.inv_star(star_left, rm, vb=BBND, slot="left")
+    assert l2_error_bbnd(back_left, df, mesh) < 1e-10
+
+    star_right = dg.star(df, rm, vb=BBND, slot="right")
+    assert star_right.degree_left == 1
+    assert star_right.degree_right == 0
+    back_right = dg.inv_star(star_right, rm, vb=BBND, slot="right")
+    assert l2_error_bbnd(back_right, df, mesh) < 1e-10
 
 
 if __name__ == "__main__":
