@@ -921,6 +921,21 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=self.dim)
 
     def InnerProduct(self, tf1, tf2, vb=None, forms=False):
+        if forms:
+            dim = self.dim
+            tf1_df = isinstance(tf1, (DoubleForm, _CPP_DoubleForm))
+            tf2_df = isinstance(tf2, (DoubleForm, _CPP_DoubleForm))
+            tf1_sf = _is_scalarfield_like(tf1)
+            tf2_sf = _is_scalarfield_like(tf2)
+
+            # Treat scalar inputs as (0,0) double-forms so forms=True also works
+            # after complete traces such as Trace(star(phi), l=p).
+            if tf1_df or tf2_df or (tf1_sf and tf2_sf):
+                if tf1_sf:
+                    tf1 = DoubleForm(tf1, p=0, q=0, dim=dim)
+                if tf2_sf:
+                    tf2 = DoubleForm(tf2, p=0, q=0, dim=dim)
+
         if vb is None:
             out = _CPP_RiemannianManifold.InnerProduct(self, tf1, tf2, forms=forms)
         else:
@@ -1004,6 +1019,15 @@ class RiemannianManifold(_CPP_RiemannianManifold):
                     out, p=out.degree_left, q=out.degree_right, dim=self.dim
                 )
             return as_scalarfield(out, dim=self.dim)
+
+        if _is_scalarfield_like(tf):
+            if l is not None:
+                if l == 0:
+                    return as_scalarfield(tf, dim=self.dim)
+                raise ValueError(
+                    "Trace: l is only supported for double-forms; use index1/index2 for tensor fields"
+                )
+            return as_scalarfield(0, dim=self.dim)
 
         if l is not None:
             if l == 0:
