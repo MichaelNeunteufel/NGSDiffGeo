@@ -199,7 +199,8 @@ namespace ngfem
         shared_ptr<DoubleFormCoefficientFunction> s_op(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL) const;
         shared_ptr<DoubleFormCoefficientFunction> ProjectDoubleForm(shared_ptr<DoubleFormCoefficientFunction> tf, int left_mode, int right_mode,
                                                                     shared_ptr<VectorFieldCoefficientFunction> normal = nullptr,
-                                                                    shared_ptr<VectorFieldCoefficientFunction> conormal = nullptr) const;
+                                                                    shared_ptr<VectorFieldCoefficientFunction> conormal = nullptr,
+                                                                    bool project_remaining = true) const;
         shared_ptr<DoubleFormCoefficientFunction> ContractSlot(shared_ptr<DoubleFormCoefficientFunction> tf, shared_ptr<VectorFieldCoefficientFunction> vf, int slot) const;
         shared_ptr<TensorFieldCoefficientFunction> J_op(shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb = VOL) const;
     };

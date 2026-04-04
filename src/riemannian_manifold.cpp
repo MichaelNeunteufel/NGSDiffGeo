@@ -1403,7 +1403,8 @@ namespace ngfem
 
     shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::ProjectDoubleForm(shared_ptr<DoubleFormCoefficientFunction> tf, int left_mode, int right_mode,
                                                                                     shared_ptr<VectorFieldCoefficientFunction> normal,
-                                                                                    shared_ptr<VectorFieldCoefficientFunction> conormal) const
+                                                                                    shared_ptr<VectorFieldCoefficientFunction> conormal,
+                                                                                    bool project_remaining) const
     {
         if (!tf)
             throw Exception("ProjectDoubleForm: input must be non-null");
@@ -1453,8 +1454,9 @@ namespace ngfem
 
             if (mode == 2)
             {
-                for (size_t i = start + 1; i < start + size_t(count); ++i)
-                    current = ApplyProjectorToIndex(current, proj, i);
+                // if (project_remaining)
+                //     for (size_t i = start + 1; i < start + size_t(count); ++i)
+                //         current = ApplyProjectorToIndex(current, proj, i);
                 current = Contraction(current, n, start);
                 if (slot == 0)
                     --p;
@@ -1479,8 +1481,9 @@ namespace ngfem
 
             if (mode == 4)
             {
-                for (size_t i = start + 1; i < start + size_t(count); ++i)
-                    current = ApplyProjectorToIndex(current, edge_proj, i);
+                if (project_remaining)
+                    for (size_t i = start + 1; i < start + size_t(count); ++i)
+                        current = ApplyProjectorToIndex(current, edge_proj, i);
                 current = Contraction(current, conormal, start);
                 if (slot == 0)
                     --p;
@@ -1791,7 +1794,7 @@ void ExportRiemannianManifold(py::module m)
                  if (slot_id == 1)
                      return self->CovCodifferential2(df, vb);
                  throw Exception("delta_cov: slot must be 0/1 or 'left'/'right'"); }, "Exterior covariant codifferential of a double-form", py::arg("tf"), py::arg("slot") = "left", py::arg("vb") = VOL)
-        .def("ProjectDoubleForm", [parse_proj](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, py::object left, py::object right, py::object normal, py::object conormal)
+        .def("ProjectDoubleForm", [parse_proj](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, py::object left, py::object right, py::object normal, py::object conormal, bool project_remaining)
              {
                  int left_mode = parse_proj(left, "ProjectDoubleForm");
                  int right_mode = parse_proj(right, "ProjectDoubleForm");
@@ -1801,7 +1804,7 @@ void ExportRiemannianManifold(py::module m)
                      n = py::cast<shared_ptr<VectorFieldCoefficientFunction>>(normal);
                  if (!conormal.is_none())
                      cn = py::cast<shared_ptr<VectorFieldCoefficientFunction>>(conormal);
-                 return self->ProjectDoubleForm(tf, left_mode, right_mode, n, cn); }, "Project a double-form in left/right slots onto tangent or normal components (normal reduces slot degree by one). Optional normal/conormal override the defaults for boundary/edge projections.", py::arg("tf"), py::arg("left") = "none", py::arg("right") = "none", py::arg("normal") = py::none(), py::arg("conormal") = py::none())
+                 return self->ProjectDoubleForm(tf, left_mode, right_mode, n, cn, project_remaining); }, "Project a double-form in left/right slots onto tangent or normal components (normal/conormal reduce the slot degree by one). Optional normal/conormal override the defaults for boundary/edge projections. Set project_remaining=False to contract without projecting the remaining indices in that slot.", py::arg("tf"), py::arg("left") = "none", py::arg("right") = "none", py::arg("normal") = py::none(), py::arg("conormal") = py::none(), py::arg("project_remaining") = true)
         .def("ProjectTensor", [parse_proj](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, py::object mode)
              {
                  int proj_mode = parse_proj(mode, "ProjectTensor");

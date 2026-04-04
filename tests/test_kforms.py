@@ -599,6 +599,32 @@ def test_doubleform_trace_contracts_first_slots():
     assert l2_error(traced, expected, mesh) == pytest.approx(0)
 
 
+def test_trace_scalarfield_returns_zero():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    f = dg.ScalarField(x + y, dim=dim)
+
+    traced = rm.Trace(f)
+
+    assert isinstance(traced, dg.ScalarField)
+    assert l2_norm(traced, mesh) == pytest.approx(0)
+
+
+def test_trace_scalarfield_l0_returns_input():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    f = dg.ScalarField(x + y, dim=dim)
+
+    traced = rm.Trace(f, l=0)
+
+    assert isinstance(traced, dg.ScalarField)
+    assert l2_error(traced, f, mesh) == pytest.approx(0)
+
+
 def test_doubleform_trace_sigma_raises_indices():
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
     dim = 2

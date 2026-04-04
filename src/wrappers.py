@@ -815,7 +815,13 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=self.dim)
 
     def ProjectDoubleForm(
-        self, tf, left="none", right="none", normal=None, conormal=None
+        self,
+        tf,
+        left="none",
+        right="none",
+        normal=None,
+        conormal=None,
+        project_remaining=True,
     ):
         def _parse_proj_mode(mode):
             if isinstance(mode, str):
@@ -862,7 +868,7 @@ class RiemannianManifold(_CPP_RiemannianManifold):
             return as_doubleform(0, p=0, q=0, dim=self.dim)
 
         out = _CPP_RiemannianManifold.ProjectDoubleForm(
-            self, tf, left, right, normal, conormal
+            self, tf, left, right, normal, conormal, project_remaining
         )
         return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=self.dim)
 
