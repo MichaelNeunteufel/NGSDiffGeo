@@ -105,7 +105,7 @@ def _as_doubleform_like(obj, *, dim=None):
                 "Wedge: dim must be provided or inferable for covariant (2,0) tensor"
             )
         return DoubleForm(obj, p=1, q=1, dim=dim)
-    raise TypeError("Wedge: expected DoubleForm or covariant (2,0) TensorField")
+    raise TypeError("Wedge: expected DoubleForm or covariant (2,0) TensorField, but received type {}".format(type(obj)))
 
 
 # ---------------- KForm factory + isinstance ----------------
@@ -792,6 +792,11 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         out = _CPP_RiemannianManifold.MeanCurvature.__get__(self)
         return as_scalarfield(out, dim=self.dim)
 
+    @property
+    def AngleDefect(self):
+        out = _CPP_RiemannianManifold.AngleDefect.__get__(self)
+        return as_scalarfield(out, dim=self.dim)
+
     def KForm(self, cf, k):
         out = _CPP_RiemannianManifold.KForm(self, cf, k)
         return as_kform(out, k=k, dim=self.dim)
@@ -858,7 +863,7 @@ class RiemannianManifold(_CPP_RiemannianManifold):
             return as_scalarfield(tf, dim=self.dim)
 
         if not isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
-            raise TypeError("ProjectDoubleForm expects a DoubleForm")
+            raise TypeError("ProjectDoubleForm expects a DoubleForm, but received type {}".format(type(tf)))
 
         if (
             getattr(tf, "degree_left", None) == 0
@@ -921,7 +926,7 @@ class RiemannianManifold(_CPP_RiemannianManifold):
 
     def ContractSlot(self, tf, vf, slot="left"):
         if not isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
-            raise TypeError("ContractSlot expects a DoubleForm")
+            raise TypeError("ContractSlot expects a DoubleForm, but received type {}".format(type(tf)))
         vf_wrapped = as_vectorfield(vf)
         out = _CPP_RiemannianManifold.ContractSlot(self, tf, vf_wrapped, slot)
         return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=self.dim)
@@ -1049,8 +1054,10 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         return as_tensorfield(out, dim=self.dim)
 
     def TraceSigma(self, tf, sigma, vb=ngsolve.VOL):
+        if _is_scalarfield_like(tf):
+            return as_scalarfield(0, dim=self.dim)
         if not isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
-            raise TypeError("TraceSigma expects a DoubleForm")
+            raise TypeError("TraceSigma expects a DoubleForm or ScalarField, but received type {}".format(type(tf)))
         try:
             sigma_df = _as_doubleform_like(sigma, dim=self.dim)
         except TypeError:
@@ -1106,6 +1113,13 @@ class RiemannianManifold(_CPP_RiemannianManifold):
             out = _CPP_RiemannianManifold.S(self, tf)
         else:
             out = _CPP_RiemannianManifold.S(self, tf, vb)
+        if isinstance(out, _CPP_DoubleForm):
+            return as_doubleform(
+                out, p=out.degree_left, q=out.degree_right, dim=self.dim
+            )
+        if isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
+            if tf.degree_left == 1 and tf.degree_right == 1:
+                return as_doubleform(out, p=1, q=1, dim=self.dim)
         return as_tensorfield(out)
 
     def s(self, tf, vb=None):
@@ -1120,6 +1134,13 @@ class RiemannianManifold(_CPP_RiemannianManifold):
             out = _CPP_RiemannianManifold.J(self, tf)
         else:
             out = _CPP_RiemannianManifold.J(self, tf, vb)
+        if isinstance(out, _CPP_DoubleForm):
+            return as_doubleform(
+                out, p=out.degree_left, q=out.degree_right, dim=self.dim
+            )
+        if isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
+            if tf.degree_left == 1 and tf.degree_right == 1:
+                return as_doubleform(out, p=1, q=1, dim=self.dim)
         return as_tensorfield(out)
 
 

@@ -60,6 +60,7 @@ namespace ngfem
 
         shared_ptr<DoubleFormCoefficientFunction> SFF;
         shared_ptr<DoubleFormCoefficientFunction> SFF_restricted;
+        shared_ptr<ScalarFieldCoefficientFunction> AngleDefect;
 
         // Euclidean and g-normalized normal and tangent vectors
         shared_ptr<CoefficientFunction> nv;
@@ -137,6 +138,7 @@ namespace ngfem
         shared_ptr<DoubleFormCoefficientFunction> GetSecondFundamentalForm() const;
         shared_ptr<ScalarFieldCoefficientFunction> GetGeodesicCurvature() const;
         shared_ptr<ScalarFieldCoefficientFunction> GetMeanCurvature() const;
+        shared_ptr<ScalarFieldCoefficientFunction> GetAngleDefect() const;
 
         shared_ptr<TensorFieldCoefficientFunction> ProjectTensorToEuclideanTangent(shared_ptr<TensorFieldCoefficientFunction> tf) const;
         shared_ptr<TensorFieldCoefficientFunction> ProjectTensor(shared_ptr<TensorFieldCoefficientFunction> tf, int mode) const;
@@ -196,6 +198,7 @@ namespace ngfem
         shared_ptr<TensorFieldCoefficientFunction> Transpose(shared_ptr<TensorFieldCoefficientFunction> tf, size_t index1 = 0, size_t index2 = 1) const;
 
         shared_ptr<TensorFieldCoefficientFunction> S_op(shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb = VOL) const;
+        shared_ptr<DoubleFormCoefficientFunction> S_op(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL) const;
         shared_ptr<DoubleFormCoefficientFunction> s_op(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL) const;
         shared_ptr<DoubleFormCoefficientFunction> ProjectDoubleForm(shared_ptr<DoubleFormCoefficientFunction> tf, int left_mode, int right_mode,
                                                                     shared_ptr<VectorFieldCoefficientFunction> normal = nullptr,
@@ -203,6 +206,7 @@ namespace ngfem
                                                                     bool project_remaining = true) const;
         shared_ptr<DoubleFormCoefficientFunction> ContractSlot(shared_ptr<DoubleFormCoefficientFunction> tf, shared_ptr<VectorFieldCoefficientFunction> vf, int slot) const;
         shared_ptr<TensorFieldCoefficientFunction> J_op(shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb = VOL) const;
+        shared_ptr<DoubleFormCoefficientFunction> J_op(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL) const;
     };
 }
 

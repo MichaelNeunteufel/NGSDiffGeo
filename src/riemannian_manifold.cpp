@@ -366,6 +366,12 @@ namespace ngfem
                 g_cnv[i] = VectorFieldCF(1 / cnv_g_norm * cnv_g);
             }
 
+            auto n_euc_0 = CrossProduct(TangentialVectorCF(dim, true), cnv[0]);
+            auto n_euc_1 = CrossProduct(TangentialVectorCF(dim, true), cnv[1]);
+            AngleDefect = ScalarFieldCF(
+                acos(InnerProduct(n_euc_0, n_euc_1)) - acos(InnerProduct(g * g_nv_BBND[0], g_nv_BBND[1])),
+                dim);
+
             // auto tv_mat = tv->Reshape(Array<int>({dim, 1}));
             // auto P_E = tv_mat * TransposeCF(tv_mat);
             // g_E = g_tv_norm * P_E;
@@ -632,6 +638,15 @@ namespace ngfem
     shared_ptr<ScalarFieldCoefficientFunction> RiemannianManifold::GetMeanCurvature() const
     {
         return dynamic_pointer_cast<ScalarFieldCoefficientFunction>(this->Trace(GetSecondFundamentalForm(), 0, 1, BND));
+    }
+
+    shared_ptr<ScalarFieldCoefficientFunction> RiemannianManifold::GetAngleDefect() const
+    {
+        if (dim != 3)
+            throw Exception("In RMF: Angle defect only available in 3D");
+        if (!AngleDefect)
+            throw Exception("In RMF: Angle defect not available");
+        return AngleDefect;
     }
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::ProjectTensorToEuclideanTangent(shared_ptr<TensorFieldCoefficientFunction> tf) const
@@ -1587,10 +1602,25 @@ namespace ngfem
         case VOL:
             return TensorFieldCF(Transpose(tf) - this->Trace(tf, 0, 1, VOL) * g, "11");
         case BND:
-            return TensorFieldCF(P_F_g * Transpose(tf) * P_F_g - this->Trace(tf, 0, 1, BND) * g_F, "11");
+        {
+            auto tangential = ApplyProjectorToIndex(Transpose(tf), P_F_g, 0);
+            tangential = ApplyProjectorToIndex(tangential, P_F_g, 1);
+            return TensorFieldCF(tangential - this->Trace(tf, 0, 1, BND) * g_F, "11");
+        }
         default:
             throw Exception("S_op: Only implemented for VOL and BND");
         }
+    }
+
+    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::S_op(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb) const
+    {
+        if (!tf)
+            throw Exception("S_op: input must be non-null");
+        if (tf->LeftDegree() != 1 || tf->RightDegree() != 1)
+            throw Exception("S_op: DoubleForm input must be a (1,1) double form");
+
+        auto out = S_op(static_pointer_cast<TensorFieldCoefficientFunction>(tf), vb);
+        return DoubleFormCF(out->GetCoefficients(), 1, 1, dim);
     }
 
     shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::s_op(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb) const
@@ -1655,10 +1685,25 @@ namespace ngfem
         case VOL:
             return TensorFieldCF(Transpose(tf) - 0.5 * this->Trace(tf, 0, 1, VOL) * g, "11");
         case BND:
-            return TensorFieldCF(P_F_g * Transpose(tf) * P_F_g - 0.5 * this->Trace(tf, 0, 1, BND) * g_F, "11");
+        {
+            auto tangential = ApplyProjectorToIndex(Transpose(tf), P_F_g, 0);
+            tangential = ApplyProjectorToIndex(tangential, P_F_g, 1);
+            return TensorFieldCF(tangential - 0.5 * this->Trace(tf, 0, 1, BND) * g_F, "11");
+        }
         default:
             throw Exception("J_op: Only implemented for VOL and BND");
         }
+    }
+
+    shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::J_op(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb) const
+    {
+        if (!tf)
+            throw Exception("J_op: input must be non-null");
+        if (tf->LeftDegree() != 1 || tf->RightDegree() != 1)
+            throw Exception("J_op: DoubleForm input must be a (1,1) double form");
+
+        auto out = J_op(static_pointer_cast<TensorFieldCoefficientFunction>(tf), vb);
+        return DoubleFormCF(out->GetCoefficients(), 1, 1, dim);
     }
 
 }
@@ -1754,6 +1799,7 @@ void ExportRiemannianManifold(py::module m)
         .def_property_readonly("SFF", &RiemannianManifold::GetSecondFundamentalForm, "return the second fundamental form")
         .def_property_readonly("GeodesicCurvature", &RiemannianManifold::GetGeodesicCurvature, "return the geodesic curvature")
         .def_property_readonly("MeanCurvature", &RiemannianManifold::GetMeanCurvature, "return the mean curvature")
+        .def_property_readonly("AngleDefect", &RiemannianManifold::GetAngleDefect, "return the edge angle defect in 3D")
         .def("KForm", [](shared_ptr<RiemannianManifold> self, shared_ptr<CoefficientFunction> cf, int k)
              { return self->MakeKForm(cf, k); }, "Wrap a CoefficientFunction as a k-form using the manifold dimension", py::arg("cf"), py::arg("k"))
         .def("star", [](shared_ptr<RiemannianManifold> self, shared_ptr<KFormCoefficientFunction> a, VorB vb)
@@ -1859,8 +1905,12 @@ void ExportRiemannianManifold(py::module m)
              { return self->Transpose(tf, index1, index2); }, "Transpose of TensorField for given indices. Default indices are first and second.", py::arg("tf"), py::arg("index1") = 0, py::arg("index2") = 1)
         .def("S", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb)
              { return self->S_op(tf, vb); }, "S operator subtracting the trace.", py::arg("tf"), py::arg("vb") = VOL)
+        .def("S", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb)
+             { return self->S_op(tf, vb); }, "S operator on (1,1) double forms preserving the double-form type.", py::arg("tf"), py::arg("vb") = VOL)
         .def("s", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb)
              { return self->s_op(tf, vb); }, "s operator for double forms: (p,q) -> (p+1,q-1)", py::arg("tf"), py::arg("vb") = VOL)
         .def("J", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb)
-             { return self->J_op(tf, vb); }, "J operator subtracting half the trace.", py::arg("tf"), py::arg("vb") = VOL);
+             { return self->J_op(tf, vb); }, "J operator subtracting half the trace.", py::arg("tf"), py::arg("vb") = VOL)
+        .def("J", [](shared_ptr<RiemannianManifold> self, shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb)
+             { return self->J_op(tf, vb); }, "J operator on (1,1) double forms preserving the double-form type.", py::arg("tf"), py::arg("vb") = VOL);
 }
