@@ -9,7 +9,15 @@ namespace ngfem
 {
   namespace
   {
-    using EinsumCache = std::array<std::array<std::string, 53>, 53>;
+    template <typename T>
+    shared_ptr<T> RequireNonNull(shared_ptr<T> ptr, const char *name)
+    {
+      if (!ptr)
+        throw Exception(std::string(name) + ": input coefficient is null");
+      return ptr;
+    }
+
+    using EinsumCache = std::array<std::array<std::string, MAX_SIGNATURE_LABELS + 1>, MAX_SIGNATURE_LABELS + 1>;
 
     std::string MakeEinsumSignature(int r1, int r2)
     {
@@ -25,8 +33,8 @@ namespace ngfem
       static std::once_flag flag;
       std::call_once(flag, [&]()
                      {
-        for (int r1 = 0; r1 <= 52; ++r1)
-          for (int r2 = 0; r2 <= 52; ++r2)
+        for (size_t r1 = 0; r1 <= MAX_SIGNATURE_LABELS; ++r1)
+          for (size_t r2 = 0; r2 <= MAX_SIGNATURE_LABELS; ++r2)
             cache[size_t(r1)][size_t(r2)] = MakeEinsumSignature(r1, r2); });
       return cache;
     }
@@ -47,46 +55,48 @@ namespace ngfem
   shared_ptr<TensorFieldCoefficientFunction> TensorFieldCF(const shared_ptr<CoefficientFunction> &cf,
                                                            const string &covariant_indices)
   {
-    if (!cf)
-      throw Exception("TensorFieldCF: input coefficient is null");
+    auto checked_cf = RequireNonNull(cf, "TensorFieldCF");
     auto meta = TensorMeta::FromCovString(covariant_indices);
-    if (auto tf = dynamic_pointer_cast<TensorFieldCoefficientFunction>(cf))
+    if (auto tf = dynamic_pointer_cast<TensorFieldCoefficientFunction>(checked_cf))
       if (tf->Meta() == meta)
         return tf;
-    return make_shared<TensorFieldCoefficientFunction>(cf, meta);
+    return make_shared<TensorFieldCoefficientFunction>(checked_cf, meta);
   }
 
   shared_ptr<TensorFieldCoefficientFunction> TensorFieldCF(const shared_ptr<CoefficientFunction> &cf,
                                                            const TensorMeta &meta)
   {
-    if (!cf)
-      throw Exception("TensorFieldCF: input coefficient is null");
-    if (auto tf = dynamic_pointer_cast<TensorFieldCoefficientFunction>(cf))
+    auto checked_cf = RequireNonNull(cf, "TensorFieldCF");
+    if (auto tf = dynamic_pointer_cast<TensorFieldCoefficientFunction>(checked_cf))
       if (tf->Meta() == meta)
         return tf;
-    auto result = make_shared<TensorFieldCoefficientFunction>(cf, meta);
+    auto result = make_shared<TensorFieldCoefficientFunction>(checked_cf, meta);
     return result;
   }
 
   shared_ptr<VectorFieldCoefficientFunction> VectorFieldCF(const shared_ptr<CoefficientFunction> &cf)
   {
-    if (cf->Dimensions().Size() != 1)
+    auto checked_cf = RequireNonNull(cf, "VectorFieldCF");
+    if (checked_cf->Dimensions().Size() != 1)
       throw Exception("VectorFieldCF: input must be a vector-valued CoefficientFunction");
-    if (cf->Dimension() != (size_t)(cf->Dimensions()[0]))
+    if (checked_cf->Dimension() != (size_t)(checked_cf->Dimensions()[0]))
       throw Exception("VectorFieldCF: dimension metadata mismatch");
-    // if (cf->IsZeroCF())
+    // if (checked_cf->IsZeroCF())
     //     return cf;
-    if (auto vf = dynamic_pointer_cast<VectorFieldCoefficientFunction>(cf))
+    if (auto vf = dynamic_pointer_cast<VectorFieldCoefficientFunction>(checked_cf))
       return vf;
-    return make_shared<VectorFieldCoefficientFunction>(cf);
+    return make_shared<VectorFieldCoefficientFunction>(checked_cf);
   }
 
   shared_ptr<TensorFieldCoefficientFunction> PermuteTensorCF(shared_ptr<TensorFieldCoefficientFunction> tf,
                                                              const std::vector<int> &order)
   {
+    tf = RequireNonNull(std::move(tf), "PermuteTensorCF");
     int rank = int(order.size());
     if (int(tf->Dimensions().Size()) != rank)
       throw Exception("PermuteTensorCF: rank mismatch");
+
+    std::vector<char> seen(size_t(rank), 0);
 
     std::string sig = tf->GetSignature();
     std::string cov = tf->GetCovariantIndices();
@@ -95,10 +105,14 @@ namespace ngfem
 
     for (int i = 0; i < rank; ++i)
     {
-      if (order[size_t(i)] < 0 || order[size_t(i)] >= rank)
+      int oi = order[size_t(i)];
+      if (oi < 0 || oi >= rank)
         throw Exception("PermuteTensorCF: permutation index out of range");
-      out_sig[size_t(i)] = sig[size_t(order[size_t(i)])];
-      out_cov[size_t(i)] = cov[size_t(order[size_t(i)])];
+      if (seen[size_t(oi)])
+        throw Exception("PermuteTensorCF: order must be a permutation");
+      seen[size_t(oi)] = 1;
+      out_sig[size_t(i)] = sig[size_t(oi)];
+      out_cov[size_t(i)] = cov[size_t(oi)];
     }
 
     auto out_cf = EinsumCF(sig + "->" + out_sig, {tf->GetCoefficients()});

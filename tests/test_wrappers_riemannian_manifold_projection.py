@@ -1,25 +1,10 @@
 import pytest
 from netgen.csg import unit_cube
 from netgen.occ import unit_square
-from ngsolve import *
+from ngsolve import BBND, BND, CF, Id, InnerProduct, Integrate, Mesh, dx, sqrt, x, y, z
 
 import ngsdiffgeo as dg
-
-
-def l2_error(a, b, mesh):
-    return sqrt(Integrate((a - b) * (a - b), mesh))
-
-
-def l2_error_bnd(a, b, mesh):
-    return sqrt(Integrate(InnerProduct(a - b, a - b), mesh, BND))
-
-
-def l2_norm_bnd(a, mesh):
-    return sqrt(Integrate(InnerProduct(a, a), mesh, BND))
-
-
-def l2_error_bbnd(a, b, mesh):
-    return sqrt(Integrate(InnerProduct(a - b, a - b) * dx(element_vb=BBND), mesh))
+from tests._helpers import l2_error, l2_error_bbnd, l2_error_bnd, l2_norm_bnd
 
 
 def two_form_3d(a12, a13, a23):

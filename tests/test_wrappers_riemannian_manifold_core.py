@@ -1,92 +1,37 @@
 import pytest
 
-from ngsolve import *
-from netgen.occ import unit_square, unit_cube
 import ngsdiffgeo as dg
+from netgen.occ import unit_cube, unit_square
+from ngsolve import (
+    BND,
+    CF,
+    CoefficientFunction,
+    Cof,
+    Det,
+    GridFunction,
+    HCurlCurl,
+    Id,
+    InnerProduct,
+    Integrate,
+    Inv,
+    Mesh,
+    OuterProduct,
+    VOL,
+    dx,
+    sin,
+    cos,
+    specialcf,
+    sqrt,
+    x,
+    y,
+    z,
+)
 
-xvec = [x, y, z]
-
-
-def GetDiffOp(name, cf):
-    dims = cf.dims
-    dim = cf.dims[0]
-    if name == "grad":
-        if len(dims) == 0 or (len(dims) == 1 and dims[0] == 1):
-            return CF(tuple([cf.Diff(xvec[i]) for i in range(dim)]))
-        elif len(cf.dims) == 1:
-            return CF(
-                tuple(
-                    [
-                        cf[i].Diff(xvec[j])
-                        for i in range(cf.dims[0])
-                        for j in range(cf.dims[0])
-                    ]
-                ),
-                dims=(cf.dims[0], cf.dims[0]),
-            )
-        else:
-            return CF(
-                tuple(
-                    [
-                        cf[j, k].Diff(xvec[i])
-                        for i in range(cf.dims[0])
-                        for j in range(cf.dims[0])
-                        for k in range(cf.dims[0])
-                    ]
-                ),
-                dims=(cf.dims[0], cf.dims[0] ** 2),
-            )
-    elif name == "christoffel":
-        cfgrad = GetDiffOp("grad", cf)
-        return 0.5 * CF(
-            tuple(
-                [
-                    cfgrad[i, j + dim * k]
-                    + cfgrad[j, i + dim * k]
-                    - cfgrad[k, i + dim * j]
-                ]
-                for i in range(dim)
-                for j in range(dim)
-                for k in range(dim)
-            ),
-            dims=(dim, dim, dim),
-        )
-    elif name == "christoffel2":
-        chr1 = GetDiffOp("christoffel", cf)
-        return CF((CF((chr1), dims=(dim**2, dim)) * Inv(cf)), dims=(dim, dim, dim))
-    else:
-        raise Exception(
-            "In GetDiffOp: Something went wrong: name =",
-            name,
-            ", order =",
-            order,
-            ", dim =",
-            dim,
-            ", dim =",
-            dims,
-            ", sym =",
-            sym,
-            ", dev =",
-            dev,
-            ", vb =",
-            vb,
-        )
-
-
-def l2_norm(cf, mesh):
-    return sqrt(Integrate(InnerProduct(cf, cf), mesh))
-
-
-def l2_norm_bnd(cf, mesh):
-    return sqrt(Integrate(InnerProduct(cf, cf) * dx(element_boundary=True), mesh))
-
-
-def l2_inner(a, b, mesh):
-    return sqrt(Integrate(InnerProduct(a - b, a - b), mesh))
+from tests._helpers import get_diff_op, l2_inner, l2_norm_bnd
 
 
 @pytest.mark.parametrize("interpolate", [True, False])
-def test_volume_forms_vectors_2D(interpolate):
+def test_volume_forms_vectors_2d(interpolate):
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.2))
     cf_metric = dg.CigarSoliton().metric
 
@@ -101,7 +46,6 @@ def test_volume_forms_vectors_2D(interpolate):
     assert sqrt(
         Integrate((mf.VolumeForm(VOL) - sqrt(Det(metric))) ** 2, mesh)
     ) == pytest.approx(0)
-    print(type(metric))
     assert sqrt(
         Integrate(
             (mf.VolumeForm(BND) - sqrt(metric[tang, tang])) ** 2
@@ -170,7 +114,7 @@ def test_raise_lower_multiple_indices_errors():
 
 
 @pytest.mark.parametrize("interpolate", [True, False])
-def test_volume_forms_vectors_3D(interpolate):
+def test_volume_forms_vectors_3d(interpolate):
     mesh = Mesh(unit_cube.GenerateMesh(maxh=0.3))
     cf_metric = dg.WarpedProduct().metric
 
@@ -224,7 +168,7 @@ def test_riemann_sign_flips_tensor():
 
 
 @pytest.mark.parametrize("interpolate", [True, False])
-def test_metric_inverse_derivative2D(interpolate):
+def test_metric_inverse_derivative_2d(interpolate):
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
     cf_metric = dg.TestMetric(dim=2, order=4)
     if interpolate:
@@ -242,14 +186,14 @@ def test_metric_inverse_derivative2D(interpolate):
     ) == pytest.approx(0)
 
     g_grad = (
-        GetDiffOp("grad", cf=metric) if not interpolate else metric.Operator("grad")
+        get_diff_op("grad", cf=metric) if not interpolate else metric.Operator("grad")
     )
     assert (
         sqrt(Integrate(InnerProduct(mf.G_deriv - g_grad, mf.G_deriv - g_grad), mesh))
         < 1e-10
     )
     chr1 = (
-        GetDiffOp(name="christoffel", cf=metric)
+        get_diff_op(name="christoffel", cf=metric)
         if not interpolate
         else metric.Operator("christoffel")
     )
@@ -267,7 +211,7 @@ def test_metric_inverse_derivative2D(interpolate):
         < 1e-10
     )
     chr2 = (
-        GetDiffOp(name="christoffel2", cf=metric)
+        get_diff_op(name="christoffel2", cf=metric)
         if not interpolate
         else metric.Operator("christoffel2")
     )
@@ -288,7 +232,7 @@ def test_metric_inverse_derivative2D(interpolate):
 
 
 @pytest.mark.parametrize("interpolate", [True, False])
-def test_metric_inverse_derivative3D(interpolate):
+def test_metric_inverse_derivative_3d(interpolate):
     mesh = Mesh(unit_cube.GenerateMesh(maxh=0.3))
     cf_metric = dg.TestMetric(dim=3, order=4)  # WarpedProduct
 
@@ -308,14 +252,14 @@ def test_metric_inverse_derivative3D(interpolate):
     ) == pytest.approx(0)
 
     g_grad = (
-        GetDiffOp("grad", cf=metric) if not interpolate else metric.Operator("grad")
+        get_diff_op("grad", cf=metric) if not interpolate else metric.Operator("grad")
     )
     assert (
         sqrt(Integrate(InnerProduct(mf.G_deriv - g_grad, mf.G_deriv - g_grad), mesh))
         < 1e-10
     )
     chr1 = (
-        GetDiffOp(name="christoffel", cf=metric)
+        get_diff_op(name="christoffel", cf=metric)
         if not interpolate
         else metric.Operator("christoffel")
     )
@@ -333,7 +277,7 @@ def test_metric_inverse_derivative3D(interpolate):
         < 1e-10
     )
     chr2 = (
-        GetDiffOp(name="christoffel2", cf=metric)
+        get_diff_op(name="christoffel2", cf=metric)
         if not interpolate
         else metric.Operator("christoffel2")
     )

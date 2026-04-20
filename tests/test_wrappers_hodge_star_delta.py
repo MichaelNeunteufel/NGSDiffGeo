@@ -1,21 +1,10 @@
 import pytest
-from netgen.occ import unit_square, unit_cube
-from ngsolve import *
+from netgen.occ import unit_cube, unit_square
+from ngsolve import BBND, CF, Id, Mesh, x, y, z
 from ngsolve.fem import Einsum
 
 import ngsdiffgeo as dg
-
-
-def l2_error(a, b, mesh):
-    return sqrt(Integrate(InnerProduct(a - b, a - b), mesh))
-
-
-def l2_norm(a, mesh):
-    return sqrt(Integrate(InnerProduct(a, a), mesh))
-
-
-def l2_error_bbnd(a, b, mesh):
-    return sqrt(Integrate(InnerProduct(a - b, a - b) * dx(element_vb=BBND), mesh))
+from tests._helpers import l2_error, l2_error_bbnd, l2_norm
 
 
 def test_hodge_star_2d_euclidean():

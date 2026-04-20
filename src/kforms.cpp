@@ -11,6 +11,131 @@ namespace ngfem
 {
     namespace
     {
+        template <typename T>
+        shared_ptr<T> RequireNonNull(shared_ptr<T> ptr, const char *name)
+        {
+            if (!ptr)
+                throw Exception(std::string(name) + ": input coefficient is null");
+            return ptr;
+        }
+
+        int InferWrappedOrTensorDimension(shared_ptr<CoefficientFunction> cf, int dim)
+        {
+            if (dim > 0)
+                return dim;
+            if (auto kf = dynamic_pointer_cast<KFormCoefficientFunction>(cf))
+                return kf->DimensionOfSpace();
+            if (auto df = dynamic_pointer_cast<DoubleFormCoefficientFunction>(cf))
+                return df->DimensionOfSpace();
+            if (cf->Dimensions().Size() > 0)
+                return int(cf->Dimensions()[0]);
+            return 0;
+        }
+
+        void RequireScalarFormDimension(int used_dim, const char *name)
+        {
+            if (used_dim <= 0)
+                throw Exception(std::string(name) + ": dim must be provided for scalar forms");
+        }
+
+        void ValidateKFormInput(const CoefficientFunction &cf, int k)
+        {
+            if (cf.Dimensions().Size() != size_t(k))
+                throw Exception("KFormCF: degree k requires rank-k coefficient");
+        }
+
+        void ValidateDoubleFormInput(const CoefficientFunction &cf, int p, int q)
+        {
+            if (cf.Dimensions().Size() != size_t(p + q))
+                throw Exception("DoubleFormCF: degrees p,q require rank-(p+q) coefficient");
+        }
+
+        template <typename TWrapped>
+        shared_ptr<TWrapped> ReuseIfCompatible(shared_ptr<CoefficientFunction> cf, int used_dim, const char *name)
+        {
+            auto existing = dynamic_pointer_cast<TWrapped>(cf);
+            if (!existing)
+                return nullptr;
+            if (used_dim > 0 && existing->DimensionOfSpace() != used_dim)
+                throw Exception(std::string(name) + ": requested dim does not match wrapped dimension");
+            return existing;
+        }
+
+        shared_ptr<KFormCoefficientFunction> WrapKFormImpl(shared_ptr<CoefficientFunction> cf, int k, int dim)
+        {
+            int used_dim = InferWrappedOrTensorDimension(cf, dim);
+            if (k == 0)
+                RequireScalarFormDimension(used_dim, "KFormCF");
+
+            ValidateKFormInput(*cf, k);
+
+            if (k == 0)
+            {
+                if (auto sf = ReuseIfCompatible<ScalarFieldCoefficientFunction>(cf, used_dim, "KFormCF"))
+                    return sf;
+                return make_shared<ScalarFieldCoefficientFunction>(cf, used_dim);
+            }
+            if (k == 1)
+            {
+                if (auto of = ReuseIfCompatible<OneFormCoefficientFunction>(cf, used_dim, "KFormCF"))
+                    return of;
+                return make_shared<OneFormCoefficientFunction>(cf, used_dim);
+            }
+            if (k == 2)
+            {
+                if (auto tf = ReuseIfCompatible<TwoFormCoefficientFunction>(cf, used_dim, "KFormCF"))
+                    return tf;
+                return make_shared<TwoFormCoefficientFunction>(cf, used_dim);
+            }
+            if (k == 3)
+            {
+                if (auto tf = ReuseIfCompatible<ThreeFormCoefficientFunction>(cf, used_dim, "KFormCF"))
+                    return tf;
+                return make_shared<ThreeFormCoefficientFunction>(cf, used_dim);
+            }
+
+            if (auto kf = dynamic_pointer_cast<KFormCoefficientFunction>(cf))
+            {
+                if (kf->Degree() != k)
+                    throw Exception("KFormCF: cannot reinterpret existing k-form with different degree");
+                if (used_dim > 0 && kf->DimensionOfSpace() != used_dim)
+                    throw Exception("KFormCF: requested dim does not match wrapped dimension");
+                return kf;
+            }
+
+            return make_shared<KFormCoefficientFunction>(cf, uint8_t(k), uint8_t(used_dim));
+        }
+
+        shared_ptr<DoubleFormCoefficientFunction> WrapDoubleFormImpl(shared_ptr<CoefficientFunction> cf, int p, int q, int dim)
+        {
+            int used_dim = InferWrappedOrTensorDimension(cf, dim);
+            if (p + q == 0)
+                RequireScalarFormDimension(used_dim, "DoubleFormCF");
+
+            ValidateDoubleFormInput(*cf, p, q);
+
+            if (auto df = dynamic_pointer_cast<DoubleFormCoefficientFunction>(cf))
+            {
+                if (df->LeftDegree() != p || df->RightDegree() != q)
+                    throw Exception("DoubleFormCF: cannot reinterpret existing DoubleForm with different left/right degrees");
+                if (used_dim > 0 && df->DimensionOfSpace() != used_dim)
+                    throw Exception("DoubleFormCF: requested dim does not match wrapped double-form dimension");
+                return df;
+            }
+
+            return make_shared<DoubleFormCoefficientFunction>(cf, uint8_t(p), uint8_t(q), uint8_t(used_dim));
+        }
+
+        template <typename TWrapped>
+        shared_ptr<TWrapped> WrapSpecializedKForm(shared_ptr<CoefficientFunction> cf, int k, int dim, const char *name)
+        {
+            int used_dim = InferWrappedOrTensorDimension(cf, dim);
+            auto kf = KFormCF(cf, k, used_dim);
+            auto wrapped = dynamic_pointer_cast<TWrapped>(kf);
+            if (!wrapped)
+                throw Exception(std::string(name) + ": internal type mismatch");
+            return wrapped;
+        }
 
         int ParseDoubleFormSlot(const std::string &slot)
         {
@@ -25,13 +150,13 @@ namespace ngfem
 
         const std::vector<std::array<int, 4>> &GeneratePermutations(int rank)
         {
-            if (rank < 0 || rank > 4)
-                throw Exception("GeneratePermutations: rank must be in [0, 4]");
+            if (rank < 0 || rank > MAX_PERMUTATION_RANK)
+                throw Exception("GeneratePermutations: rank must be in [0, " + ToString(MAX_PERMUTATION_RANK) + "]");
 
-            static std::array<std::vector<std::array<int, 4>>, 5> cached_perms = []()
+            static std::array<std::vector<std::array<int, 4>>, MAX_PERMUTATION_RANK + 1> cached_perms = []()
             {
-                std::array<std::vector<std::array<int, 4>>, 5> result;
-                for (int r = 0; r <= 4; ++r)
+                std::array<std::vector<std::array<int, 4>>, MAX_PERMUTATION_RANK + 1> result;
+                for (int r = 0; r <= MAX_PERMUTATION_RANK; ++r)
                 {
                     std::vector<int> current(r);
                     std::iota(current.begin(), current.end(), 0);
@@ -97,38 +222,36 @@ namespace ngfem
             }
             }
         }
-        struct SignedPermutationOrders
+
+        enum class PermutationFamily : uint8_t
         {
-            std::once_flag flag;
-            std::vector<std::vector<int>> orders;
-            std::vector<int> signs;
+            Full,
+            Shuffle
         };
 
-        const SignedPermutationOrders &
-        GetSignedBlockPermutationData(int rank_total, int block_start, int block_len)
+        struct PermutationSpec
         {
-            static std::array<std::array<std::array<SignedPermutationOrders, 5>, 9>, 9> cache;
-            auto &entry = cache[size_t(rank_total)][size_t(block_start)][size_t(block_len)];
+            PermutationFamily family;
+            int a;
+            int b;
+        };
 
-            std::call_once(entry.flag, [&]()
-                           {
-            const auto &perms = GeneratePermutations(block_len);
-            entry.orders.resize(perms.size());
-            entry.signs.resize(perms.size());
-
-            for (size_t p = 0; p < perms.size(); ++p)
+        int BlockLength(const PermutationSpec &spec)
+        {
+            switch (spec.family)
             {
-                auto &order = entry.orders[p];
-                order.resize(size_t(rank_total));
-                for (int i = 0; i < rank_total; ++i)
-                    order[size_t(i)] = i;
-                for (int i = 0; i < block_len; ++i)
-                    order[size_t(block_start + i)] = block_start + perms[p][size_t(i)];
-
-                entry.signs[p] = PermutationSign(perms[p], block_len);
-            } });
-
-            return entry;
+            case PermutationFamily::Full:
+                if (spec.a < 0 || spec.a > MAX_PERMUTATION_RANK)
+                    throw Exception("BlockLength: full permutation rank must be in [0, " + ToString(MAX_PERMUTATION_RANK) + "]");
+                if (spec.b != 0)
+                    throw Exception("BlockLength: full permutation spec requires b == 0");
+                return spec.a;
+            case PermutationFamily::Shuffle:
+                if (spec.a < 0 || spec.b < 0 || spec.a + spec.b > MAX_PERMUTATION_RANK)
+                    throw Exception("BlockLength: shuffle block sizes must be non-negative and sum to <= " + ToString(MAX_PERMUTATION_RANK));
+                return spec.a + spec.b;
+            }
+            throw Exception("BlockLength: unsupported permutation family");
         }
 
         bool IsShuffle(const std::array<int, 4> &perm, int left, int right)
@@ -155,62 +278,117 @@ namespace ngfem
             }
             return true;
         }
-        const std::vector<std::array<int, 4>> &GenerateShuffles(int left, int right)
+
+        struct SignedPermutations
         {
-            int total = left + right;
-            if (left < 0 || right < 0 || total > 4)
-                throw Exception("GenerateShuffles: block sizes must be non-negative and sum to <= 4");
+            std::once_flag flag;
+            std::vector<std::array<int, 4>> perms;
+            std::vector<int> signs;
+        };
 
-            struct ShuffleCacheEntry
+        const SignedPermutations &GetSignedPermutations(const PermutationSpec &spec)
+        {
+            constexpr size_t family_count = 2;
+            static std::array<std::array<std::array<SignedPermutations, MAX_PERMUTATION_RANK + 1>, MAX_PERMUTATION_RANK + 1>, family_count> cache;
+
+            int block_len = BlockLength(spec);
+            auto family_index = size_t(spec.family);
+            auto &entry = cache[family_index][size_t(spec.a)][size_t(spec.b)];
+
+            std::call_once(entry.flag, [&]()
+                           {
+            const auto &base_perms = GeneratePermutations(block_len);
+            entry.signs.reserve(base_perms.size());
+
+            switch (spec.family)
             {
-                std::once_flag flag;
-                std::vector<std::array<int, 4>> perms;
-            };
+            case PermutationFamily::Full:
+                for (const auto &perm : base_perms)
+                {
+                    entry.perms.push_back(perm);
+                    entry.signs.push_back(PermutationSign(perm, block_len));
+                }
+                break;
+            case PermutationFamily::Shuffle:
+                for (const auto &perm : base_perms)
+                {
+                    if (!IsShuffle(perm, spec.a, spec.b))
+                        continue;
+                    entry.perms.push_back(perm);
+                    entry.signs.push_back(PermutationSign(perm, block_len));
+                }
+                break;
+            } });
 
-            static std::array<std::array<ShuffleCacheEntry, 5>, 5> cache;
+            return entry;
+        }
+
+        struct SignedPermutationOrders
+        {
+            std::once_flag flag;
+            std::vector<std::vector<int>> orders;
+            std::vector<int> signs;
+        };
+
+        const SignedPermutationOrders &GetSignedWedgeOrders(int left, int right)
+        {
+            static std::array<std::array<SignedPermutationOrders, MAX_PERMUTATION_RANK + 1>, MAX_PERMUTATION_RANK + 1> cache;
             auto &entry = cache[size_t(left)][size_t(right)];
 
             std::call_once(entry.flag, [&]()
                            {
-            const auto &perms = GeneratePermutations(total);
-            entry.perms.reserve(perms.size());
-            for (const auto &perm : perms)
-                if (IsShuffle(perm, left, right))
-                    entry.perms.push_back(perm); });
+            const auto &data = GetSignedPermutations(
+                PermutationSpec{PermutationFamily::Shuffle, left, right});
 
-            return entry.perms;
+            entry.orders.resize(data.perms.size());
+            entry.signs = data.signs;
+
+            int total = left + right;
+            for (size_t p = 0; p < data.perms.size(); ++p)
+            {
+                auto &order = entry.orders[p];
+                order.resize(size_t(total));
+                for (int i = 0; i < total; ++i)
+                    order[size_t(i)] = data.perms[p][size_t(i)];
+            } });
+
+            return entry;
         }
 
-        // struct PermOrderCacheEntry
-        // {
-        //     bool ready = false;
-        //     std::vector<std::vector<int>> orders;
-        // };
+        const SignedPermutationOrders &
+        GetSignedBlockPermutationData(int rank_total, int block_start, const PermutationSpec &spec)
+        {
+            constexpr size_t family_count = 2;
+            static std::array<std::array<std::array<std::array<std::array<SignedPermutationOrders, MAX_PERMUTATION_RANK + 1>, MAX_PERMUTATION_RANK + 1>, family_count>, MAX_FORM_RANK + 1>, MAX_FORM_RANK + 1> cache;
 
-        // const std::vector<std::vector<int>> &GetBlockPermutationOrders(int rank_total, int block_start, int block_len,
-        //                                                                const std::vector<std::array<int, 4>> &perms)
-        // {
-        //     static std::mutex cache_mutex;
-        //     static std::array<std::array<std::array<PermOrderCacheEntry, 5>, 9>, 9> cache;
+            int block_len = BlockLength(spec);
+            if (rank_total < 0 || rank_total > MAX_FORM_RANK)
+                throw Exception("GetSignedBlockPermutationData: rank_total must be in [0, " + ToString(MAX_FORM_RANK) + "]");
+            if (block_start < 0 || block_start + block_len > rank_total)
+                throw Exception("GetSignedBlockPermutationData: block range out of bounds");
 
-        //     std::lock_guard<std::mutex> lock(cache_mutex);
-        //     auto &entry = cache[size_t(rank_total)][size_t(block_start)][size_t(block_len)];
-        //     if (!entry.ready)
-        //     {
-        //         entry.orders.resize(perms.size());
-        //         for (size_t p = 0; p < perms.size(); ++p)
-        //         {
-        //             auto &order = entry.orders[p];
-        //             order.resize(size_t(rank_total));
-        //             for (int i = 0; i < rank_total; ++i)
-        //                 order[size_t(i)] = i;
-        //             for (int i = 0; i < block_len; ++i)
-        //                 order[size_t(block_start + i)] = block_start + perms[p][size_t(i)];
-        //         }
-        //         entry.ready = true;
-        //     }
-        //     return entry.orders;
-        // }
+            auto family_index = size_t(spec.family);
+            auto &entry = cache[size_t(rank_total)][size_t(block_start)][family_index][size_t(spec.a)][size_t(spec.b)];
+
+            std::call_once(entry.flag, [&]()
+                           {
+            const auto &signed_perms = GetSignedPermutations(spec);
+            const auto &perms = signed_perms.perms;
+            entry.orders.resize(perms.size());
+            entry.signs = signed_perms.signs;
+
+            for (size_t p = 0; p < perms.size(); ++p)
+            {
+                auto &order = entry.orders[p];
+                order.resize(size_t(rank_total));
+                for (int i = 0; i < rank_total; ++i)
+                    order[size_t(i)] = i;
+                for (int i = 0; i < block_len; ++i)
+                    order[size_t(block_start + i)] = block_start + perms[p][size_t(i)];
+            } });
+
+            return entry;
+        }
 
         std::string FreshSignature(std::string_view used, int count)
         {
@@ -371,10 +549,10 @@ namespace ngfem
     {
         if (!T)
             throw Exception("BlockAlternationByPermutationCF: input coefficient is null");
-        if (rank_total < 0 || rank_total > 8)
-            throw Exception("BlockAlternationByPermutationCF: only ranks 0-8 supported");
-        if (block_len < 0 || block_len > 4)
-            throw Exception("BlockAlternationByPermutationCF: block size must be in [0, 4]");
+        if (rank_total < 0 || rank_total > MAX_FORM_RANK)
+            throw Exception("BlockAlternationByPermutationCF: only ranks 0-" + ToString(MAX_FORM_RANK) + " supported");
+        if (block_len < 0 || block_len > MAX_PERMUTATION_RANK)
+            throw Exception("BlockAlternationByPermutationCF: block size must be in [0, " + ToString(MAX_PERMUTATION_RANK) + "]");
         if (block_start < 0 || block_start + block_len > rank_total)
             throw Exception("BlockAlternationByPermutationCF: block range out of bounds");
         if (block_len <= 1)
@@ -394,7 +572,8 @@ namespace ngfem
         if (int(tf->Dimensions().Size()) != rank_total)
             throw Exception("BlockAlternationByPermutationCF: tensor rank mismatch");
 
-        const auto &data = GetSignedBlockPermutationData(rank_total, block_start, block_len);
+        const auto &data = GetSignedBlockPermutationData(rank_total, block_start,
+                                                         PermutationSpec{PermutationFamily::Full, block_len, 0});
 
         shared_ptr<CoefficientFunction> accum;
         for (size_t p = 0; p < data.orders.size(); ++p)
@@ -410,10 +589,10 @@ namespace ngfem
     KFormCoefficientFunction::KFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, uint8_t ak, uint8_t adim)
         : TensorFieldCoefficientFunction(ac1, std::string(size_t(ak), '1')), degree(ak), dim(adim)
     {
-        if (!((adim >= 1 && adim <= 4) || (adim == 0 && ak == 0)))
-            throw Exception("KFormCF: dim must be in {1,2,3,4} (or 0 for scalar forms)");
-        if (ak > 8)
-            throw Exception("KFormCF: only ranks up to 8 are supported");
+        if (!((adim >= 1 && adim <= MAX_SPACE_DIM) || (adim == 0 && ak == 0)))
+            throw Exception("KFormCF: dim must be in {1,...," + ToString(MAX_SPACE_DIM) + "} (or 0 for scalar forms)");
+        if (ak > MAX_FORM_RANK)
+            throw Exception("KFormCF: only ranks up to " + ToString(MAX_FORM_RANK) + " are supported");
 
         const auto &dims = ac1->Dimensions();
         if (dims.Size() != degree)
@@ -473,10 +652,10 @@ namespace ngfem
     DoubleFormCoefficientFunction::DoubleFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, uint8_t ap, uint8_t aq, uint8_t adim)
         : TensorFieldCoefficientFunction(ac1, std::string(size_t(ap + aq), '1')), degree_left(ap), degree_right(aq), dim(adim)
     {
-        if (!((adim >= 1 && adim <= 4) || (adim == 0 && ap == 0 && aq == 0)))
-            throw Exception("DoubleFormCF: dim must be in {1,2,3,4} (or 0 for scalar forms)");
-        if (ap + aq > 8)
-            throw Exception("DoubleFormCF: only ranks up to 8 are supported");
+        if (!((adim >= 1 && adim <= MAX_SPACE_DIM) || (adim == 0 && ap == 0 && aq == 0)))
+            throw Exception("DoubleFormCF: dim must be in {1,...," + ToString(MAX_SPACE_DIM) + "} (or 0 for scalar forms)");
+        if (ap + aq > MAX_FORM_RANK && !ac1->IsZeroCF())
+            throw Exception("DoubleFormCF: only ranks up to " + ToString(MAX_FORM_RANK) + " are supported");
 
         const auto &dims = ac1->Dimensions();
         if (dims.Size() != ap + aq)
@@ -575,10 +754,10 @@ namespace ngfem
         AlternationCoefficientFunction(shared_ptr<CoefficientFunction> ac1, int arank, int adim)
             : T_CoefficientFunction<AlternationCoefficientFunction>(ac1->Dimension(), ac1->IsComplex()), c1(ac1), rank(arank), dim(adim)
         {
-            if (rank < 0 || rank > 4)
-                throw Exception("AlternationCF: only ranks 0-4 supported");
-            if (dim < 1 || dim > 4)
-                throw Exception("AlternationCF: dim must be in {1,2,3,4}");
+            if (rank < 0 || rank > MAX_PERMUTATION_RANK)
+                throw Exception("AlternationCF: only ranks 0-" + ToString(MAX_PERMUTATION_RANK) + " supported");
+            if (dim < 1 || dim > MAX_SPACE_DIM)
+                throw Exception("AlternationCF: dim must be in {1,...," + ToString(MAX_SPACE_DIM) + "}");
             if (rank > dim)
                 throw Exception("AlternationCF: rank exceeds dimension");
 
@@ -767,147 +946,47 @@ namespace ngfem
 
     shared_ptr<KFormCoefficientFunction> KFormCF(shared_ptr<CoefficientFunction> cf, int k, int dim)
     {
+        cf = RequireNonNull(std::move(cf), "KFormCF");
         if (k < 0)
             throw Exception("KFormCF: degree must be non-negative");
-        if (k > 8)
-            throw Exception("KFormCF: only ranks up to 8 are supported");
-
-        int used_dim = dim;
-        if (used_dim <= 0)
-        {
-            if (cf->Dimensions().Size() > 0)
-                used_dim = int(cf->Dimensions()[0]);
-            else
-                used_dim = 0;
-        }
-        if (k == 0 && used_dim <= 0)
-            throw Exception("KFormCF: dim must be provided for scalar forms");
-        if (cf->Dimensions().Size() != size_t(k))
-            throw Exception("KFormCF: degree k requires rank-k coefficient");
-
-        auto reuse_if_compatible = [&](auto existing) -> shared_ptr<KFormCoefficientFunction>
-        {
-            if (!existing)
-                return nullptr;
-            if (used_dim > 0 && existing->DimensionOfSpace() != used_dim)
-                throw Exception("KFormCF: requested dim does not match wrapped form dimension");
-            return existing;
-        };
-
-        if (k == 0)
-        {
-            if (auto sf = dynamic_pointer_cast<ScalarFieldCoefficientFunction>(cf))
-                return reuse_if_compatible(sf);
-            return make_shared<ScalarFieldCoefficientFunction>(cf, used_dim);
-        }
-        if (k == 1)
-        {
-            if (auto of = dynamic_pointer_cast<OneFormCoefficientFunction>(cf))
-                return reuse_if_compatible(of);
-            return make_shared<OneFormCoefficientFunction>(cf, used_dim);
-        }
-        if (k == 2)
-        {
-            if (auto tf = dynamic_pointer_cast<TwoFormCoefficientFunction>(cf))
-                return reuse_if_compatible(tf);
-            return make_shared<TwoFormCoefficientFunction>(cf, used_dim);
-        }
-        if (k == 3)
-        {
-            if (auto tf = dynamic_pointer_cast<ThreeFormCoefficientFunction>(cf))
-                return reuse_if_compatible(tf);
-            return make_shared<ThreeFormCoefficientFunction>(cf, used_dim);
-        }
-
-        if (auto kf = dynamic_pointer_cast<KFormCoefficientFunction>(cf))
-        {
-            if (kf->Degree() != k)
-                throw Exception("KFormCF: cannot reinterpret existing k-form with different degree");
-            return reuse_if_compatible(kf);
-        }
-
-        return make_shared<KFormCoefficientFunction>(cf, uint8_t(k), uint8_t(used_dim));
+        if (k > MAX_FORM_RANK)
+            throw Exception("KFormCF: only ranks up to " + ToString(MAX_FORM_RANK) + " are supported");
+        return WrapKFormImpl(cf, k, dim);
     }
 
     shared_ptr<DoubleFormCoefficientFunction> DoubleFormCF(shared_ptr<CoefficientFunction> cf, int p, int q, int dim)
     {
+        cf = RequireNonNull(std::move(cf), "DoubleFormCF");
         if (p < 0 || q < 0)
             throw Exception("DoubleFormCF: degrees must be non-negative");
-        if (p + q > 8)
-            throw Exception("DoubleFormCF: only ranks up to 8 are supported");
-
-        int used_dim = dim;
-        if (used_dim <= 0)
-        {
-            if (cf->Dimensions().Size() > 0)
-                used_dim = int(cf->Dimensions()[0]);
-            else
-                used_dim = 0;
-        }
-
-        if (p + q == 0 && used_dim <= 0)
-            throw Exception("DoubleFormCF: dim must be provided for scalar forms");
-
-        if (cf->Dimensions().Size() != size_t(p + q))
-            throw Exception("DoubleFormCF: degrees p,q require rank-(p+q) coefficient");
-
-        if (auto df = dynamic_pointer_cast<DoubleFormCoefficientFunction>(cf))
-        {
-            if (df->LeftDegree() != p || df->RightDegree() != q)
-                throw Exception("DoubleFormCF: cannot reinterpret existing DoubleForm with different left/right degrees");
-            if (used_dim > 0 && df->DimensionOfSpace() != used_dim)
-                throw Exception("DoubleFormCF: requested dim does not match wrapped double-form dimension");
-            return df;
-        }
-
-        return make_shared<DoubleFormCoefficientFunction>(cf, uint8_t(p), uint8_t(q), uint8_t(used_dim));
+        if (p + q > MAX_FORM_RANK && !cf->IsZeroCF())
+            throw Exception("DoubleFormCF: only ranks up to " + ToString(MAX_FORM_RANK) + " are supported");
+        return WrapDoubleFormImpl(cf, p, q, dim);
     }
     shared_ptr<ScalarFieldCoefficientFunction> ScalarFieldCF(shared_ptr<CoefficientFunction> cf, int dim)
     {
-        auto kf = KFormCF(cf, 0, dim);
-        auto sf = dynamic_pointer_cast<ScalarFieldCoefficientFunction>(kf);
-        if (!sf)
-            throw Exception("ScalarFieldCF: internal type mismatch");
-        return sf;
+        cf = RequireNonNull(std::move(cf), "ScalarFieldCF");
+        return WrapSpecializedKForm<ScalarFieldCoefficientFunction>(cf, 0, dim, "ScalarFieldCF");
     }
 
     shared_ptr<OneFormCoefficientFunction> OneFormCF(shared_ptr<CoefficientFunction> cf)
     {
+        cf = RequireNonNull(std::move(cf), "OneFormCF");
         if (cf->Dimensions().Size() != 1)
             throw Exception("OneFormCF: input coefficient must be vector valued");
-
-        int used_dim = int(cf->Dimensions()[0]);
-        auto kf = KFormCF(cf, 1, used_dim);
-        auto of = dynamic_pointer_cast<OneFormCoefficientFunction>(kf);
-        if (!of)
-            throw Exception("OneFormCF: internal type mismatch");
-        return of;
+        return WrapSpecializedKForm<OneFormCoefficientFunction>(cf, 1, -1, "OneFormCF");
     }
 
     shared_ptr<TwoFormCoefficientFunction> TwoFormCF(shared_ptr<CoefficientFunction> cf, int dim)
     {
-        int used_dim = dim;
-        if (used_dim <= 0)
-            used_dim = (cf->Dimensions().Size() > 0) ? int(cf->Dimensions()[0]) : 1;
-
-        auto kf = KFormCF(cf, 2, used_dim);
-        auto tf = dynamic_pointer_cast<TwoFormCoefficientFunction>(kf);
-        if (!tf)
-            throw Exception("TwoFormCF: internal type mismatch");
-        return tf;
+        cf = RequireNonNull(std::move(cf), "TwoFormCF");
+        return WrapSpecializedKForm<TwoFormCoefficientFunction>(cf, 2, dim, "TwoFormCF");
     }
 
     shared_ptr<ThreeFormCoefficientFunction> ThreeFormCF(shared_ptr<CoefficientFunction> cf, int dim)
     {
-        int used_dim = dim;
-        if (used_dim <= 0)
-            used_dim = (cf->Dimensions().Size() > 0) ? int(cf->Dimensions()[0]) : 1;
-
-        auto kf = KFormCF(cf, 3, used_dim);
-        auto tf = dynamic_pointer_cast<ThreeFormCoefficientFunction>(kf);
-        if (!tf)
-            throw Exception("ThreeFormCF: internal type mismatch");
-        return tf;
+        cf = RequireNonNull(std::move(cf), "ThreeFormCF");
+        return WrapSpecializedKForm<ThreeFormCoefficientFunction>(cf, 3, dim, "ThreeFormCF");
     }
 
     shared_ptr<KFormCoefficientFunction> ZeroKForm(int k, int dim)
@@ -941,16 +1020,12 @@ namespace ngfem
             return KFormCF(a->GetCoefficients() * b->GetCoefficients(), k + l, dim);
 
         auto T = TensorProduct(a, b);
-        const auto &shuffles = GenerateShuffles(k, l);
+        const auto &shuffle_data = GetSignedWedgeOrders(k, l);
         shared_ptr<CoefficientFunction> accum;
-        for (const auto &perm : shuffles)
+        for (size_t p = 0; p < shuffle_data.orders.size(); ++p)
         {
-            std::vector<int> order(size_t(k + l));
-            for (int i = 0; i < k + l; ++i)
-                order[size_t(i)] = perm[size_t(i)];
-            shared_ptr<CoefficientFunction> term = PermuteTensorCF(T, order);
-            int sign = PermutationSign(perm, k + l);
-            if (sign == -1)
+            shared_ptr<CoefficientFunction> term = PermuteTensorCF(T, shuffle_data.orders[p]);
+            if (shuffle_data.signs[p] == -1)
                 term = (-1.0) * term;
             accum = accum ? (accum + term) : term;
         }
@@ -987,29 +1062,31 @@ namespace ngfem
         auto reordered = PermuteTensorCF(T, order);
         const int left_len = p + r;
         const int right_len = q + s;
-        const auto &left_shuffles = GenerateShuffles(p, r);
-        const auto &right_shuffles = GenerateShuffles(q, s);
+        const auto &left_data = GetSignedPermutations(PermutationSpec{PermutationFamily::Shuffle, p, r});
+        const auto &right_data = GetSignedPermutations(PermutationSpec{PermutationFamily::Shuffle, q, s});
 
         shared_ptr<CoefficientFunction> accum;
-        for (const auto &perm_left : left_shuffles)
+        for (size_t pl = 0; pl < left_data.perms.size(); ++pl)
         {
+            const auto &perm_left = left_data.perms[pl];
             auto order_left = std::vector<int>(size_t(total));
             for (int i = 0; i < total; ++i)
                 order_left[size_t(i)] = i;
             for (int i = 0; i < left_len; ++i)
                 order_left[size_t(i)] = perm_left[size_t(i)];
             auto left_tf = PermuteTensorCF(reordered, order_left);
-            int sign_left = PermutationSign(perm_left, left_len);
+            int sign_left = left_data.signs[pl];
 
-            for (const auto &perm_right : right_shuffles)
+            for (size_t pr = 0; pr < right_data.perms.size(); ++pr)
             {
+                const auto &perm_right = right_data.perms[pr];
                 auto order_right = std::vector<int>(size_t(total));
                 for (int i = 0; i < total; ++i)
                     order_right[size_t(i)] = i;
                 for (int i = 0; i < right_len; ++i)
                     order_right[size_t(left_len + i)] = left_len + perm_right[size_t(i)];
                 shared_ptr<CoefficientFunction> term = PermuteTensorCF(left_tf, order_right);
-                int sign = sign_left * PermutationSign(perm_right, right_len);
+                int sign = sign_left * right_data.signs[pr];
                 if (sign == -1)
                     term = (-1.0) * term;
                 accum = accum ? (accum + term) : term;

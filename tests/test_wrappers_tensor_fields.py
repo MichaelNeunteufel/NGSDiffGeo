@@ -1,12 +1,26 @@
 import pytest
 
-from ngsolve import *
+from netgen.csg import unit_cube
 from netgen.occ import unit_square
+from ngsolve import (
+    BND,
+    CF,
+    CoefficientFunction,
+    Id,
+    InnerProduct,
+    Integrate,
+    Mesh,
+    OuterProduct,
+    cos,
+    sin,
+    sqrt,
+    x,
+    y,
+    z,
+)
 import ngsdiffgeo as dg
 
-
-def l2_inner(a, b, mesh):
-    return sqrt(Integrate(InnerProduct(a - b, a - b), mesh))
+from tests._helpers import l2_inner
 
 
 def test_tensorfield_constructors_and_metadata():
@@ -107,6 +121,60 @@ def test_nested_wrapping_is_idempotent_in_value():
 
     assert vv2.covariant_indices == "0"
     assert l2_inner(vv.coef, vv2.coef, mesh) == pytest.approx(0)
+
+
+def test_J_and_S_preserve_doubleform_type_for_11_inputs():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    rm = dg.RiemannianManifold(Id(2))
+
+    A = CF((x, y, x + y, x - y), dims=(2, 2))
+    df = dg.DoubleForm(A, p=1, q=1, dim=2)
+
+    Jdf = rm.J(df)
+    Sdf = rm.S(df)
+
+    trace_A = 2 * x - y
+    expected_J = CF((x, x + y, y, x - y), dims=(2, 2)) - 0.5 * trace_A * Id(2)
+    expected_S = CF((x, x + y, y, x - y), dims=(2, 2)) - trace_A * Id(2)
+
+    assert isinstance(Jdf, dg.DoubleForm)
+    assert isinstance(Sdf, dg.DoubleForm)
+    assert Jdf.degree_left == 1
+    assert Jdf.degree_right == 1
+    assert Sdf.degree_left == 1
+    assert Sdf.degree_right == 1
+    assert l2_inner(Jdf.coef, expected_J, mesh) == pytest.approx(0)
+    assert l2_inner(Sdf.coef, expected_S, mesh) == pytest.approx(0)
+
+
+def test_S_and_J_on_bnd_match_projected_doubleform_for_non_euclidean_metric():
+    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.8))
+    g = CF((2 + x, 0.2, 0.1, 0.2, 3 + y, 0.3, 0.1, 0.3, 4 + z), dims=(3, 3))
+    rm = dg.RiemannianManifold(g)
+
+    alpha = dg.OneForm(CF((x + 1, y + 2, z + 3)))
+    beta = dg.OneForm(CF((2 * x + 1, 3 * y + 1, 4 * z + 1)))
+    phi = dg.DoubleForm(dg.TensorProduct(alpha, beta), p=1, q=1, dim=3)
+
+    projected = rm.ProjectDoubleForm(phi, left="F", right="F")
+    expected_S = dg.DoubleForm(
+        projected.trans - rm.G_F * rm.Trace(projected, vb=BND),
+        p=1,
+        q=1,
+        dim=3,
+    )
+    expected_J = dg.DoubleForm(
+        projected.trans - 0.5 * rm.G_F * rm.Trace(projected, vb=BND),
+        p=1,
+        q=1,
+        dim=3,
+    )
+
+    Sdf = rm.S(phi, vb=BND)
+    Jdf = rm.J(phi, vb=BND)
+
+    assert sqrt(Integrate(InnerProduct(Sdf - expected_S, Sdf - expected_S), mesh, BND)) < 1e-8
+    assert sqrt(Integrate(InnerProduct(Jdf - expected_J, Jdf - expected_J), mesh, BND)) < 1e-8
 
 
 if __name__ == "__main__":

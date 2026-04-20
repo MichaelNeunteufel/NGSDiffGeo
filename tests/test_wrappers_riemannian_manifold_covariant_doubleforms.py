@@ -1,20 +1,9 @@
 import pytest
 from netgen.occ import unit_square
-from ngsolve import *
+from ngsolve import BND, CF, Id, Mesh, VOL, x, y
 
 import ngsdiffgeo as dg
-
-
-def l2_error(a, b, mesh):
-    return sqrt(Integrate(InnerProduct(a - b, a - b), mesh))
-
-
-def l2_norm(a, mesh):
-    return sqrt(Integrate(InnerProduct(a, a), mesh))
-
-
-def l2_norm_bnd(a, mesh):
-    return sqrt(Integrate(InnerProduct(a, a) * dx(element_boundary=True), mesh))
+from tests._helpers import l2_error, l2_norm, l2_norm_bnd
 
 
 def test_double_form_covariant_derivatives_constant_zero():
