@@ -108,6 +108,143 @@ def _as_doubleform_like(obj, *, dim=None):
     raise TypeError("Wedge: expected DoubleForm or covariant (2,0) TensorField, but received type {}".format(type(obj)))
 
 
+def _vb_dimension(M, vb):
+    if vb == ngsolve.VOL:
+        return M.dim
+    if vb == ngsolve.BND:
+        return M.dim - 1
+    if vb == ngsolve.BBND:
+        return M.dim - 2
+    raise ValueError("vb must be VOL, BND, or BBND")
+
+
+def _parse_slot(slot):
+    if isinstance(slot, str):
+        s = slot.lower()
+        if s == "left":
+            return 0
+        if s == "right":
+            return 1
+        if s in ("both", "-1"):
+            return -1
+    if isinstance(slot, numbers.Integral):
+        val = int(slot)
+        if val in (-1, 0, 1):
+            return val
+    raise ValueError("slot must be -1/0/1 or 'left'/'right'/'both'")
+
+
+def _parse_proj_mode(mode):
+    if isinstance(mode, str):
+        s = mode.lower()
+        if s in ("f", "tangent", "tan", "1"):
+            return 1
+        if s in ("n", "normal", "2"):
+            return 2
+        if s in ("e", "edge", "3"):
+            return 3
+        if s in ("m", "conormal", "4"):
+            return 4
+        if s in ("none", "0"):
+            return 0
+        raise ValueError(
+            "ProjectDoubleForm: mode must be 'F'/'tangent', 'n'/'normal', 'E'/'edge', 'm'/'conormal', or 'none'"
+        )
+    if isinstance(mode, numbers.Integral):
+        if int(mode) in (0, 1, 2, 3, 4):
+            return int(mode)
+        raise ValueError(
+            "ProjectDoubleForm: mode must be 0 (none), 1 (F/tangent), 2 (n/normal), 3 (E/edge), or 4 (m/conormal)"
+        )
+    raise ValueError("ProjectDoubleForm: mode must be string or int")
+
+
+def _projected_doubleform_degrees(p, q, left_mode, right_mode):
+    p_out = int(p)
+    q_out = int(q)
+    if left_mode in (2, 4):
+        p_out -= 1
+    if right_mode in (2, 4):
+        q_out -= 1
+    return p_out, q_out
+
+
+def _zero_tensor_cf(rank, dim):
+    if rank < 0:
+        raise ValueError("rank must be non-negative")
+    if rank == 0:
+        return 0
+    dims = tuple(int(dim) for _ in range(rank))
+    size = int(dim) ** int(rank)
+    return ngsolve.CF(tuple(0 for _ in range(size)), dims=dims)
+
+
+def _star_requires_formal(a, n, slot_id, *, double=False):
+    if isinstance(a, FormalZeroDoubleForm) or isinstance(a, FormalZeroKForm):
+        return True
+
+    if double or isinstance(a, (DoubleForm, _CPP_DoubleForm)):
+        degs = _doubleform_degrees(a)
+        if degs is None:
+            return False
+        p, q, _ = degs
+        if slot_id == -1:
+            return p > n or q > n
+        if slot_id == 0:
+            return p > n
+        return q > n
+
+    deg = _kform_degree(a)
+    if deg is None:
+        return False
+    return deg[0] > n
+
+
+def _doubleform_degrees(obj):
+    if isinstance(obj, FormalZeroDoubleForm):
+        return obj.degree_left, obj.degree_right, obj.dim_space
+    if isinstance(obj, (DoubleForm, _CPP_DoubleForm)):
+        return int(obj.degree_left), int(obj.degree_right), int(obj.dim_space)
+    if _is_scalarfield_like(obj):
+        dim = _infer_dim(obj)
+        if dim is None:
+            raise TypeError("double-form scalar input requires inferable dim")
+        return 0, 0, int(dim)
+    return None
+
+
+def _kform_degree(obj):
+    if isinstance(obj, FormalZeroKForm):
+        return int(obj.degree), int(obj.dim_space)
+    if isinstance(obj, (ScalarField, OneForm, TwoForm, ThreeForm, GenericKForm, _CPP_KForm)):
+        dim = _infer_dim(obj)
+        if dim is None:
+            raise TypeError("k-form input requires inferable dim")
+        return int(obj.degree), int(dim)
+    if _is_scalarfield_like(obj):
+        dim = _infer_dim(obj)
+        if dim is None:
+            raise TypeError("scalar input requires inferable dim")
+        return 0, int(dim)
+    return None
+
+
+def _same_kform_degree(a, b):
+    da = _kform_degree(a)
+    db = _kform_degree(b)
+    if da is None or db is None:
+        return False
+    return da[0] == db[0] and da[1] == db[1]
+
+
+def _same_doubleform_degree(a, b):
+    da = _doubleform_degrees(a)
+    db = _doubleform_degrees(b)
+    if da is None or db is None:
+        return False
+    return da == db
+
+
 # ---------------- KForm factory + isinstance ----------------
 
 
@@ -300,12 +437,20 @@ class GenericKForm(_CPP_KForm):
         return as_kform(cf, k=self._k, dim=self._dim)
 
     def __add__(self, other):
+        if is_formal_zero_kform(other):
+            if not _same_kform_degree(self, other):
+                raise TypeError("cannot add k-forms of different degree/dimension")
+            return self
         return self._wrap(self.coef + _unwrap_cf(other))
 
     def __radd__(self, other):
         return self.__add__(other)
 
     def __sub__(self, other):
+        if is_formal_zero_kform(other):
+            if not _same_kform_degree(self, other):
+                raise TypeError("cannot subtract k-forms of different degree/dimension")
+            return self
         return self._wrap(self.coef - _unwrap_cf(other))
 
     def __neg__(self):
@@ -332,12 +477,24 @@ class DoubleForm(_CPP_DoubleForm):
         return as_doubleform(cf, p=self._p, q=self._q, dim=self._dim)
 
     def __add__(self, other):
+        if is_formal_zero_doubleform(other):
+            if not _same_doubleform_degree(self, other):
+                raise TypeError(
+                    "cannot add double-forms of different left/right degree or dimension"
+                )
+            return self
         return self._wrap(self.coef + _unwrap_cf(other))
 
     def __radd__(self, other):
         return self.__add__(other)
 
     def __sub__(self, other):
+        if is_formal_zero_doubleform(other):
+            if not _same_doubleform_degree(self, other):
+                raise TypeError(
+                    "cannot subtract double-forms of different left/right degree or dimension"
+                )
+            return self
         return self._wrap(self.coef - _unwrap_cf(other))
 
     def __neg__(self):
@@ -354,6 +511,137 @@ class DoubleForm(_CPP_DoubleForm):
 
     def __pow__(self, power):
         return WedgePower(self, power)
+
+
+class FormalZeroBase:
+    is_formal_zero = True
+
+    def __init__(self, *, reason=None):
+        self.reason = reason
+
+    def __repr__(self):
+        attrs = []
+        for key in ("degree", "degree_left", "degree_right", "dim_space", "reason"):
+            if hasattr(self, key):
+                attrs.append(f"{key}={getattr(self, key)!r}")
+        return f"{self.__class__.__name__}({', '.join(attrs)})"
+
+
+class FormalZeroKForm(FormalZeroBase):
+    def __init__(self, k, dim, *, reason=None):
+        super().__init__(reason=reason)
+        self.degree = int(k)
+        self.dim_space = int(dim)
+
+    def __add__(self, other):
+        if is_formal_zero_kform(other):
+            if not _same_kform_degree(self, other):
+                raise TypeError("cannot add k-forms of different degree/dimension")
+            return self
+        if _kform_degree(other) is not None:
+            if not _same_kform_degree(self, other):
+                raise TypeError("cannot add k-forms of different degree/dimension")
+            return other
+        return NotImplemented
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __sub__(self, other):
+        if is_formal_zero_kform(other):
+            if not _same_kform_degree(self, other):
+                raise TypeError("cannot subtract k-forms of different degree/dimension")
+            return self
+        if _kform_degree(other) is not None:
+            if not _same_kform_degree(self, other):
+                raise TypeError("cannot subtract k-forms of different degree/dimension")
+            return (-1) * other
+        return NotImplemented
+
+    def __rsub__(self, other):
+        if _kform_degree(other) is not None:
+            if not _same_kform_degree(self, other):
+                raise TypeError("cannot subtract k-forms of different degree/dimension")
+            return other
+        return NotImplemented
+
+    def __mul__(self, other):
+        if isinstance(other, (int, float, complex)) or _is_scalarfield_like(other):
+            return self
+        return NotImplemented
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __neg__(self):
+        return self
+
+    def InnerProduct(self, other):
+        return ngsolve.CF(0)
+
+
+class FormalZeroDoubleForm(FormalZeroBase):
+    def __init__(self, p, q, dim, *, reason=None):
+        super().__init__(reason=reason)
+        self.degree_left = int(p)
+        self.degree_right = int(q)
+        self.dim_space = int(dim)
+
+    def __add__(self, other):
+        if is_formal_zero_doubleform(other):
+            if not _same_doubleform_degree(self, other):
+                raise TypeError(
+                    "cannot add double-forms of different left/right degree or dimension"
+                )
+            return self
+        if _doubleform_degrees(other) is not None:
+            if not _same_doubleform_degree(self, other):
+                raise TypeError(
+                    "cannot add double-forms of different left/right degree or dimension"
+                )
+            return other
+        return NotImplemented
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __sub__(self, other):
+        if is_formal_zero_doubleform(other):
+            if not _same_doubleform_degree(self, other):
+                raise TypeError(
+                    "cannot subtract double-forms of different left/right degree or dimension"
+                )
+            return self
+        if _doubleform_degrees(other) is not None:
+            if not _same_doubleform_degree(self, other):
+                raise TypeError(
+                    "cannot subtract double-forms of different left/right degree or dimension"
+                )
+            return (-1) * other
+        return NotImplemented
+
+    def __rsub__(self, other):
+        if _doubleform_degrees(other) is not None:
+            if not _same_doubleform_degree(self, other):
+                raise TypeError(
+                    "cannot subtract double-forms of different left/right degree or dimension"
+                )
+            return other
+        return NotImplemented
+
+    def __mul__(self, other):
+        if isinstance(other, (int, float, complex)) or _is_scalarfield_like(other):
+            return self
+        return NotImplemented
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __neg__(self):
+        return self
+
+    def InnerProduct(self, other):
+        return ngsolve.CF(0)
 
 
 # ---------------- as_* functions ----------------
@@ -440,6 +728,381 @@ def as_doubleform(cf, *, p=None, q=None, dim=None):
         raise TypeError("as_doubleform: dim must be provided or inferable")
 
     return DoubleForm(cf, p=p, q=q, dim=dim)
+
+
+def is_formal_zero(obj):
+    return bool(getattr(obj, "is_formal_zero", False))
+
+
+def is_formal_zero_kform(obj):
+    return isinstance(obj, FormalZeroKForm)
+
+
+def is_formal_zero_doubleform(obj):
+    return isinstance(obj, FormalZeroDoubleForm)
+
+
+def materialize_zero(obj):
+    if isinstance(obj, FormalZeroKForm):
+        if obj.degree < 0:
+            raise ValueError("cannot materialize FormalZeroKForm with negative degree")
+        return as_kform(_zero_tensor_cf(obj.degree, obj.dim_space), k=obj.degree, dim=obj.dim_space)
+    if isinstance(obj, FormalZeroDoubleForm):
+        if obj.degree_left < 0 or obj.degree_right < 0:
+            raise ValueError(
+                "cannot materialize FormalZeroDoubleForm with negative degree"
+            )
+        return as_doubleform(
+            _zero_tensor_cf(obj.degree_left + obj.degree_right, obj.dim_space),
+            p=obj.degree_left,
+            q=obj.degree_right,
+            dim=obj.dim_space,
+        )
+    return obj
+
+
+def contract_slot_formal(M, tf, vf, slot="left"):
+    slot_id = _parse_slot(slot)
+    if slot_id not in (0, 1):
+        raise ValueError("contract_slot_formal: slot must be 'left' or 'right'")
+
+    if isinstance(tf, FormalZeroDoubleForm):
+        p = tf.degree_left - (1 if slot_id == 0 else 0)
+        q = tf.degree_right - (1 if slot_id == 1 else 0)
+        return FormalZeroDoubleForm(p, q, tf.dim_space, reason="contract_slot_formal")
+
+    if not isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
+        raise TypeError(
+            "contract_slot_formal expects a DoubleForm, but received type {}".format(
+                type(tf)
+            )
+        )
+
+    if (slot_id == 0 and tf.degree_left == 0) or (
+        slot_id == 1 and tf.degree_right == 0
+    ):
+        return FormalZeroDoubleForm(
+            tf.degree_left - (1 if slot_id == 0 else 0),
+            tf.degree_right - (1 if slot_id == 1 else 0),
+            tf.dim_space,
+            reason="contract_slot_formal",
+        )
+
+    return M.ContractSlot(tf, vf, slot=slot_id)
+
+
+def project_doubleform_formal(
+    M,
+    tf,
+    left="none",
+    right="none",
+    normal=None,
+    conormal=None,
+    project_remaining=True,
+):
+    left_mode = _parse_proj_mode(left)
+    right_mode = _parse_proj_mode(right)
+
+    if isinstance(tf, FormalZeroDoubleForm):
+        p_out, q_out = _projected_doubleform_degrees(
+            tf.degree_left, tf.degree_right, left_mode, right_mode
+        )
+        return FormalZeroDoubleForm(
+            p_out, q_out, tf.dim_space, reason="project_doubleform_formal"
+        )
+
+    if isinstance(tf, (ScalarField, _CPP_ScalarField)):
+        p_out, q_out = _projected_doubleform_degrees(0, 0, left_mode, right_mode)
+        if left_mode in (2, 4) or right_mode in (2, 4):
+            return FormalZeroDoubleForm(
+                p_out, q_out, M.dim, reason="project_doubleform_formal"
+            )
+        return as_scalarfield(tf, dim=M.dim)
+
+    if not isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
+        raise TypeError(
+            "project_doubleform_formal expects a DoubleForm, but received type {}".format(
+                type(tf)
+            )
+        )
+
+    p_out, q_out = _projected_doubleform_degrees(
+        tf.degree_left, tf.degree_right, left_mode, right_mode
+    )
+    if (left_mode in (2, 4) and tf.degree_left == 0) or (
+        right_mode in (2, 4) and tf.degree_right == 0
+    ):
+        return FormalZeroDoubleForm(
+            p_out, q_out, tf.dim_space, reason="project_doubleform_formal"
+        )
+
+    return M.ProjectDoubleForm(
+        tf,
+        left=left,
+        right=right,
+        normal=normal,
+        conormal=conormal,
+        project_remaining=project_remaining,
+    )
+
+
+def star_formal(a, M, vb=ngsolve.VOL, double=False, slot="both"):
+    slot_id = _parse_slot(slot)
+    n = _vb_dimension(M, vb)
+
+    if isinstance(a, FormalZeroDoubleForm):
+        if slot_id == -1:
+            return FormalZeroDoubleForm(
+                n - a.degree_left,
+                n - a.degree_right,
+                a.dim_space,
+                reason="star_formal",
+            )
+        if slot_id == 0:
+            return FormalZeroDoubleForm(
+                n - a.degree_left, a.degree_right, a.dim_space, reason="star_formal"
+            )
+        return FormalZeroDoubleForm(
+            a.degree_left, n - a.degree_right, a.dim_space, reason="star_formal"
+        )
+
+    if isinstance(a, FormalZeroKForm):
+        return FormalZeroKForm(n - a.degree, a.dim_space, reason="star_formal")
+
+    if _star_requires_formal(a, n, slot_id, double=double):
+        if double or isinstance(a, (DoubleForm, _CPP_DoubleForm)):
+            degs = _doubleform_degrees(a)
+            if degs is not None:
+                p, q, dim = degs
+                if slot_id == -1:
+                    return FormalZeroDoubleForm(
+                        n - p, n - q, dim, reason="star_formal"
+                    )
+                if slot_id == 0:
+                    return FormalZeroDoubleForm(n - p, q, dim, reason="star_formal")
+                return FormalZeroDoubleForm(p, n - q, dim, reason="star_formal")
+
+        deg = _kform_degree(a)
+        if deg is not None:
+            k, dim = deg
+            return FormalZeroKForm(n - k, dim, reason="star_formal")
+
+    return star(a, M, vb=vb, double=double, slot=slot)
+
+
+def inv_star_formal(a, M, vb=ngsolve.VOL, double=False, slot="both"):
+    slot_id = _parse_slot(slot)
+    n = _vb_dimension(M, vb)
+
+    if isinstance(a, FormalZeroDoubleForm):
+        if slot_id == -1:
+            return FormalZeroDoubleForm(
+                n - a.degree_left,
+                n - a.degree_right,
+                a.dim_space,
+                reason="inv_star_formal",
+            )
+        if slot_id == 0:
+            return FormalZeroDoubleForm(
+                n - a.degree_left,
+                a.degree_right,
+                a.dim_space,
+                reason="inv_star_formal",
+            )
+        return FormalZeroDoubleForm(
+            a.degree_left,
+            n - a.degree_right,
+            a.dim_space,
+            reason="inv_star_formal",
+        )
+
+    if isinstance(a, FormalZeroKForm):
+        return FormalZeroKForm(n - a.degree, a.dim_space, reason="inv_star_formal")
+
+    if _star_requires_formal(a, n, slot_id, double=double):
+        if double or isinstance(a, (DoubleForm, _CPP_DoubleForm)):
+            degs = _doubleform_degrees(a)
+            if degs is not None:
+                p, q, dim = degs
+                if slot_id == -1:
+                    return FormalZeroDoubleForm(
+                        n - p, n - q, dim, reason="inv_star_formal"
+                    )
+                if slot_id == 0:
+                    return FormalZeroDoubleForm(
+                        n - p, q, dim, reason="inv_star_formal"
+                    )
+                return FormalZeroDoubleForm(p, n - q, dim, reason="inv_star_formal")
+
+        deg = _kform_degree(a)
+        if deg is not None:
+            k, dim = deg
+            return FormalZeroKForm(n - k, dim, reason="inv_star_formal")
+
+    return inv_star(a, M, vb=vb, double=double, slot=slot)
+
+
+def wedge_formal(a, b):
+    da = _doubleform_degrees(a)
+    db = _doubleform_degrees(b)
+    if da is not None and db is not None:
+        p1, q1, dim1 = da
+        p2, q2, dim2 = db
+        dim = dim1 if dim1 is not None else dim2
+        if dim1 is not None and dim2 is not None and dim1 != dim2:
+            raise ValueError("wedge_formal: double-form dimensions must match")
+        if is_formal_zero(a) or is_formal_zero(b):
+            return FormalZeroDoubleForm(
+                p1 + p2, q1 + q2, dim, reason="wedge_formal"
+            )
+        return Wedge(a, b)
+
+    ka = _kform_degree(a)
+    kb = _kform_degree(b)
+    if ka is not None and kb is not None:
+        k1, dim1 = ka
+        k2, dim2 = kb
+        dim = dim1 if dim1 is not None else dim2
+        if dim1 is not None and dim2 is not None and dim1 != dim2:
+            raise ValueError("wedge_formal: k-form dimensions must match")
+        if is_formal_zero(a) or is_formal_zero(b):
+            return FormalZeroKForm(k1 + k2, dim, reason="wedge_formal")
+        return Wedge(a, b)
+
+    raise TypeError(
+        "wedge_formal expects k-form-like or double-form-like operands, but received {} and {}".format(
+            type(a), type(b)
+        )
+    )
+
+
+def inner_product_formal(M, a, b, vb=ngsolve.VOL, forms=False):
+    if is_formal_zero(a) or is_formal_zero(b):
+        return as_scalarfield(0, dim=M.dim)
+    return M.InnerProduct(a, b, vb=vb, forms=forms)
+
+
+def compare_formal_zero(a, b):
+    return is_formal_zero(a) and is_formal_zero(b)
+
+
+def d_formal(a):
+    if isinstance(a, FormalZeroKForm):
+        return FormalZeroKForm(a.degree + 1, a.dim_space, reason="d_formal")
+    raise TypeError(
+        "d_formal expects a FormalZeroKForm, but received type {}".format(type(a))
+    )
+
+
+def delta_formal(a, M):
+    if isinstance(a, FormalZeroKForm):
+        return FormalZeroKForm(a.degree - 1, a.dim_space, reason="delta_formal")
+    raise TypeError(
+        "delta_formal expects a FormalZeroKForm, but received type {}".format(type(a))
+    )
+
+
+def d_cov_formal(M, tf, slot="left", vb=ngsolve.VOL):
+    slot_id = _parse_slot(slot)
+    if slot_id not in (0, 1):
+        raise ValueError("d_cov_formal: slot must be 'left' or 'right'")
+
+    if isinstance(tf, FormalZeroDoubleForm):
+        return FormalZeroDoubleForm(
+            tf.degree_left + (1 if slot_id == 0 else 0),
+            tf.degree_right + (1 if slot_id == 1 else 0),
+            tf.dim_space,
+            reason="d_cov_formal",
+        )
+
+    return M.d_cov(tf, slot=slot, vb=vb)
+
+
+def delta_cov_formal(M, tf, slot="left", vb=ngsolve.VOL):
+    slot_id = _parse_slot(slot)
+    if slot_id not in (0, 1):
+        raise ValueError("delta_cov_formal: slot must be 'left' or 'right'")
+
+    if isinstance(tf, FormalZeroDoubleForm):
+        return FormalZeroDoubleForm(
+            tf.degree_left - (1 if slot_id == 0 else 0),
+            tf.degree_right - (1 if slot_id == 1 else 0),
+            tf.dim_space,
+            reason="delta_cov_formal",
+        )
+
+    return M.delta_cov(tf, slot=slot, vb=vb)
+
+
+def covdiv_formal(M, tf, slot="left", vb=ngsolve.VOL):
+    if isinstance(tf, FormalZeroDoubleForm):
+        return delta_cov_formal(M, tf, slot=slot, vb=vb)
+    raise TypeError(
+        "covdiv_formal expects a FormalZeroDoubleForm, but received type {}".format(
+            type(tf)
+        )
+    )
+
+
+def trace_formal(M, tf, vb=None, index1=0, index2=1, l=None):
+    if isinstance(tf, FormalZeroDoubleForm):
+        if index1 != 0 or index2 != 1:
+            raise ValueError(
+                "trace_formal only supports the double-form trace convention; use l for repeated traces"
+            )
+        if l is None:
+            l = 1
+        if not isinstance(l, numbers.Integral):
+            raise TypeError("trace_formal: l must be an integer")
+        l = int(l)
+        return FormalZeroDoubleForm(
+            tf.degree_left - l,
+            tf.degree_right - l,
+            tf.dim_space,
+            reason="trace_formal",
+        )
+
+    if isinstance(tf, FormalZeroKForm):
+        raise TypeError("trace_formal does not support FormalZeroKForm inputs")
+
+    raise TypeError(
+        "trace_formal expects a FormalZeroDoubleForm, but received type {}".format(
+            type(tf)
+        )
+    )
+
+
+def trace_sigma_formal(M, tf, sigma, vb=ngsolve.VOL):
+    if isinstance(tf, FormalZeroDoubleForm):
+        return FormalZeroDoubleForm(
+            tf.degree_left - 1,
+            tf.degree_right - 1,
+            tf.dim_space,
+            reason="trace_sigma_formal",
+        )
+    raise TypeError(
+        "trace_sigma_formal expects a FormalZeroDoubleForm, but received type {}".format(
+            type(tf)
+        )
+    )
+
+
+def contraction_formal(M, tf, vf, slot=0):
+    tf_is_vector = isinstance(tf, VectorField)
+    vf_is_vector = isinstance(vf, VectorField)
+    tf_is_zero_kform = isinstance(tf, FormalZeroKForm)
+    vf_is_zero_kform = isinstance(vf, FormalZeroKForm)
+
+    if tf_is_vector and vf_is_zero_kform:
+        return FormalZeroKForm(vf.degree - 1, vf.dim_space, reason="contraction_formal")
+    if vf_is_vector and tf_is_zero_kform:
+        return FormalZeroKForm(tf.degree - 1, tf.dim_space, reason="contraction_formal")
+
+    raise TypeError(
+        "contraction_formal expects exactly one VectorField and one FormalZeroKForm, but received {} and {}".format(
+            type(tf), type(vf)
+        )
+    )
 
 
 # ---------------- VectorField / TensorField ----------------
@@ -554,6 +1217,8 @@ def as_tensorfield(cf, *, covariant_indices=None, dim=-1):
 
 
 def Wedge(a, b):
+    if is_formal_zero(a) or is_formal_zero(b):
+        return wedge_formal(a, b)
     if _is_scalarfield_like(a) and _is_scalarfield_like(b):
         return as_scalarfield(a * b, dim=_infer_dim(a) or _infer_dim(b))
     if _is_scalarfield_like(a) and _is_doubleform_like(b):
@@ -625,11 +1290,17 @@ def Sym(a):
 
 
 def d(a):
+    if is_formal_zero(a):
+        return d_formal(a)
     out = _cpp.d(a)
     return as_kform(out, k=out.degree, dim=out.dim_space)
 
 
 def star(a, M, vb=ngsolve.VOL, double=False, slot="both"):
+    slot_id = _parse_slot(slot)
+    n = _vb_dimension(M, vb)
+    if is_formal_zero(a) or _star_requires_formal(a, n, slot_id, double=double):
+        return star_formal(a, M, vb=vb, double=double, slot=slot)
     if double or isinstance(a, (DoubleForm, _CPP_DoubleForm)):
         if not isinstance(a, (DoubleForm, _CPP_DoubleForm)):
             a = DoubleForm(a, p=0, q=0, dim=M.dim)
@@ -642,6 +1313,10 @@ def star(a, M, vb=ngsolve.VOL, double=False, slot="both"):
 
 
 def inv_star(a, M, vb=ngsolve.VOL, double=False, slot="both"):
+    slot_id = _parse_slot(slot)
+    n = _vb_dimension(M, vb)
+    if is_formal_zero(a) or _star_requires_formal(a, n, slot_id, double=double):
+        return inv_star_formal(a, M, vb=vb, double=double, slot=slot)
     if double or isinstance(a, (DoubleForm, _CPP_DoubleForm)):
         if not isinstance(a, (DoubleForm, _CPP_DoubleForm)):
             a = DoubleForm(a, p=0, q=0, dim=M.dim)
@@ -661,6 +1336,8 @@ def slot_inner_product(a, M, vb=ngsolve.VOL, forms=True):
 
 
 def delta(a, M):
+    if is_formal_zero(a):
+        return delta_formal(a, M)
     out = _cpp.delta(a, M)
     return as_kform(out, k=out.degree, dim=M.dim)
 
@@ -804,18 +1481,33 @@ class RiemannianManifold(_CPP_RiemannianManifold):
     def star(self, a, vb=ngsolve.VOL, double=False, slot="both"):
         return star(a, self, vb=vb, double=double, slot=slot)
 
+    def star_formal(self, a, vb=ngsolve.VOL, double=False, slot="both"):
+        return star_formal(a, self, vb=vb, double=double, slot=slot)
+
     def inv_star(self, a, vb=ngsolve.VOL, double=False, slot="both"):
         return inv_star(a, self, vb=vb, double=double, slot=slot)
 
+    def inv_star_formal(self, a, vb=ngsolve.VOL, double=False, slot="both"):
+        return inv_star_formal(a, self, vb=vb, double=double, slot=slot)
+
     def delta(self, a):
+        if is_formal_zero(a):
+            return delta_formal(a, self)
         out = _CPP_RiemannianManifold.delta(self, a)
         return as_kform(out, k=out.degree, dim=self.dim)
 
+    def delta_formal(self, a):
+        return delta_formal(a, self)
+
     def d_cov(self, tf, slot="left", vb=ngsolve.VOL):
+        if is_formal_zero(tf):
+            return d_cov_formal(self, tf, slot=slot, vb=vb)
         out = _CPP_RiemannianManifold.d_cov(self, tf, slot, vb)
         return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=self.dim)
 
     def delta_cov(self, tf, slot="left", vb=ngsolve.VOL):
+        if is_formal_zero(tf):
+            return delta_cov_formal(self, tf, slot=slot, vb=vb)
         out = _CPP_RiemannianManifold.delta_cov(self, tf, slot, vb)
         return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=self.dim)
 
@@ -828,6 +1520,17 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         conormal=None,
         project_remaining=True,
     ):
+        if is_formal_zero(tf):
+            return project_doubleform_formal(
+                self,
+                tf,
+                left=left,
+                right=right,
+                normal=normal,
+                conormal=conormal,
+                project_remaining=project_remaining,
+            )
+
         def _parse_proj_mode(mode):
             if isinstance(mode, str):
                 s = mode.lower()
@@ -877,6 +1580,25 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         )
         return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=self.dim)
 
+    def ProjectDoubleFormFormal(
+        self,
+        tf,
+        left="none",
+        right="none",
+        normal=None,
+        conormal=None,
+        project_remaining=True,
+    ):
+        return project_doubleform_formal(
+            self,
+            tf,
+            left=left,
+            right=right,
+            normal=normal,
+            conormal=conormal,
+            project_remaining=project_remaining,
+        )
+
     def ProjectTensor(self, tf, mode="none"):
         tf_wrapped = as_tensorfield(tf, dim=self.dim)
         out = _CPP_RiemannianManifold.ProjectTensor(self, tf_wrapped, mode)
@@ -925,13 +1647,23 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         return as_tensorfield(out, dim=self.dim)
 
     def ContractSlot(self, tf, vf, slot="left"):
+        if is_formal_zero(tf):
+            return contract_slot_formal(self, tf, vf, slot=slot)
         if not isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
             raise TypeError("ContractSlot expects a DoubleForm, but received type {}".format(type(tf)))
         vf_wrapped = as_vectorfield(vf)
         out = _CPP_RiemannianManifold.ContractSlot(self, tf, vf_wrapped, slot)
         return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=self.dim)
 
+    def ContractSlotFormal(self, tf, vf, slot="left"):
+        return contract_slot_formal(self, tf, vf, slot=slot)
+
     def InnerProduct(self, tf1, tf2, vb=None, forms=False):
+        if is_formal_zero(tf1) or is_formal_zero(tf2):
+            effective_vb = ngsolve.VOL if vb is None else vb
+            return inner_product_formal(
+                self, tf1, tf2, vb=effective_vb, forms=forms
+            )
         if forms:
             dim = self.dim
             tf1_df = isinstance(tf1, (DoubleForm, _CPP_DoubleForm))
@@ -952,6 +1684,9 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         else:
             out = _CPP_RiemannianManifold.InnerProduct(self, tf1, tf2, vb, forms)
         return as_scalarfield(out, dim=self.dim)
+
+    def InnerProductFormal(self, tf1, tf2, vb=ngsolve.VOL, forms=False):
+        return inner_product_formal(self, tf1, tf2, vb=vb, forms=forms)
 
     def Cross(self, tf1, tf2):
         out = _CPP_RiemannianManifold.Cross(self, tf1, tf2)
@@ -997,6 +1732,9 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         return as_tensorfield(out)
 
     def CovDiv(self, tf, slot="left", vb=None):
+        if is_formal_zero(tf):
+            effective_vb = ngsolve.VOL if vb is None else vb
+            return covdiv_formal(self, tf, slot=slot, vb=effective_vb)
         if isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
             if vb is None:
                 vb = ngsolve.VOL
@@ -1017,7 +1755,12 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         out = _CPP_RiemannianManifold.CovDiv(self, tf, vb)
         return as_tensorfield(out, dim=self.dim)
 
+    def CovDivFormal(self, tf, slot="left", vb=ngsolve.VOL):
+        return covdiv_formal(self, tf, slot=slot, vb=vb)
+
     def Trace(self, tf, vb=None, index1=0, index2=1, l=None):
+        if is_formal_zero(tf):
+            return trace_formal(self, tf, vb=vb, index1=index1, index2=index2, l=l)
         if isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
             if l is None:
                 l = 1
@@ -1053,7 +1796,12 @@ class RiemannianManifold(_CPP_RiemannianManifold):
             out = _CPP_RiemannianManifold.Trace(self, tf, vb, index1, index2)
         return as_tensorfield(out, dim=self.dim)
 
+    def TraceFormal(self, tf, vb=None, index1=0, index2=1, l=None):
+        return trace_formal(self, tf, vb=vb, index1=index1, index2=index2, l=l)
+
     def TraceSigma(self, tf, sigma, vb=ngsolve.VOL):
+        if is_formal_zero(tf):
+            return trace_sigma_formal(self, tf, sigma, vb=vb)
         if _is_scalarfield_like(tf):
             return as_scalarfield(0, dim=self.dim)
         if not isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
@@ -1069,13 +1817,20 @@ class RiemannianManifold(_CPP_RiemannianManifold):
             )
         return as_scalarfield(out, dim=self.dim)
 
+    def TraceSigmaFormal(self, tf, sigma, vb=ngsolve.VOL):
+        return trace_sigma_formal(self, tf, sigma, vb=vb)
+
     def SlotInnerProduct(self, tf, vb=ngsolve.VOL, forms=True):
+        if is_formal_zero(tf):
+            return as_scalarfield(0, dim=self.dim)
         if _is_scalarfield_like(tf):
             return as_scalarfield(tf, dim=self.dim)
         out = _CPP_RiemannianManifold.SlotInnerProduct(self, tf, vb, forms)
         return as_scalarfield(out, dim=self.dim)
 
     def Contraction(self, tf, vf, slot=0):
+        if is_formal_zero(tf) or is_formal_zero(vf):
+            return contraction_formal(self, tf, vf, slot=slot)
         # Accept inputs where exactly one argument is a vector field; the other can be any tensor (including k-forms).
         tf_wrapped = as_tensorfield(tf)
         vf_wrapped = as_tensorfield(vf)
@@ -1103,6 +1858,9 @@ class RiemannianManifold(_CPP_RiemannianManifold):
             if k_in is not None and k_in > 0:
                 return as_kform(out, k=k_in - 1, dim=self.dim)
         return as_tensorfield(out, dim=self.dim)
+
+    def ContractionFormal(self, tf, vf, slot=0):
+        return contraction_formal(self, tf, vf, slot=slot)
 
     def Transpose(self, tf, index1=0, index2=1):
         out = _CPP_RiemannianManifold.Transpose(self, tf, index1, index2)
@@ -1148,6 +1906,9 @@ __all__ = [
     "KForm",
     "GenericKForm",
     "DoubleForm",
+    "FormalZeroBase",
+    "FormalZeroKForm",
+    "FormalZeroDoubleForm",
     "ScalarField",
     "OneForm",
     "TwoForm",
@@ -1158,16 +1919,35 @@ __all__ = [
     "as_threeform",
     "as_kform",
     "as_doubleform",
+    "is_formal_zero",
+    "is_formal_zero_kform",
+    "is_formal_zero_doubleform",
+    "materialize_zero",
     "VectorField",
     "TensorField",
     "as_vectorfield",
     "as_tensorfield",
     "Wedge",
+    "wedge_formal",
+    "d_formal",
     "Sym",
     "d",
     "star",
+    "star_formal",
     "inv_star",
+    "inv_star_formal",
     "slot_inner_product",
+    "delta_formal",
     "delta",
+    "contract_slot_formal",
+    "project_doubleform_formal",
+    "inner_product_formal",
+    "compare_formal_zero",
+    "d_cov_formal",
+    "delta_cov_formal",
+    "covdiv_formal",
+    "trace_formal",
+    "trace_sigma_formal",
+    "contraction_formal",
     "RiemannianManifold",
 ]
