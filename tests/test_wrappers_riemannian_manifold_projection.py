@@ -119,7 +119,8 @@ def test_project_doubleform_00_with_normal_returns_zero():
 
     v00 = dg.DoubleForm(x + y, p=0, q=0, dim=dim)
     proj = rm.ProjectDoubleForm(v00, left="n", right="F")
-    assert proj.degree_left == 0
+    assert isinstance(proj, dg.FormalZeroDoubleForm)
+    assert proj.degree_left == -1
     assert proj.degree_right == 0
     assert l2_norm_bnd(proj, mesh) < 1e-10
 

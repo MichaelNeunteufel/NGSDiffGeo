@@ -144,7 +144,7 @@ def test_double_form_covdiv_slot_degrees():
     assert l2_error(div_right, div_right_int, mesh) < 1e-12
 
 
-def test_double_form_covdiv_slot_degree_zero_errors():
+def test_double_form_covdiv_slot_degree_zero_returns_formal_zero():
     dim = 2
     rm = dg.RiemannianManifold(Id(dim))
 
@@ -152,10 +152,15 @@ def test_double_form_covdiv_slot_degree_zero_errors():
     A01 = dg.DoubleForm(alpha, p=0, q=1, dim=dim)
     A10 = dg.DoubleForm(alpha, p=1, q=0, dim=dim)
 
-    with pytest.raises(Exception, match="left slot degree is zero"):
-        rm.CovDiv(A01, slot="left")
-    with pytest.raises(Exception, match="right slot degree is zero"):
-        rm.CovDiv(A10, slot="right")
+    out_left = rm.CovDiv(A01, slot="left")
+    out_right = rm.CovDiv(A10, slot="right")
+
+    assert isinstance(out_left, dg.FormalZeroDoubleForm)
+    assert out_left.degree_left == -1
+    assert out_left.degree_right == 1
+    assert isinstance(out_right, dg.FormalZeroDoubleForm)
+    assert out_right.degree_left == 1
+    assert out_right.degree_right == -1
 
 
 def test_covdiv_tensor_backward_compatibility_positional_vb():
