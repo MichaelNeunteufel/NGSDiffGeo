@@ -7,7 +7,7 @@ authors = [{name="Michael Neunteufel"}]
 description = "Differential geometry tools for NGSolve"
 urls = {github="https://github.com/MichaelNeunteufel/NGSDiffGeo"}
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 # dependencies = [] # ngsolve will be added automatically
 # dynamic = ["dependencies"]
 classifiers = [
@@ -51,6 +51,7 @@ version_file = "src/_version.py"
 manylinux-x86_64-image = "manylinux_2_28"
 skip = """
   pp*
+  cp39-*
   *_i686
   *musllinux*
   *win32
