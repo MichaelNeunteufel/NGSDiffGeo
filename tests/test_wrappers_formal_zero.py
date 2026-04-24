@@ -432,6 +432,18 @@ def test_delta_dispatches_formal_zero_input():
     assert out.dim_space == dim
 
 
+def test_delta_dispatches_concrete_scalar_to_formal_zero():
+    dim = 3
+    rm = dg.RiemannianManifold(Id(dim))
+    f = dg.ScalarField(x + y, dim=dim)
+
+    out = rm.delta(f)
+
+    assert isinstance(out, dg.FormalZeroKForm)
+    assert out.degree == -1
+    assert out.dim_space == dim
+
+
 def test_d_cov_formal_preserves_degree_propagation():
     dim = 3
     rm = dg.RiemannianManifold(Id(dim))
@@ -664,6 +676,37 @@ def test_contraction_dispatches_concrete_scalar_to_formal_zero():
 
     assert isinstance(out, dg.FormalZeroKForm)
     assert out.degree == -1
+    assert out.dim_space == dim
+
+
+def test_s_dispatches_concrete_overdegree_to_formal_zero():
+    dim = 3
+    rm = dg.RiemannianManifold(Id(dim))
+
+    dx = dg.OneForm(CF((1, 0, 0)))
+    dy = dg.OneForm(CF((0, 1, 0)))
+    dz = dg.OneForm(CF((0, 0, 1)))
+    vol = dg.Wedge(dx, dg.Wedge(dy, dz))
+    df = dg.DoubleForm(Einsum("ijk,lmn->ijklmn", vol, vol), p=3, q=3, dim=dim)
+
+    out = rm.s(df)
+
+    assert isinstance(out, dg.FormalZeroDoubleForm)
+    assert out.degree_left == 4
+    assert out.degree_right == 2
+    assert out.dim_space == dim
+
+
+def test_s_dispatches_formal_zero_input():
+    dim = 3
+    rm = dg.RiemannianManifold(Id(dim))
+    zdf = dg.FormalZeroDoubleForm(2, 1, dim)
+
+    out = rm.s(zdf)
+
+    assert isinstance(out, dg.FormalZeroDoubleForm)
+    assert out.degree_left == 3
+    assert out.degree_right == 0
     assert out.dim_space == dim
 
 

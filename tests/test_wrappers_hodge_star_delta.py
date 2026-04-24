@@ -126,11 +126,11 @@ def test_coderivative_degrees_and_zero(dim):
     )
     rm = dg.RiemannianManifold(Id(dim))
 
-    # δ on scalars returns typed zero
+    # δ on scalars returns formal zero of degree -1
     f = dg.ScalarField(CF(1), dim=dim)
     delta_f = rm.delta(f)
-    assert delta_f.degree == 0
-    assert l2_norm(delta_f, mesh) < 1e-12
+    assert isinstance(delta_f, dg.FormalZeroKForm)
+    assert delta_f.degree == -1
 
     # δ on constant 1-forms is zero and drops degree
     if dim == 2:

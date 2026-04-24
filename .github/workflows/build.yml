@@ -159,7 +159,6 @@ jobs:
           apt update -y && DEBIAN_FRONTEND="noninteractive" apt install -y git pandoc
           python -m pip install --upgrade pip
           python -m pip install -r $GITHUB_WORKSPACE/NGSDiffGeo/docs/requirements.txt
-          python -m pip install ipywidgets webgui_jupyter_widgets
 
       - uses: actions/download-artifact@v4
         with:
@@ -177,6 +176,14 @@ jobs:
         working-directory: NGSDiffGeo/docs
         run: |
           make html
+
+      - name: Verify WebGUI docs assets
+        working-directory: NGSDiffGeo/docs
+        run: |
+          test -f _build/html/_static/webgui_jupyter_widgets.js
+          test -f _build/html/_static/webgui.js
+          grep -R -q "webgui_jupyter_widgets.js" _build/html/tutorials/*.html
+          ! grep -R -q "integrity=.*require.min.js" _build/html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

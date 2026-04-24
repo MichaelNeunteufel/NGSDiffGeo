@@ -21,18 +21,19 @@ Welcome
    :caption: Tutorials
    :maxdepth: 1
 
-   tutorials/riemannian_manifolds.ipynb
-   tutorials/covariant_derivatives.ipynb
-   tutorials/curvatures.ipynb
-   tutorials/gauss_bonnet.ipynb
-   tutorials/regge_metric.ipynb
-   tutorials/distributional_gauss_curvature.ipynb
-   tutorials/distributional_gauss_curvature_analysis.ipynb
-   tutorials/distributional_gauss_curvature_surface.ipynb
-   tutorials/distributional_scalar_curvature.ipynb
-   tutorials/distributional_einstein_tensor.ipynb
-   tutorials/distributional_riemann_curvature_tensor.ipynb
-   tutorials/linearization_curvature_quantitites.ipynb
-   tutorials/kforms_exterior_derivative.ipynb
+   tutorials/01_riemannian_manifolds.ipynb
+   tutorials/02_covariant_derivatives.ipynb
+   tutorials/03_curvatures.ipynb
+   tutorials/04_gauss_bonnet.ipynb
+   tutorials/05_regge_metric.ipynb
+   tutorials/06_distributional_gauss_curvature.ipynb
+   tutorials/07_distributional_gauss_curvature_analysis.ipynb
+   tutorials/08_distributional_gauss_curvature_surface.ipynb
+   tutorials/09_distributional_scalar_curvature.ipynb
+   tutorials/10_distributional_einstein_tensor.ipynb
+   tutorials/11_distributional_riemann_curvature_tensor.ipynb
+   tutorials/12_linearization_curvature_quantitites.ipynb
+   tutorials/13_kforms_exterior_derivative.ipynb
+   tutorials/14_double_forms.ipynb
 
 

@@ -93,6 +93,15 @@ def _is_scalarfield_like(obj):
     return False
 
 
+def _raise_doubleform_scalar_op_error(op, other):
+    raise TypeError(
+        f"DoubleForm '{op}' only supports scalar operands. "
+        "Use dg.Wedge(...) for double-form products, or multiply coefficient matrices via '.coef' "
+        "(for example 'A * df.coef * B') if you intended plain matrix multiplication. "
+        f"Received operand of type {type(other)}."
+    )
+
+
 def _as_doubleform_like(obj, *, dim=None):
     if isinstance(obj, (DoubleForm, _CPP_DoubleForm)):
         return obj
@@ -545,12 +554,24 @@ class DoubleForm(_CPP_DoubleForm):
         return self._wrap(-self.coef)
 
     def __mul__(self, other):
+        if not (
+            isinstance(other, numbers.Number) or _is_scalarfield_like(other)
+        ):
+            _raise_doubleform_scalar_op_error("*", other)
         return self._wrap(self.coef * _unwrap_cf(other))
 
     def __rmul__(self, other):
+        if not (
+            isinstance(other, numbers.Number) or _is_scalarfield_like(other)
+        ):
+            _raise_doubleform_scalar_op_error("*", other)
         return self.__mul__(other)
 
     def __truediv__(self, other):
+        if not (
+            isinstance(other, numbers.Number) or _is_scalarfield_like(other)
+        ):
+            _raise_doubleform_scalar_op_error("/", other)
         return self._wrap(self.coef / _unwrap_cf(other))
 
     def __pow__(self, power):
@@ -612,7 +633,7 @@ class FormalZeroKForm(FormalZeroBase):
     def __mul__(self, other):
         if isinstance(other, (int, float, complex)) or _is_scalarfield_like(other):
             return self
-        return NotImplemented
+        _raise_doubleform_scalar_op_error("*", other)
 
     def __rmul__(self, other):
         return self.__mul__(other)
@@ -1267,6 +1288,37 @@ def _trace_sigma_formal(M, tf, sigma, vb=ngsolve.VOL):
     )
 
 
+def _s_formal(M, tf, vb=None):
+    if vb is None:
+        vb = ngsolve.VOL
+
+    if vb not in (ngsolve.VOL, ngsolve.BND):
+        raise ValueError("s: vb must be VOL or BND")
+
+    if isinstance(tf, FormalZeroDoubleForm):
+        return FormalZeroDoubleForm(
+            tf.degree_left + 1,
+            tf.degree_right - 1,
+            tf.dim_space,
+            reason="s",
+        )
+
+    if isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
+        n = _vb_dimension(M, vb)
+        p_out = tf.degree_left + 1
+        q_out = tf.degree_right - 1
+        if q_out < 0 or p_out > n or q_out > n:
+            return FormalZeroDoubleForm(p_out, q_out, tf.dim_space, reason="s")
+        out = _CPP_RiemannianManifold.s(M, tf, vb)
+        return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=M.dim)
+
+    raise TypeError(
+        "s expects a DoubleForm or FormalZeroDoubleForm, but received type {}".format(
+            type(tf)
+        )
+    )
+
+
 def _contraction_formal(M, tf, vf, slot=0):
     if slot is None:
         slot = 0
@@ -1534,6 +1586,9 @@ def slot_inner_product(a, M, vb=ngsolve.VOL, forms=True):
 def delta(a, M):
     if is_formal_zero(a):
         return _delta_formal(a, M)
+    deg = _kform_degree(a)
+    if deg is not None and deg[0] == 0:
+        return FormalZeroKForm(-1, deg[1], reason="delta")
     out = _cpp.delta(a, M)
     return as_kform(out, k=out.degree, dim=M.dim)
 
@@ -1683,6 +1738,9 @@ class RiemannianManifold(_CPP_RiemannianManifold):
     def delta(self, a):
         if is_formal_zero(a):
             return _delta_formal(a, self)
+        deg = _kform_degree(a)
+        if deg is not None and deg[0] == 0:
+            return FormalZeroKForm(-1, deg[1], reason="delta")
         out = _CPP_RiemannianManifold.delta(self, a)
         return as_kform(out, k=out.degree, dim=self.dim)
 
@@ -1976,11 +2034,13 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         return as_tensorfield(out)
 
     def s(self, tf, vb=None):
-        if vb is None:
-            out = _CPP_RiemannianManifold.s(self, tf)
-        else:
-            out = _CPP_RiemannianManifold.s(self, tf, vb)
-        return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=self.dim)
+        if is_formal_zero(tf) or isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
+            return _s_formal(self, tf, vb=vb)
+        raise TypeError(
+            "s expects a DoubleForm or FormalZeroDoubleForm, but received type {}".format(
+                type(tf)
+            )
+        )
 
     def J(self, tf, vb=None):
         if vb is None:

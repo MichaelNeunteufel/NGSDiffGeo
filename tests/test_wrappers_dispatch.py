@@ -197,6 +197,24 @@ def test_manifold_property_wrappers_have_expected_types(rm_euclidean_2d, rm_eucl
     assert isinstance(rm_euclidean_3d.Curvature, dg.TensorField)
 
 
+def test_doubleform_matrix_multiplication_requires_explicit_coef(rm_euclidean_2d):
+    projector = Id(2)
+
+    with pytest.raises(TypeError, match=r"DoubleForm '\*' only supports scalar operands"):
+        projector * rm_euclidean_2d.SFF
+
+    with pytest.raises(TypeError, match=r"DoubleForm '\*' only supports scalar operands"):
+        rm_euclidean_2d.SFF * projector
+
+
+def test_doubleform_matrix_division_requires_scalar_operand(make_unit_square_mesh):
+    df = dg.DoubleForm(CF((1 + x, x - y, x - y, 2 + y), dims=(2, 2)), p=1, q=1, dim=2)
+    mat = CF((2 + x, y, x * y, 3 - y), dims=(2, 2))
+
+    with pytest.raises(TypeError, match=r"DoubleForm '/' only supports scalar operands"):
+        df / mat
+
+
 def test_edge_normal_and_conormal_wrappers_have_expected_types(rm_euclidean_3d):
     edge_normals = rm_euclidean_3d.edge_normals
     edge_conormals = rm_euclidean_3d.edge_conormals
