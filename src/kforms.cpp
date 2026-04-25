@@ -889,9 +889,11 @@ namespace ngfem
             FlatMatrix<T, ORD> input(comp_dim, mir.Size(), temp.Data());
             c1->Evaluate(mir, input);
 
-            values = T(0);
+            // values = T(0);
             for (size_t ip = 0; ip < mir.Size(); ++ip)
             {
+                for (int idx = 0; idx < comp_dim; ++idx)
+                    values(idx, ip) = T(0);
                 for (size_t vi = 0; vi < valid_indices.size(); ++vi)
                 {
                     int idx = valid_indices[vi];
