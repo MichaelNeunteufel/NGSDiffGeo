@@ -297,7 +297,18 @@ namespace ngfem
         virtual void GenerateCode(Code &code, FlatArray<int> inputs, int index) const override
         {
             // TensorFieldCF is metadata-only. Delegate code generation to the wrapped CF.
-            code.Declare(index, this->Dimensions(), this->IsComplex());
+            const string type = this->IsComplex() ? "Complex" : "double";
+
+            if (this->Dimension() == 1)
+            {
+                code.body += Var(index).Declare(type);
+            }
+            else
+            {
+                for (size_t i = 0; i < this->Dimension(); ++i)
+                    code.body += Var(index, i, this->Dimensions()).Declare(type);
+            }
+
             code.body += Var(index).Assign(Var(inputs[0]), false);
         }
 
