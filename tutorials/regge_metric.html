@@ -8,18 +8,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Regge finite elements and Regge metrics &mdash; NGSDiffGeo 0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=2709fde1"></script>
-      <script src="../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
       <script src="https://unpkg.com/@jupyter-widgets/html-manager@*/dist/embed-amd.js"></script>
       <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -141,12 +141,12 @@ H(\mathrm{curl}\,\mathrm{curl},\Omega)=\left\{\sigma \in L^2(\Omega,\mathbb{R}^{
  \varphi_{E_i} = \nabla \lambda_j\odot\nabla \lambda_k,\qquad t_j^\top\varphi_{E_i}t_j=c_i\delta_{ij},\qquad\qquad\varphi_{T_i} = \lambda_i\,\nabla \lambda_j\odot\nabla \lambda_k.
 \end{align*}\]</div>
 <p>For higher-order shape functions, one might augment these low-order functions by, e.g. linear independent Legendre and Jacobi polynomials. The construction for higher-dimensional simplices follows the same lines, for example, by constructing appropriate bubble functions. In the following figure, the DoFs are schematically sketched for some shapes.</p>
-<center><table><tr><td><p><img alt="fa1cd32c57f54a9e98e64570df75c048" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_1.jpg" style="width: 120px;" /></p>
-</td><td><p><img alt="7209c05a7fc64119946fabe8b9639370" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_2.jpg" style="width: 120px;" /></p>
-</td><td><p><img alt="790e5e5bfad64519af5168ac95daff35" class="no-scaled-link" src="../_images/hcurlcurl_0_tet_ref_1.jpg" style="width: 130px;" /></p>
-</td></tr><tr><td><p><img alt="bc6f989280c041c396699d151fbd148c" class="no-scaled-link" src="../_images/hcurlcurl_0_quad_ref_1.jpg" style="width: 120px;" /></p>
-</td><td><p><img alt="fbba31d54f4b45fcbd3264effee95d1f" class="no-scaled-link" src="../_images/hcurlcurl_0_hex_ref_1.jpg" style="width: 120px;" /></p>
-</td><td><p><img alt="104fa1bc7b3240ca8feea767a6c71f3a" class="no-scaled-link" src="../_images/hcurlcurl_0_prism_ref_1.jpg" style="width: 130px;" /></p>
+<center><table><tr><td><p><img alt="c22b07b4c2df4364965e6da38ed81c5a" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_1.jpg" width="120" /></p>
+</td><td><p><img alt="277a859bd0dd42a0a57c280f49c183ee" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_2.jpg" width="120" /></p>
+</td><td><p><img alt="e8c21a7ffa0241f79697333123ca7421" class="no-scaled-link" src="../_images/hcurlcurl_0_tet_ref_1.jpg" width="130" /></p>
+</td></tr><tr><td><p><img alt="80c9a09261124cfc81b6890de1d08820" class="no-scaled-link" src="../_images/hcurlcurl_0_quad_ref_1.jpg" width="120" /></p>
+</td><td><p><img alt="93690f56af6444c092e75aab954507d1" class="no-scaled-link" src="../_images/hcurlcurl_0_hex_ref_1.jpg" width="120" /></p>
+</td><td><p><img alt="72a26aa3d0c747d0a6267ae01072a837" class="no-scaled-link" src="../_images/hcurlcurl_0_prism_ref_1.jpg" width="130" /></p>
 </td></tr></table></center><p>The canonical Regge interpolant <span class="math notranslate nohighlight">\(\mathcal{I}_{Reg}^k\)</span> is defined by the requirement to preserve tangential-tangential moments at edges and inner moments</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{align*}
