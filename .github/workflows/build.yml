@@ -6,6 +6,9 @@ on:
       - main
     tags:
       - 'v*'
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build_wheels:
@@ -15,13 +18,13 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
         cibw_build:
-          - cp39-* cp310-* cp311-* cp312-* cp313-*
+          - cp310-* cp311-* cp312-* cp313-*
         include:
           - os: windows-2022
             cibw-arch: AMD64
             cmake-generator: "Visual Studio 17 2022"
             cmake_generator_platform: "x64"
-            cibw_build: cp39-* cp310-* cp311-* cp312-* cp313-*
+            cibw_build: cp310-* cp311-* cp312-* cp313-*
     env:
       CIBW_BUILD: ${{ matrix.cibw_build }}
 
@@ -32,7 +35,7 @@ jobs:
           fetch-depth: 0
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.19.0
+        uses: pypa/cibuildwheel@v3.4.1
 
       - uses: actions/upload-artifact@v4
         with:
