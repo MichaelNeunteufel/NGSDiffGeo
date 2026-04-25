@@ -64,34 +64,6 @@ exclude_patterns = [
     *_notebooks_not_listed_in_index(),
 ]
 
-
-def _notebooks_not_listed_in_index():
-    """Exclude notebooks that are present in docs but not linked from index.rst."""
-    from pathlib import Path
-
-    docs_dir = Path(__file__).parent
-    index_text = (docs_dir / "index.rst").read_text(encoding="utf-8")
-
-    listed_notebooks = {
-        (docs_dir / line.strip()).resolve()
-        for line in index_text.splitlines()
-        if line.strip().endswith(".ipynb")
-    }
-
-    return [
-        notebook.relative_to(docs_dir).as_posix()
-        for notebook in docs_dir.rglob("*.ipynb")
-        if "_build" not in notebook.parts and notebook.resolve() not in listed_notebooks
-    ]
-
-
-exclude_patterns = [
-    "_build",
-    "Thumbs.db",
-    ".DS_Store",
-    *_notebooks_not_listed_in_index(),
-]
-
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
