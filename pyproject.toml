@@ -4,6 +4,7 @@ name = "ngsdiffgeo"
 dynamic = ["version"]
 dependencies = [
   "ngsolve>=6.2.2505.post105.dev0",
+  "mkl<2026; platform_system == 'Linux' and platform_machine == 'x86_64'",
 ]
 # version = "0.0.1.dev6"
 authors = [{name="Michael Neunteufel"}]
