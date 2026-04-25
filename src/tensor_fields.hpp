@@ -5,6 +5,7 @@
 #include <coefficient.hpp>
 #include <cstdint>
 #include <string_view>
+#include <vector>
 
 /**
  * @file tensor_fields.hpp
@@ -18,11 +19,18 @@ namespace ngfem
     class OneFormCoefficientFunction;
     class VectorFieldCoefficientFunction;
     class ScalarFieldCoefficientFunction;
+    inline constexpr int MAX_SPACE_DIM = 4;
+    inline constexpr int MAX_PERMUTATION_RANK = 4;
+    inline constexpr int MAX_FORM_RANK = 8;
+    inline constexpr size_t MAX_SIGNATURE_LABELS = 52;
     // /**
     //  * @var const string SIGNATURE
     //  * @brief A constant string containing all possible letters for building a signature for tensor field coefficient functions.
     //  */
-    inline const string SIGNATURE = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    inline constexpr std::string_view SIGNATURE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    static_assert(SIGNATURE_CHARS.size() == MAX_SIGNATURE_LABELS,
+                  "SIGNATURE size must match MAX_SIGNATURE_LABELS");
+    inline const string SIGNATURE(SIGNATURE_CHARS);
 
     inline std::string EraseLabel(std::string s, size_t i)
     {
@@ -47,13 +55,13 @@ namespace ngfem
 
     struct TensorMeta
     {
-        uint8_t rank = 0;     // up to 52
+        uint8_t rank = 0;     // up to MAX_SIGNATURE_LABELS
         uint64_t covmask = 0; // bit i = 1 means covariant
 
         static TensorMeta FromCovString(std::string_view cov)
         {
             if (cov.size() > SIGNATURE.size())
-                throw ngstd::Exception("TensorMeta: rank overflow (>52)");
+                throw ngstd::Exception("TensorMeta: rank overflow (>" + ToString(MAX_SIGNATURE_LABELS) + ")");
 
             TensorMeta m;
             m.rank = uint8_t(cov.size());
@@ -95,7 +103,7 @@ namespace ngfem
         {
             size_t id = size_t(rank) + offset;
             if (id >= SIGNATURE.size())
-                throw Exception("TensorMeta: signature overflow (>52)");
+                throw Exception("TensorMeta: signature overflow (>" + ToString(MAX_SIGNATURE_LABELS) + ")");
             return SIGNATURE[id];
         }
 
@@ -117,7 +125,7 @@ namespace ngfem
         TensorMeta Appended(bool cov) const
         {
             if (rank >= SIGNATURE.size())
-                throw ngstd::Exception("TensorMeta: rank overflow (>52)");
+                throw ngstd::Exception("TensorMeta: rank overflow (>" + ToString(MAX_SIGNATURE_LABELS) + ")");
             TensorMeta m = *this;
             if (cov)
                 m.covmask |= (uint64_t(1) << rank);
@@ -128,7 +136,7 @@ namespace ngfem
         TensorMeta Prepended(bool cov) const
         {
             if (rank >= SIGNATURE.size())
-                throw Exception("TensorMeta: rank overflow (>52)");
+                throw Exception("TensorMeta: rank overflow (>" + ToString(MAX_SIGNATURE_LABELS) + ")");
             TensorMeta m;
             m.rank = uint8_t(rank + 1);
             m.covmask = (cov ? 1ull : 0ull) | (covmask << 1);
@@ -161,7 +169,7 @@ namespace ngfem
         TensorMeta Concatenated(const TensorMeta &b) const
         {
             if (size_t(rank) + size_t(b.rank) > SIGNATURE.size())
-                throw Exception("TensorMeta: concat overflow (>52)");
+                throw Exception("TensorMeta: concat overflow (>" + ToString(MAX_SIGNATURE_LABELS) + ")");
             TensorMeta m;
             m.rank = uint8_t(rank + b.rank);
             m.covmask = covmask | (b.covmask << rank);
@@ -194,6 +202,12 @@ namespace ngfem
      * @return A shared pointer to the created vector field coefficient function.
      */
     shared_ptr<VectorFieldCoefficientFunction> VectorFieldCF(const shared_ptr<CoefficientFunction> &cf);
+    shared_ptr<TensorFieldCoefficientFunction> PermuteTensorCF(shared_ptr<TensorFieldCoefficientFunction> tf,
+                                                               const std::vector<int> &order);
+    shared_ptr<TensorFieldCoefficientFunction> ApplyProjectorToIndex(shared_ptr<TensorFieldCoefficientFunction> tf,
+                                                                     shared_ptr<CoefficientFunction> proj,
+                                                                     size_t index);
+    int Factorial(int n);
 
     /**
      * @class TensorFieldCoefficientFunction
@@ -278,6 +292,24 @@ namespace ngfem
         virtual Array<shared_ptr<CoefficientFunction>> InputCoefficientFunctions() const override
         {
             return Array<shared_ptr<CoefficientFunction>>({c1});
+        }
+
+        virtual void GenerateCode(Code &code, FlatArray<int> inputs, int index) const override
+        {
+            // TensorFieldCF is metadata-only. Delegate code generation to the wrapped CF.
+            const string type = this->IsComplex() ? "Complex" : "double";
+
+            if (this->Dimension() == 1)
+            {
+                code.body += Var(index).Declare(type);
+            }
+            else
+            {
+                for (size_t i = 0; i < this->Dimension(); ++i)
+                    code.body += Var(index, i, this->Dimensions()).Declare(type);
+            }
+
+            code.body += Var(index).Assign(Var(inputs[0]), false);
         }
 
         virtual void NonZeroPattern(const class ProxyUserData &ud,

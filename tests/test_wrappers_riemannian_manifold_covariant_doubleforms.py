@@ -1,0 +1,179 @@
+import pytest
+from netgen.occ import unit_square
+from ngsolve import BND, CF, Id, Mesh, VOL, x, y
+
+import ngsdiffgeo as dg
+from tests._helpers import l2_error, l2_norm, l2_norm_bnd
+
+
+def test_double_form_covariant_derivatives_constant_zero():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.OneForm(CF((1, 0)))
+    beta = dg.OneForm(CF((0, 1)))
+    A = dg.DoubleForm(dg.TensorProduct(alpha, beta), p=1, q=1, dim=dim)
+
+    d1 = rm.d_cov(A, slot="left")
+    d2 = rm.d_cov(A, slot="right")
+    delta1 = rm.delta_cov(A, slot="left")
+    delta2 = rm.delta_cov(A, slot="right")
+
+    assert d1.degree_left == 2
+    assert d1.degree_right == 1
+    assert d2.degree_left == 1
+    assert d2.degree_right == 2
+    assert delta1.degree_left == 0
+    assert delta1.degree_right == 1
+    assert delta2.degree_left == 1
+    assert delta2.degree_right == 0
+
+    assert l2_norm(d1, mesh) < 1e-12
+    assert l2_norm(d2, mesh) < 1e-12
+    assert l2_norm(delta1, mesh) < 1e-12
+    assert l2_norm(delta2, mesh) < 1e-12
+
+
+def test_double_form_covariant_d1_matches_left_exterior_derivative():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.OneForm(CF((0, x)))
+    beta = dg.OneForm(CF((1, 0)))
+    A = dg.DoubleForm(dg.TensorProduct(alpha, beta), p=1, q=1, dim=dim)
+
+    d1 = rm.d_cov(A, slot="left")
+    expected = dg.DoubleForm(dg.TensorProduct(dg.d(alpha), beta), p=2, q=1, dim=dim)
+    assert l2_error(d1, expected, mesh) < 1e-8
+
+
+def test_double_form_covariant_d2_matches_right_exterior_derivative():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.OneForm(CF((1, 0)))
+    beta = dg.OneForm(CF((0, x)))
+    A = dg.DoubleForm(dg.TensorProduct(alpha, beta), p=1, q=1, dim=dim)
+
+    d2 = rm.d_cov(A, slot="right")
+    expected = dg.DoubleForm(dg.TensorProduct(alpha, dg.d(beta)), p=1, q=2, dim=dim)
+    assert l2_error(d2, expected, mesh) < 1e-8
+
+
+def test_double_form_covariant_codifferentials_divergence():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.OneForm(CF((x, 0)))
+    beta = dg.OneForm(CF((0, y)))
+    A = dg.DoubleForm(dg.TensorProduct(alpha, beta), p=1, q=1, dim=dim)
+
+    delta1 = rm.delta_cov(A, slot="left")
+    delta2 = rm.delta_cov(A, slot="right")
+
+    expected_delta1 = dg.DoubleForm((-1.0) * beta, p=0, q=1, dim=dim)
+    expected_delta2 = dg.DoubleForm((-1.0) * alpha, p=1, q=0, dim=dim)
+
+    assert l2_error(delta1, expected_delta1, mesh) < 1e-8
+    assert l2_error(delta2, expected_delta2, mesh) < 1e-8
+
+
+def test_double_form_covariant_derivatives_boundary_constant_zero():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.OneForm(CF((1, 0)))
+    beta = dg.OneForm(CF((0, 1)))
+    A = dg.DoubleForm(dg.TensorProduct(alpha, beta), p=1, q=1, dim=dim)
+
+    d1 = rm.d_cov(A, slot="left", vb=BND)
+    d2 = rm.d_cov(A, slot="right", vb=BND)
+    delta1 = rm.delta_cov(A, slot="left", vb=BND)
+    delta2 = rm.delta_cov(A, slot="right", vb=BND)
+
+    assert l2_norm_bnd(d1, mesh) < 1e-12
+    assert l2_norm_bnd(d2, mesh) < 1e-12
+    assert l2_norm_bnd(delta1, mesh) < 1e-12
+    assert l2_norm_bnd(delta2, mesh) < 1e-12
+
+
+def test_scalar_d_cov_promotes_to_double_form():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    f = dg.ScalarField(CF(x + y), dim=dim)
+    d_left = rm.d_cov(f, slot="left")
+    d_right = rm.d_cov(f, slot="right")
+
+    expected_left = dg.DoubleForm(dg.d(f), p=1, q=0, dim=dim)
+    expected_right = dg.DoubleForm(dg.d(f), p=0, q=1, dim=dim)
+
+    assert d_left.degree_left == 1
+    assert d_left.degree_right == 0
+    assert d_right.degree_left == 0
+    assert d_right.degree_right == 1
+    assert l2_error(d_left, expected_left, mesh) < 1e-8
+    assert l2_error(d_right, expected_right, mesh) < 1e-8
+
+
+def test_double_form_covdiv_slot_degrees():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.OneForm(CF((x, y)))
+    beta = dg.OneForm(CF((1 + x, 1 - y)))
+    A = dg.DoubleForm(dg.TensorProduct(alpha, beta), p=1, q=1, dim=dim)
+
+    div_left = rm.CovDiv(A, slot="left")
+    div_right = rm.CovDiv(A, slot="right")
+    div_left_int = rm.CovDiv(A, slot=0)
+    div_right_int = rm.CovDiv(A, slot=1)
+
+    assert div_left.degree_left == 0
+    assert div_left.degree_right == 1
+    assert div_right.degree_left == 1
+    assert div_right.degree_right == 0
+    assert l2_error(div_left, div_left_int, mesh) < 1e-12
+    assert l2_error(div_right, div_right_int, mesh) < 1e-12
+
+
+def test_double_form_covdiv_slot_degree_zero_returns_formal_zero():
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    alpha = dg.OneForm(CF((x, y)))
+    A01 = dg.DoubleForm(alpha, p=0, q=1, dim=dim)
+    A10 = dg.DoubleForm(alpha, p=1, q=0, dim=dim)
+
+    out_left = rm.CovDiv(A01, slot="left")
+    out_right = rm.CovDiv(A10, slot="right")
+
+    assert isinstance(out_left, dg.FormalZeroDoubleForm)
+    assert out_left.degree_left == -1
+    assert out_left.degree_right == 1
+    assert isinstance(out_right, dg.FormalZeroDoubleForm)
+    assert out_right.degree_left == 1
+    assert out_right.degree_right == -1
+
+
+def test_covdiv_tensor_backward_compatibility_positional_vb():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
+    dim = 2
+    rm = dg.RiemannianManifold(Id(dim))
+
+    X = dg.VectorField(CF((x + y, x - y)))
+    div_positional = rm.CovDiv(X, VOL)
+    div_keyword = rm.CovDiv(X, vb=VOL)
+
+    assert l2_error(div_positional, div_keyword, mesh) < 1e-12
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])

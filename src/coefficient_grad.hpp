@@ -1,7 +1,7 @@
 #ifndef COEFFICIENT_GRAD
 #define COEFFICIENT_GRAD
 
-// #include <fem.hpp>
+#include <fem.hpp>
 #include <coefficient.hpp>
 // #include <fespace.hpp>
 #include <symbolicintegrator.hpp>
@@ -12,12 +12,13 @@ using namespace std;
 namespace ngfem
 {
 
-    shared_ptr<CoefficientFunction> GradCF(const shared_ptr<CoefficientFunction> &cf, size_t dim);
+    shared_ptr<CoefficientFunction> GradCF(const shared_ptr<CoefficientFunction> &cf, size_t dim, bool surface = false);
 
     template <int D>
     class GradCoefficientFunction : public T_CoefficientFunction<GradCoefficientFunction<D>>
     {
         shared_ptr<CoefficientFunction> c1;
+        bool surface;
 
     public:
         static constexpr double eps() { return 1e-4; }
@@ -28,8 +29,8 @@ namespace ngfem
          *
          * @throws Exception if any dimension of the input CoefficientFunction is not equal to D.
          */
-        GradCoefficientFunction(shared_ptr<CoefficientFunction> ac1)
-            : T_CoefficientFunction<GradCoefficientFunction<D>>(ac1->Dimension() * D, ac1->IsComplex()), c1(ac1)
+        GradCoefficientFunction(shared_ptr<CoefficientFunction> ac1, bool asurface = false)
+            : T_CoefficientFunction<GradCoefficientFunction<D>>(ac1->Dimension() * D, ac1->IsComplex()), c1(ac1), surface(asurface)
         {
             for (auto cf_dim : ac1->Dimensions())
                 if (cf_dim != D)
@@ -102,50 +103,164 @@ namespace ngfem
         template <typename T, ORDERING ORD, typename std::enable_if<std::is_convertible<T, double>::value, int>::type = 0>
         void T_Evaluate_impl(const BaseMappedIntegrationRule &bmir, BareSliceMatrix<T, ORD> values) const
         {
-            if (bmir.DimSpace() != D || bmir.DimElement() != D)
+            if (!surface)
             {
-                throw Exception(ToString("GradCF :: T_Evaluate_impl: D = ") + ToString(D) + ", bmir.DimSpace() = " + ToString(bmir.DimSpace()) + ", bmir.DimElement() = " + ToString(bmir.DimElement()));
+                if (bmir.DimSpace() != D || bmir.DimElement() != D)
+                {
+                    throw Exception(ToString("GradCF :: T_Evaluate_impl: D = ") + ToString(D) + ", bmir.DimSpace() = " + ToString(bmir.DimSpace()) + ", bmir.DimElement() = " + ToString(bmir.DimElement()));
+                }
+            }
+            else
+            {
+                if (D < 2)
+                    throw Exception("GradCF(surface): only dimensions >= 2 supported");
+                if (bmir.DimSpace() != D)
+                {
+                    throw Exception(ToString("GradCF(surface) :: T_Evaluate_impl: D = ") + ToString(D) + ", bmir.DimSpace() = " + ToString(bmir.DimSpace()));
+                }
+                if (!(bmir.DimElement() == D || bmir.DimElement() == D - 1))
+                {
+                    throw Exception(ToString("GradCF(surface) :: T_Evaluate_impl: bmir.DimElement() = ") + ToString(bmir.DimElement()));
+                }
             }
             LocalHeapMem<10000> lh("GradCF-lh");
 
-            auto &mir = static_cast<const MappedIntegrationRule<D, D> &>(bmir);
-            auto &ir = mir.IR();
             int hd = c1->Dimension();
-            STACK_ARRAY(T, hmem, hd * 4);
-            STACK_ARRAY(T, hmem2, hd * D);
-            STACK_ARRAY(T, hmem3, hd * D);
-            FlatMatrix<T, ORD> values_c1(hd, 4, &hmem[0]);
-            FlatMatrix<T, ORD> dshape_ref(hd, D, &hmem2[0]);
-            FlatMatrix<T, ORD> dshape(hd, D, &hmem3[0]);
-
-            for (size_t i = 0; i < mir.Size(); i++)
+            if (!surface)
             {
-                const IntegrationPoint &ip = ir[i];
-                const ElementTransformation &eltrans = mir[i].GetTransformation();
+                auto &mir = static_cast<const MappedIntegrationRule<D, D> &>(bmir);
+                auto &ir = mir.IR();
+                STACK_ARRAY(T, hmem, hd * 4);
+                STACK_ARRAY(T, hmem2, hd * D);
+                STACK_ARRAY(T, hmem3, hd * D);
+                FlatMatrix<T, ORD> values_c1(hd, 4, &hmem[0]);
+                FlatMatrix<T, ORD> dshape_ref(hd, D, &hmem2[0]);
+                FlatMatrix<T, ORD> dshape(hd, D, &hmem3[0]);
 
-                for (int j = 0; j < D; j++) // d / d t_j
+                for (size_t i = 0; i < mir.Size(); i++)
                 {
-                    HeapReset hr(lh);
-                    IntegrationPoint ipts[4];
-                    ipts[0] = ip;
-                    ipts[0](j) -= eps();
-                    ipts[1] = ip;
-                    ipts[1](j) += eps();
-                    ipts[2] = ip;
-                    ipts[2](j) -= 2 * eps();
-                    ipts[3] = ip;
-                    ipts[3](j) += 2 * eps();
+                    const IntegrationPoint &ip = ir[i];
+                    const ElementTransformation &eltrans = mir[i].GetTransformation();
 
-                    IntegrationRule ir_j(4, ipts);
-                    MappedIntegrationRule<D, D, T> mir_j(ir_j, eltrans, lh);
+                    for (int j = 0; j < D; j++) // d / d t_j
+                    {
+                        HeapReset hr(lh);
+                        IntegrationPoint ipts[4];
+                        ipts[0] = ip;
+                        ipts[0](j) -= eps();
+                        ipts[1] = ip;
+                        ipts[1](j) += eps();
+                        ipts[2] = ip;
+                        ipts[2](j) -= 2 * eps();
+                        ipts[3] = ip;
+                        ipts[3](j) += 2 * eps();
 
-                    c1->Evaluate(mir_j, values_c1);
+                        IntegrationRule ir_j(4, ipts);
+                        MappedIntegrationRule<D, D, T> mir_j(ir_j, eltrans, lh);
 
-                    dshape_ref.Col(j) = (1.0 / (12.0 * eps())) * (8.0 * values_c1.Col(1) - 8.0 * values_c1.Col(0) - values_c1.Col(3) + values_c1.Col(2));
+                        c1->Evaluate(mir_j, values_c1);
+
+                        dshape_ref.Col(j) = (1.0 / (12.0 * eps())) * (8.0 * values_c1.Col(1) - 8.0 * values_c1.Col(0) - values_c1.Col(3) + values_c1.Col(2));
+                    }
+
+                    dshape = dshape_ref * mir[i].GetJacobianInverse();
+                    values.Col(i) = dshape.AsVector();
+                }
+                return;
+            }
+
+            if constexpr (D < 2)
+            {
+                throw Exception("GradCF(surface): only dimensions >= 2 supported");
+            }
+            else
+            {
+                STACK_ARRAY(T, hmem, hd * 4);
+                STACK_ARRAY(T, hmem2, hd * (D - 1));
+                STACK_ARRAY(T, hmem3, hd * D);
+                FlatMatrix<T, ORD> values_c1(hd, 4, &hmem[0]);
+                FlatMatrix<T, ORD> dshape_ref(hd, D - 1, &hmem2[0]);
+                FlatMatrix<T, ORD> dshape(hd, D, &hmem3[0]);
+
+                if (bmir.DimElement() == D - 1)
+                {
+                    auto &mir = static_cast<const MappedIntegrationRule<D - 1, D> &>(bmir);
+                    auto &ir = mir.IR();
+
+                    for (size_t i = 0; i < mir.Size(); i++)
+                    {
+                        const IntegrationPoint &ip = ir[i];
+                        const ElementTransformation &eltrans = mir[i].GetTransformation();
+
+                        for (int j = 0; j < D - 1; j++) // d / d t_j (surface)
+                        {
+                            HeapReset hr(lh);
+                            IntegrationPoint ipts[4];
+                            ipts[0] = ip;
+                            ipts[0](j) -= eps();
+                            ipts[1] = ip;
+                            ipts[1](j) += eps();
+                            ipts[2] = ip;
+                            ipts[2](j) -= 2 * eps();
+                            ipts[3] = ip;
+                            ipts[3](j) += 2 * eps();
+
+                            IntegrationRule ir_j(4, ipts);
+                            MappedIntegrationRule<D - 1, D, T> mir_j(ir_j, eltrans, lh);
+
+                            c1->Evaluate(mir_j, values_c1);
+
+                            dshape_ref.Col(j) = (1.0 / (12.0 * eps())) * (8.0 * values_c1.Col(1) - 8.0 * values_c1.Col(0) - values_c1.Col(3) + values_c1.Col(2));
+                        }
+
+                        dshape = dshape_ref * mir[i].GetJacobianInverse();
+                        values.Col(i) = dshape.AsVector();
+                    }
+                    return;
                 }
 
-                dshape = dshape_ref * mir[i].GetJacobianInverse();
-                values.Col(i) = dshape.AsVector();
+                auto &mir = static_cast<const MappedIntegrationRule<D, D> &>(bmir);
+                auto &ir = mir.IR();
+
+                for (size_t i = 0; i < mir.Size(); i++)
+                {
+                    const IntegrationPoint &ip = ir[i];
+                    const ElementTransformation &eltrans = mir[i].GetTransformation();
+                    int fnr = ip.FacetNr();
+                    if (fnr < 0)
+                        throw Exception("GradCF(surface): missing FacetNr for boundary evaluation");
+
+                    ELEMENT_TYPE et = eltrans.GetElementType();
+                    auto f2eltrafo = Facet2ElementTrafo(et);
+
+                    for (int j = 0; j < D - 1; j++) // d / d t_j (surface)
+                    {
+                        HeapReset hr(lh);
+                        IntegrationPoint ipts[4];
+                        ipts[0] = ip;
+                        ipts[0](j) -= eps();
+                        ipts[1] = ip;
+                        ipts[1](j) += eps();
+                        ipts[2] = ip;
+                        ipts[2](j) -= 2 * eps();
+                        ipts[3] = ip;
+                        ipts[3](j) += 2 * eps();
+
+                        IntegrationRule ir_j(4, ipts);
+                        const IntegrationRule &f2elir = f2eltrafo(fnr, ir_j, lh);
+                        MappedIntegrationRule<D, D, T> mir_j(f2elir, eltrans, lh);
+
+                        c1->Evaluate(mir_j, values_c1);
+
+                        dshape_ref.Col(j) = (1.0 / (12.0 * eps())) * (8.0 * values_c1.Col(1) - 8.0 * values_c1.Col(0) - values_c1.Col(3) + values_c1.Col(2));
+                    }
+
+                    Mat<D, D - 1> F = mir[i].GetJacobian() * f2eltrafo.GetJacobian(fnr, lh);
+                    Mat<D - 1, D - 1> FtF = Trans(F) * F;
+                    Mat<D - 1, D> Finv = Inv(FtF) * Trans(F);
+                    dshape = dshape_ref * Finv;
+                    values.Col(i) = dshape.AsVector();
+                }
             }
         }
 
@@ -172,7 +287,7 @@ namespace ngfem
         {
             if (this == var)
                 return dir;
-            return GradCF(c1->Diff(var, dir), D);
+            return GradCF(c1->Diff(var, dir), D, surface);
         }
 
         // shared_ptr<CoefficientFunction> DiffJacobi(const CoefficientFunction *var, T_DJC &cache) const override

@@ -1,13 +1,38 @@
 import ngsdiffgeo as dg
 import pytest
-from netgen.occ import unit_square
-from ngsolve import *
+from netgen.occ import unit_square, unit_cube
+from ngsolve import (
+    BND,
+    CF,
+    CoefficientFunction,
+    Grad,
+    GridFunction,
+    HCurlCurl,
+    InnerProduct,
+    Integrate,
+    Inv,
+    L2,
+    MatrixValued,
+    Mesh,
+    VOL,
+    VectorL2,
+    cos,
+    ds,
+    dx,
+    fem,
+    sin,
+    sqrt,
+    x,
+    y,
+    z,
+    Id,
+)
 
 order = 6
 addorder = 6
 
 
-def CovDerS(s, mesh, gfgamma, cov=True):
+def cov_der_s(s, mesh, gfgamma, cov=True):
     Xgf = GridFunction(L2(mesh, order=order + addorder))
     Xgf.Set(s)
     if cov:
@@ -16,7 +41,7 @@ def CovDerS(s, mesh, gfgamma, cov=True):
         return Inv(gfgamma) * Grad(Xgf)
 
 
-def CovDerV(X, mesh, gfgamma, contra=True):
+def cov_der_v(X, mesh, gfgamma, contra=True):
     Xgf = GridFunction(VectorL2(mesh, order=order + addorder))
     Xgf.Set(X)
     christoffel2 = gfgamma.Operator("christoffel2")
@@ -26,7 +51,7 @@ def CovDerV(X, mesh, gfgamma, contra=True):
         return (Grad(Xgf) - christoffel2 * X).trans
 
 
-def CovDerT(A, mesh, gfgamma, contra=[True, True]):
+def cov_der_t(A, mesh, gfgamma, contra=(True, True)):
     chr2 = gfgamma.Operator("christoffel2")
     Xgf = GridFunction(MatrixValued(L2(mesh, order=order + addorder)))
     Xgf.Set(A)
@@ -49,7 +74,7 @@ def CovDerT(A, mesh, gfgamma, contra=[True, True]):
     return term
 
 
-def test_cov_der_scal():
+def test_cov_der_scalar():
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.2))
     metric = dg.CigarSoliton().metric
     mf = dg.RiemannianManifold(metric=metric)
@@ -59,14 +84,14 @@ def test_cov_der_scal():
     f = CoefficientFunction(x**2 * y - 0.1 * y * x)
     sf = dg.ScalarField(f, dim=2)
 
-    term1 = CovDerS(f, mesh, gf_metric, cov=True)
+    term1 = cov_der_s(f, mesh, gf_metric, cov=True)
     term2 = mf.CovDeriv(sf)
     assert Integrate(term1, mesh) == pytest.approx(Integrate(term2, mesh))
 
     return
 
 
-def test_cov_der_vec():
+def test_cov_der_vector():
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.15))
     metric = dg.CigarSoliton().metric
     mf = dg.RiemannianManifold(metric=metric)
@@ -77,18 +102,18 @@ def test_cov_der_vec():
     vv = dg.VectorField(v)
     ov = dg.OneForm(v)
 
-    term1 = CovDerV(v, mesh, gf_metric, contra=True)
+    term1 = cov_der_v(v, mesh, gf_metric, contra=True)
     term2 = mf.CovDeriv(vv)
     assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 5e-7
 
-    term1 = CovDerV(v, mesh, gf_metric, contra=False)
+    term1 = cov_der_v(v, mesh, gf_metric, contra=False)
     term2 = mf.CovDeriv(ov)
     assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 5e-7
 
     return
 
 
-def test_cov_der_mat():
+def test_cov_der_matrix():
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.15))
     metric = dg.CigarSoliton().metric
     mf = dg.RiemannianManifold(metric=metric)
@@ -101,19 +126,19 @@ def test_cov_der_mat():
     Amix1 = dg.TensorField(A, "10")
     Amix2 = dg.TensorField(A, "01")
 
-    term1 = CovDerT(A, mesh, gf_metric, contra=[True, True])
+    term1 = cov_der_t(A, mesh, gf_metric, contra=(True, True))
     term2 = mf.CovDeriv(Acon)
     assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 5e-7
 
-    term1 = CovDerT(A, mesh, gf_metric, contra=[False, False])
+    term1 = cov_der_t(A, mesh, gf_metric, contra=(False, False))
     term2 = mf.CovDeriv(Acov)
     assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 5e-7
 
-    term1 = CovDerT(A, mesh, gf_metric, contra=[False, True])
+    term1 = cov_der_t(A, mesh, gf_metric, contra=(False, True))
     term2 = mf.CovDeriv(Amix1)
     assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 5e-7
 
-    term1 = CovDerT(A, mesh, gf_metric, contra=[True, False])
+    term1 = cov_der_t(A, mesh, gf_metric, contra=(True, False))
     term2 = mf.CovDeriv(Amix2)
     assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 5e-7
 
@@ -324,6 +349,58 @@ def test_integration_by_parts_3d():
         < 1e-8
     )
     return
+
+
+def test_covcurl_rowwise_covariant_tensor_3d_euclidean():
+    mesh = Mesh(unit_cube.GenerateMesh(maxh=0.3))
+    mf = dg.RiemannianManifold(Id(3))
+
+    T = dg.TensorField(
+        CF(
+            (
+                0,
+                -z,
+                y,
+                z,
+                0,
+                -x,
+                -y,
+                x,
+                0,
+            ),
+            dims=(3, 3),
+        ),
+        "11",
+    )
+
+    out = mf.CovCurl(T)
+    expected = dg.TensorField(
+        CF(
+            (
+                2,
+                0,
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                2,
+            ),
+            dims=(3, 3),
+        ),
+        "10",
+    )
+
+    assert out.covariant_indices == "10"
+    assert (
+        sqrt(
+            Integrate(
+                InnerProduct(out.coef - expected.coef, out.coef - expected.coef), mesh
+            )
+        )
+        < 1e-10
+    )
 
 
 if __name__ == "__main__":

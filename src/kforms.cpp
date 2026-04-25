@@ -4,29 +4,159 @@
 #include <algorithm>
 #include <array>
 #include <numeric>
+#include <mutex>
 #include <vector>
 
 namespace ngfem
 {
     namespace
     {
-        inline int Factorial(int n)
+        template <typename T>
+        shared_ptr<T> RequireNonNull(shared_ptr<T> ptr, const char *name)
         {
-            int f = 1;
-            for (int i = 2; i <= n; ++i)
-                f *= i;
-            return f;
+            if (!ptr)
+                throw Exception(std::string(name) + ": input coefficient is null");
+            return ptr;
+        }
+
+        int InferWrappedOrTensorDimension(shared_ptr<CoefficientFunction> cf, int dim)
+        {
+            if (dim > 0)
+                return dim;
+            if (auto kf = dynamic_pointer_cast<KFormCoefficientFunction>(cf))
+                return kf->DimensionOfSpace();
+            if (auto df = dynamic_pointer_cast<DoubleFormCoefficientFunction>(cf))
+                return df->DimensionOfSpace();
+            if (cf->Dimensions().Size() > 0)
+                return int(cf->Dimensions()[0]);
+            return 0;
+        }
+
+        void RequireScalarFormDimension(int used_dim, const char *name)
+        {
+            if (used_dim <= 0)
+                throw Exception(std::string(name) + ": dim must be provided for scalar forms");
+        }
+
+        void ValidateKFormInput(const CoefficientFunction &cf, int k)
+        {
+            if (cf.Dimensions().Size() != size_t(k))
+                throw Exception("KFormCF: degree k requires rank-k coefficient");
+        }
+
+        void ValidateDoubleFormInput(const CoefficientFunction &cf, int p, int q)
+        {
+            if (cf.Dimensions().Size() != size_t(p + q))
+                throw Exception("DoubleFormCF: degrees p,q require rank-(p+q) coefficient");
+        }
+
+        template <typename TWrapped>
+        shared_ptr<TWrapped> ReuseIfCompatible(shared_ptr<CoefficientFunction> cf, int used_dim, const char *name)
+        {
+            auto existing = dynamic_pointer_cast<TWrapped>(cf);
+            if (!existing)
+                return nullptr;
+            if (used_dim > 0 && existing->DimensionOfSpace() != used_dim)
+                throw Exception(std::string(name) + ": requested dim does not match wrapped dimension");
+            return existing;
+        }
+
+        shared_ptr<KFormCoefficientFunction> WrapKFormImpl(shared_ptr<CoefficientFunction> cf, int k, int dim)
+        {
+            int used_dim = InferWrappedOrTensorDimension(cf, dim);
+            if (k == 0)
+                RequireScalarFormDimension(used_dim, "KFormCF");
+
+            ValidateKFormInput(*cf, k);
+
+            if (k == 0)
+            {
+                if (auto sf = ReuseIfCompatible<ScalarFieldCoefficientFunction>(cf, used_dim, "KFormCF"))
+                    return sf;
+                return make_shared<ScalarFieldCoefficientFunction>(cf, used_dim);
+            }
+            if (k == 1)
+            {
+                if (auto of = ReuseIfCompatible<OneFormCoefficientFunction>(cf, used_dim, "KFormCF"))
+                    return of;
+                return make_shared<OneFormCoefficientFunction>(cf, used_dim);
+            }
+            if (k == 2)
+            {
+                if (auto tf = ReuseIfCompatible<TwoFormCoefficientFunction>(cf, used_dim, "KFormCF"))
+                    return tf;
+                return make_shared<TwoFormCoefficientFunction>(cf, used_dim);
+            }
+            if (k == 3)
+            {
+                if (auto tf = ReuseIfCompatible<ThreeFormCoefficientFunction>(cf, used_dim, "KFormCF"))
+                    return tf;
+                return make_shared<ThreeFormCoefficientFunction>(cf, used_dim);
+            }
+
+            if (auto kf = dynamic_pointer_cast<KFormCoefficientFunction>(cf))
+            {
+                if (kf->Degree() != k)
+                    throw Exception("KFormCF: cannot reinterpret existing k-form with different degree");
+                if (used_dim > 0 && kf->DimensionOfSpace() != used_dim)
+                    throw Exception("KFormCF: requested dim does not match wrapped dimension");
+                return kf;
+            }
+
+            return make_shared<KFormCoefficientFunction>(cf, uint8_t(k), uint8_t(used_dim));
+        }
+
+        shared_ptr<DoubleFormCoefficientFunction> WrapDoubleFormImpl(shared_ptr<CoefficientFunction> cf, int p, int q, int dim)
+        {
+            int used_dim = InferWrappedOrTensorDimension(cf, dim);
+            if (p + q == 0)
+                RequireScalarFormDimension(used_dim, "DoubleFormCF");
+
+            ValidateDoubleFormInput(*cf, p, q);
+
+            if (auto df = dynamic_pointer_cast<DoubleFormCoefficientFunction>(cf))
+            {
+                if (df->LeftDegree() != p || df->RightDegree() != q)
+                    throw Exception("DoubleFormCF: cannot reinterpret existing DoubleForm with different left/right degrees");
+                if (used_dim > 0 && df->DimensionOfSpace() != used_dim)
+                    throw Exception("DoubleFormCF: requested dim does not match wrapped double-form dimension");
+                return df;
+            }
+
+            return make_shared<DoubleFormCoefficientFunction>(cf, uint8_t(p), uint8_t(q), uint8_t(used_dim));
+        }
+
+        template <typename TWrapped>
+        shared_ptr<TWrapped> WrapSpecializedKForm(shared_ptr<CoefficientFunction> cf, int k, int dim, const char *name)
+        {
+            int used_dim = InferWrappedOrTensorDimension(cf, dim);
+            auto kf = KFormCF(cf, k, used_dim);
+            auto wrapped = dynamic_pointer_cast<TWrapped>(kf);
+            if (!wrapped)
+                throw Exception(std::string(name) + ": internal type mismatch");
+            return wrapped;
+        }
+
+        int ParseDoubleFormSlot(const std::string &slot)
+        {
+            if (slot == "both" || slot == "all")
+                return -1;
+            if (slot == "left" || slot == "0")
+                return 0;
+            if (slot == "right" || slot == "1")
+                return 1;
+            throw Exception("slot must be 'left', 'right', or 'both'");
         }
 
         const std::vector<std::array<int, 4>> &GeneratePermutations(int rank)
         {
-            if (rank < 0 || rank > 4)
-                throw Exception("GeneratePermutations: rank must be in [0, 4]");
+            if (rank < 0 || rank > MAX_PERMUTATION_RANK)
+                throw Exception("GeneratePermutations: rank must be in [0, " + ToString(MAX_PERMUTATION_RANK) + "]");
 
-            static std::array<std::vector<std::array<int, 4>>, 5> cached_perms = []()
+            static std::array<std::vector<std::array<int, 4>>, MAX_PERMUTATION_RANK + 1> cached_perms = []()
             {
-                std::array<std::vector<std::array<int, 4>>, 5> result;
-                for (int r = 0; r <= 4; ++r)
+                std::array<std::vector<std::array<int, 4>>, MAX_PERMUTATION_RANK + 1> result;
+                for (int r = 0; r <= MAX_PERMUTATION_RANK; ++r)
                 {
                     std::vector<int> current(r);
                     std::iota(current.begin(), current.end(), 0);
@@ -44,7 +174,6 @@ namespace ngfem
 
             return cached_perms[rank];
         }
-
         int PermutationSign(const std::array<int, 4> &perm, int rank)
         {
             switch (rank)
@@ -93,15 +222,377 @@ namespace ngfem
             }
             }
         }
+
+        enum class PermutationFamily : uint8_t
+        {
+            Full,
+            Shuffle
+        };
+
+        struct PermutationSpec
+        {
+            PermutationFamily family;
+            int a;
+            int b;
+        };
+
+        int BlockLength(const PermutationSpec &spec)
+        {
+            switch (spec.family)
+            {
+            case PermutationFamily::Full:
+                if (spec.a < 0 || spec.a > MAX_PERMUTATION_RANK)
+                    throw Exception("BlockLength: full permutation rank must be in [0, " + ToString(MAX_PERMUTATION_RANK) + "]");
+                if (spec.b != 0)
+                    throw Exception("BlockLength: full permutation spec requires b == 0");
+                return spec.a;
+            case PermutationFamily::Shuffle:
+                if (spec.a < 0 || spec.b < 0 || spec.a + spec.b > MAX_PERMUTATION_RANK)
+                    throw Exception("BlockLength: shuffle block sizes must be non-negative and sum to <= " + ToString(MAX_PERMUTATION_RANK));
+                return spec.a + spec.b;
+            }
+            throw Exception("BlockLength: unsupported permutation family");
+        }
+
+        bool IsShuffle(const std::array<int, 4> &perm, int left, int right)
+        {
+            int total = left + right;
+            int prev_left = -1;
+            int prev_right = left - 1;
+
+            for (int i = 0; i < total; ++i)
+            {
+                int v = perm[size_t(i)];
+                if (v < left)
+                {
+                    if (v < prev_left)
+                        return false;
+                    prev_left = v;
+                }
+                else
+                {
+                    if (v < prev_right)
+                        return false;
+                    prev_right = v;
+                }
+            }
+            return true;
+        }
+
+        struct SignedPermutations
+        {
+            std::once_flag flag;
+            std::vector<std::array<int, 4>> perms;
+            std::vector<int> signs;
+        };
+
+        const SignedPermutations &GetSignedPermutations(const PermutationSpec &spec)
+        {
+            constexpr size_t family_count = 2;
+            static std::array<std::array<std::array<SignedPermutations, MAX_PERMUTATION_RANK + 1>, MAX_PERMUTATION_RANK + 1>, family_count> cache;
+
+            int block_len = BlockLength(spec);
+            auto family_index = size_t(spec.family);
+            auto &entry = cache[family_index][size_t(spec.a)][size_t(spec.b)];
+
+            std::call_once(entry.flag, [&]()
+                           {
+            const auto &base_perms = GeneratePermutations(block_len);
+            entry.signs.reserve(base_perms.size());
+
+            switch (spec.family)
+            {
+            case PermutationFamily::Full:
+                for (const auto &perm : base_perms)
+                {
+                    entry.perms.push_back(perm);
+                    entry.signs.push_back(PermutationSign(perm, block_len));
+                }
+                break;
+            case PermutationFamily::Shuffle:
+                for (const auto &perm : base_perms)
+                {
+                    if (!IsShuffle(perm, spec.a, spec.b))
+                        continue;
+                    entry.perms.push_back(perm);
+                    entry.signs.push_back(PermutationSign(perm, block_len));
+                }
+                break;
+            } });
+
+            return entry;
+        }
+
+        struct SignedPermutationOrders
+        {
+            std::once_flag flag;
+            std::vector<std::vector<int>> orders;
+            std::vector<int> signs;
+        };
+
+        const SignedPermutationOrders &GetSignedWedgeOrders(int left, int right)
+        {
+            static std::array<std::array<SignedPermutationOrders, MAX_PERMUTATION_RANK + 1>, MAX_PERMUTATION_RANK + 1> cache;
+            auto &entry = cache[size_t(left)][size_t(right)];
+
+            std::call_once(entry.flag, [&]()
+                           {
+            const auto &data = GetSignedPermutations(
+                PermutationSpec{PermutationFamily::Shuffle, left, right});
+
+            entry.orders.resize(data.perms.size());
+            entry.signs = data.signs;
+
+            int total = left + right;
+            for (size_t p = 0; p < data.perms.size(); ++p)
+            {
+                auto &order = entry.orders[p];
+                order.resize(size_t(total));
+                for (int i = 0; i < total; ++i)
+                    order[size_t(i)] = data.perms[p][size_t(i)];
+            } });
+
+            return entry;
+        }
+
+        const SignedPermutationOrders &
+        GetSignedBlockPermutationData(int rank_total, int block_start, const PermutationSpec &spec)
+        {
+            constexpr size_t family_count = 2;
+            static std::array<std::array<std::array<std::array<std::array<SignedPermutationOrders, MAX_PERMUTATION_RANK + 1>, MAX_PERMUTATION_RANK + 1>, family_count>, MAX_FORM_RANK + 1>, MAX_FORM_RANK + 1> cache;
+
+            int block_len = BlockLength(spec);
+            if (rank_total < 0 || rank_total > MAX_FORM_RANK)
+                throw Exception("GetSignedBlockPermutationData: rank_total must be in [0, " + ToString(MAX_FORM_RANK) + "]");
+            if (block_start < 0 || block_start + block_len > rank_total)
+                throw Exception("GetSignedBlockPermutationData: block range out of bounds");
+
+            auto family_index = size_t(spec.family);
+            auto &entry = cache[size_t(rank_total)][size_t(block_start)][family_index][size_t(spec.a)][size_t(spec.b)];
+
+            std::call_once(entry.flag, [&]()
+                           {
+            const auto &signed_perms = GetSignedPermutations(spec);
+            const auto &perms = signed_perms.perms;
+            entry.orders.resize(perms.size());
+            entry.signs = signed_perms.signs;
+
+            for (size_t p = 0; p < perms.size(); ++p)
+            {
+                auto &order = entry.orders[p];
+                order.resize(size_t(rank_total));
+                for (int i = 0; i < rank_total; ++i)
+                    order[size_t(i)] = i;
+                for (int i = 0; i < block_len; ++i)
+                    order[size_t(block_start + i)] = block_start + perms[p][size_t(i)];
+            } });
+
+            return entry;
+        }
+
+        std::string FreshSignature(std::string_view used, int count)
+        {
+            if (count < 0)
+                throw Exception("FreshSignature: count must be non-negative");
+            if (count == 0)
+                return std::string();
+            std::string out;
+            out.reserve(size_t(count));
+            for (char c : SIGNATURE)
+            {
+                if (used.find(c) == std::string_view::npos)
+                {
+                    out.push_back(c);
+                    if (int(out.size()) == count)
+                        break;
+                }
+            }
+            if (int(out.size()) != count)
+                throw Exception("FreshSignature: not enough signature labels available");
+            return out;
+        }
+
+        shared_ptr<CoefficientFunction> BlockHodgeStar(shared_ptr<TensorFieldCoefficientFunction> tf, int block_start, int block_len, int n, const RiemannianManifold &M)
+        {
+            if (block_len < 0 || block_start < 0)
+                throw Exception("BlockHodgeStar: invalid block parameters");
+            if (block_len > n)
+                throw Exception("BlockHodgeStar: block degree exceeds dimension");
+
+            shared_ptr<TensorFieldCoefficientFunction> raised = tf;
+            for (int i = 0; i < block_len; ++i)
+                raised = M.Raise(raised, size_t(block_start + i));
+
+            auto eps = M.GetLeviCivitaSymbol(true);
+            std::string sig = raised->GetSignature();
+            if (block_start + block_len > int(sig.size()))
+                throw Exception("BlockHodgeStar: block range out of bounds");
+            if (sig.empty())
+                return raised * eps;
+
+            std::string pre = sig.substr(0, size_t(block_start));
+            std::string block = sig.substr(size_t(block_start), size_t(block_len));
+            std::string post = sig.substr(size_t(block_start + block_len));
+            std::string new_block = FreshSignature(sig, n - block_len);
+
+            std::string eps_sig = block + new_block;
+            std::string out_sig = pre + new_block + post;
+
+            std::string eins = sig + "," + eps_sig + "->" + out_sig;
+            auto contracted = EinsumCF(eins, {raised, eps});
+            double scale = 1.0 / double(Factorial(block_len));
+            return scale * contracted;
+        }
+
+        shared_ptr<KFormCoefficientFunction> BoundaryHodgeStarKForm(shared_ptr<KFormCoefficientFunction> a,
+                                                                    const RiemannianManifold &M)
+        {
+            int ambient_dim = M.Dimension();
+            int n = ambient_dim - 1;
+            int k = a->Degree();
+
+            auto star_vol = HodgeStar(a, M, VOL);
+            auto normal = M.GetNV();
+            auto contracted = M.Contraction(star_vol, normal); // reduce degree by 1
+            // if (!extended && (n - k) > 0)
+            // {
+            //     auto projected = M.ProjectTensorToEuclideanTangent(contracted);
+            //     return KFormCF(projected, n - k, ambient_dim);
+            // }
+            double sign = (k % 2 == 0) ? 1.0 : -1.0;
+            return KFormCF(sign * contracted->GetCoefficients(), n - k, ambient_dim);
+        }
+
+        shared_ptr<DoubleFormCoefficientFunction> BoundaryHodgeStarDoubleForm(shared_ptr<DoubleFormCoefficientFunction> a,
+                                                                              const RiemannianManifold &M)
+        {
+            int ambient_dim = M.Dimension();
+            int n = ambient_dim - 1;
+            int p = a->LeftDegree();
+            int q = a->RightDegree();
+
+            auto star_vol = HodgeStar(a, M, VOL);
+            auto normal = M.GetNV();
+
+            int left_deg = star_vol->LeftDegree();
+            auto contracted_left = M.Contraction(star_vol, normal, 0);
+            auto contracted_right = M.Contraction(contracted_left, normal, size_t(left_deg - 1));
+            // if (!extended && (n - p + n - q) > 0)
+            // {
+            //     auto projected = M.ProjectTensorToEuclideanTangent(contracted_right);
+            //     return DoubleFormCF(projected, n - p, n - q, ambient_dim);
+            // }
+            double sign = ((p + q) % 2 == 0) ? 1.0 : -1.0;
+            return DoubleFormCF(sign * contracted_right->GetCoefficients(), n - p, n - q, ambient_dim);
+        }
+
+        shared_ptr<KFormCoefficientFunction> BBNDHodgeStarKForm(shared_ptr<KFormCoefficientFunction> a,
+                                                                const RiemannianManifold &M)
+        {
+            int ambient_dim = M.Dimension();
+            int n = ambient_dim - 2;
+            int k = a->Degree();
+
+            if (k > n)
+                throw Exception("HodgeStar (BBND): form degree exceeds codimension-2 manifold dimension");
+
+            if (a->IsZeroCF())
+                return ZeroKForm(n - k, ambient_dim);
+
+            if (n == 0)
+                return KFormCF(a->GetCoefficients(), 0, ambient_dim);
+
+            auto star_vol = HodgeStar(a, M, VOL);
+            auto n1 = M.GetEdgeNormal(0);
+            auto cn1 = M.GetEdgeConormal(0);
+            auto c1 = M.Contraction(star_vol, n1);
+            auto c2 = M.Contraction(c1, cn1);
+
+            // Codim-2 induced orientation uses two contractions; no extra k-dependent sign.
+            return KFormCF(c2->GetCoefficients(), n - k, ambient_dim);
+        }
+
+        shared_ptr<DoubleFormCoefficientFunction> BBNDHodgeStarDoubleForm(shared_ptr<DoubleFormCoefficientFunction> a,
+                                                                          const RiemannianManifold &M)
+        {
+            int ambient_dim = M.Dimension();
+            int n = ambient_dim - 2;
+            int p = a->LeftDegree();
+            int q = a->RightDegree();
+
+            if (p > n || q > n)
+                throw Exception("HodgeStar (double-form, BBND): form degree exceeds codimension-2 manifold dimension");
+
+            if (a->IsZeroCF())
+                return ZeroDoubleForm(n - p, n - q, ambient_dim);
+
+            if (n == 0)
+                return DoubleFormCF(a->GetCoefficients(), 0, 0, ambient_dim);
+
+            auto n1 = M.GetEdgeNormal(0);
+            auto cn1 = M.GetEdgeConormal(0);
+            auto star_vol = HodgeStar(a, M, VOL);
+
+            int left_deg = star_vol->LeftDegree();
+            auto c_l1 = M.Contraction(star_vol, n1, 0);
+            auto c_l2 = M.Contraction(c_l1, cn1, 0);
+            auto c_r1 = M.Contraction(c_l2, n1, size_t(left_deg - 2));
+            auto c_r2 = M.Contraction(c_r1, cn1, size_t(left_deg - 2));
+
+            // Codim-2 induced orientation uses two contractions per slot; no extra degree sign.
+            return DoubleFormCF(c_r2->GetCoefficients(), n - p, n - q, ambient_dim);
+        }
+
     } // namespace
+
+    shared_ptr<CoefficientFunction> BlockAlternationByPermutationCF(shared_ptr<CoefficientFunction> T, int rank_total, int block_start, int block_len)
+    {
+        if (!T)
+            throw Exception("BlockAlternationByPermutationCF: input coefficient is null");
+        if (rank_total < 0 || rank_total > MAX_FORM_RANK)
+            throw Exception("BlockAlternationByPermutationCF: only ranks 0-" + ToString(MAX_FORM_RANK) + " supported");
+        if (block_len < 0 || block_len > MAX_PERMUTATION_RANK)
+            throw Exception("BlockAlternationByPermutationCF: block size must be in [0, " + ToString(MAX_PERMUTATION_RANK) + "]");
+        if (block_start < 0 || block_start + block_len > rank_total)
+            throw Exception("BlockAlternationByPermutationCF: block range out of bounds");
+        if (block_len <= 1)
+            return T;
+
+        shared_ptr<TensorFieldCoefficientFunction> tf;
+        if (auto ttf = dynamic_pointer_cast<TensorFieldCoefficientFunction>(T))
+        {
+            tf = ttf;
+            for (char c : tf->GetCovariantIndices())
+                if (c != '1')
+                    throw Exception("BlockAlternationByPermutationCF: only covariant tensors are supported");
+        }
+        else
+            tf = TensorFieldCF(T, std::string(size_t(rank_total), '1'));
+
+        if (int(tf->Dimensions().Size()) != rank_total)
+            throw Exception("BlockAlternationByPermutationCF: tensor rank mismatch");
+
+        const auto &data = GetSignedBlockPermutationData(rank_total, block_start,
+                                                         PermutationSpec{PermutationFamily::Full, block_len, 0});
+
+        shared_ptr<CoefficientFunction> accum;
+        for (size_t p = 0; p < data.orders.size(); ++p)
+        {
+            shared_ptr<CoefficientFunction> term = PermuteTensorCF(tf, data.orders[p]);
+            if (data.signs[p] == -1)
+                term = (-1.0) * term;
+            accum = accum ? (accum + term) : term;
+        }
+        return accum;
+    }
 
     KFormCoefficientFunction::KFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, uint8_t ak, uint8_t adim)
         : TensorFieldCoefficientFunction(ac1, std::string(size_t(ak), '1')), degree(ak), dim(adim)
     {
-        if (!((adim >= 1 && adim <= 4) || (adim == 0 && ak == 0)))
-            throw Exception("KFormCF: dim must be in {1,2,3,4} (or 0 for scalar forms)");
-        if (ak > 8)
-            throw Exception("KFormCF: only ranks up to 8 are supported");
+        if (!((adim >= 1 && adim <= MAX_SPACE_DIM) || (adim == 0 && ak == 0)))
+            throw Exception("KFormCF: dim must be in {1,...," + ToString(MAX_SPACE_DIM) + "} (or 0 for scalar forms)");
+        if (ak > MAX_FORM_RANK)
+            throw Exception("KFormCF: only ranks up to " + ToString(MAX_FORM_RANK) + " are supported");
 
         const auto &dims = ac1->Dimensions();
         if (dims.Size() != degree)
@@ -158,6 +649,69 @@ namespace ngfem
         return res;
     }
 
+    DoubleFormCoefficientFunction::DoubleFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, uint8_t ap, uint8_t aq, uint8_t adim)
+        : TensorFieldCoefficientFunction(ac1, std::string(size_t(ap + aq), '1')), degree_left(ap), degree_right(aq), dim(adim)
+    {
+        if (!((adim >= 1 && adim <= MAX_SPACE_DIM) || (adim == 0 && ap == 0 && aq == 0)))
+            throw Exception("DoubleFormCF: dim must be in {1,...," + ToString(MAX_SPACE_DIM) + "} (or 0 for scalar forms)");
+        if (ap + aq > MAX_FORM_RANK && !ac1->IsZeroCF())
+            throw Exception("DoubleFormCF: only ranks up to " + ToString(MAX_FORM_RANK) + " are supported");
+
+        const auto &dims = ac1->Dimensions();
+        if (dims.Size() != ap + aq)
+            throw Exception("DoubleFormCF: underlying coefficient must have rank " + ToString(int(ap + aq)));
+        for (auto d : dims)
+            if (dim > 0 && d != dim)
+            {
+                throw Exception("DoubleFormCF: tensor dimensions must all equal dim. dim = " + ToString(int(dim)) + ", but found dimension " + ToString(int(d)));
+            }
+
+        if (dim > 0 && (ap > dim || aq > dim) && !ac1->IsZeroCF())
+            throw Exception("DoubleFormCF: degree exceeds dimension (only zero forms allowed in that case)");
+
+        auto meta = Meta();
+        if (meta.rank != ap + aq)
+            throw Exception("DoubleFormCF: rank mismatch");
+        uint64_t expected_covmask = (meta.rank == 0) ? 0 : ((uint64_t(1) << meta.rank) - 1);
+        if (meta.covmask != expected_covmask)
+            throw Exception("DoubleFormCF: double-forms must be fully covariant");
+    }
+
+    shared_ptr<CoefficientFunction>
+    DoubleFormCoefficientFunction::Transform(CoefficientFunction::T_Transform &transformation) const
+    {
+        auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
+        if (transformation.cache.count(thisptr))
+            return transformation.cache[thisptr];
+        if (transformation.replace.count(thisptr))
+            return transformation.replace[thisptr];
+        auto newcf = DoubleFormCF(GetCoefficients()->Transform(transformation), degree_left, degree_right, dim);
+        transformation.cache[thisptr] = newcf;
+        return newcf;
+    }
+
+    shared_ptr<CoefficientFunction> DoubleFormCoefficientFunction::Diff(const CoefficientFunction *var,
+                                                                        shared_ptr<CoefficientFunction> dir) const
+    {
+        if (this == var)
+            return dir;
+        return DoubleFormCF(GetCoefficients()->Diff(var, dir), degree_left, degree_right, dim);
+    }
+
+    shared_ptr<CoefficientFunction> DoubleFormCoefficientFunction::DiffJacobi(const CoefficientFunction *var, T_DJC &cache) const
+    {
+        auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
+        if (cache.find(thisptr) != cache.end())
+            return cache[thisptr];
+
+        if (this == var)
+            return IdentityCF(this->Dimensions());
+
+        auto res = DoubleFormCF(GetCoefficients()->DiffJacobi(var, cache), degree_left, degree_right, dim);
+        cache[thisptr] = res;
+        return res;
+    }
+
     ScalarFieldCoefficientFunction::ScalarFieldCoefficientFunction(shared_ptr<CoefficientFunction> cf, int dim)
         : KFormCoefficientFunction(cf, 0, uint8_t(dim))
     {
@@ -200,10 +754,10 @@ namespace ngfem
         AlternationCoefficientFunction(shared_ptr<CoefficientFunction> ac1, int arank, int adim)
             : T_CoefficientFunction<AlternationCoefficientFunction>(ac1->Dimension(), ac1->IsComplex()), c1(ac1), rank(arank), dim(adim)
         {
-            if (rank < 0 || rank > 4)
-                throw Exception("AlternationCF: only ranks 0-4 supported");
-            if (dim < 1 || dim > 4)
-                throw Exception("AlternationCF: dim must be in {1,2,3,4}");
+            if (rank < 0 || rank > MAX_PERMUTATION_RANK)
+                throw Exception("AlternationCF: only ranks 0-" + ToString(MAX_PERMUTATION_RANK) + " supported");
+            if (dim < 1 || dim > MAX_SPACE_DIM)
+                throw Exception("AlternationCF: dim must be in {1,...," + ToString(MAX_SPACE_DIM) + "}");
             if (rank > dim)
                 throw Exception("AlternationCF: rank exceeds dimension");
 
@@ -225,7 +779,8 @@ namespace ngfem
 
             int comp_dim = this->Dimension();
             valid_indices.reserve(comp_dim);
-            lin_table.resize(size_t(comp_dim) * perms.size(), -1);
+            lin_table.clear();
+            lin_table.reserve(size_t(comp_dim) * perms.size());
 
             std::array<int, 4> multi = {0, 0, 0, 0};
             for (int idx = 0; idx < comp_dim; ++idx)
@@ -258,7 +813,7 @@ namespace ngfem
                         lin += multi[perms[p][j]] * stride;
                         stride *= dim;
                     }
-                    lin_table[size_t(idx) * perms.size() + p] = lin;
+                    lin_table.push_back(lin);
                 }
             }
         }
@@ -294,10 +849,11 @@ namespace ngfem
             c1->NonZeroPattern(ud, input);
 
             values = AutoDiffDiff<1, NonZero>(false);
-            for (int idx : valid_indices)
+            for (size_t vi = 0; vi < valid_indices.size(); ++vi)
             {
+                int idx = valid_indices[vi];
                 auto accum = AutoDiffDiff<1, NonZero>(false);
-                const size_t base = size_t(idx) * perms.size();
+                const size_t base = vi * perms.size();
                 for (size_t p = 0; p < perms.size(); ++p)
                     accum = accum + input(lin_table[base + p]);
                 values(idx) = accum;
@@ -333,15 +889,16 @@ namespace ngfem
             FlatMatrix<T, ORD> input(comp_dim, mir.Size(), temp.Data());
             c1->Evaluate(mir, input);
 
+            // values = T(0);
             for (size_t ip = 0; ip < mir.Size(); ++ip)
             {
                 for (int idx = 0; idx < comp_dim; ++idx)
                     values(idx, ip) = T(0);
-
-                for (int idx : valid_indices)
+                for (size_t vi = 0; vi < valid_indices.size(); ++vi)
                 {
+                    int idx = valid_indices[vi];
                     T accum = T(0);
-                    const size_t base = size_t(idx) * perms.size();
+                    const size_t base = vi * perms.size();
                     for (size_t p = 0; p < perms.size(); ++p)
                     {
                         int lin = lin_table[base + p];
@@ -391,94 +948,47 @@ namespace ngfem
 
     shared_ptr<KFormCoefficientFunction> KFormCF(shared_ptr<CoefficientFunction> cf, int k, int dim)
     {
+        cf = RequireNonNull(std::move(cf), "KFormCF");
         if (k < 0)
             throw Exception("KFormCF: degree must be non-negative");
-        if (k > 8)
-            throw Exception("KFormCF: only ranks up to 8 are supported");
-
-        auto deduce_dim = [&]()
-        {
-            if (dim > 0)
-                return dim;
-            if (cf->Dimensions().Size() > 0)
-                return int(cf->Dimensions()[0]);
-            return 0;
-        };
-
-        int used_dim = deduce_dim();
-        if (k == 0 && used_dim <= 0)
-            throw Exception("KFormCF: dim must be provided for scalar forms");
-
-        if (k == 0)
-        {
-            if (auto sf = dynamic_pointer_cast<ScalarFieldCoefficientFunction>(cf))
-                return sf;
-            return make_shared<ScalarFieldCoefficientFunction>(cf, used_dim);
-        }
-        if (k == 1)
-        {
-            if (auto of = dynamic_pointer_cast<OneFormCoefficientFunction>(cf))
-                return of;
-            return make_shared<OneFormCoefficientFunction>(cf, used_dim);
-        }
-        if (k == 2)
-        {
-            if (auto tf = dynamic_pointer_cast<TwoFormCoefficientFunction>(cf))
-                return tf;
-            return make_shared<TwoFormCoefficientFunction>(cf, used_dim);
-        }
-        if (k == 3)
-        {
-            if (auto tf = dynamic_pointer_cast<ThreeFormCoefficientFunction>(cf))
-                return tf;
-            return make_shared<ThreeFormCoefficientFunction>(cf, used_dim);
-        }
-
-        return make_shared<KFormCoefficientFunction>(cf, uint8_t(k), uint8_t(used_dim));
+        if (k > MAX_FORM_RANK)
+            throw Exception("KFormCF: only ranks up to " + ToString(MAX_FORM_RANK) + " are supported");
+        return WrapKFormImpl(cf, k, dim);
     }
 
+    shared_ptr<DoubleFormCoefficientFunction> DoubleFormCF(shared_ptr<CoefficientFunction> cf, int p, int q, int dim)
+    {
+        cf = RequireNonNull(std::move(cf), "DoubleFormCF");
+        if (p < 0 || q < 0)
+            throw Exception("DoubleFormCF: degrees must be non-negative");
+        if (p + q > MAX_FORM_RANK && !cf->IsZeroCF())
+            throw Exception("DoubleFormCF: only ranks up to " + ToString(MAX_FORM_RANK) + " are supported");
+        return WrapDoubleFormImpl(cf, p, q, dim);
+    }
     shared_ptr<ScalarFieldCoefficientFunction> ScalarFieldCF(shared_ptr<CoefficientFunction> cf, int dim)
     {
-        if (dim <= 0)
-            throw Exception("ScalarFieldCF: dim must be provided for scalar forms");
-        int used_dim = dim;
-        if (cf->Dimension() > 1)
-            throw Exception("ScalarFieldCF: input coefficient must be scalar valued");
-
-        if (auto sf = dynamic_pointer_cast<ScalarFieldCoefficientFunction>(cf))
-            return sf;
-        return make_shared<ScalarFieldCoefficientFunction>(cf, used_dim);
+        cf = RequireNonNull(std::move(cf), "ScalarFieldCF");
+        return WrapSpecializedKForm<ScalarFieldCoefficientFunction>(cf, 0, dim, "ScalarFieldCF");
     }
 
     shared_ptr<OneFormCoefficientFunction> OneFormCF(shared_ptr<CoefficientFunction> cf)
     {
+        cf = RequireNonNull(std::move(cf), "OneFormCF");
         if (cf->Dimensions().Size() != 1)
             throw Exception("OneFormCF: input coefficient must be vector valued");
-
-        int used_dim = cf->Dimension();
-        if (auto of = dynamic_pointer_cast<OneFormCoefficientFunction>(cf))
-            return of;
-        return make_shared<OneFormCoefficientFunction>(cf, used_dim);
+        return WrapSpecializedKForm<OneFormCoefficientFunction>(cf, 1, -1, "OneFormCF");
     }
 
     shared_ptr<TwoFormCoefficientFunction> TwoFormCF(shared_ptr<CoefficientFunction> cf, int dim)
     {
-        int used_dim = dim;
-        if (used_dim <= 0)
-            used_dim = (cf->Dimensions().Size() > 0) ? int(cf->Dimensions()[0]) : 1;
-        if (auto tf = dynamic_pointer_cast<TwoFormCoefficientFunction>(cf))
-            return tf;
-        return make_shared<TwoFormCoefficientFunction>(cf, used_dim);
+        cf = RequireNonNull(std::move(cf), "TwoFormCF");
+        return WrapSpecializedKForm<TwoFormCoefficientFunction>(cf, 2, dim, "TwoFormCF");
     }
 
     shared_ptr<ThreeFormCoefficientFunction> ThreeFormCF(shared_ptr<CoefficientFunction> cf, int dim)
     {
-        int used_dim = dim;
-        if (used_dim <= 0)
-            used_dim = (cf->Dimensions().Size() > 0) ? int(cf->Dimensions()[0]) : 1;
-        if (auto tf = dynamic_pointer_cast<ThreeFormCoefficientFunction>(cf))
-            return tf;
-        return make_shared<ThreeFormCoefficientFunction>(cf, used_dim);
+        cf = RequireNonNull(std::move(cf), "ThreeFormCF");
+        return WrapSpecializedKForm<ThreeFormCoefficientFunction>(cf, 3, dim, "ThreeFormCF");
     }
 
     shared_ptr<KFormCoefficientFunction> ZeroKForm(int k, int dim)
@@ -488,6 +998,15 @@ namespace ngfem
             dims.Append(dim);
         auto zero_cf = ZeroCF(dims);
         return KFormCF(zero_cf, k, dim);
+    }
+
+    shared_ptr<DoubleFormCoefficientFunction> ZeroDoubleForm(int p, int q, int dim)
+    {
+        Array<int> dims;
+        for (int i = 0; i < p + q; ++i)
+            dims.Append(dim);
+        auto zero_cf = ZeroCF(dims);
+        return DoubleFormCF(zero_cf, p, q, dim);
     }
 
     shared_ptr<KFormCoefficientFunction> Wedge(shared_ptr<KFormCoefficientFunction> a, shared_ptr<KFormCoefficientFunction> b)
@@ -503,10 +1022,80 @@ namespace ngfem
             return KFormCF(a->GetCoefficients() * b->GetCoefficients(), k + l, dim);
 
         auto T = TensorProduct(a, b);
-        auto alt = AlternationCF(T, k + l, dim);
-        double scale = 1.0 / double(Factorial(k) * Factorial(l));
-        auto out = scale * alt;
-        return KFormCF(out, k + l, dim);
+        const auto &shuffle_data = GetSignedWedgeOrders(k, l);
+        shared_ptr<CoefficientFunction> accum;
+        for (size_t p = 0; p < shuffle_data.orders.size(); ++p)
+        {
+            shared_ptr<CoefficientFunction> term = PermuteTensorCF(T, shuffle_data.orders[p]);
+            if (shuffle_data.signs[p] == -1)
+                term = (-1.0) * term;
+            accum = accum ? (accum + term) : term;
+        }
+
+        return KFormCF(accum, k + l, dim);
+    }
+
+    shared_ptr<DoubleFormCoefficientFunction> Wedge(shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<DoubleFormCoefficientFunction> b)
+    {
+        if (a->DimensionOfSpace() != b->DimensionOfSpace())
+            throw Exception("Wedge: input double-forms must have the same dimension of space");
+        int dim = a->DimensionOfSpace();
+        int p = a->LeftDegree();
+        int q = a->RightDegree();
+        int r = b->LeftDegree();
+        int s = b->RightDegree();
+
+        if (p + r > dim || q + s > dim)
+            return ZeroDoubleForm(p + r, q + s, dim);
+
+        auto T = TensorProduct(a, b);
+        int total = p + q + r + s;
+        std::vector<int> order;
+        order.reserve(total);
+        for (int i = 0; i < p; ++i)
+            order.push_back(i);
+        for (int i = 0; i < r; ++i)
+            order.push_back(p + q + i);
+        for (int i = 0; i < q; ++i)
+            order.push_back(p + i);
+        for (int i = 0; i < s; ++i)
+            order.push_back(p + q + r + i);
+
+        auto reordered = PermuteTensorCF(T, order);
+        const int left_len = p + r;
+        const int right_len = q + s;
+        const auto &left_data = GetSignedPermutations(PermutationSpec{PermutationFamily::Shuffle, p, r});
+        const auto &right_data = GetSignedPermutations(PermutationSpec{PermutationFamily::Shuffle, q, s});
+
+        shared_ptr<CoefficientFunction> accum;
+        for (size_t pl = 0; pl < left_data.perms.size(); ++pl)
+        {
+            const auto &perm_left = left_data.perms[pl];
+            auto order_left = std::vector<int>(size_t(total));
+            for (int i = 0; i < total; ++i)
+                order_left[size_t(i)] = i;
+            for (int i = 0; i < left_len; ++i)
+                order_left[size_t(i)] = perm_left[size_t(i)];
+            auto left_tf = PermuteTensorCF(reordered, order_left);
+            int sign_left = left_data.signs[pl];
+
+            for (size_t pr = 0; pr < right_data.perms.size(); ++pr)
+            {
+                const auto &perm_right = right_data.perms[pr];
+                auto order_right = std::vector<int>(size_t(total));
+                for (int i = 0; i < total; ++i)
+                    order_right[size_t(i)] = i;
+                for (int i = 0; i < right_len; ++i)
+                    order_right[size_t(left_len + i)] = left_len + perm_right[size_t(i)];
+                shared_ptr<CoefficientFunction> term = PermuteTensorCF(left_tf, order_right);
+                int sign = sign_left * right_data.signs[pr];
+                if (sign == -1)
+                    term = (-1.0) * term;
+                accum = accum ? (accum + term) : term;
+            }
+        }
+
+        return DoubleFormCF(accum, p + r, q + s, dim);
     }
 
     shared_ptr<KFormCoefficientFunction> ExteriorDerivative(shared_ptr<KFormCoefficientFunction> a)
@@ -527,10 +1116,9 @@ namespace ngfem
     shared_ptr<KFormCoefficientFunction> HodgeStar(shared_ptr<KFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb)
     {
         int ambient_dim = M.Dimension();
-        if (vb == BBND)
-            throw Exception("HodgeStar: not implemented for BBND (codimension-2) yet");
-
-        int n = (vb == VOL) ? ambient_dim : ambient_dim - 1;
+        if (vb != VOL && vb != BND && vb != BBND)
+            throw Exception("HodgeStar: only implemented for VOL, BND, and BBND");
+        int n = (vb == VOL) ? ambient_dim : (vb == BND ? ambient_dim - 1 : ambient_dim - 2);
         int k = a->Degree();
         if (k > n)
             throw Exception("HodgeStar: form degree exceeds manifold dimension");
@@ -538,16 +1126,10 @@ namespace ngfem
         if (a->IsZeroCF())
             return ZeroKForm(n - k, vb == VOL ? n : ambient_dim);
 
-        // Boundary star via ambient star followed by contraction with the unit normal:
-        //   *star_bnd(alpha) = i_nu (star_vol(alpha))*
         if (vb == BND)
-        {
-            auto star_vol = HodgeStar(a, M, VOL);
-            auto normal = M.GetNV();
-
-            auto contracted = M.Contraction(star_vol, normal); // reduce degree by 1
-            return KFormCF(contracted->GetCoefficients(), n - k, ambient_dim);
-        }
+            return BoundaryHodgeStarKForm(a, M);
+        if (vb == BBND)
+            return BBNDHodgeStarKForm(a, M);
 
         shared_ptr<TensorFieldCoefficientFunction> raised = a;
         for (int i = 0; i < k; ++i)
@@ -576,6 +1158,145 @@ namespace ngfem
         auto scaled = 1 / double(Factorial(k)) * contracted;
 
         return KFormCF(scaled, n - k, n);
+    }
+
+    shared_ptr<KFormCoefficientFunction> InverseHodgeStar(shared_ptr<KFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb)
+    {
+        if (vb != VOL && vb != BND && vb != BBND)
+            throw Exception("InverseHodgeStar: only implemented for VOL, BND, and BBND");
+        int n = (vb == VOL) ? M.Dimension() : (vb == BND ? M.Dimension() - 1 : M.Dimension() - 2);
+        int k = a->Degree();
+        int exponent = k * (n - k);
+        int sign = (exponent % 2 == 0) ? 1 : -1;
+
+        auto star = HodgeStar(a, M, vb);
+        if (sign == 1)
+            return star;
+        return KFormCF((-1.0) * star->GetCoefficients(), n - k, vb == VOL ? n : M.Dimension());
+    }
+
+    shared_ptr<DoubleFormCoefficientFunction> HodgeStar(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, int slot)
+    {
+        int ambient_dim = M.Dimension();
+        if (vb != VOL && vb != BND && vb != BBND)
+            throw Exception("HodgeStar (double-form): only implemented for VOL, BND, and BBND");
+        int n = (vb == VOL) ? ambient_dim : (vb == BND ? ambient_dim - 1 : ambient_dim - 2);
+        int p = a->LeftDegree();
+        int q = a->RightDegree();
+        if (p > n || q > n)
+            throw Exception("HodgeStar (double-form): form degree exceeds manifold dimension");
+
+        if (a->IsZeroCF())
+            return ZeroDoubleForm(n - p, n - q, vb == VOL ? n : ambient_dim);
+
+        if (slot == 0)
+        {
+            if (vb == BBND)
+            {
+                if (n == 0)
+                    return DoubleFormCF(a->GetCoefficients(), 0, q, ambient_dim);
+                auto n1 = M.GetEdgeNormal(0);
+                auto n2 = M.GetEdgeConormal(0);
+                auto star_vol_left = BlockHodgeStar(a, 0, p, ambient_dim, M);
+                auto left_tf = TensorFieldCF(star_vol_left, std::string(size_t(ambient_dim - p + q), '1'));
+                auto c1 = M.Contraction(left_tf, n1, 0);
+                auto c2 = M.Contraction(c1, n2, 0);
+                return DoubleFormCF(c2->GetCoefficients(), n - p, q, ambient_dim);
+            }
+            if (vb == BND)
+            {
+                auto star_vol_left = BlockHodgeStar(a, 0, p, ambient_dim, M);
+                auto left_tf = TensorFieldCF(star_vol_left, std::string(size_t(ambient_dim - p + q), '1'));
+                auto contracted = M.Contraction(left_tf, M.GetNV(), 0);
+                double sign = (p % 2 == 0) ? 1.0 : -1.0;
+                return DoubleFormCF(sign * contracted->GetCoefficients(), n - p, q, ambient_dim);
+            }
+            auto left_star = BlockHodgeStar(a, 0, p, n, M);
+            return DoubleFormCF(left_star, n - p, q, n);
+        }
+
+        if (slot == 1)
+        {
+            if (vb == BBND)
+            {
+                if (n == 0)
+                    return DoubleFormCF(a->GetCoefficients(), p, 0, ambient_dim);
+                auto n1 = M.GetEdgeNormal(0);
+                auto n2 = M.GetEdgeConormal(0);
+                auto star_vol_right = BlockHodgeStar(a, p, q, ambient_dim, M);
+                auto right_tf = TensorFieldCF(star_vol_right, std::string(size_t(p + ambient_dim - q), '1'));
+                auto c1 = M.Contraction(right_tf, n1, size_t(p));
+                auto c2 = M.Contraction(c1, n2, size_t(p));
+                return DoubleFormCF(c2->GetCoefficients(), p, n - q, ambient_dim);
+            }
+            if (vb == BND)
+            {
+                auto star_vol_right = BlockHodgeStar(a, p, q, ambient_dim, M);
+                auto right_tf = TensorFieldCF(star_vol_right, std::string(size_t(p + ambient_dim - q), '1'));
+                auto contracted = M.Contraction(right_tf, M.GetNV(), size_t(p));
+                double sign = (q % 2 == 0) ? 1.0 : -1.0;
+                return DoubleFormCF(sign * contracted->GetCoefficients(), p, n - q, ambient_dim);
+            }
+            auto right_star = BlockHodgeStar(a, p, q, n, M);
+            return DoubleFormCF(right_star, p, n - q, n);
+        }
+
+        if (vb == BBND)
+            return BBNDHodgeStarDoubleForm(a, M);
+
+        if (vb == BND)
+            return BoundaryHodgeStarDoubleForm(a, M);
+
+        auto left_star = BlockHodgeStar(a, 0, p, n, M);
+        auto left_tf = TensorFieldCF(left_star, std::string(size_t(n - p + q), '1'));
+        auto right_star = BlockHodgeStar(left_tf, n - p, q, n, M);
+
+        return DoubleFormCF(right_star, n - p, n - q, n);
+    }
+
+    shared_ptr<DoubleFormCoefficientFunction> InverseHodgeStar(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, int slot)
+    {
+        if (vb != VOL && vb != BND && vb != BBND)
+            throw Exception("InverseHodgeStar (double-form): only implemented for VOL, BND, and BBND");
+        int n = (vb == VOL) ? M.Dimension() : (vb == BND ? M.Dimension() - 1 : M.Dimension() - 2);
+        int p = a->LeftDegree();
+        int q = a->RightDegree();
+        int exponent = 0;
+        if (slot == 0)
+            exponent = p * (n - p);
+        else if (slot == 1)
+            exponent = q * (n - q);
+        else
+            exponent = p * (n - p) + q * (n - q);
+        int sign = (exponent % 2 == 0) ? 1 : -1;
+
+        auto star = HodgeStar(a, M, vb, slot);
+        if (sign == 1)
+            return star;
+        return DoubleFormCF((-1.0) * star->GetCoefficients(), star->LeftDegree(), star->RightDegree(), vb == VOL ? n : M.Dimension());
+    }
+
+    shared_ptr<ScalarFieldCoefficientFunction> SlotInnerProduct(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, bool forms)
+    {
+        return M.SlotInnerProduct(a, vb, forms);
+    }
+
+    shared_ptr<DoubleFormCoefficientFunction> SwapDoubleFormSlots(shared_ptr<DoubleFormCoefficientFunction> a)
+    {
+        int p = a->LeftDegree();
+        int q = a->RightDegree();
+        int dim = a->DimensionOfSpace();
+        int total = p + q;
+
+        std::vector<int> order;
+        order.reserve(total);
+        for (int i = 0; i < q; ++i)
+            order.push_back(p + i);
+        for (int i = 0; i < p; ++i)
+            order.push_back(i);
+
+        auto reordered = PermuteTensorCF(a, order);
+        return DoubleFormCF(reordered, q, p, dim);
     }
 }
 
@@ -611,16 +1332,37 @@ void ExportKForms(py::module m)
              { return ExteriorDerivative(a); })
         .def("star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
              { return HodgeStar(a, *M, vb); }, py::arg("M"), py::arg("vb") = VOL)
+        .def("inv_star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
+             { return InverseHodgeStar(a, *M, vb); }, py::arg("M"), py::arg("vb") = VOL)
         .def_property_readonly("coef", &KFormCoefficientFunction::GetCoefficients);
+
+    py::class_<DoubleFormCoefficientFunction,
+               TensorFieldCoefficientFunction,
+               shared_ptr<DoubleFormCoefficientFunction>>(m, "DoubleForm")
+        .def(py::init([](shared_ptr<CoefficientFunction> cf, int p, int q, int dim)
+                      { return DoubleFormCF(cf, p, q, dim); }),
+             py::arg("cf"), py::arg("p"), py::arg("q"), py::arg("dim"))
+        .def_property_readonly("degree_left", &DoubleFormCoefficientFunction::LeftDegree)
+        .def_property_readonly("degree_right", &DoubleFormCoefficientFunction::RightDegree)
+        .def_property_readonly("dim_space", &DoubleFormCoefficientFunction::DimensionOfSpace)
+        .def("wedge", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<DoubleFormCoefficientFunction> b)
+             { return Wedge(a, b); }, py::arg("b"))
+        .def("star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, const std::string &slot)
+             { return HodgeStar(a, *M, vb, ParseDoubleFormSlot(slot)); }, py::arg("M"), py::arg("vb") = VOL, py::arg("slot") = "both")
+        .def("inv_star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, const std::string &slot)
+             { return InverseHodgeStar(a, *M, vb, ParseDoubleFormSlot(slot)); }, py::arg("M"), py::arg("vb") = VOL, py::arg("slot") = "both")
+        .def_property_readonly("trans", [](shared_ptr<DoubleFormCoefficientFunction> a)
+                               { return SwapDoubleFormSlots(a); })
+        .def_property_readonly("coef", &DoubleFormCoefficientFunction::GetCoefficients);
 
     py::class_<ScalarFieldCoefficientFunction,
                KFormCoefficientFunction,
                shared_ptr<ScalarFieldCoefficientFunction>>(m, "ScalarField")
         .def(py::init([](shared_ptr<CoefficientFunction> cf, int dim)
                       { return ScalarFieldCF(cf, dim); }),
-             py::arg("cf"), py::arg("dim") = -1)
+             py::arg("cf"), py::arg("dim"))
         .def_static("from_cf", [](shared_ptr<CoefficientFunction> cf, int dim)
-                    { return ScalarFieldCF(cf, dim); }, py::arg("cf"), py::arg("dim") = -1);
+                    { return ScalarFieldCF(cf, dim); }, py::arg("cf"), py::arg("dim"));
 
     py::class_<OneFormCoefficientFunction,
                KFormCoefficientFunction,
@@ -651,11 +1393,21 @@ void ExportKForms(py::module m)
 
     m.def("Wedge", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<KFormCoefficientFunction> b)
           { return Wedge(a, b); }, py::arg("a"), py::arg("b"));
+    m.def("Wedge", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<DoubleFormCoefficientFunction> b)
+          { return Wedge(a, b); }, py::arg("a"), py::arg("b"));
 
     m.def("d", [](shared_ptr<KFormCoefficientFunction> a)
           { return ExteriorDerivative(a); }, py::arg("a"));
     m.def("star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
           { return M->Star(a, vb); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL);
+    m.def("inv_star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
+          { return InverseHodgeStar(a, *M, vb); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL);
+    m.def("star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, const std::string &slot)
+          { return HodgeStar(a, *M, vb, ParseDoubleFormSlot(slot)); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL, py::arg("slot") = "both");
+    m.def("inv_star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, const std::string &slot)
+          { return InverseHodgeStar(a, *M, vb, ParseDoubleFormSlot(slot)); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL, py::arg("slot") = "both");
+    m.def("slot_inner_product", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, bool forms)
+          { return SlotInnerProduct(a, *M, vb, forms); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL, py::arg("forms") = true);
 
     m.def("delta", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M)
           { return M->Coderivative(a); }, py::arg("a"), py::arg("M"));

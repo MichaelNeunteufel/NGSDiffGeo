@@ -34,6 +34,8 @@
 __pycache__/
 dist/
 build/
+build-debug/
+build-release/
 logs/
 suggestions/
 src/_version.py
@@ -42,4 +44,9 @@ src/_version.py
 
 .DS_Store
 
+.codex
+.vscode
+
+
 ideas.txt
+code_conventions.txt

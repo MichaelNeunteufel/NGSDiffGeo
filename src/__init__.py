@@ -15,17 +15,30 @@ from ngsolve.fem import Einsum
 from .ngsdiffgeo import *
 
 from .wrappers import (
+    FormalZeroBase,
+    FormalZeroKForm,
+    FormalZeroDoubleForm,
     ScalarField,
     OneForm,
     TwoForm,
     ThreeForm,
     KForm,
+    DoubleForm,
     VectorField,
     TensorField,
     Wedge,
+    Sym,
+    WedgePower,
     d,
     star,
+    inv_star,
+    slot_inner_product,
     delta,
+    is_formal_zero,
+    is_formal_zero_kform,
+    is_formal_zero_doubleform,
+    materialize_zero,
+    compare_formal_zero,
     RiemannianManifold,
 )
 from .manifolds import (

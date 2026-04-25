@@ -1,6 +1,6 @@
 import ngsolve
 from ngsolve.fem import Einsum
-from .wrappers import TensorField
+from .wrappers import TensorField, ScalarField, DoubleForm
 
 __all__ = [
     "EuclideanMetric",
@@ -22,16 +22,23 @@ class EuclideanMetric:
     """
 
     def __init__(self, dim=2):
-        self.metric = ngsolve.Id(dim)
+        self.metric = TensorField(ngsolve.Id(dim), "11")
 
         # flat manifold
         self.chr1 = ngsolve.CF((0,) * dim**3, dims=(dim, dim, dim))
         self.chr2 = ngsolve.CF((0,) * dim**3, dims=(dim, dim, dim))
-        self.Riemann = ngsolve.CF((0,) * dim**4, dims=(dim, dim, dim, dim))
-        self.Ricci = ngsolve.CF((0,) * dim**2, dims=(dim, dim))
-        self.scalar = ngsolve.CF(0)
-        self.Einstein = ngsolve.CF((0,) * dim**2, dims=(dim, dim))
-        self.curvature = ngsolve.CF(0)
+        self.Riemann = DoubleForm(
+            ngsolve.CF((0,) * dim**4, dims=(dim, dim, dim, dim)), dim=dim, p=2, q=2
+        )
+        self.Ricci = TensorField(ngsolve.CF((0,) * dim**2, dims=(dim, dim)), "11")
+        self.scalar = ScalarField(ngsolve.CF(0), dim=dim)
+        self.Einstein = TensorField(ngsolve.CF((0,) * dim**2, dims=(dim, dim)), "11")
+        if dim == 2:
+            self.curvature = ScalarField(ngsolve.CF(0), dim=dim)
+        else:
+            self.curvature = TensorField(
+                ngsolve.CF((0,) * dim**2, dims=(dim, dim)), "00"
+            )
         return
 
 
@@ -42,7 +49,9 @@ class Sphere2:
 
     def __init__(self):
         # metric tensor
-        self.metric = ngsolve.CF((1, 0, 0, ngsolve.sin(ngsolve.x) ** 2), dims=(2, 2))
+        self.metric = TensorField(
+            ngsolve.CF((1, 0, 0, ngsolve.sin(ngsolve.x) ** 2), dims=(2, 2)), "11"
+        )
         # Christoffel symbols of the first kind Gamma_{ijk}=0.5*(d_ig_jk+d_jg_ik-d_kg_ij)
         self.chr1 = ngsolve.CF(
             (
@@ -71,36 +80,43 @@ class Sphere2:
             ),
             dims=(2, 2, 2),
         )
-        # Riemann curvature tensor R_{ijkl}=d_jGamma_{ikl}-d_kGamma_{ijl}+Gamma_{ijm}Gamma_{mkl}-Gamma_{ikm}Gamma_{mjl}
-        self.Riemann = ngsolve.CF(
-            (
-                0,
-                0,
-                0,
-                0,
-                0,
-                -(ngsolve.sin(ngsolve.x) ** 2),
-                ngsolve.sin(ngsolve.x) ** 2,
-                0,
-                0,
-                ngsolve.sin(ngsolve.x) ** 2,
-                -(ngsolve.sin(ngsolve.x) ** 2),
-                0,
-                0,
-                0,
-                0,
-                0,
+        # Riemann curvature tensor R_{ijkl}=d_iGamma_{jkl}-d_jGamma_{ikl}+Gamma_{jlm}Gamma_{ik}^m-Gamma_{ilm}Gamma_{jk}^m
+        self.Riemann = DoubleForm(
+            ngsolve.CF(
+                (
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    -(ngsolve.sin(ngsolve.x) ** 2),
+                    ngsolve.sin(ngsolve.x) ** 2,
+                    0,
+                    0,
+                    ngsolve.sin(ngsolve.x) ** 2,
+                    -(ngsolve.sin(ngsolve.x) ** 2),
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                ),
+                dims=(2, 2, 2, 2),
             ),
-            dims=(2, 2, 2, 2),
+            dim=2,
+            p=2,
+            q=2,
         )
-        # Ricci curvature tensor R_{ij}=g^{kl}R_{kilj}=-g^{kl}R_{ikjl}
-        self.Ricci = ngsolve.CF((1, 0, 0, ngsolve.sin(ngsolve.x) ** 2), dims=(2, 2))
+        # Ricci curvature tensor R_{ij}=g^{kl}R_{kijl}
+        self.Ricci = TensorField(
+            ngsolve.CF((1, 0, 0, ngsolve.sin(ngsolve.x) ** 2), dims=(2, 2)), "11"
+        )
         # Scalar curvature R=g^{ij}R_{ij}
-        self.scalar = ngsolve.CF(2)
+        self.scalar = ScalarField(ngsolve.CF(2), dim=2)
         # Einstein tensor G_{ij}=R_{ij}-0.5*g_{ij}R
-        self.Einstein = ngsolve.CF((0, 0, 0, 0), dims=(2, 2))
+        self.Einstein = TensorField(ngsolve.CF((0, 0, 0, 0), dims=(2, 2)), "11")
         # Curvature operator is the Gauss curvature in 2D
-        self.curvature = ngsolve.CF(1)
+        self.curvature = ScalarField(ngsolve.CF(1), dim=2)
         return
 
 
@@ -112,19 +128,22 @@ class Sphere3:
 
     def __init__(self):
         # metric
-        self.metric = ngsolve.CF(
-            (
-                1,
-                0,
-                0,
-                0,
-                ngsolve.sin(ngsolve.x) ** 2,
-                0,
-                0,
-                0,
-                ngsolve.sin(ngsolve.x) ** 2 * ngsolve.sin(ngsolve.y) ** 2,
+        self.metric = TensorField(
+            ngsolve.CF(
+                (
+                    1,
+                    0,
+                    0,
+                    0,
+                    ngsolve.sin(ngsolve.x) ** 2,
+                    0,
+                    0,
+                    0,
+                    ngsolve.sin(ngsolve.x) ** 2 * ngsolve.sin(ngsolve.y) ** 2,
+                ),
+                dims=(3, 3),
             ),
-            dims=(3, 3),
+            "11",
         )
         # Christoffel symbols of the first kind Gamma_{ijk}=0.5*(d_ig_jk+d_jg_ik-d_kg_ij)
         self.chr1 = ngsolve.CF(
@@ -164,7 +183,9 @@ class Sphere3:
                 -ngsolve.sin(ngsolve.x)
                 * ngsolve.cos(ngsolve.x)
                 * ngsolve.sin(ngsolve.y) ** 2,
-                -(ngsolve.sin(ngsolve.x) ** 3) * ngsolve.cos(ngsolve.y),
+                -(ngsolve.sin(ngsolve.x) ** 2)
+                * ngsolve.sin(ngsolve.y)
+                * ngsolve.cos(ngsolve.y),
                 0,
             ),
             dims=(3, 3, 3),
@@ -205,121 +226,39 @@ class Sphere3:
             dims=(3, 3, 3),
         )
 
-        # is correct, but with Einsum it's faster
-        # Q00 = (ngsolve.sin(ngsolve.x) ** 4) * ngsolve.sin(ngsolve.y) ** 2
-        # Q11 = ngsolve.sin(ngsolve.x) ** 2 * ngsolve.sin(ngsolve.y) ** 2
-        # Q22 = ngsolve.sin(ngsolve.x) ** 2
-        # self.Riemann = ngsolve.CF(
-        #     (
-        #         0,  # 0000
-        #         0,  # 0001
-        #         0,  # 0002
-        #         0,  # 0010
-        #         0,  # 0011
-        #         0,  # 0012
-        #         0,  # 0020
-        #         0,  # 0021
-        #         0,  # 0022
-        #         0,  # 0100
-        #         -Q22,  # 0101
-        #         0,  # 0102
-        #         Q22,  # 0110
-        #         0,  # 0111
-        #         0,  # 0112
-        #         0,  # 0120
-        #         0,  # 0121
-        #         0,  # 0122
-        #         0,  # 0200
-        #         0,  # 0201
-        #         -Q11,  # 0202
-        #         0,  # 0210
-        #         0,  # 0211
-        #         0,  # 0212
-        #         Q11,  # 0220
-        #         0,  # 0221
-        #         0,  # 0222
-        #         0,  # 1000
-        #         Q22,  # 1001
-        #         0,  # 1002
-        #         -Q22,  # 1010
-        #         0,  # 1011
-        #         0,  # 1012
-        #         0,  # 1020
-        #         0,  # 1021
-        #         0,  # 1022
-        #         0,  # 1100
-        #         0,  # 1101
-        #         0,  # 1102
-        #         0,  # 1110
-        #         0,  # 1111
-        #         0,  # 1112
-        #         0,  # 1120
-        #         0,  # 1121
-        #         0,  # 1122
-        #         0,  # 1200
-        #         0,  # 1201
-        #         0,  # 1202
-        #         0,  # 1210
-        #         0,  # 1211
-        #         -Q00,  # 1212
-        #         0,  # 1220
-        #         Q00,  # 1221
-        #         0,  # 1222
-        #         0,  # 2000
-        #         0,  # 2001
-        #         Q11,  # 2002
-        #         0,  # 2010
-        #         0,  # 2011
-        #         0,  # 2012
-        #         -Q11,  # 2020
-        #         0,  # 2021
-        #         0,  # 2022
-        #         0,  # 2100
-        #         0,  # 2101
-        #         0,  # 2102
-        #         0,  # 2110
-        #         0,  # 2111
-        #         Q00,  # 2112
-        #         0,  # 2120
-        #         -Q00,  # 2121
-        #         0,  # 2122
-        #         0,  # 2200
-        #         0,  # 2201
-        #         0,  # 2202
-        #         0,  # 2210
-        #         0,  # 2211
-        #         0,  # 2212
-        #         0,  # 2220
-        #         0,  # 2221
-        #         0,  # 2222
-        #     ),
-        #     dims=(3, 3, 3, 3),
-        # )
-
-        self.Ricci = 2 * self.metric
-        self.scalar = ngsolve.CF(6)
-        self.Einstein = -self.metric
+        self.Ricci = TensorField(2 * self.metric, "11")
+        self.scalar = ScalarField(ngsolve.CF(6), dim=3)
+        self.Einstein = TensorField(-self.metric, "11")
         # curvature = g^{-1}
-        self.curvature = ngsolve.CF(
-            (
-                1,
-                0,
-                0,
-                0,
-                1 / ngsolve.sin(ngsolve.x) ** 2,
-                0,
-                0,
-                0,
-                1 / (ngsolve.sin(ngsolve.x) ** 2 * ngsolve.sin(ngsolve.y) ** 2),
+        self.curvature = TensorField(
+            ngsolve.CF(
+                (
+                    1,
+                    0,
+                    0,
+                    0,
+                    1 / ngsolve.sin(ngsolve.x) ** 2,
+                    0,
+                    0,
+                    0,
+                    1 / (ngsolve.sin(ngsolve.x) ** 2 * ngsolve.sin(ngsolve.y) ** 2),
+                ),
+                dims=(3, 3),
             ),
-            dims=(3, 3),
+            "00",
         )
-
-        self.Riemann = -ngsolve.Det(self.metric) * Einsum(
-            "ija,klb,ab->ijkl",
-            ngsolve.fem.LeviCivitaSymbol(3),
-            ngsolve.fem.LeviCivitaSymbol(3),
-            self.curvature,
+        # Riemann curvature tensor R_{ijkl}=d_iGamma_{jkl}-d_jGamma_{ikl}+Gamma_{jlm}Gamma_{ik}^m-Gamma_{ilm}Gamma_{jk}^m
+        self.Riemann = DoubleForm(
+            -ngsolve.Det(self.metric)
+            * Einsum(
+                "ija,klb,ab->ijkl",
+                ngsolve.fem.LeviCivitaSymbol(3),
+                ngsolve.fem.LeviCivitaSymbol(3),
+                self.curvature,
+            ),
+            dim=3,
+            p=2,
+            q=2,
         )
         return
 
@@ -330,7 +269,9 @@ class PoincareDisk:
     """
 
     def __init__(self):
-        self.metric = 4 / (1 - ngsolve.x**2 - ngsolve.y**2) ** 2 * ngsolve.Id(2)
+        self.metric = TensorField(
+            4 / (1 - ngsolve.x**2 - ngsolve.y**2) ** 2 * ngsolve.Id(2), "11"
+        )
 
         self.chr1 = (
             8
@@ -367,17 +308,22 @@ class PoincareDisk:
             )
         )
 
-        self.Riemann = (
+        self.Riemann = DoubleForm(
             16
             / (1 - ngsolve.x**2 - ngsolve.y**2) ** 4
             * ngsolve.CF(
                 (0, 0, 0, 0, 0, 1, -1, 0, 0, -1, 1, 0, 0, 0, 0, 0), dims=(2, 2, 2, 2)
-            )
+            ),
+            dim=2,
+            p=2,
+            q=2,
         )
-        self.Ricci = -4 / (1 - ngsolve.x**2 - ngsolve.y**2) ** 2 * ngsolve.Id(2)
-        self.scalar = ngsolve.CF(-2)
-        self.Einstein = ngsolve.CF((0, 0, 0, 0), dims=(2, 2))
-        self.curvature = ngsolve.CF(-1)
+        self.Ricci = TensorField(
+            -4 / (1 - ngsolve.x**2 - ngsolve.y**2) ** 2 * ngsolve.Id(2), "11"
+        )
+        self.scalar = ScalarField(ngsolve.CF(-2), dim=2)
+        self.Einstein = TensorField(ngsolve.CF((0, 0, 0, 0), dims=(2, 2)), "11")
+        self.curvature = ScalarField(ngsolve.CF(-1), dim=2)
         return
 
 
@@ -390,22 +336,25 @@ class HyperbolicH2:
     def __init__(self):
         self.metric = TensorField(1 / ngsolve.y**2 * ngsolve.Id(2), "11")
         self.chr1 = (
-            -1 / ngsolve.y**3 * ngsolve.CF((0, -1, 1, 0, 1, 0, 0, 1), dims=(2, 2, 2))
+            -1 / ngsolve.y**3 * ngsolve.CF((0, -1, 1, 0, 1, 0, 0, -1), dims=(2, 2, 2))
         )
         self.chr2 = (
             -1 / ngsolve.y * ngsolve.CF((0, -1, 1, 0, 1, 0, 0, 1), dims=(2, 2, 2))
         )
-        self.Riemann = (
+        self.Riemann = DoubleForm(
             1
             / ngsolve.y**4
             * ngsolve.CF(
                 (0, 0, 0, 0, 0, 1, -1, 0, 0, -1, 1, 0, 0, 0, 0, 0), dims=(2, 2, 2, 2)
-            )
+            ),
+            dim=2,
+            p=2,
+            q=2,
         )
-        self.Ricci = -1 / ngsolve.y**2 * ngsolve.Id(2)
-        self.scalar = ngsolve.CF(-2)
-        self.Einstein = ngsolve.CF((0, 0, 0, 0), dims=(2, 2))
-        self.curvature = ngsolve.CF(-1)
+        self.Ricci = TensorField(-1 / ngsolve.y**2 * ngsolve.Id(2), "11")
+        self.scalar = ScalarField(ngsolve.CF(-2), dim=2)
+        self.Einstein = TensorField(ngsolve.CF((0, 0, 0, 0), dims=(2, 2)), "11")
+        self.curvature = ScalarField(ngsolve.CF(-1), dim=2)
         return
 
 
@@ -416,7 +365,7 @@ class HyperbolicH3:
     """
 
     def __init__(self):
-        self.metric = 1 / ngsolve.z**2 * ngsolve.Id(3)
+        self.metric = TensorField(1 / ngsolve.z**2 * ngsolve.Id(3), "11")
         self.chr1 = (
             -1
             / ngsolve.z**3
@@ -489,12 +438,23 @@ class HyperbolicH3:
                 dims=(3, 3, 3),
             )
         )
-        self.Riemann = None
-        self.Ricci = -2 / ngsolve.z**2 * ngsolve.Id(3)
-        self.scalar = -6
+        self.Ricci = TensorField(-2 / ngsolve.z**2 * ngsolve.Id(3), "11")
+        self.scalar = ScalarField(ngsolve.CF(-6), dim=3)
         # G_{ij}=R_{ij}-0.5*g_{ij}R
-        self.Einstein = 1 / ngsolve.z**2 * ngsolve.Id(3)
-        self.curvature = ngsolve.z**2 * ngsolve.Id(3)
+        self.Einstein = TensorField(1 / ngsolve.z**2 * ngsolve.Id(3), "11")
+        self.Riemann = DoubleForm(
+            1
+            / ngsolve.z**4
+            * (
+                Einsum("ik,jl->ijkl", self.metric, self.metric)
+                - Einsum("il,jk->ijkl", self.metric, self.metric)
+            ),
+            dim=3,
+            p=2,
+            q=2,
+        )
+
+        self.curvature = TensorField(-(ngsolve.z**2) * ngsolve.Id(3), "00")
         return
 
 
@@ -504,8 +464,12 @@ class Heisenberg:
     """
 
     def __init__(self):
-        self.metric = ngsolve.CF(
-            (1, 0, 0, 0, 1 + ngsolve.x**2, -ngsolve.x, 0, -ngsolve.x, 1), dims=(3, 3)
+        self.metric = TensorField(
+            ngsolve.CF(
+                (1, 0, 0, 0, 1 + ngsolve.x**2, -ngsolve.x, 0, -ngsolve.x, 1),
+                dims=(3, 3),
+            ),
+            "11",
         )
         self.chr1 = ngsolve.CF(
             (
@@ -571,24 +535,144 @@ class Heisenberg:
             ),
             dims=(3, 3, 3),
         )
-        self.Riemann = None
-        self.Ricci = ngsolve.CF(
-            (
-                -0.5,
-                0,
-                0,
-                0,
-                0.5 * (ngsolve.x**2 - 1),
-                -ngsolve.x / 2,
-                0,
-                -ngsolve.x / 2,
-                0,
+        self.Ricci = TensorField(
+            ngsolve.CF(
+                (
+                    -0.5,
+                    0,
+                    0,
+                    0,
+                    0.5 * (ngsolve.x**2 - 1),
+                    -ngsolve.x / 2,
+                    0,
+                    -ngsolve.x / 2,
+                    0.5,  # 0?
+                ),
+                dims=(3, 3),
             ),
-            dims=(3, 3),
+            "11",
         )
-        self.scalar = -0.5
-        self.Einstein = self.Ricci - 0.5 * self.scalar * self.metric
-        self.curvature = None
+        self.scalar = ScalarField(ngsolve.CF(-0.5), dim=3)
+        self.Einstein = TensorField(self.Ricci - 0.5 * self.scalar * self.metric, "11")
+        self.Riemann = DoubleForm(
+            ngsolve.CF(
+                (
+                    # i=0, j=0  (k,l block)
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    # i=0, j=1
+                    0,
+                    (3 - ngsolve.x**2) / 4,
+                    ngsolve.x / 4,
+                    (ngsolve.x**2 - 3) / 4,
+                    0,
+                    0,
+                    -ngsolve.x / 4,
+                    0,
+                    0,
+                    # i=0, j=2
+                    0,
+                    ngsolve.x / 4,
+                    -1 / 4,
+                    -ngsolve.x / 4,
+                    0,
+                    0,
+                    1 / 4,
+                    0,
+                    0,
+                    # i=1, j=0
+                    0,
+                    (ngsolve.x**2 - 3) / 4,
+                    -ngsolve.x / 4,
+                    (3 - ngsolve.x**2) / 4,
+                    0,
+                    0,
+                    ngsolve.x / 4,
+                    0,
+                    0,
+                    # i=1, j=1
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    # i=1, j=2
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    -1 / 4,
+                    0,
+                    1 / 4,
+                    0,
+                    # i=2, j=0
+                    0,
+                    -ngsolve.x / 4,
+                    1 / 4,
+                    ngsolve.x / 4,
+                    0,
+                    0,
+                    -1 / 4,
+                    0,
+                    0,
+                    # i=2, j=1
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1 / 4,
+                    0,
+                    -1 / 4,
+                    0,
+                    # i=2, j=2
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                ),
+                dims=(3, 3, 3, 3),
+            ),
+            dim=3,
+            p=2,
+            q=2,
+        )
+
+        self.curvature = TensorField(
+            ngsolve.CF(
+                (
+                    1 / 4,
+                    0,
+                    0,
+                    0,
+                    1 / 4,
+                    ngsolve.x / 4,
+                    0,
+                    ngsolve.x / 4,
+                    ngsolve.x**2 / 4 - 3 / 4,
+                ),
+                dims=(3, 3),
+            ),
+            "00",
+        )
+
         return
 
 
@@ -635,26 +719,32 @@ class CigarSoliton:
                 dims=(2, 2, 2),
             )
         )
-        self.Riemann = (
+        self.Riemann = DoubleForm(
             2
             * ngsolve.exp(4 * t)
             / (ngsolve.exp(4 * t) + ngsolve.x**2 + ngsolve.y**2) ** 3
             * ngsolve.CF(
                 (0, 0, 0, 0, 0, -1, 1, 0, 0, 1, -1, 0, 0, 0, 0, 0), dims=(2, 2, 2, 2)
-            )
+            ),
+            dim=2,
+            p=2,
+            q=2,
         )
-        self.Ricci = (
+        self.Ricci = TensorField(
             2
             * ngsolve.exp(4 * t)
             / (ngsolve.exp(4 * t) + ngsolve.x**2 + ngsolve.y**2) ** 2
-            * ngsolve.Id(2)
+            * ngsolve.Id(2),
+            "11",
         )
-        self.scalar = (
-            4 * ngsolve.exp(4 * t) / (ngsolve.exp(4 * t) + ngsolve.x**2 + ngsolve.y**2)
+        self.scalar = ScalarField(
+            4 * ngsolve.exp(4 * t) / (ngsolve.exp(4 * t) + ngsolve.x**2 + ngsolve.y**2),
+            dim=2,
         )
-        self.Einstein = ngsolve.CF((0, 0, 0, 0), dims=(2, 2))
-        self.curvature = (
-            2 * ngsolve.exp(4 * t) / (ngsolve.exp(4 * t) + ngsolve.x**2 + ngsolve.y**2)
+        self.Einstein = TensorField(ngsolve.CF((0, 0, 0, 0), dims=(2, 2)), "11")
+        self.curvature = ScalarField(
+            2 * ngsolve.exp(4 * t) / (ngsolve.exp(4 * t) + ngsolve.x**2 + ngsolve.y**2),
+            dim=2,
         )
         return
 
@@ -665,19 +755,22 @@ class WarpedProduct:
     """
 
     def __init__(self):
-        self.metric = ngsolve.CF(
-            (
-                ngsolve.exp(2 * ngsolve.z),
-                0,
-                0,
-                0,
-                ngsolve.exp(2 * ngsolve.z),
-                0,
-                0,
-                0,
-                1,
+        self.metric = TensorField(
+            ngsolve.CF(
+                (
+                    ngsolve.exp(2 * ngsolve.z),
+                    0,
+                    0,
+                    0,
+                    ngsolve.exp(2 * ngsolve.z),
+                    0,
+                    0,
+                    0,
+                    1,
+                ),
+                dims=(3, 3),
             ),
-            dims=(3, 3),
+            "11",
         )
         self.chr1 = ngsolve.exp(2 * ngsolve.z) * ngsolve.CF(
             (
@@ -743,10 +836,34 @@ class WarpedProduct:
             ),
             dims=(3, 3, 3),
         )
-        self.Riemann = None
-        self.Ricci = None
-        self.scalar = -6
-        self.curvature = None
+        self.Riemann = DoubleForm(
+            Einsum("ik,jl->ijkl", self.metric, self.metric)
+            - Einsum("il,jk->ijkl", self.metric, self.metric),
+            dim=3,
+            p=2,
+            q=2,
+        )
+        self.Ricci = TensorField(
+            -2
+            * ngsolve.CF(
+                (
+                    ngsolve.exp(2 * ngsolve.z),
+                    0,
+                    0,
+                    0,
+                    ngsolve.exp(2 * ngsolve.z),
+                    0,
+                    0,
+                    0,
+                    1,
+                ),
+                dims=(3, 3),
+            ),
+            "11",
+        )
+        self.scalar = ScalarField(ngsolve.CF(-6), dim=3)
+        self.curvature = TensorField(-ngsolve.Inv(self.metric), "00")
+        self.Einstein = TensorField(self.Ricci - 0.5 * self.scalar * self.metric, "11")
         return
 
 

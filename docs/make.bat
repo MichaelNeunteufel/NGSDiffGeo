@@ -5,10 +5,10 @@ pushd %~dp0
 REM Command file for Sphinx documentation
 
 if "%SPHINXBUILD%" == "" (
-       set SPHINXBUILD=sphinx-build
+	set SPHINXBUILD=sphinx-build
 )
 if "%PYTHON%" == "" (
-       set PYTHON=python
+	set PYTHON=python
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
@@ -30,7 +30,7 @@ if "%1" == "" goto help
 
 %SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
 if "%1" == "html" (
-       %PYTHON% -m webgui_jupyter_widgets.js %BUILDDIR%/html/_static
+	%PYTHON% -m webgui_jupyter_widgets.js %BUILDDIR%/html/_static
 )
 goto end
 
