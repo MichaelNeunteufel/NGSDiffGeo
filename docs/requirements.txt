@@ -4,5 +4,6 @@ myst-parser
 sphinx_rtd_theme
 jupyter
 ipykernel
+webgui_jupyter_widgets
 numpy
 matplotlib
