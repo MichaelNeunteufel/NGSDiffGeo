@@ -52,7 +52,6 @@ version_file = "src/_version.py"
 [tool.cibuildwheel]
 manylinux-x86_64-image = "manylinux_2_28"
 skip = """
-  pp*
   *_i686
   *musllinux*
   *win32

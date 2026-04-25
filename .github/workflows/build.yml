@@ -179,6 +179,15 @@ jobs:
     needs: [build_wheels, build_sdist, tests]
     container: python:3.12
 
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
       - uses: actions/checkout@v6
         with:
@@ -240,8 +249,11 @@ jobs:
           python -c "import ngsdiffgeo; print('NGSDiffGeo import OK')"
           make html
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: NGSDiffGeo/docs/_build/html
+          path: NGSDiffGeo/docs/_build/html
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
