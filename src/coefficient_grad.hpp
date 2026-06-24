@@ -13,6 +13,7 @@ namespace ngfem
 {
 
     shared_ptr<CoefficientFunction> GradCF(const shared_ptr<CoefficientFunction> &cf, size_t dim, bool surface = false);
+    shared_ptr<CoefficientFunction> HesseCF(const shared_ptr<CoefficientFunction> &cf, size_t dim, bool boundary = false);
 
     template <int D>
     class GradCoefficientFunction : public T_CoefficientFunction<GradCoefficientFunction<D>>
@@ -307,41 +308,6 @@ namespace ngfem
         // virtual bool IsZeroCF() const override { return c1->IsZeroCF(); }
     };
 
-    template <int D>
-    class GradDiffOp : public DifferentialOperator
-    {
-        shared_ptr<CoefficientFunction> func;
-        ProxyFunction *proxy;
-        bool testfunction;
-
-    public:
-        static constexpr double eps() { return 1e-4; }
-        GradDiffOp(shared_ptr<CoefficientFunction> afunc, bool atestfunction);
-
-        void
-        CalcMatrix(const FiniteElement &inner_fel,
-                   const BaseMappedIntegrationRule &bmir,
-                   BareSliceMatrix<double, ColMajor> mat,
-                   LocalHeap &lh) const override;
-
-        bool IsNonlinear() const override
-        {
-            return false;
-        }
-    };
-
-    class GradProxy : public ProxyFunction
-    {
-    protected:
-        shared_ptr<CoefficientFunction> func;
-        bool testfunction;
-        int dim;
-
-    public:
-        GradProxy(shared_ptr<CoefficientFunction> afunc, bool atestfunction, int adim, shared_ptr<DifferentialOperator> adiffop);
-
-        shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var, shared_ptr<CoefficientFunction> dir) const override;
-    };
 }
 
 #include <python_ngstd.hpp>

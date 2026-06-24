@@ -1,11 +1,180 @@
 #include "coefficient_grad.hpp"
 #include <hcurlhdiv_dshape.hpp>
 #include <fespace.hpp>
+#include <gridfunction.hpp>
+#include <set>
 
 namespace ngfem
 {
 
     using namespace ngcomp;
+
+    struct ProxyInfo
+    {
+        bool has_trial = false;
+        bool has_test = false;
+        ProxyFunction *proxy = nullptr;
+    };
+
+    ProxyInfo GetProxyInfo(const shared_ptr<CoefficientFunction> &cf)
+    {
+        ProxyInfo info;
+        cf->TraverseTree([&](CoefficientFunction &nodecf)
+                         {
+          if (auto proxy = dynamic_cast<ProxyFunction*> (&nodecf))
+            {
+              if (!info.proxy)
+                info.proxy = proxy;
+              if (proxy->IsTestFunction())
+                  info.has_test = true;
+              else
+                  info.has_trial = true;
+            } });
+        return info;
+    }
+
+    bool HasDescriptionPrefix(const CoefficientFunction &cf, const string &prefix)
+    {
+        return cf.GetDescription().rfind(prefix, 0) == 0;
+    }
+
+    bool SameDimensions(FlatArray<int> a, FlatArray<int> b)
+    {
+        if (a.Size() != b.Size())
+            return false;
+        for (size_t i = 0; i < a.Size(); i++)
+            if (a[i] != b[i])
+                return false;
+        return true;
+    }
+
+    Array<int> DerivativeFirstDimensions(const shared_ptr<CoefficientFunction> &cf,
+                                         size_t dim,
+                                         size_t difforder)
+    {
+        Array<int> dims;
+        for (size_t i = 0; i < difforder; i++)
+            dims.Append(int(dim));
+        dims += cf->Dimensions();
+        return dims;
+    }
+
+    Array<int> DerivativeLastDimensions(const shared_ptr<CoefficientFunction> &cf,
+                                        size_t dim,
+                                        size_t difforder)
+    {
+        Array<int> dims;
+        dims += cf->Dimensions();
+        for (size_t i = 0; i < difforder; i++)
+            dims.Append(int(dim));
+        return dims;
+    }
+
+    shared_ptr<CoefficientFunction> NormalizeDerivativeSlots(shared_ptr<CoefficientFunction> result,
+                                                             const shared_ptr<CoefficientFunction> &cf,
+                                                             size_t dim,
+                                                             size_t difforder)
+    {
+        auto first = DerivativeFirstDimensions(cf, dim, difforder);
+        if (SameDimensions(result->Dimensions(), first))
+            return result;
+
+        auto last = DerivativeLastDimensions(cf, dim, difforder);
+        if (SameDimensions(result->Dimensions(), last))
+        {
+            auto transposed = result;
+            size_t cfdim = cf->Dimensions().Size();
+            for (size_t deriv = 0; deriv < difforder; deriv++)
+            {
+                for (size_t pos = cfdim + deriv; pos > deriv; pos--)
+                    transposed = transposed->TensorTranspose(int(pos - 1), int(pos));
+            }
+            return transposed;
+        }
+
+        size_t expected_dim = 1;
+        for (int d : first)
+            expected_dim *= d;
+        if (result->Dimension() == expected_dim)
+            return result->Reshape(first);
+
+        return result;
+    }
+
+    shared_ptr<CoefficientFunction> ProxyDirection(ProxyFunction &proxy, const string &opname)
+    {
+        auto op = proxy.Operator(opname);
+        if (!op)
+            throw Exception(string("operator \"") + opname + string("\" returned nullptr"));
+        return op;
+    }
+
+    shared_ptr<CoefficientFunction> ProxyVariable(ProxyFunction &proxy)
+    {
+        if (auto primary = dynamic_pointer_cast<ProxyFunction>(proxy.Primary()))
+            return primary;
+        return dynamic_pointer_cast<CoefficientFunction>(proxy.shared_from_this());
+    }
+
+    shared_ptr<CoefficientFunction> DerivativeOfVariable(const shared_ptr<CoefficientFunction> &var,
+                                                        size_t dim,
+                                                        bool surface)
+    {
+        if (auto proxy = dynamic_pointer_cast<ProxyFunction>(var))
+            return ProxyDirection(*proxy, surface ? "Gradboundary" : "Grad");
+        return GradCF(var, dim, surface);
+    }
+
+    shared_ptr<CoefficientFunction> SymbolicGradByChainRule(const shared_ptr<CoefficientFunction> &cf,
+                                                           size_t dim,
+                                                           bool surface)
+    {
+        Array<shared_ptr<CoefficientFunction>> vars;
+        set<const CoefficientFunction *> seen;
+        bool has_component_wrapper = false;
+
+        cf->TraverseTree([&](CoefficientFunction &nodecf)
+                         {
+          if (HasDescriptionPrefix(nodecf, "ComponentCoefficientFunction"))
+            has_component_wrapper = true; });
+
+        cf->TraverseTree([&](CoefficientFunction &nodecf)
+                         {
+          bool is_component_wrapper =
+            HasDescriptionPrefix(nodecf, "ComponentCoefficientFunction");
+          if (!is_component_wrapper && nodecf.InputCoefficientFunctions().Size() != 0)
+            return;
+          if (has_component_wrapper && dynamic_cast<ngcomp::GridFunctionCoefficientFunction *>(&nodecf))
+            return;
+
+          shared_ptr<CoefficientFunction> var;
+          if (auto proxy = dynamic_cast<ProxyFunction *>(&nodecf))
+            var = ProxyVariable(*proxy);
+          else
+            var = const_pointer_cast<CoefficientFunction>(nodecf.shared_from_this());
+
+          if (var && !seen.count(var.get()))
+            {
+              seen.insert(var.get());
+              vars.Append(var);
+            } });
+
+        Array<shared_ptr<CoefficientFunction>> comps(dim);
+        for (size_t d = 0; d < dim; d++)
+        {
+            comps[d] = ZeroCF(cf->Dimensions());
+            for (auto var : vars)
+            {
+                auto dvar = DerivativeOfVariable(var, dim, surface);
+                auto dvar_comp = MakeComponentCoefficientFunction(dvar, d);
+                comps[d] = comps[d] + cf->Diff(var.get(), dvar_comp);
+            }
+        }
+
+        auto result = MakeVectorialCoefficientFunction(std::move(comps));
+        return result->Reshape(DerivativeFirstDimensions(cf, dim, 1));
+    }
+
     shared_ptr<CoefficientFunction> GradCF(const shared_ptr<CoefficientFunction> &cf, size_t dim, bool surface)
     {
         // create new ZeroCF with updated dimensions
@@ -16,39 +185,31 @@ namespace ngfem
             return ZeroCF(resultdims);
         }
 
-        bool has_trial = false, has_test = false;
-
-        cf->TraverseTree([&](CoefficientFunction &nodecf)
-                         {
-          
-          if (auto proxy = dynamic_cast<ProxyFunction*> (&nodecf))
-            {
-              if (proxy->IsTestFunction())
-                  has_test = true;
-              else
-                  has_trial = true;
-            } });
+        auto proxy_info = GetProxyInfo(cf);
 
         if (dim < 1 || dim > 3)
             throw Exception("GradCF: only dimensions 1,2,3 supported");
         if (surface && dim < 2)
             throw Exception("GradCF(surface): only dimensions 2,3 supported");
 
-        // If the input coefficient function includes a trial or test function, we need to use
-        // a proxy function to calculate the gradient via a differential operator.
-        // Otherwise, we can directly calculate the gradient using the CoefficientFunction.
-        if (surface && has_trial != has_test)
-            throw Exception("GradCF(surface): trial/test functions not supported yet");
-        if (has_trial != has_test)
-            switch (dim)
+        if (proxy_info.has_trial && proxy_info.has_test)
+            throw Exception("GradCF: expressions containing trial and test functions in the same GradCF are not supported yet");
+
+        if (proxy_info.has_trial || proxy_info.has_test)
+        {
+            try
             {
-            case 1:
-                return make_shared<GradProxy>(cf, has_test, dim, make_shared<GradDiffOp<1>>(cf, has_test));
-            case 2:
-                return make_shared<GradProxy>(cf, has_test, dim, make_shared<GradDiffOp<2>>(cf, has_test));
-            default:
-                return make_shared<GradProxy>(cf, has_test, dim, make_shared<GradDiffOp<3>>(cf, has_test));
+                cf->SetSpaceDim(int(dim));
+                return NormalizeDerivativeSlots(cf->Operator(surface ? "Gradboundary" : "Grad"),
+                                                cf, dim, 1);
             }
+            catch (...)
+            {
+                ;
+            }
+            return NormalizeDerivativeSlots(SymbolicGradByChainRule(cf, dim, surface),
+                                            cf, dim, 1);
+        }
         else
             switch (dim)
             {
@@ -61,182 +222,51 @@ namespace ngfem
             }
     }
 
-    template <int D>
-    GradDiffOp<D>::GradDiffOp(shared_ptr<CoefficientFunction> afunc, bool atestfunction)
-        : DifferentialOperator(D * afunc->Dimension(), 1, VOL, 1), func(afunc), testfunction(atestfunction)
+    shared_ptr<CoefficientFunction> HesseCF(const shared_ptr<CoefficientFunction> &cf, size_t dim, bool boundary)
     {
-        for (auto cf_dim : func->Dimensions())
-            if (cf_dim != D)
-                throw Exception("GradDiffOp: all dimensions must be the same and equal to D");
-
-        Array<int> tensor_dims(func->Dimensions().Size() + 1);
-        for (size_t i = 0; i < tensor_dims.Size(); i++)
-            tensor_dims[i] = D;
-        SetDimensions(tensor_dims);
-
-        // Extract proxy function
-        func->TraverseTree([&](CoefficientFunction &nodecf)
-                           {
-            if (dynamic_cast<ProxyFunction *>(&nodecf))
-                proxy = dynamic_cast<ProxyFunction *>(&nodecf); });
-        if (!proxy)
-            throw Exception("GradDiffOp: no ProxyFunction found");
-    }
-
-    template <int D>
-    void GradDiffOp<D>::CalcMatrix(const FiniteElement &inner_fel,
-                                   const BaseMappedIntegrationRule &bmir,
-                                   BareSliceMatrix<double, ColMajor> mat,
-                                   LocalHeap &lh) const
-    {
-        // cout << "in GradDiffOp CalcMatrix" << endl;
-        HeapReset hr(lh);
-
-        auto &mir = static_cast<const MappedIntegrationRule<D, D> &>(bmir);
-        auto &ir = mir.IR();
-
-        size_t proxy_dim = proxy->Dimension();
-        FlatMatrix<double> bbmat(inner_fel.GetNDof(), 4 * proxy_dim, lh);
-        FlatMatrix<double> dshape_ref(inner_fel.GetNDof() * proxy_dim, D, lh);
-        FlatMatrix<double> dshape(inner_fel.GetNDof() * proxy_dim, D, lh);
-
-        for (size_t i = 0; i < mir.Size(); i++)
+        if (cf->IsZeroCF())
         {
-            const IntegrationPoint &ip = ir[i];
-            const ElementTransformation &eltrans = mir[i].GetTransformation();
-            dshape_ref = 0;
-            for (int j = 0; j < D; j++) // d / d t_j
-            {
-                HeapReset hr(lh);
-                IntegrationPoint ipts[4];
-                ipts[0] = ip;
-                ipts[0](j) -= eps();
-                ipts[1] = ip;
-                ipts[1](j) += eps();
-                ipts[2] = ip;
-                ipts[2](j) -= 2 * eps();
-                ipts[3] = ip;
-                ipts[3](j) += 2 * eps();
-
-                IntegrationRule ir_j(4, ipts);
-                MappedIntegrationRule<D, D, double> mir_j(ir_j, eltrans, lh);
-
-                proxy->Evaluator()->CalcMatrix(inner_fel, mir_j, Trans(bbmat), lh);
-
-                // cout << "bbmat = " << bbmat << endl;
-
-                // dshape_ref.Col(j) = (1.0 / (12.0 * eps)) * (8.0 * bbmat.Cols(proxy_dim, 2 * proxy_dim).AsVector() - 8.0 * bbmat.Cols(0, proxy_dim).AsVector() - bbmat.Cols(3 * proxy_dim, 4 * proxy_dim).AsVector() + bbmat.Cols(2 * proxy_dim, 3 * proxy_dim).AsVector());
-                dshape_ref.Col(j) = (1.0 / (12.0 * eps())) * (8.0 * bbmat.Cols(proxy_dim, 2 * proxy_dim).AsVector() - 8.0 * bbmat.Cols(0, proxy_dim).AsVector() - bbmat.Cols(3 * proxy_dim, 4 * proxy_dim).AsVector() + bbmat.Cols(2 * proxy_dim, 3 * proxy_dim).AsVector());
-                // if (j == D - 1)
-                //     cout << "dshape_ref = " << dshape_ref << endl;
-            }
-            dshape = dshape_ref * mir[i].GetJacobianInverse();
-            // cout << "dshape = " << dshape << endl;
-
-            for (auto k : Range(dshape.Height()))
-                for (auto l : Range(dshape.Width()))
-                    mat(k * dshape.Width() + l, i) = dshape(k, l);
-            // mat.Col(i) = dshape.AsVector();
+            Array<int> resultdims = {int(dim), int(dim)};
+            resultdims += cf->Dimensions();
+            return ZeroCF(resultdims);
         }
 
-        // int nd_u = inner_fel.GetNDof();
+        auto proxy_info = GetProxyInfo(cf);
 
-        // FlatMatrix<double> shape_ul(nd_u, proxy_dim, lh);
-        // FlatMatrix<double> shape_ur(nd_u, proxy_dim, lh);
-        // FlatMatrix<double> shape_ull(nd_u, proxy_dim, lh);
-        // FlatMatrix<double> shape_urr(nd_u, proxy_dim, lh);
-        // FlatMatrix<double> dshape_u_ref(nd_u, proxy_dim, lh);
-        // FlatMatrix<double> bmatu(nd_u, D * proxy_dim, lh);
+        if (dim < 1 || dim > 3)
+            throw Exception("HesseCF: only dimensions 1,2,3 supported");
 
-        // FlatMatrix<double> dshape_u_ref_comp(nd_u, D, lh);
-        // FlatMatrix<double> dshape_u(nd_u, D, lh); //(shape_ul);///saves "reserved lh-memory"
+        if (proxy_info.has_trial && proxy_info.has_test)
+            throw Exception("HesseCF: expressions containing trial and test functions in the same HesseCF are not supported yet");
 
-        // for (size_t i = 0; i < mir.Size(); i++)
-        // {
-        //     bmatu = 0;
-        //     const IntegrationPoint &ip = mir[i].IP(); // volume_ir[i];
-        //     const ElementTransformation &eltrans = mir[i].GetTransformation();
-        //     for (int j = 0; j < D; j++) // d / dxj
-        //     {
-        //         IntegrationPoint ipl(ip);
-        //         ipl(j) -= eps;
-        //         IntegrationPoint ipr(ip);
-        //         ipr(j) += eps;
-        //         IntegrationPoint ipll(ip);
-        //         ipll(j) -= 2 * eps;
-        //         IntegrationPoint iprr(ip);
-        //         iprr(j) += 2 * eps;
+        if (proxy_info.has_trial || proxy_info.has_test)
+        {
+            string opname = boundary ? "hesseboundary" : "hesse";
+            try
+            {
+                cf->SetSpaceDim(int(dim));
+                return NormalizeDerivativeSlots(cf->Operator(opname), cf, dim, 2);
+            }
+            catch (const Exception &e)
+            {
+                throw Exception(string("HesseCF: symbolic proxy Hessian requires Operator(\"") +
+                                opname + string("\") support for the full expression. Original error: ") +
+                                e.What());
+            }
+        }
 
-        //         MappedIntegrationPoint<D, D> mipl(ipl, eltrans);
-        //         MappedIntegrationPoint<D, D> mipr(ipr, eltrans);
-        //         MappedIntegrationPoint<D, D> mipll(ipll, eltrans);
-        //         MappedIntegrationPoint<D, D> miprr(iprr, eltrans);
-
-        //         proxy->Evaluator()->CalcMatrix(inner_fel, mipl, Trans(shape_ul), lh);
-        //         proxy->Evaluator()->CalcMatrix(inner_fel, mipr, Trans(shape_ur), lh);
-        //         proxy->Evaluator()->CalcMatrix(inner_fel, mipll, Trans(shape_ull), lh);
-        //         proxy->Evaluator()->CalcMatrix(inner_fel, miprr, Trans(shape_urr), lh);
-
-        //         dshape_u_ref = (1.0 / (12.0 * eps)) * (8.0 * shape_ur - 8.0 * shape_ul - shape_urr + shape_ull);
-        //         for (int l = 0; l < proxy_dim; l++)
-        //             bmatu.Col(j * proxy_dim + l) = dshape_u_ref.Col(l);
-        //         // if (j == D - 1)
-        //         //     cout << "bmatu = " << bmatu << endl;
-        //     }
-
-        //     for (int j = 0; j < proxy_dim; j++)
-        //     {
-        //         for (int k = 0; k < nd_u; k++)
-        //             for (int l = 0; l < D; l++)
-        //                 dshape_u_ref_comp(k, l) = bmatu(k, l * proxy_dim + j);
-
-        //         dshape_u = dshape_u_ref_comp * mir[i].GetJacobianInverse();
-
-        //         for (int k = 0; k < nd_u; k++)
-        //             for (int l = 0; l < D; l++)
-        //                 bmatu(k, l * proxy_dim + j) = dshape_u(k, l);
-        //     }
-        //     cout << "bmatu final = " << bmatu << endl;
-        // }
-        // cout << "mat = " << mat << endl;
+        return NormalizeDerivativeSlots(GradCF(GradCF(cf, dim, boundary), dim, boundary),
+                                        cf, dim, 2);
     }
 
-    shared_ptr<FESpace> FindProxySpace(shared_ptr<CoefficientFunction> func)
-    {
-        shared_ptr<FESpace> space;
-
-        func->TraverseTree([&](CoefficientFunction &nodecf)
-                           {
-          if (auto proxy = dynamic_cast<ProxyFunction*> (&nodecf))
-            space = proxy->GetFESpace(); });
-        return space;
-    }
-
-    GradProxy::GradProxy(shared_ptr<CoefficientFunction> afunc, bool atestfunction, int adim, shared_ptr<DifferentialOperator> adiffop)
-        : ProxyFunction(FindProxySpace(afunc), atestfunction, false,
-                        adiffop, nullptr, nullptr,
-                        nullptr, nullptr, nullptr),
-          func(afunc), testfunction(atestfunction), dim(adim)
-    {
-        Array<int> tensor_dims(func->Dimensions().Size() + 1);
-        for (size_t i = 0; i < tensor_dims.Size(); i++)
-            tensor_dims[i] = dim;
-        SetDimensions(tensor_dims);
-    }
-
-    shared_ptr<CoefficientFunction> GradProxy::Diff(const CoefficientFunction *var, shared_ptr<CoefficientFunction> dir) const
-    {
-        if (this == var)
-            return dir;
-        return make_shared<GradProxy>(func->Diff(var, dir), testfunction, dim, this->Evaluator());
-    }
 };
 
 void ExportGradCF(py::module m)
 {
     using namespace ngfem;
 
-    py::class_<GradProxy, shared_ptr<GradProxy>, ProxyFunction>(m, "GradProxy");
     m.def("GradCF", [](shared_ptr<CoefficientFunction> cf, int dim, bool surface)
           { return GradCF(cf, dim, surface); }, "Create a GradientCoefficientFunction. Uses numerical differentiation to compute the gradient of a given CoefficientFunction. Set surface=True for tangential surface gradients.", py::arg("cf"), py::arg("dim"), py::arg("surface") = false);
+    m.def("HesseCF", [](shared_ptr<CoefficientFunction> cf, int dim, bool boundary)
+          { return HesseCF(cf, dim, boundary); }, "Create a Hessian CoefficientFunction. Uses numerical differentiation for pure coefficient functions and symbolic finite element operators for trial/test functions.", py::arg("cf"), py::arg("dim"), py::arg("boundary") = false);
 }
