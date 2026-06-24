@@ -412,6 +412,14 @@ namespace ngfem
             return out;
         }
 
+        int TopFormComponentIndex(int n)
+        {
+            int index = 0;
+            for (int i = 0; i < n; ++i)
+                index = index * n + i;
+            return index;
+        }
+
         shared_ptr<CoefficientFunction> BlockHodgeStar(shared_ptr<TensorFieldCoefficientFunction> tf, int block_start, int block_len, int n, const RiemannianManifold &M)
         {
             if (block_len < 0 || block_start < 0)
@@ -1130,6 +1138,18 @@ namespace ngfem
             return BoundaryHodgeStarKForm(a, M);
         if (vb == BBND)
             return BBNDHodgeStarKForm(a, M);
+
+        if (k == 0)
+        {
+            auto eps = M.GetLeviCivitaSymbol(true);
+            return KFormCF(a->GetCoefficients() * eps->GetCoefficients(), n, n);
+        }
+
+        if (k == n)
+        {
+            auto component = MakeComponentCoefficientFunction(a->GetCoefficients(), TopFormComponentIndex(n));
+            return KFormCF(component / M.GetVolumeForm(VOL), 0, n);
+        }
 
         shared_ptr<TensorFieldCoefficientFunction> raised = a;
         for (int i = 0; i < k; ++i)

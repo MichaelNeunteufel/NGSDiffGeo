@@ -111,7 +111,7 @@ namespace ngfem
             return src;
         }
 
-        CurvatureSources FromCF(RiemannianManifold &M, shared_ptr<CoefficientFunction> g, shared_ptr<CoefficientFunction> g_inv, bool change_riemann_sign = false)
+        CurvatureSources FromCF(const RiemannianManifold &M, shared_ptr<CoefficientFunction> g, shared_ptr<CoefficientFunction> g_inv, bool change_riemann_sign = false)
         {
             CurvatureSources src;
             int dim = M.Dimension();
@@ -245,7 +245,7 @@ namespace ngfem
 
     using namespace std;
     RiemannianManifold::RiemannianManifold(shared_ptr<CoefficientFunction> _g, double normal_sign_, bool change_riemann_sign_)
-        : has_trial(false), is_regge(false), is_proxy(false), normal_sign(normal_sign_), change_riemann_sign(change_riemann_sign_), regge_proxy(nullptr), regge_space(nullptr), g(_g)
+        : has_trial(false), is_regge(false), is_proxy(false), normal_sign(normal_sign_), change_riemann_sign(change_riemann_sign_), regge_proxy(nullptr), regge_space(nullptr), g(_g), curvature_initialized(false)
     {
         if (_g->Dimensions().Size() != 2 || _g->Dimensions()[0] != _g->Dimensions()[1])
             throw Exception("In RMF: input must be a square matrix");
@@ -385,6 +385,13 @@ namespace ngfem
 
         P_F_g = IdentityCF(dim) - TensorProduct(g_nv, Lower(g_nv));
 
+    }
+
+    void RiemannianManifold::EnsureCurvature() const
+    {
+        if (curvature_initialized)
+            return;
+
         CurvatureSources sources;
         if (is_regge)
         {
@@ -413,36 +420,49 @@ namespace ngfem
         Einstein = sources.Einstein;
         Scalar = sources.Scalar;
         SFF = DoubleFormCF(EinsumCF("ia,ijk,k,jb->ab", {P_F_g, chr1->Reshape(Array<int>({dim, dim, dim})), g_nv, P_F_g}), 1, 1, dim);
+        curvature_initialized = true;
     }
 
     shared_ptr<CoefficientFunction> RiemannianManifold::GetMetric() const
     {
-        return DoubleFormCF(g, 1, 1, dim);
+        if (!g_typed)
+            g_typed = DoubleFormCF(g, 1, 1, dim);
+        return g_typed;
     }
 
     shared_ptr<CoefficientFunction> RiemannianManifold::GetMetricF() const
     {
-        return DoubleFormCF(g_F, 1, 1, dim);
+        if (!g_F_typed)
+            g_F_typed = DoubleFormCF(g_F, 1, 1, dim);
+        return g_F_typed;
     }
 
     shared_ptr<CoefficientFunction> RiemannianManifold::GetMetricFInverse() const
     {
-        return TensorFieldCF(g_F_inv, "00");
+        if (!g_F_inv_typed)
+            g_F_inv_typed = TensorFieldCF(g_F_inv, "00");
+        return g_F_inv_typed;
     }
 
     shared_ptr<CoefficientFunction> RiemannianManifold::GetMetricE() const
     {
-        return DoubleFormCF(g_E, 1, 1, dim);
+        if (!g_E_typed)
+            g_E_typed = DoubleFormCF(g_E, 1, 1, dim);
+        return g_E_typed;
     }
 
     shared_ptr<CoefficientFunction> RiemannianManifold::GetMetricEInverse() const
     {
-        return TensorFieldCF(g_E_inv, "00");
+        if (!g_E_inv_typed)
+            g_E_inv_typed = TensorFieldCF(g_E_inv, "00");
+        return g_E_inv_typed;
     }
 
     shared_ptr<CoefficientFunction> RiemannianManifold::GetMetricInverse() const
     {
-        return TensorFieldCF(g_inv, "00");
+        if (!g_inv_typed)
+            g_inv_typed = TensorFieldCF(g_inv, "00");
+        return g_inv_typed;
     }
 
     shared_ptr<CoefficientFunction> RiemannianManifold::GetVolumeForm(VorB vb) const
@@ -485,6 +505,24 @@ namespace ngfem
         std::string eins = lhs + "," + std::string(1, a) + std::string(1, b) + "->" + sig;
 
         auto mout = m.WithCovariant(index, false);
+        if (m.rank == 1 && index == 0)
+        {
+            auto out_cf = metric_inv * tf->GetCoefficients();
+            if (dynamic_pointer_cast<OneFormCoefficientFunction>(tf))
+                return VectorFieldCF(out_cf);
+            return TensorFieldCF(out_cf, mout);
+        }
+        if (m.rank == 2)
+        {
+            shared_ptr<CoefficientFunction> out_cf;
+            if (index == 0)
+                out_cf = metric_inv * tf->GetCoefficients();
+            else if (index == 1)
+                out_cf = tf->GetCoefficients() * metric_inv;
+            if (out_cf)
+                return TensorFieldCF(out_cf, mout);
+        }
+
         auto out_cf = EinsumCF(eins, {tf->GetCoefficients(), metric_inv});
 
         // if tf is a OneFormCoefficientFunction, return a VectorFieldCoefficientFunction
@@ -542,6 +580,24 @@ namespace ngfem
         std::string eins = lhs + "," + std::string(1, a) + std::string(1, b) + "->" + sig;
 
         auto mout = m.WithCovariant(index, true);
+        if (m.rank == 1 && index == 0)
+        {
+            auto out_cf = metric * tf->GetCoefficients();
+            if (dynamic_pointer_cast<VectorFieldCoefficientFunction>(tf))
+                return OneFormCF(out_cf);
+            return TensorFieldCF(out_cf, mout);
+        }
+        if (m.rank == 2)
+        {
+            shared_ptr<CoefficientFunction> out_cf;
+            if (index == 0)
+                out_cf = metric * tf->GetCoefficients();
+            else if (index == 1)
+                out_cf = tf->GetCoefficients() * metric;
+            if (out_cf)
+                return TensorFieldCF(out_cf, mout);
+        }
+
         auto out_cf = EinsumCF(eins, {tf->GetCoefficients(), metric});
 
         // if tf is a VectorFieldCoefficientFunction, return a OneFormCoefficientFunction
@@ -584,36 +640,43 @@ namespace ngfem
 
     shared_ptr<CoefficientFunction> RiemannianManifold::GetMetricDerivative() const
     {
+        EnsureCurvature();
         return g_deriv;
     }
 
     shared_ptr<CoefficientFunction> RiemannianManifold::GetChristoffelSymbol(bool second_kind) const
     {
+        EnsureCurvature();
         return second_kind ? chr2 : chr1;
     }
 
     shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::GetRiemannCurvatureTensor() const
     {
+        EnsureCurvature();
         return Riemann;
     }
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::GetCurvatureOperator() const
     {
+        EnsureCurvature();
         return Curvature;
     }
 
     shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::GetRicciTensor() const
     {
+        EnsureCurvature();
         return Ricci;
     }
 
     shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::GetEinsteinTensor() const
     {
+        EnsureCurvature();
         return Einstein;
     }
 
     shared_ptr<ScalarFieldCoefficientFunction> RiemannianManifold::GetScalarCurvature() const
     {
+        EnsureCurvature();
         return ScalarFieldCF(Scalar, dim);
     }
 
@@ -621,17 +684,20 @@ namespace ngfem
     {
         if (dim != 2)
             throw Exception("In RMF: Gauss curvature only available in 2D");
+        EnsureCurvature();
         return ScalarFieldCF(1 / det_g * Curvature, dim);
     }
 
     shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::GetSecondFundamentalForm() const
     {
+        EnsureCurvature();
         return SFF;
     }
     shared_ptr<ScalarFieldCoefficientFunction> RiemannianManifold::GetGeodesicCurvature() const
     {
         if (dim != 2)
             throw Exception("In RMF: Geodesic curvature only available in 2D");
+        EnsureCurvature();
         return ScalarFieldCF(InnerProduct(SFF * g_tv, g_tv), dim);
     }
 
@@ -659,7 +725,8 @@ namespace ngfem
 
         auto current = tf;
         const auto &cov_ind = tf->GetCovariantIndices();
-        auto P_F_g_T = TransposeCF(P_F_g);
+        if (!P_F_g_T)
+            P_F_g_T = TransposeCF(P_F_g);
         for (size_t i = 0; i < m.rank; ++i)
         {
             auto proj = (cov_ind[i] == '1') ? P_F_g : P_F_g_T;
@@ -685,9 +752,11 @@ namespace ngfem
 
         auto current = tf;
         const auto &cov_ind = tf->GetCovariantIndices();
-        auto P_F_g_T = TransposeCF(P_F_g);
         auto edge_proj = P_E_g;
-        auto P_E_g_T = edge_proj ? TransposeCF(edge_proj) : nullptr;
+        if (!P_F_g_T)
+            P_F_g_T = TransposeCF(P_F_g);
+        if (edge_proj && !P_E_g_T)
+            P_E_g_T = TransposeCF(edge_proj);
 
         if (mode == 1)
         {
@@ -787,6 +856,42 @@ namespace ngfem
             break;
         }
 
+        auto apply_form_scaling = [&](shared_ptr<ScalarFieldCoefficientFunction> result)
+        {
+            if (!forms)
+                return result;
+
+            auto k1 = dynamic_pointer_cast<KFormCoefficientFunction>(c1);
+            auto k2 = dynamic_pointer_cast<KFormCoefficientFunction>(c2);
+            if (!k1 || !k2)
+                throw Exception("IP: forms=true requires k-forms or double-forms");
+            if (k1->Degree() != k2->Degree())
+                throw Exception("IP: form degrees must match");
+
+            double scale = 1.0 / double(Factorial(k1->Degree()));
+            return ScalarFieldCF(scale * result->GetCoefficients(), dim);
+        };
+
+        if (cov_ind1.size() == 1)
+        {
+            shared_ptr<CoefficientFunction> left = c1->GetCoefficients();
+            if (cov_ind1[0] == cov_ind2[0])
+                left = cov_ind1[0] == '1' ? metric_inv * left : metric * left;
+            auto result = ScalarFieldCF(InnerProduct(left, c2->GetCoefficients()), dim);
+            return apply_form_scaling(result);
+        }
+
+        if (cov_ind1.size() == 2)
+        {
+            shared_ptr<CoefficientFunction> left = c1->GetCoefficients();
+            if (cov_ind1[0] == cov_ind2[0])
+                left = cov_ind1[0] == '1' ? metric_inv * left : metric * left;
+            if (cov_ind1[1] == cov_ind2[1])
+                left = cov_ind1[1] == '1' ? left * metric_inv : left * metric;
+            auto result = ScalarFieldCF(InnerProduct(left, c2->GetCoefficients()), dim);
+            return apply_form_scaling(result);
+        }
+
         // create boolean array with true if cov_ind1 and ind_cov2 coincide at the position
         Array<bool> same_index(cov_ind1.size());
         Array<size_t> position_same_index;
@@ -826,18 +931,7 @@ namespace ngfem
             cfs[2 + i] = cov_ind1[position_same_index[i]] == '1' ? metric_inv : metric;
         }
         auto result = ScalarFieldCF(EinsumCF(signature_c1 + "," + signature_c2 + raise_lower_signatures, cfs), dim);
-        if (!forms)
-            return result;
-
-        auto k1 = dynamic_pointer_cast<KFormCoefficientFunction>(c1);
-        auto k2 = dynamic_pointer_cast<KFormCoefficientFunction>(c2);
-        if (!k1 || !k2)
-            throw Exception("IP: forms=true requires k-forms or double-forms");
-        if (k1->Degree() != k2->Degree())
-            throw Exception("IP: form degrees must match");
-
-        double scale = 1.0 / double(Factorial(k1->Degree()));
-        return ScalarFieldCF(scale * result->GetCoefficients(), dim);
+        return apply_form_scaling(result);
     }
 
     shared_ptr<ScalarFieldCoefficientFunction> RiemannianManifold::IP(shared_ptr<DoubleFormCoefficientFunction> c1, shared_ptr<DoubleFormCoefficientFunction> c2, VorB vb, bool forms) const
@@ -974,6 +1068,7 @@ namespace ngfem
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::CovDerivative(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb) const
     {
+        EnsureCurvature();
         if (vb != VOL && vb != BND)
             throw Exception("CovDerivative: only implemented for vb=VOL and vb=BND.");
 
@@ -1029,7 +1124,8 @@ namespace ngfem
         if (vb == BND)
         {
             const auto &cov_ind = result->GetCovariantIndices();
-            auto P_F_g_T = TransposeCF(P_F_g);
+            if (!P_F_g_T)
+                P_F_g_T = TransposeCF(P_F_g);
             for (size_t i = 0; i < cov_ind.size(); ++i)
             {
                 if (cov_ind[i] == '1')
@@ -1085,6 +1181,7 @@ namespace ngfem
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::CovCurl(shared_ptr<TensorFieldCoefficientFunction> c1) const
     {
+        EnsureCurvature();
         if (c1->Dimensions().Size() == 0)
             throw Exception("CovCurl: called with scalar field");
         // if (c1->Dimensions()[0] != 3)
@@ -1180,6 +1277,7 @@ namespace ngfem
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::CovRot(shared_ptr<TensorFieldCoefficientFunction> c1) const
     {
+        EnsureCurvature();
         if (dim != 2)
             throw Exception("CovRot: only available in 2D");
 
@@ -1247,6 +1345,18 @@ namespace ngfem
 
         bool cov1 = m.Covariant(index1);
         bool cov2 = m.Covariant(index2);
+
+        if (m.rank == 2 && ((index1 == 0 && index2 == 1) || (index1 == 1 && index2 == 0)))
+        {
+            if (cov1 != cov2)
+            {
+                auto result = EinsumCF("ii->", {tf->GetCoefficients()});
+                return ScalarFieldCF(result, dim);
+            }
+            auto result = cov1 ? InnerProduct(metric_inv, tf->GetCoefficients())
+                               : InnerProduct(metric, tf->GetCoefficients());
+            return ScalarFieldCF(result, dim);
+        }
 
         if (cov1 != cov2)
         {
@@ -1642,7 +1752,9 @@ namespace ngfem
             mix = IdentityCF(dim);
             break;
         case BND:
-            mix = TransposeCF(P_F_g);
+            if (!P_F_g_T)
+                P_F_g_T = TransposeCF(P_F_g);
+            mix = P_F_g_T;
             break;
         default:
             throw Exception("s_op: only implemented for VOL and BND");

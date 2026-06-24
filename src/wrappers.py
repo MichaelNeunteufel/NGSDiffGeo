@@ -1599,102 +1599,181 @@ def delta(a, M):
 class RiemannianManifold(_CPP_RiemannianManifold):
     def __init__(self, metric, normal_sign=1.0, change_riemann_sign=False):
         super().__init__(metric, normal_sign, change_riemann_sign)
+        self._property_cache = {}
+
+    def _cached_property(self, name, factory):
+        cache = self._property_cache
+        if name not in cache:
+            cache[name] = factory()
+        return cache[name]
 
     # properties
     @property
     def G(self):
-        out = _CPP_RiemannianManifold.G.__get__(self)
-        return as_tensorfield(out)
+        return self._cached_property(
+            "G",
+            lambda: as_tensorfield(_CPP_RiemannianManifold.G.__get__(self)),
+        )
 
     @property
     def G_F(self):
-        out = _CPP_RiemannianManifold.G_F.__get__(self)
-        return as_tensorfield(out)
+        return self._cached_property(
+            "G_F",
+            lambda: as_tensorfield(_CPP_RiemannianManifold.G_F.__get__(self)),
+        )
 
     @property
     def G_F_inv(self):
-        out = _CPP_RiemannianManifold.G_F_inv.__get__(self)
-        return as_tensorfield(out)
+        return self._cached_property(
+            "G_F_inv",
+            lambda: as_tensorfield(_CPP_RiemannianManifold.G_F_inv.__get__(self)),
+        )
 
     @property
     def G_E(self):
-        out = _CPP_RiemannianManifold.G_E.__get__(self)
-        return as_tensorfield(out)
+        return self._cached_property(
+            "G_E",
+            lambda: as_tensorfield(_CPP_RiemannianManifold.G_E.__get__(self)),
+        )
 
     @property
     def G_E_inv(self):
-        out = _CPP_RiemannianManifold.G_E_inv.__get__(self)
-        return as_tensorfield(out)
+        return self._cached_property(
+            "G_E_inv",
+            lambda: as_tensorfield(_CPP_RiemannianManifold.G_E_inv.__get__(self)),
+        )
 
     @property
     def G_inv(self):
-        out = _CPP_RiemannianManifold.G_inv.__get__(self)
-        return as_tensorfield(out)
+        return self._cached_property(
+            "G_inv",
+            lambda: as_tensorfield(_CPP_RiemannianManifold.G_inv.__get__(self)),
+        )
 
     @property
     def normal(self):
-        out = _CPP_RiemannianManifold.normal.__get__(self)
-        return as_vectorfield(out)
+        return self._cached_property(
+            "normal",
+            lambda: as_vectorfield(_CPP_RiemannianManifold.normal.__get__(self)),
+        )
 
     @property
     def tangent(self):
-        out = _CPP_RiemannianManifold.tangent.__get__(self)
-        return as_tensorfield(out)
+        return self._cached_property(
+            "tangent",
+            lambda: as_tensorfield(_CPP_RiemannianManifold.tangent.__get__(self)),
+        )
 
     def edge_conormal(self, i):
-        out = _CPP_RiemannianManifold.EdgeConormal(self, i)
-        return as_vectorfield(out)
+        return self._cached_property(
+            f"edge_conormal_{i}",
+            lambda: as_vectorfield(_CPP_RiemannianManifold.EdgeConormal(self, i)),
+        )
 
     def edge_normal(self, i):
-        out = _CPP_RiemannianManifold.EdgeNormal(self, i)
-        return as_vectorfield(out)
+        return self._cached_property(
+            f"edge_normal_{i}",
+            lambda: as_vectorfield(_CPP_RiemannianManifold.EdgeNormal(self, i)),
+        )
 
     @property
     def edge_conormals(self):
-        return [self.edge_conormal(0), self.edge_conormal(1)]
+        return self._cached_property(
+            "edge_conormals",
+            lambda: [self.edge_conormal(0), self.edge_conormal(1)],
+        )
 
     @property
     def edge_normals(self):
-        return [self.edge_normal(0), self.edge_normal(1)]
+        return self._cached_property(
+            "edge_normals",
+            lambda: [self.edge_normal(0), self.edge_normal(1)],
+        )
 
     @property
     def G_deriv(self):
-        return _CPP_RiemannianManifold.G_deriv.__get__(self)
+        return self._cached_property(
+            "G_deriv",
+            lambda: _CPP_RiemannianManifold.G_deriv.__get__(self),
+        )
 
     @property
     def Riemann(self):
-        out = _CPP_RiemannianManifold.Riemann.__get__(self)
-        return as_doubleform(out, p=2, q=2, dim=self.dim)
+        return self._cached_property(
+            "Riemann",
+            lambda: as_doubleform(
+                _CPP_RiemannianManifold.Riemann.__get__(self),
+                p=2,
+                q=2,
+                dim=self.dim,
+            ),
+        )
 
     @property
     def Curvature(self):
-        out = _CPP_RiemannianManifold.Curvature.__get__(self)
-        return as_tensorfield(out, dim=self.dim)
+        return self._cached_property(
+            "Curvature",
+            lambda: as_tensorfield(
+                _CPP_RiemannianManifold.Curvature.__get__(self),
+                dim=self.dim,
+            ),
+        )
 
     @property
     def Gauss(self):
-        out = _CPP_RiemannianManifold.Gauss.__get__(self)
-        return as_scalarfield(out, dim=self.dim)
+        return self._cached_property(
+            "Gauss",
+            lambda: as_scalarfield(
+                _CPP_RiemannianManifold.Gauss.__get__(self),
+                dim=self.dim,
+            ),
+        )
 
     @property
     def Ricci(self):
-        out = _CPP_RiemannianManifold.Ricci.__get__(self)
-        return as_doubleform(out, p=1, q=1, dim=self.dim)
+        return self._cached_property(
+            "Ricci",
+            lambda: as_doubleform(
+                _CPP_RiemannianManifold.Ricci.__get__(self),
+                p=1,
+                q=1,
+                dim=self.dim,
+            ),
+        )
 
     @property
     def Einstein(self):
-        out = _CPP_RiemannianManifold.Einstein.__get__(self)
-        return as_doubleform(out, p=1, q=1, dim=self.dim)
+        return self._cached_property(
+            "Einstein",
+            lambda: as_doubleform(
+                _CPP_RiemannianManifold.Einstein.__get__(self),
+                p=1,
+                q=1,
+                dim=self.dim,
+            ),
+        )
 
     @property
     def Scalar(self):
-        out = _CPP_RiemannianManifold.Scalar.__get__(self)
-        return as_scalarfield(out, dim=self.dim)
+        return self._cached_property(
+            "Scalar",
+            lambda: as_scalarfield(
+                _CPP_RiemannianManifold.Scalar.__get__(self),
+                dim=self.dim,
+            ),
+        )
 
     @property
     def SFF(self):
-        out = _CPP_RiemannianManifold.SFF.__get__(self)
-        return as_doubleform(out, p=1, q=1, dim=self.dim)
+        return self._cached_property(
+            "SFF",
+            lambda: as_doubleform(
+                _CPP_RiemannianManifold.SFF.__get__(self),
+                p=1,
+                q=1,
+                dim=self.dim,
+            ),
+        )
 
     def Raise(self, tf, index=0, vb=ngsolve.VOL):
         if isinstance(index, (list, tuple)):
@@ -1712,18 +1791,33 @@ class RiemannianManifold(_CPP_RiemannianManifold):
 
     @property
     def GeodesicCurvature(self):
-        out = _CPP_RiemannianManifold.GeodesicCurvature.__get__(self)
-        return as_scalarfield(out, dim=self.dim)
+        return self._cached_property(
+            "GeodesicCurvature",
+            lambda: as_scalarfield(
+                _CPP_RiemannianManifold.GeodesicCurvature.__get__(self),
+                dim=self.dim,
+            ),
+        )
 
     @property
     def MeanCurvature(self):
-        out = _CPP_RiemannianManifold.MeanCurvature.__get__(self)
-        return as_scalarfield(out, dim=self.dim)
+        return self._cached_property(
+            "MeanCurvature",
+            lambda: as_scalarfield(
+                _CPP_RiemannianManifold.MeanCurvature.__get__(self),
+                dim=self.dim,
+            ),
+        )
 
     @property
     def AngleDefect(self):
-        out = _CPP_RiemannianManifold.AngleDefect.__get__(self)
-        return as_scalarfield(out, dim=self.dim)
+        return self._cached_property(
+            "AngleDefect",
+            lambda: as_scalarfield(
+                _CPP_RiemannianManifold.AngleDefect.__get__(self),
+                dim=self.dim,
+            ),
+        )
 
     def KForm(self, cf, k):
         out = _CPP_RiemannianManifold.KForm(self, cf, k)

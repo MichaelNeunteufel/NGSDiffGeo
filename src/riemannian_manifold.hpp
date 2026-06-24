@@ -44,22 +44,29 @@ namespace ngfem
         shared_ptr<CoefficientFunction> g_F_inv;
         shared_ptr<CoefficientFunction> g_E;
         shared_ptr<CoefficientFunction> g_E_inv;
-        shared_ptr<CoefficientFunction> g_deriv;
+        mutable shared_ptr<CoefficientFunction> g_typed;
+        mutable shared_ptr<CoefficientFunction> g_inv_typed;
+        mutable shared_ptr<CoefficientFunction> g_F_typed;
+        mutable shared_ptr<CoefficientFunction> g_F_inv_typed;
+        mutable shared_ptr<CoefficientFunction> g_E_typed;
+        mutable shared_ptr<CoefficientFunction> g_E_inv_typed;
+        mutable bool curvature_initialized;
+        mutable shared_ptr<CoefficientFunction> g_deriv;
         shared_ptr<CoefficientFunction> vol[4];
 
         // Christoffel symbols of first and second kind
-        shared_ptr<CoefficientFunction> chr1;
-        shared_ptr<CoefficientFunction> chr2;
+        mutable shared_ptr<CoefficientFunction> chr1;
+        mutable shared_ptr<CoefficientFunction> chr2;
 
         // curvature quantities
-        shared_ptr<DoubleFormCoefficientFunction> Riemann;
-        shared_ptr<TensorFieldCoefficientFunction> Curvature;
-        shared_ptr<DoubleFormCoefficientFunction> Ricci;
-        shared_ptr<DoubleFormCoefficientFunction> Einstein;
-        shared_ptr<TensorFieldCoefficientFunction> Scalar;
+        mutable shared_ptr<DoubleFormCoefficientFunction> Riemann;
+        mutable shared_ptr<TensorFieldCoefficientFunction> Curvature;
+        mutable shared_ptr<DoubleFormCoefficientFunction> Ricci;
+        mutable shared_ptr<DoubleFormCoefficientFunction> Einstein;
+        mutable shared_ptr<TensorFieldCoefficientFunction> Scalar;
 
-        shared_ptr<DoubleFormCoefficientFunction> SFF;
-        shared_ptr<DoubleFormCoefficientFunction> SFF_restricted;
+        mutable shared_ptr<DoubleFormCoefficientFunction> SFF;
+        mutable shared_ptr<DoubleFormCoefficientFunction> SFF_restricted;
         shared_ptr<ScalarFieldCoefficientFunction> AngleDefect;
 
         // Euclidean and g-normalized normal and tangent vectors
@@ -76,9 +83,13 @@ namespace ngfem
 
         shared_ptr<CoefficientFunction> P_F_g;
         shared_ptr<CoefficientFunction> P_E_g;
+        mutable shared_ptr<CoefficientFunction> P_F_g_T;
+        mutable shared_ptr<CoefficientFunction> P_E_g_T;
 
         mutable shared_ptr<TensorFieldCoefficientFunction> levi_civita_cov;
         mutable shared_ptr<TensorFieldCoefficientFunction> levi_civita_contra;
+
+        void EnsureCurvature() const;
 
     public:
         /**
