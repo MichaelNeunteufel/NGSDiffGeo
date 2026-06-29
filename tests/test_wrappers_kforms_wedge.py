@@ -88,6 +88,45 @@ def test_wedge_power_doubleform_edge_cases(make_unit_square_mesh):
     assert l2_error(out1, df, mesh) == pytest.approx(0)
 
 
+def test_compiled_doubleform_wedge_preserves_value(make_unit_cube_mesh):
+    mesh = make_unit_cube_mesh(maxh=0.5)
+
+    alpha = dg.OneForm(CF((0.3 * x * y, z**2, -0.1 * x)))
+    beta = dg.OneForm(CF((0.3 * z * y, x * z**2, y**2)))
+    gamma = dg.OneForm(CF((0.3 * y * z - x * y, x**2 * z + 0.34 * y**3, -x * y * z)))
+
+    left = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=3)
+    right = dg.DoubleForm(Einsum("i,j->ij", beta, gamma), p=1, q=1, dim=3)
+    wedge = dg.Wedge(left, right)
+    compiled = dg.DoubleForm(wedge.coef.Compile(maxderiv=0), p=2, q=2, dim=3)
+
+    assert l2_error(wedge, compiled, mesh) < 1e-12
+
+
+def test_doubleform_wedge_three_slot_shuffle_matches_component_formula(make_unit_cube_mesh):
+    mesh = make_unit_cube_mesh(maxh=0.5)
+
+    alpha = dg.OneForm(CF((0.3 * x * y, z**2, -0.1 * x)))
+    beta = dg.OneForm(CF((0.3 * z * y, x * z**2, y**2)))
+    gamma = dg.OneForm(CF((0.3 * y * z - x * y, x**2 * z + 0.34 * y**3, -x * y * z)))
+    omega = dg.Wedge(alpha, beta)
+
+    phi = dg.DoubleForm(omega, p=0, q=2, dim=3)
+    psi = dg.DoubleForm(Einsum("i,j->ij", beta, gamma), p=1, q=1, dim=3)
+    wedge = dg.Wedge(phi, psi)
+
+    expected = dg.DoubleForm(
+        Einsum("jk,il->ijkl", phi.coef, psi.coef)
+        - Einsum("jl,ik->ijkl", phi.coef, psi.coef)
+        + Einsum("kl,ij->ijkl", phi.coef, psi.coef),
+        p=1,
+        q=3,
+        dim=3,
+    )
+
+    assert l2_error(wedge, expected, mesh) < 1e-12
+
+
 def test_sym_doubleform_properties(make_unit_square_mesh):
     mesh = make_unit_square_mesh(maxh=0.3)
     dim = 2
@@ -305,6 +344,70 @@ def test_doubleform_wedge_high_rank_zero_remains_representable(make_unit_cube_me
     assert overflow.degree_right == 5
     assert Integrate(Norm(overflow) * dx(bonus_intorder=3), mesh) == pytest.approx(0)
     assert Integrate(rm.SlotInnerProduct(overflow) * dx(bonus_intorder=3), mesh) == pytest.approx(0)
+    assert overflow.trans.degree_left == 5
+    assert overflow.trans.degree_right == 5
+
+    d_right = rm.d_cov(overflow, slot="right")
+    d_left_transposed = rm.d_cov(overflow.trans, slot="left").trans
+    assert d_right.degree_left == d_left_transposed.degree_left
+    assert d_right.degree_right == d_left_transposed.degree_right
+    assert l2_norm(d_right - d_left_transposed, mesh) == pytest.approx(0)
+
+    delta_right = rm.delta_cov(overflow, slot="right")
+    delta_left_transposed = rm.delta_cov(overflow.trans, slot="left").trans
+    assert delta_right.degree_left == delta_left_transposed.degree_left
+    assert delta_right.degree_right == delta_left_transposed.degree_right
+    assert l2_norm(delta_right - delta_left_transposed, mesh) == pytest.approx(0)
+
+
+def test_overdegree_concrete_zero_doubleform_arithmetic_stays_formal(make_unit_cube_mesh, rm_euclidean_3d):
+    mesh = make_unit_cube_mesh(maxh=0.6)
+    rm = rm_euclidean_3d
+
+    alpha = dg.OneForm(CF((0.3 * x * y, z**2, -0.1 * x)))
+    beta = dg.OneForm(CF((0.3 * z * y, x * z**2, y**2)))
+    gamma = dg.OneForm(CF((0.3 * y * z - x * y, x**2 * z + 0.34 * y**3, -x * y * z)))
+    omega = dg.Wedge(alpha, beta)
+
+    phi_12 = dg.DoubleForm(Einsum("i,jk->ijk", alpha, omega), p=1, q=2, dim=3)
+    psi_11 = dg.DoubleForm(Einsum("i,j->ij", beta, gamma), p=1, q=1, dim=3)
+    phi_23 = dg.Wedge(phi_12, psi_11)
+
+    right_zero = rm.d_cov(phi_23, slot="right")
+    left_zero = rm.d_cov(phi_23.trans, slot="left").trans
+
+    assert right_zero.degree_left == 2
+    assert right_zero.degree_right == 4
+    assert left_zero.degree_left == 2
+    assert left_zero.degree_right == 4
+    assert l2_norm(right_zero - left_zero, mesh) == pytest.approx(0)
+
+
+def test_zero_doubleforms_with_different_degrees_are_neutral(make_unit_cube_mesh):
+    mesh = make_unit_cube_mesh(maxh=0.6)
+
+    zero_00 = dg.DoubleForm(CF(0), p=0, q=0, dim=3)
+    zero_11 = dg.DoubleForm(CF((0,) * 9, dims=(3, 3)), p=1, q=1, dim=3)
+    symbolic_zero_00 = dg.DoubleForm(x * y, p=0, q=0, dim=3)
+    symbolic_zero_00 = symbolic_zero_00 - symbolic_zero_00
+
+    assert l2_norm(zero_00 - zero_11, mesh) == pytest.approx(0)
+    assert l2_norm(zero_11 - zero_00, mesh) == pytest.approx(0)
+    assert l2_norm(symbolic_zero_00 - zero_11, mesh) == pytest.approx(0)
+
+
+def test_formal_zero_doubleform_mismatched_degree_is_symmetric_neutral(make_unit_cube_mesh):
+    mesh = make_unit_cube_mesh(maxh=0.6)
+
+    alpha = dg.OneForm(CF((0.3 * x * y, z**2, -0.1 * x)))
+    beta = dg.OneForm(CF((0.3 * z * y, x * z**2, y**2)))
+    phi = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=3)
+    zero_00 = dg.FormalZeroDoubleForm(0, 0, dim=3)
+
+    assert l2_error(phi + zero_00, phi, mesh) == pytest.approx(0)
+    assert l2_error(zero_00 + phi, phi, mesh) == pytest.approx(0)
+    assert l2_error(phi - zero_00, phi, mesh) == pytest.approx(0)
+    assert l2_error(zero_00 - phi, -phi, mesh) == pytest.approx(0)
 
 
 def test_doubleform_wedge_right_slot_nonzero(make_unit_cube_mesh, rm_euclidean_3d):

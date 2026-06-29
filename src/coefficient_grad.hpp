@@ -80,6 +80,16 @@ namespace ngfem
                     values[d * c1->Dimension() + i] = v1[i];
         }
 
+        virtual void NonZeroPattern(const class ProxyUserData &ud,
+                                    FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> input,
+                                    FlatVector<AutoDiffDiff<1, NonZero>> values) const override
+        {
+            values = AutoDiffDiff<1, NonZero>(true);
+            for (size_t d = 0; d < D; d++)
+                for (size_t i = 0; i < c1->Dimension(); i++)
+                    values[d * c1->Dimension() + i] = input[0][i];
+        }
+
         shared_ptr<CoefficientFunction>
         Transform(CoefficientFunction::T_Transform &transformation) const override
         {
@@ -123,19 +133,17 @@ namespace ngfem
                     throw Exception(ToString("GradCF(surface) :: T_Evaluate_impl: bmir.DimElement() = ") + ToString(bmir.DimElement()));
                 }
             }
-            LocalHeapMem<10000> lh("GradCF-lh");
+            auto & lh = TLHeap();
+            HeapReset hr_lh(lh);
 
             int hd = c1->Dimension();
             if (!surface)
             {
                 auto &mir = static_cast<const MappedIntegrationRule<D, D> &>(bmir);
                 auto &ir = mir.IR();
-                STACK_ARRAY(T, hmem, hd * 4);
-                STACK_ARRAY(T, hmem2, hd * D);
-                STACK_ARRAY(T, hmem3, hd * D);
-                FlatMatrix<T, ORD> values_c1(hd, 4, &hmem[0]);
-                FlatMatrix<T, ORD> dshape_ref(hd, D, &hmem2[0]);
-                FlatMatrix<T, ORD> dshape(hd, D, &hmem3[0]);
+                FlatMatrix<T, ORD> values_c1(hd, 4, lh);
+                FlatMatrix<T, ORD> dshape_ref(hd, D, lh);
+                FlatMatrix<T, ORD> dshape(hd, D, lh);
 
                 for (size_t i = 0; i < mir.Size(); i++)
                 {
@@ -175,12 +183,9 @@ namespace ngfem
             }
             else
             {
-                STACK_ARRAY(T, hmem, hd * 4);
-                STACK_ARRAY(T, hmem2, hd * (D - 1));
-                STACK_ARRAY(T, hmem3, hd * D);
-                FlatMatrix<T, ORD> values_c1(hd, 4, &hmem[0]);
-                FlatMatrix<T, ORD> dshape_ref(hd, D - 1, &hmem2[0]);
-                FlatMatrix<T, ORD> dshape(hd, D, &hmem3[0]);
+                FlatMatrix<T, ORD> values_c1(hd, 4, lh);
+                FlatMatrix<T, ORD> dshape_ref(hd, D - 1, lh);
+                FlatMatrix<T, ORD> dshape(hd, D, lh);
 
                 if (bmir.DimElement() == D - 1)
                 {

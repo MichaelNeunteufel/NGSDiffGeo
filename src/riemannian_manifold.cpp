@@ -30,6 +30,126 @@ namespace ngfem
             throw Exception("s_op (double-form): not enough signature labels available");
         }
 
+#if 0
+        // Kept here for quick reactivation if raw coefficient-expression
+        // evaluation issues come back.
+        class NonZeroPatternBarrierCoefficientFunction
+            : public T_CoefficientFunction<NonZeroPatternBarrierCoefficientFunction>
+        {
+            shared_ptr<CoefficientFunction> c1;
+
+        public:
+            NonZeroPatternBarrierCoefficientFunction(shared_ptr<CoefficientFunction> ac1)
+                : T_CoefficientFunction<NonZeroPatternBarrierCoefficientFunction>(ac1->Dimension(), ac1->IsComplex()),
+                  c1(ac1)
+            {
+                this->SetDimensions(c1->Dimensions());
+                this->elementwise_constant = c1->ElementwiseConstant();
+            }
+
+            virtual string GetDescription() const override
+            {
+                return "NonZeroPatternBarrierCF";
+            }
+
+            auto GetCArgs() const { return tuple{c1}; }
+
+            void DoArchive(Archive &ar) override
+            {
+            }
+
+            virtual void TraverseTree(const function<void(CoefficientFunction &)> &func) override
+            {
+                func(*this);
+            }
+
+            virtual Array<shared_ptr<CoefficientFunction>> InputCoefficientFunctions() const override
+            {
+                return Array<shared_ptr<CoefficientFunction>>();
+            }
+
+            using T_CoefficientFunction<NonZeroPatternBarrierCoefficientFunction>::Evaluate;
+
+            virtual double Evaluate(const BaseMappedIntegrationPoint &ip) const override
+            {
+                return c1->Evaluate(ip);
+            }
+
+            virtual void Evaluate(const BaseMappedIntegrationPoint &ip, FlatVector<> values) const override
+            {
+                c1->Evaluate(ip, values);
+            }
+
+            virtual void Evaluate(const BaseMappedIntegrationPoint &ip, FlatVector<Complex> values) const override
+            {
+                c1->Evaluate(ip, values);
+            }
+
+            template <typename MIR, typename T, ORDERING ORD>
+            void T_Evaluate(const MIR &ir, BareSliceMatrix<T, ORD> values) const
+            {
+                c1->Evaluate(ir, values);
+            }
+
+            template <typename MIR, typename T, ORDERING ORD>
+            void T_Evaluate(const MIR &ir, FlatArray<BareSliceMatrix<T, ORD>> input,
+                            BareSliceMatrix<T, ORD> values) const
+            {
+                c1->Evaluate(ir, values);
+            }
+
+            shared_ptr<CoefficientFunction>
+            Transform(CoefficientFunction::T_Transform &transformation) const override
+            {
+                auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
+                if (transformation.cache.count(thisptr))
+                    return transformation.cache[thisptr];
+                if (transformation.replace.count(thisptr))
+                    return transformation.replace[thisptr];
+                auto res = make_shared<NonZeroPatternBarrierCoefficientFunction>(c1->Transform(transformation));
+                transformation.cache[thisptr] = res;
+                return res;
+            }
+
+            shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
+                                                 shared_ptr<CoefficientFunction> dir) const override
+            {
+                if (this == var)
+                    return dir;
+                return make_shared<NonZeroPatternBarrierCoefficientFunction>(c1->Diff(var, dir));
+            }
+
+            shared_ptr<CoefficientFunction> DiffJacobi(const CoefficientFunction *var, T_DJC &cache) const override
+            {
+                auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
+                if (cache.find(thisptr) != cache.end())
+                    return cache[thisptr];
+
+                if (this == var)
+                    return IdentityCF(this->Dimensions());
+
+                auto res = make_shared<NonZeroPatternBarrierCoefficientFunction>(c1->DiffJacobi(var, cache));
+                cache[thisptr] = res;
+                return res;
+            }
+
+            virtual void NonZeroPattern(const class ProxyUserData &ud,
+                                        FlatVector<AutoDiffDiff<1, NonZero>> values) const override
+            {
+                values = AutoDiffDiff<1, NonZero>(true);
+            }
+
+            virtual void NonZeroPattern(const class ProxyUserData &ud,
+                                        FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> input,
+                                        FlatVector<AutoDiffDiff<1, NonZero>> values) const override
+            {
+                values = AutoDiffDiff<1, NonZero>(true);
+            }
+
+            virtual bool IsZeroCF() const override { return c1->IsZeroCF(); }
+        };
+#endif
+
         struct CurvatureSources
         {
             shared_ptr<CoefficientFunction> g_deriv;
@@ -115,6 +235,24 @@ namespace ngfem
         {
             CurvatureSources src;
             int dim = M.Dimension();
+
+            if (g->GetDescription() == "Identity matrix" && !g->IsVariable())
+            {
+                Array<int> dims3({dim, dim, dim});
+                src.g_deriv = ZeroCF(dims3);
+                src.chr1 = ZeroCF(dims3);
+                src.chr2 = ZeroCF(dims3);
+                src.Riemann = ZeroDoubleForm(2, 2, dim);
+                if (dim == 2)
+                    src.Curvature = ScalarFieldCF(make_shared<ConstantCoefficientFunction>(0.0), dim);
+                else
+                    src.Curvature = TensorFieldCF(ZeroCF(Array<int>({dim, dim})), "00");
+                src.Ricci = ZeroDoubleForm(1, 1, dim);
+                src.Scalar = ScalarFieldCF(make_shared<ConstantCoefficientFunction>(0.0), dim);
+                src.Einstein = ZeroDoubleForm(1, 1, dim);
+                return src;
+            }
+
             src.g_deriv = GradCF(g, dim);
             Array<shared_ptr<CoefficientFunction>> values(dim * dim * dim);
 
@@ -183,6 +321,14 @@ namespace ngfem
                 throw Exception(string(name) + ": slot must be 0/1 or 'left'/'right'");
 
             auto cov_der = M.CovDerivative(tf, vb);
+            // Temporarily disabled for investigating raw-expression crashes.
+            // The connection terms can produce very large mixed coefficient
+            // expression trees. Re-enable this block to compare against the
+            // compiled/nonzero-pattern barrier behavior.
+            // cov_der = TensorFieldCF(
+            //     make_shared<NonZeroPatternBarrierCoefficientFunction>(
+            //         Compile(cov_der->GetCoefficients(), false, 0)),
+            //     cov_der->GetCovariantIndices());
 
             auto project_if_needed = [&](shared_ptr<DoubleFormCoefficientFunction> df)
             {
@@ -978,6 +1124,16 @@ namespace ngfem
             throw Exception("CovDerivative: only implemented for vb=VOL and vb=BND.");
 
         shared_ptr<TensorFieldCoefficientFunction> result;
+        bool zero_connection = chr2->IsZeroCF();
+
+        if (c1->IsZeroCF())
+        {
+            Array<int> zero_dims(c1->Dimensions().Size() + 1);
+            zero_dims[0] = dim;
+            for (size_t i = 0; i < c1->Dimensions().Size(); ++i)
+                zero_dims[i + 1] = c1->Dimensions()[i];
+            return TensorFieldCF(ZeroCF(zero_dims), "1" + c1->GetCovariantIndices());
+        }
 
         // scalar field
         if (c1->Dimensions().Size() == 0)
@@ -988,13 +1144,19 @@ namespace ngfem
         // vector field
         else if (auto vf = dynamic_pointer_cast<VectorFieldCoefficientFunction>(c1))
         {
-            result = TensorFieldCF(GradCF(vf->GetCoefficients(), dim) + EinsumCF("ikj,k->ij", {chr2, vf->GetCoefficients()}), "10");
+            auto result_cf = GradCF(vf->GetCoefficients(), dim);
+            if (!zero_connection)
+                result_cf = result_cf + EinsumCF("ikj,k->ij", {chr2, vf->GetCoefficients()});
+            result = TensorFieldCF(result_cf, "10");
         }
 
         // one-form field
         else if (auto of = dynamic_pointer_cast<OneFormCoefficientFunction>(c1))
         {
-            result = TensorFieldCF(GradCF(of->GetCoefficients(), dim) - EinsumCF("ijk,k->ij", {chr2, of->GetCoefficients()}), "11");
+            auto result_cf = GradCF(of->GetCoefficients(), dim);
+            if (!zero_connection)
+                result_cf = result_cf - EinsumCF("ijk,k->ij", {chr2, of->GetCoefficients()});
+            result = TensorFieldCF(result_cf, "11");
         }
 
         // General tensor field
@@ -1006,21 +1168,24 @@ namespace ngfem
             char new_char = FreshLabel(signature);
 
             auto result_cf = GradCF(c1->GetCoefficients(), dim);
-            for (size_t i = 0; i < signature.size(); i++)
+            if (!zero_connection)
             {
-                tmp_signature = signature;
-                tmp_signature[i] = FreshLabel(signature + std::string(1, new_char));
-                if (cov_ind[i] == '1')
+                for (size_t i = 0; i < signature.size(); i++)
                 {
-                    // covariant
-                    string einsum_signature = ToString(new_char) + signature[i] + tmp_signature[i] + "," + tmp_signature + "->" + new_char + signature;
-                    result_cf = result_cf - EinsumCF(einsum_signature, {chr2, c1->GetCoefficients()});
-                }
-                else
-                {
-                    // contravariant
-                    string einsum_signature = ToString(new_char) + tmp_signature[i] + signature[i] + "," + tmp_signature + "->" + new_char + signature;
-                    result_cf = result_cf + EinsumCF(einsum_signature, {chr2, c1->GetCoefficients()});
+                    tmp_signature = signature;
+                    tmp_signature[i] = FreshLabel(signature + std::string(1, new_char));
+                    if (cov_ind[i] == '1')
+                    {
+                        // covariant
+                        string einsum_signature = ToString(new_char) + signature[i] + tmp_signature[i] + "," + tmp_signature + "->" + new_char + signature;
+                        result_cf = result_cf - EinsumCF(einsum_signature, {chr2, c1->GetCoefficients()});
+                    }
+                    else
+                    {
+                        // contravariant
+                        string einsum_signature = ToString(new_char) + tmp_signature[i] + signature[i] + "," + tmp_signature + "->" + new_char + signature;
+                        result_cf = result_cf + EinsumCF(einsum_signature, {chr2, c1->GetCoefficients()});
+                    }
                 }
             }
             result = TensorFieldCF(result_cf, "1" + cov_ind);

@@ -93,6 +93,22 @@ def _is_scalarfield_like(obj):
     return False
 
 
+def _is_raw_scalar_coefficient(obj):
+    return (
+        isinstance(obj, ngsolve.CoefficientFunction)
+        and getattr(obj, "dim", None) == 1
+        and not isinstance(
+            obj,
+            (
+                _CPP_KForm,
+                _CPP_DoubleForm,
+                _CPP_VectorField,
+                _CPP_TensorField,
+            ),
+        )
+    )
+
+
 def _raise_doubleform_scalar_op_error(op, other):
     raise TypeError(
         f"DoubleForm '{op}' only supports scalar operands. "
@@ -220,6 +236,35 @@ def _doubleform_degrees(obj):
             raise TypeError("double-form scalar input requires inferable dim")
         return 0, 0, int(dim)
     return None
+
+
+def _is_zero_doubleform_like(obj):
+    if isinstance(obj, FormalZeroDoubleForm):
+        return True
+    if isinstance(obj, (DoubleForm, _CPP_DoubleForm)):
+        return bool(getattr(obj, "is_zero", False))
+    return False
+
+
+def _raise_doubleform_degree_error(op):
+    raise TypeError(
+        f"cannot {op} double-forms of different left/right degree or dimension"
+    )
+
+
+def _zero_neutral_doubleform_result(left, right, op):
+    if _same_doubleform_degree(left, right):
+        return None
+    if not (_is_zero_doubleform_like(left) or _is_zero_doubleform_like(right)):
+        _raise_doubleform_degree_error(op)
+
+    if _is_zero_doubleform_like(left) and _is_zero_doubleform_like(right):
+        return left
+    if op == "add":
+        return right if _is_zero_doubleform_like(left) else left
+    if op == "subtract":
+        return -right if _is_zero_doubleform_like(left) else left
+    raise ValueError("unsupported double-form operation")
 
 
 def _kform_degree(obj):
@@ -529,13 +574,37 @@ class DoubleForm(_CPP_DoubleForm):
     def _wrap(self, cf):
         return as_doubleform(cf, p=self._p, q=self._q, dim=self._dim)
 
+    def _is_overflow_zero_degree(self):
+        return self._p > self._dim or self._q > self._dim
+
+    def _formal_zero(self, *, reason):
+        return FormalZeroDoubleForm(self._p, self._q, self._dim, reason=reason)
+
+    def _can_add_scalar(self, other):
+        if not _is_scalarfield_like(other):
+            return False
+        if self._p != 0 or self._q != 0:
+            return False
+        if _is_raw_scalar_coefficient(other):
+            return True
+        other_dim = _infer_dim(other)
+        return other_dim is None or other_dim == self._dim
+
     def __add__(self, other):
         if is_formal_zero_doubleform(other):
-            if not _same_doubleform_degree(self, other):
-                raise TypeError(
-                    "cannot add double-forms of different left/right degree or dimension"
-                )
-            return self
+            neutral = _zero_neutral_doubleform_result(self, other, "add")
+            if neutral is not None:
+                return neutral
+            return self._formal_zero(reason="add") if self._is_overflow_zero_degree() else self
+        if self._can_add_scalar(other):
+            return self._wrap(self.coef + _unwrap_cf(other))
+        other_degrees = _doubleform_degrees(other)
+        if other_degrees is not None:
+            neutral = _zero_neutral_doubleform_result(self, other, "add")
+            if neutral is not None:
+                return neutral
+            if self._is_overflow_zero_degree():
+                return self._formal_zero(reason="add")
         return self._wrap(self.coef + _unwrap_cf(other))
 
     def __radd__(self, other):
@@ -543,14 +612,29 @@ class DoubleForm(_CPP_DoubleForm):
 
     def __sub__(self, other):
         if is_formal_zero_doubleform(other):
-            if not _same_doubleform_degree(self, other):
-                raise TypeError(
-                    "cannot subtract double-forms of different left/right degree or dimension"
-                )
-            return self
+            neutral = _zero_neutral_doubleform_result(self, other, "subtract")
+            if neutral is not None:
+                return neutral
+            return self._formal_zero(reason="sub") if self._is_overflow_zero_degree() else self
+        if self._can_add_scalar(other):
+            return self._wrap(self.coef - _unwrap_cf(other))
+        other_degrees = _doubleform_degrees(other)
+        if other_degrees is not None:
+            neutral = _zero_neutral_doubleform_result(self, other, "subtract")
+            if neutral is not None:
+                return neutral
+            if self._is_overflow_zero_degree():
+                return self._formal_zero(reason="sub")
         return self._wrap(self.coef - _unwrap_cf(other))
 
+    def __rsub__(self, other):
+        if self._can_add_scalar(other):
+            return self._wrap(_unwrap_cf(other) - self.coef)
+        return NotImplemented
+
     def __neg__(self):
+        if self._is_overflow_zero_degree():
+            return self._formal_zero(reason="neg")
         return self._wrap(-self.coef)
 
     def __mul__(self, other):
@@ -645,6 +729,9 @@ class FormalZeroKForm(FormalZeroBase):
         _validate_inner_product_compatibility(self, other, forms=False)
         return ngsolve.CF(0)
 
+    def Norm(self):
+        return ngsolve.CF(0)
+
 
 class FormalZeroDoubleForm(FormalZeroBase):
     def __init__(self, p, q, dim, *, reason=None):
@@ -655,16 +742,14 @@ class FormalZeroDoubleForm(FormalZeroBase):
 
     def __add__(self, other):
         if is_formal_zero_doubleform(other):
-            if not _same_doubleform_degree(self, other):
-                raise TypeError(
-                    "cannot add double-forms of different left/right degree or dimension"
-                )
+            neutral = _zero_neutral_doubleform_result(self, other, "add")
+            if neutral is not None:
+                return neutral
             return self
         if _doubleform_degrees(other) is not None:
-            if not _same_doubleform_degree(self, other):
-                raise TypeError(
-                    "cannot add double-forms of different left/right degree or dimension"
-                )
+            neutral = _zero_neutral_doubleform_result(self, other, "add")
+            if neutral is not None:
+                return neutral
             return other
         return NotImplemented
 
@@ -673,25 +758,22 @@ class FormalZeroDoubleForm(FormalZeroBase):
 
     def __sub__(self, other):
         if is_formal_zero_doubleform(other):
-            if not _same_doubleform_degree(self, other):
-                raise TypeError(
-                    "cannot subtract double-forms of different left/right degree or dimension"
-                )
+            neutral = _zero_neutral_doubleform_result(self, other, "subtract")
+            if neutral is not None:
+                return neutral
             return self
         if _doubleform_degrees(other) is not None:
-            if not _same_doubleform_degree(self, other):
-                raise TypeError(
-                    "cannot subtract double-forms of different left/right degree or dimension"
-                )
+            neutral = _zero_neutral_doubleform_result(self, other, "subtract")
+            if neutral is not None:
+                return neutral
             return (-1) * other
         return NotImplemented
 
     def __rsub__(self, other):
         if _doubleform_degrees(other) is not None:
-            if not _same_doubleform_degree(self, other):
-                raise TypeError(
-                    "cannot subtract double-forms of different left/right degree or dimension"
-                )
+            neutral = _zero_neutral_doubleform_result(other, self, "subtract")
+            if neutral is not None:
+                return neutral
             return other
         return NotImplemented
 
@@ -709,6 +791,18 @@ class FormalZeroDoubleForm(FormalZeroBase):
     def InnerProduct(self, other):
         _validate_inner_product_compatibility(self, other, forms=True)
         return ngsolve.CF(0)
+
+    def Norm(self):
+        return ngsolve.CF(0)
+
+    @property
+    def trans(self):
+        return FormalZeroDoubleForm(
+            self.degree_right,
+            self.degree_left,
+            self.dim_space,
+            reason="trans",
+        )
 
 
 # ---------------- as_* functions ----------------
@@ -1485,6 +1579,13 @@ def Wedge(a, b):
         dim = _infer_dim(a) or _infer_dim(b)
         da = _as_doubleform_like(a, dim=dim)
         db = _as_doubleform_like(b, dim=dim)
+        if da.degree_left + db.degree_left > dim or da.degree_right + db.degree_right > dim:
+            return FormalZeroDoubleForm(
+                da.degree_left + db.degree_left,
+                da.degree_right + db.degree_right,
+                dim,
+                reason="Wedge",
+            )
         out = _cpp.Wedge(da, db)
         return as_doubleform(
             out, p=out.degree_left, q=out.degree_right, dim=out.dim_space
