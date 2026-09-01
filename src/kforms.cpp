@@ -11,6 +11,41 @@ namespace ngfem
 {
     namespace
     {
+        std::string GeneratedCoefficientType(const Code &code, bool is_complex)
+        {
+            std::string type = is_complex ? "Complex" : "double";
+            if (code.is_simd)
+                type = "SIMD<" + type + ">";
+            if (code.deriv == 1)
+                type = "AutoDiff<1," + type + ">";
+            if (code.deriv == 2)
+                type = "AutoDiffDiff<1," + type + ">";
+            return type;
+        }
+
+        void DeclareGeneratedCoefficient(Code &code, int index,
+                                         FlatArray<int> dims, bool is_complex)
+        {
+            // Code::Declare is not exported by the NGSolve DLL on Windows.
+            // Generate the equivalent declaration locally so addon wheels link.
+            const std::string type = GeneratedCoefficientType(code, is_complex);
+
+            if (code_uses_tensors)
+            {
+                code.body += "Tens<" + type;
+                for (int dim : dims)
+                    code.body += ',' + ToLiteral(dim);
+                code.body += "> var_" + ToLiteral(index) + ";\n";
+                return;
+            }
+
+            size_t component_count = 1;
+            for (int dim : dims)
+                component_count *= size_t(dim);
+            for (size_t component = 0; component < component_count; ++component)
+                code.body += Var(index, int(component), dims).Declare(type);
+        }
+
         template <typename T>
         shared_ptr<T> RequireNonNull(shared_ptr<T> ptr, const char *name)
         {
@@ -355,41 +390,6 @@ namespace ngfem
             return entry;
         }
 
-        const SignedPermutationOrders &
-        GetSignedBlockPermutationData(int rank_total, int block_start, const PermutationSpec &spec)
-        {
-            constexpr size_t family_count = 2;
-            static std::array<std::array<std::array<std::array<std::array<SignedPermutationOrders, MAX_PERMUTATION_RANK + 1>, MAX_PERMUTATION_RANK + 1>, family_count>, MAX_FORM_RANK + 1>, MAX_FORM_RANK + 1> cache;
-
-            int block_len = BlockLength(spec);
-            if (rank_total < 0 || rank_total > MAX_FORM_RANK)
-                throw Exception("GetSignedBlockPermutationData: rank_total must be in [0, " + ToString(MAX_FORM_RANK) + "]");
-            if (block_start < 0 || block_start + block_len > rank_total)
-                throw Exception("GetSignedBlockPermutationData: block range out of bounds");
-
-            auto family_index = size_t(spec.family);
-            auto &entry = cache[size_t(rank_total)][size_t(block_start)][family_index][size_t(spec.a)][size_t(spec.b)];
-
-            std::call_once(entry.flag, [&]()
-                           {
-            const auto &signed_perms = GetSignedPermutations(spec);
-            const auto &perms = signed_perms.perms;
-            entry.orders.resize(perms.size());
-            entry.signs = signed_perms.signs;
-
-            for (size_t p = 0; p < perms.size(); ++p)
-            {
-                auto &order = entry.orders[p];
-                order.resize(size_t(rank_total));
-                for (int i = 0; i < rank_total; ++i)
-                    order[size_t(i)] = i;
-                for (int i = 0; i < block_len; ++i)
-                    order[size_t(block_start + i)] = block_start + perms[p][size_t(i)];
-            } });
-
-            return entry;
-        }
-
         std::string FreshSignature(std::string_view used, int count)
         {
             if (count < 0)
@@ -553,47 +553,6 @@ namespace ngfem
 
     } // namespace
 
-    shared_ptr<CoefficientFunction> BlockAlternationByPermutationCF(shared_ptr<CoefficientFunction> T, int rank_total, int block_start, int block_len)
-    {
-        if (!T)
-            throw Exception("BlockAlternationByPermutationCF: input coefficient is null");
-        if (rank_total < 0 || rank_total > MAX_FORM_RANK)
-            throw Exception("BlockAlternationByPermutationCF: only ranks 0-" + ToString(MAX_FORM_RANK) + " supported");
-        if (block_len < 0 || block_len > MAX_PERMUTATION_RANK)
-            throw Exception("BlockAlternationByPermutationCF: block size must be in [0, " + ToString(MAX_PERMUTATION_RANK) + "]");
-        if (block_start < 0 || block_start + block_len > rank_total)
-            throw Exception("BlockAlternationByPermutationCF: block range out of bounds");
-        if (block_len <= 1)
-            return T;
-
-        shared_ptr<TensorFieldCoefficientFunction> tf;
-        if (auto ttf = dynamic_pointer_cast<TensorFieldCoefficientFunction>(T))
-        {
-            tf = ttf;
-            for (char c : tf->GetCovariantIndices())
-                if (c != '1')
-                    throw Exception("BlockAlternationByPermutationCF: only covariant tensors are supported");
-        }
-        else
-            tf = TensorFieldCF(T, std::string(size_t(rank_total), '1'));
-
-        if (int(tf->Dimensions().Size()) != rank_total)
-            throw Exception("BlockAlternationByPermutationCF: tensor rank mismatch");
-
-        const auto &data = GetSignedBlockPermutationData(rank_total, block_start,
-                                                         PermutationSpec{PermutationFamily::Full, block_len, 0});
-
-        shared_ptr<CoefficientFunction> accum;
-        for (size_t p = 0; p < data.orders.size(); ++p)
-        {
-            shared_ptr<CoefficientFunction> term = PermuteTensorCF(tf, data.orders[p]);
-            if (data.signs[p] == -1)
-                term = (-1.0) * term;
-            accum = accum ? (accum + term) : term;
-        }
-        return accum;
-    }
-
     KFormCoefficientFunction::KFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, uint8_t ak, uint8_t adim)
         : TensorFieldCoefficientFunction(ac1, std::string(size_t(ak), '1')), degree(ak), dim(adim)
     {
@@ -748,6 +707,80 @@ namespace ngfem
             throw Exception("ThreeFormCF: input must be rank-3");
     }
 
+    template <typename VIN, typename VOUT>
+    void ApplyLinearNonZeroPattern(const std::vector<int> &valid_indices,
+                                   const std::vector<int> &lin_table,
+                                   size_t terms_per_index,
+                                   VIN input,
+                                   VOUT values)
+    {
+        values = AutoDiffDiff<1, NonZero>(false);
+        for (size_t vi = 0; vi < valid_indices.size(); ++vi)
+        {
+            int idx = valid_indices[vi];
+            auto accum = AutoDiffDiff<1, NonZero>(false);
+            const size_t base = vi * terms_per_index;
+            for (size_t p = 0; p < terms_per_index; ++p)
+                accum = accum + input(lin_table[base + p]);
+            values(idx) = accum;
+        }
+    }
+
+    template <typename MI, typename MV>
+    void ApplySignedLinearTable(size_t nir,
+                                int comp_dim,
+                                const std::vector<int> &valid_indices,
+                                const std::vector<int> &signs,
+                                const std::vector<int> &lin_table,
+                                size_t terms_per_index,
+                                MI input,
+                                MV values)
+    {
+        using T = typename MV::TSCAL;
+        for (size_t ip = 0; ip < nir; ++ip)
+        {
+            for (int idx = 0; idx < comp_dim; ++idx)
+                values(idx, ip) = T(0);
+            for (size_t vi = 0; vi < valid_indices.size(); ++vi)
+            {
+                int idx = valid_indices[vi];
+                T accum = T(0);
+                const size_t base = vi * terms_per_index;
+                for (size_t p = 0; p < terms_per_index; ++p)
+                    accum += T(signs[p]) * input(lin_table[base + p], ip);
+                values(idx, ip) = accum;
+            }
+        }
+    }
+
+    template <typename MA, typename MB, typename MV>
+    void ApplySignedProductTable(size_t nir,
+                                 int comp_dim,
+                                 const std::vector<int> &valid_indices,
+                                 const std::vector<int> &signs,
+                                 const std::vector<int> &lin_a,
+                                 const std::vector<int> &lin_b,
+                                 size_t terms_per_index,
+                                 MA values_a,
+                                 MB values_b,
+                                 MV values)
+    {
+        using T = typename MV::TSCAL;
+        for (size_t ip = 0; ip < nir; ++ip)
+        {
+            for (int idx = 0; idx < comp_dim; ++idx)
+                values(idx, ip) = T(0);
+            for (size_t vi = 0; vi < valid_indices.size(); ++vi)
+            {
+                T accum = T(0);
+                size_t base = vi * terms_per_index;
+                for (size_t t = 0; t < terms_per_index; ++t)
+                    accum += T(signs[base + t]) * values_a(lin_a[base + t], ip) * values_b(lin_b[base + t], ip);
+                values(valid_indices[vi], ip) = accum;
+            }
+        }
+    }
+
     class AlternationCoefficientFunction : public T_CoefficientFunction<AlternationCoefficientFunction>
     {
         shared_ptr<CoefficientFunction> c1;
@@ -855,17 +888,14 @@ namespace ngfem
         {
             Vector<AutoDiffDiff<1, NonZero>> input(values.Size());
             c1->NonZeroPattern(ud, input);
+            ApplyLinearNonZeroPattern(valid_indices, lin_table, perms.size(), input, values);
+        }
 
-            values = AutoDiffDiff<1, NonZero>(false);
-            for (size_t vi = 0; vi < valid_indices.size(); ++vi)
-            {
-                int idx = valid_indices[vi];
-                auto accum = AutoDiffDiff<1, NonZero>(false);
-                const size_t base = vi * perms.size();
-                for (size_t p = 0; p < perms.size(); ++p)
-                    accum = accum + input(lin_table[base + p]);
-                values(idx) = accum;
-            }
+        virtual void NonZeroPattern(const class ProxyUserData &ud,
+                                    FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> input,
+                                    FlatVector<AutoDiffDiff<1, NonZero>> values) const override
+        {
+            ApplyLinearNonZeroPattern(valid_indices, lin_table, perms.size(), input[0], values);
         }
 
         shared_ptr<CoefficientFunction>
@@ -896,32 +926,14 @@ namespace ngfem
             Array<T> temp(comp_dim * mir.Size());
             FlatMatrix<T, ORD> input(comp_dim, mir.Size(), temp.Data());
             c1->Evaluate(mir, input);
-
-            // values = T(0);
-            for (size_t ip = 0; ip < mir.Size(); ++ip)
-            {
-                for (int idx = 0; idx < comp_dim; ++idx)
-                    values(idx, ip) = T(0);
-                for (size_t vi = 0; vi < valid_indices.size(); ++vi)
-                {
-                    int idx = valid_indices[vi];
-                    T accum = T(0);
-                    const size_t base = vi * perms.size();
-                    for (size_t p = 0; p < perms.size(); ++p)
-                    {
-                        int lin = lin_table[base + p];
-                        accum += T(signs[p]) * input(lin, ip);
-                    }
-                    values(idx, ip) = accum;
-                }
-            }
+            ApplySignedLinearTable(mir.Size(), comp_dim, valid_indices, signs, lin_table, perms.size(), input, values);
         }
 
         template <typename MIR, typename T, ORDERING ORD>
         void T_Evaluate(const MIR &ir, FlatArray<BareSliceMatrix<T, ORD>> input,
                         BareSliceMatrix<T, ORD> values) const
         {
-            this->T_Evaluate(ir, values);
+            ApplySignedLinearTable(ir.Size(), this->Dimension(), valid_indices, signs, lin_table, perms.size(), input[0], values);
         }
 
         shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
@@ -953,6 +965,562 @@ namespace ngfem
     {
         return make_shared<AlternationCoefficientFunction>(T, rank, dim);
     }
+
+    class BlockAlternationCoefficientFunction : public T_CoefficientFunction<BlockAlternationCoefficientFunction>
+    {
+        shared_ptr<CoefficientFunction> c1;
+        int rank_total;
+        int block_start;
+        int block_len;
+        int dim;
+        std::vector<std::array<int, 4>> perms;
+        std::vector<int> signs;
+        std::vector<int> valid_indices;
+        std::vector<int> lin_table;
+
+    public:
+        BlockAlternationCoefficientFunction(shared_ptr<CoefficientFunction> ac1,
+                                            int arank_total,
+                                            int ablock_start,
+                                            int ablock_len)
+            : T_CoefficientFunction<BlockAlternationCoefficientFunction>(ac1->Dimension(), ac1->IsComplex()),
+              c1(ac1), rank_total(arank_total), block_start(ablock_start), block_len(ablock_len)
+        {
+            if (rank_total < 0 || rank_total > MAX_FORM_RANK)
+                throw Exception("BlockAlternationCF: only ranks 0-" + ToString(MAX_FORM_RANK) + " supported");
+            if (block_len < 0 || block_len > MAX_PERMUTATION_RANK)
+                throw Exception("BlockAlternationCF: block size must be in [0, " + ToString(MAX_PERMUTATION_RANK) + "]");
+            if (block_start < 0 || block_start + block_len > rank_total)
+                throw Exception("BlockAlternationCF: block range out of bounds");
+            if (c1->Dimensions().Size() != size_t(rank_total))
+                throw Exception("BlockAlternationCF: tensor rank mismatch");
+            if (rank_total == 0)
+                throw Exception("BlockAlternationCF: rank-zero tensors do not need block alternation");
+
+            dim = c1->Dimensions()[0];
+            if (dim < 1 || dim > MAX_SPACE_DIM)
+                throw Exception("BlockAlternationCF: dim must be in {1,...," + ToString(MAX_SPACE_DIM) + "}");
+            for (auto d : c1->Dimensions())
+                if (d != dim)
+                    throw Exception("BlockAlternationCF: tensor dimensions must equal dim");
+
+            this->SetDimensions(c1->Dimensions());
+
+            perms = GeneratePermutations(block_len);
+            signs.resize(perms.size());
+            for (size_t i = 0; i < perms.size(); ++i)
+                signs[i] = PermutationSign(perms[i], block_len);
+
+            int comp_dim = this->Dimension();
+            valid_indices.reserve(comp_dim);
+            lin_table.reserve(size_t(comp_dim) * perms.size());
+
+            std::array<int, MAX_FORM_RANK> multi = {};
+            std::array<int, MAX_FORM_RANK> src_multi = {};
+            for (int idx = 0; idx < comp_dim; ++idx)
+            {
+                int rem = idx;
+                bool repeated = false;
+                for (int j = rank_total - 1; j >= 0; --j)
+                {
+                    multi[size_t(j)] = rem % dim;
+                    rem /= dim;
+                }
+
+                for (int a = 0; a < block_len && !repeated; ++a)
+                    for (int b = a + 1; b < block_len; ++b)
+                        if (multi[size_t(block_start + a)] == multi[size_t(block_start + b)])
+                        {
+                            repeated = true;
+                            break;
+                        }
+
+                if (repeated)
+                    continue;
+
+                valid_indices.push_back(idx);
+                for (size_t p = 0; p < perms.size(); ++p)
+                {
+                    for (int j = 0; j < rank_total; ++j)
+                        src_multi[size_t(j)] = multi[size_t(j)];
+                    for (int j = 0; j < block_len; ++j)
+                        src_multi[size_t(block_start + perms[p][size_t(j)])] = multi[size_t(block_start + j)];
+
+                    int lin = 0;
+                    for (int j = 0; j < rank_total; ++j)
+                        lin = lin * dim + src_multi[size_t(j)];
+                    lin_table.push_back(lin);
+                }
+            }
+        }
+
+        virtual string GetDescription() const override
+        {
+            return "BlockAlternationCF";
+        }
+
+        auto GetCArgs() const { return tuple{c1}; }
+
+        void DoArchive(Archive &ar) override
+        {
+        }
+
+        virtual void GenerateCode(Code &code, FlatArray<int> inputs, int index) const override
+        {
+            DeclareGeneratedCoefficient(code, index, Dimensions(), IsComplex());
+
+            size_t vi = 0;
+            for (int idx = 0; idx < this->Dimension(); ++idx)
+            {
+                if (vi >= valid_indices.size() || valid_indices[vi] != idx)
+                {
+                    code.body += Var(index, idx, Dimensions()).Assign(string("0.0"), false);
+                    continue;
+                }
+
+                CodeExpr result;
+                const size_t base = vi * perms.size();
+                for (size_t p = 0; p < perms.size(); ++p)
+                {
+                    CodeExpr term = Var(inputs[0], lin_table[base + p], c1->Dimensions());
+                    if (signs[p] == -1)
+                        result -= term;
+                    else
+                        result += term;
+                }
+                code.body += Var(index, idx, Dimensions()).Assign(result.S(), false);
+                ++vi;
+            }
+        }
+
+        virtual void TraverseTree(const function<void(CoefficientFunction &)> &func) override
+        {
+            c1->TraverseTree(func);
+            func(*this);
+        }
+
+        virtual Array<shared_ptr<CoefficientFunction>> InputCoefficientFunctions() const override
+        {
+            return Array<shared_ptr<CoefficientFunction>>({c1});
+        }
+
+        virtual void NonZeroPattern(const class ProxyUserData &ud,
+                                    FlatVector<AutoDiffDiff<1, NonZero>> values) const override
+        {
+            Vector<AutoDiffDiff<1, NonZero>> input(values.Size());
+            c1->NonZeroPattern(ud, input);
+            ApplyLinearNonZeroPattern(valid_indices, lin_table, perms.size(), input, values);
+        }
+
+        virtual void NonZeroPattern(const class ProxyUserData &ud,
+                                    FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> input,
+                                    FlatVector<AutoDiffDiff<1, NonZero>> values) const override
+        {
+            ApplyLinearNonZeroPattern(valid_indices, lin_table, perms.size(), input[0], values);
+        }
+
+        shared_ptr<CoefficientFunction>
+        Transform(CoefficientFunction::T_Transform &transformation) const override
+        {
+            auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
+            if (transformation.cache.count(thisptr))
+                return transformation.cache[thisptr];
+            if (transformation.replace.count(thisptr))
+                return transformation.replace[thisptr];
+            auto newcf = make_shared<BlockAlternationCoefficientFunction>(
+                c1->Transform(transformation), rank_total, block_start, block_len);
+            transformation.cache[thisptr] = newcf;
+            return newcf;
+        }
+
+        using T_CoefficientFunction<BlockAlternationCoefficientFunction>::Evaluate;
+
+        virtual double Evaluate(const BaseMappedIntegrationPoint &ip) const override
+        {
+            throw Exception("BlockAlternationCF:: scalar evaluate called");
+        }
+
+        template <typename MIR, typename T, ORDERING ORD>
+        void T_Evaluate(const MIR &mir, BareSliceMatrix<T, ORD> values) const
+        {
+            int comp_dim = this->Dimension();
+
+            Array<T> temp(comp_dim * mir.Size());
+            FlatMatrix<T, ORD> input(comp_dim, mir.Size(), temp.Data());
+            c1->Evaluate(mir, input);
+
+            EvalFromInput(mir.Size(), input, values);
+        }
+
+        template <typename MI, typename MV>
+        void EvalFromInput(size_t nir, MI input, MV values) const
+        {
+            ApplySignedLinearTable(nir, this->Dimension(), valid_indices, signs, lin_table, perms.size(), input, values);
+        }
+
+        template <typename MIR, typename T, ORDERING ORD>
+        void T_Evaluate(const MIR &ir, FlatArray<BareSliceMatrix<T, ORD>> input,
+                        BareSliceMatrix<T, ORD> values) const
+        {
+            EvalFromInput(ir.Size(), input[0], values);
+        }
+
+        shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
+                                             shared_ptr<CoefficientFunction> dir) const override
+        {
+            if (this == var)
+                return dir;
+            return make_shared<BlockAlternationCoefficientFunction>(
+                c1->Diff(var, dir), rank_total, block_start, block_len);
+        }
+
+        shared_ptr<CoefficientFunction> DiffJacobi(const CoefficientFunction *var, T_DJC &cache) const override
+        {
+            auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
+            if (cache.find(thisptr) != cache.end())
+                return cache[thisptr];
+
+            if (this == var)
+                return IdentityCF(this->Dimensions());
+
+            auto res = make_shared<BlockAlternationCoefficientFunction>(
+                c1->DiffJacobi(var, cache), rank_total, block_start, block_len);
+            cache[thisptr] = res;
+            return res;
+        }
+
+        virtual bool IsZeroCF() const override { return c1->IsZeroCF(); }
+    };
+
+    shared_ptr<CoefficientFunction> BlockAlternationByPermutationCF(shared_ptr<CoefficientFunction> T, int rank_total, int block_start, int block_len)
+    {
+        if (!T)
+            throw Exception("BlockAlternationByPermutationCF: input coefficient is null");
+        if (rank_total < 0 || rank_total > MAX_FORM_RANK)
+            throw Exception("BlockAlternationByPermutationCF: only ranks 0-" + ToString(MAX_FORM_RANK) + " supported");
+        if (block_len < 0 || block_len > MAX_PERMUTATION_RANK)
+            throw Exception("BlockAlternationByPermutationCF: block size must be in [0, " + ToString(MAX_PERMUTATION_RANK) + "]");
+        if (block_start < 0 || block_start + block_len > rank_total)
+            throw Exception("BlockAlternationByPermutationCF: block range out of bounds");
+        if (block_len <= 1)
+            return T;
+
+        shared_ptr<TensorFieldCoefficientFunction> tf;
+        if (auto ttf = dynamic_pointer_cast<TensorFieldCoefficientFunction>(T))
+        {
+            tf = ttf;
+            for (char c : tf->GetCovariantIndices())
+                if (c != '1')
+                    throw Exception("BlockAlternationByPermutationCF: only covariant tensors are supported");
+        }
+        else
+            tf = TensorFieldCF(T, std::string(size_t(rank_total), '1'));
+
+        if (int(tf->Dimensions().Size()) != rank_total)
+            throw Exception("BlockAlternationByPermutationCF: tensor rank mismatch");
+
+        return make_shared<BlockAlternationCoefficientFunction>(tf, rank_total, block_start, block_len);
+    }
+
+    int TensorComponentCount(int dim, int rank)
+    {
+        int count = 1;
+        for (int i = 0; i < rank; ++i)
+            count *= dim;
+        return count;
+    }
+
+    int EncodeRowMajor(const std::array<int, MAX_FORM_RANK> &multi, const std::vector<int> &positions, int dim)
+    {
+        int lin = 0;
+        for (int pos : positions)
+            lin = lin * dim + multi[size_t(pos)];
+        return lin;
+    }
+
+    class DoubleFormWedgeCoefficientFunction : public T_CoefficientFunction<DoubleFormWedgeCoefficientFunction>
+    {
+        shared_ptr<DoubleFormCoefficientFunction> a;
+        shared_ptr<DoubleFormCoefficientFunction> b;
+        int p;
+        int q;
+        int r;
+        int s;
+        int dim;
+        int total;
+        std::vector<int> valid_indices;
+        std::vector<int> signs;
+        std::vector<int> lin_a;
+        std::vector<int> lin_b;
+        bool structural_zero = false;
+        size_t terms_per_index = 0;
+
+    public:
+        DoubleFormWedgeCoefficientFunction(shared_ptr<DoubleFormCoefficientFunction> aa,
+                                           shared_ptr<DoubleFormCoefficientFunction> bb)
+            : T_CoefficientFunction<DoubleFormWedgeCoefficientFunction>(
+                  TensorComponentCount(aa->DimensionOfSpace(), aa->LeftDegree() + bb->LeftDegree() + aa->RightDegree() + bb->RightDegree()),
+                  aa->IsComplex() || bb->IsComplex()),
+              a(aa), b(bb),
+              p(aa->LeftDegree()), q(aa->RightDegree()),
+              r(bb->LeftDegree()), s(bb->RightDegree()),
+              dim(aa->DimensionOfSpace()),
+              total(p + q + r + s)
+        {
+            if (!a || !b)
+                throw Exception("DoubleFormWedgeCF: inputs must be non-null");
+            if (a->DimensionOfSpace() != b->DimensionOfSpace())
+                throw Exception("DoubleFormWedgeCF: input double-forms must have the same dimension of space");
+            if (total > MAX_FORM_RANK)
+                throw Exception("DoubleFormWedgeCF: only ranks up to " + ToString(MAX_FORM_RANK) + " are supported");
+
+            Array<int> dims(total);
+            for (int i = 0; i < total; ++i)
+                dims[i] = dim;
+            this->SetDimensions(dims);
+
+            const int left_len = p + r;
+            const int right_len = q + s;
+            const auto &left_data = GetSignedPermutations(PermutationSpec{PermutationFamily::Shuffle, p, r});
+            const auto &right_data = GetSignedPermutations(PermutationSpec{PermutationFamily::Shuffle, q, s});
+            terms_per_index = left_data.perms.size() * right_data.perms.size();
+
+            std::array<int, MAX_FORM_RANK> multi = {};
+            std::array<int, MAX_FORM_RANK> src_multi = {};
+            std::vector<int> a_positions;
+            std::vector<int> b_positions;
+            a_positions.reserve(size_t(p + q));
+            b_positions.reserve(size_t(r + s));
+            for (int i = 0; i < p; ++i)
+                a_positions.push_back(i);
+            for (int i = 0; i < q; ++i)
+                a_positions.push_back(left_len + i);
+            for (int i = 0; i < r; ++i)
+                b_positions.push_back(p + i);
+            for (int i = 0; i < s; ++i)
+                b_positions.push_back(left_len + q + i);
+
+            for (int idx = 0; idx < this->Dimension(); ++idx)
+            {
+                int rem = idx;
+                bool repeated = false;
+                for (int j = total - 1; j >= 0; --j)
+                {
+                    multi[size_t(j)] = rem % dim;
+                    rem /= dim;
+                }
+
+                for (int i = 0; i < left_len && !repeated; ++i)
+                    for (int j = i + 1; j < left_len; ++j)
+                        if (multi[size_t(i)] == multi[size_t(j)])
+                        {
+                            repeated = true;
+                            break;
+                        }
+                for (int i = 0; i < right_len && !repeated; ++i)
+                    for (int j = i + 1; j < right_len; ++j)
+                        if (multi[size_t(left_len + i)] == multi[size_t(left_len + j)])
+                        {
+                            repeated = true;
+                            break;
+                        }
+                if (repeated)
+                    continue;
+
+                valid_indices.push_back(idx);
+                for (size_t pl = 0; pl < left_data.perms.size(); ++pl)
+                {
+                    for (size_t pr = 0; pr < right_data.perms.size(); ++pr)
+                    {
+                        std::array<int, MAX_FORM_RANK> order = {};
+                        for (int i = 0; i < total; ++i)
+                            order[size_t(i)] = i;
+                        for (int i = 0; i < left_len; ++i)
+                            order[size_t(i)] = left_data.perms[pl][size_t(i)];
+                        for (int i = 0; i < right_len; ++i)
+                            order[size_t(left_len + i)] = left_len + right_data.perms[pr][size_t(i)];
+
+                        for (int i = 0; i < total; ++i)
+                            src_multi[size_t(order[size_t(i)])] = multi[size_t(i)];
+
+                        signs.push_back(left_data.signs[pl] * right_data.signs[pr]);
+                        lin_a.push_back(EncodeRowMajor(src_multi, a_positions, dim));
+                        lin_b.push_back(EncodeRowMajor(src_multi, b_positions, dim));
+                    }
+                }
+            }
+
+            structural_zero = true;
+            for (size_t i = 0; i < lin_a.size(); ++i)
+            {
+                auto ca = MakeComponentCoefficientFunction(a->GetCoefficients(), lin_a[i]);
+                auto cb = MakeComponentCoefficientFunction(b->GetCoefficients(), lin_b[i]);
+                if (!ca->IsZeroCF() && !cb->IsZeroCF())
+                {
+                    structural_zero = false;
+                    break;
+                }
+            }
+        }
+
+        virtual string GetDescription() const override
+        {
+            return "DoubleFormWedgeCF";
+        }
+
+        auto GetCArgs() const { return tuple{a, b}; }
+
+        void DoArchive(Archive &ar) override
+        {
+        }
+
+        virtual void GenerateCode(Code &code, FlatArray<int> inputs, int index) const override
+        {
+            DeclareGeneratedCoefficient(code, index, Dimensions(), IsComplex());
+
+            size_t vi = 0;
+            for (int idx = 0; idx < this->Dimension(); ++idx)
+            {
+                if (vi >= valid_indices.size() || valid_indices[vi] != idx)
+                {
+                    code.body += Var(index, idx, Dimensions()).Assign(string("0.0"), false);
+                    continue;
+                }
+
+                CodeExpr result;
+                size_t base = vi * terms_per_index;
+                for (size_t t = 0; t < terms_per_index; ++t)
+                {
+                    CodeExpr term = Var(inputs[0], lin_a[base + t], a->Dimensions()) *
+                                    Var(inputs[1], lin_b[base + t], b->Dimensions());
+                    if (signs[base + t] == -1)
+                        result -= term;
+                    else
+                        result += term;
+                }
+                code.body += Var(index, idx, Dimensions()).Assign(result.S(), false);
+                ++vi;
+            }
+        }
+
+        virtual void TraverseTree(const function<void(CoefficientFunction &)> &func) override
+        {
+            a->TraverseTree(func);
+            b->TraverseTree(func);
+            func(*this);
+        }
+
+        virtual Array<shared_ptr<CoefficientFunction>> InputCoefficientFunctions() const override
+        {
+            return Array<shared_ptr<CoefficientFunction>>({a, b});
+        }
+
+        virtual void NonZeroPattern(const class ProxyUserData &ud,
+                                    FlatVector<AutoDiffDiff<1, NonZero>> values) const override
+        {
+            values = AutoDiffDiff<1, NonZero>(false);
+            for (int idx : valid_indices)
+                values(idx) = AutoDiffDiff<1, NonZero>(true);
+        }
+
+        virtual void NonZeroPattern(const class ProxyUserData &ud,
+                                    FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> input,
+                                    FlatVector<AutoDiffDiff<1, NonZero>> values) const override
+        {
+            values = AutoDiffDiff<1, NonZero>(false);
+            for (size_t vi = 0; vi < valid_indices.size(); ++vi)
+            {
+                auto accum = AutoDiffDiff<1, NonZero>(false);
+                size_t base = vi * terms_per_index;
+                for (size_t t = 0; t < terms_per_index; ++t)
+                    accum = accum + input[0](lin_a[base + t]) * input[1](lin_b[base + t]);
+                values(valid_indices[vi]) = accum;
+            }
+        }
+
+        shared_ptr<CoefficientFunction>
+        Transform(CoefficientFunction::T_Transform &transformation) const override
+        {
+            auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
+            if (transformation.cache.count(thisptr))
+                return transformation.cache[thisptr];
+            if (transformation.replace.count(thisptr))
+                return transformation.replace[thisptr];
+
+            auto ta = DoubleFormCF(a->GetCoefficients()->Transform(transformation), p, q, dim);
+            auto tb = DoubleFormCF(b->GetCoefficients()->Transform(transformation), r, s, dim);
+            auto newcf = make_shared<DoubleFormWedgeCoefficientFunction>(ta, tb);
+            transformation.cache[thisptr] = newcf;
+            return newcf;
+        }
+
+        using T_CoefficientFunction<DoubleFormWedgeCoefficientFunction>::Evaluate;
+
+        virtual double Evaluate(const BaseMappedIntegrationPoint &ip) const override
+        {
+            throw Exception("DoubleFormWedgeCF:: scalar evaluate called");
+        }
+
+        template <typename MIR, typename T, ORDERING ORD>
+        void T_Evaluate(const MIR &mir, BareSliceMatrix<T, ORD> values) const
+        {
+            int dim_a = a->Dimension();
+            int dim_b = b->Dimension();
+
+            Array<T> temp_a(dim_a * mir.Size());
+            Array<T> temp_b(dim_b * mir.Size());
+            FlatMatrix<T, ORD> values_a(dim_a, mir.Size(), temp_a.Data());
+            FlatMatrix<T, ORD> values_b(dim_b, mir.Size(), temp_b.Data());
+            a->GetCoefficients()->Evaluate(mir, values_a);
+            b->GetCoefficients()->Evaluate(mir, values_b);
+
+            EvalFromInputs(mir.Size(), values_a, values_b, values);
+        }
+
+        template <typename MA, typename MB, typename MV>
+        void EvalFromInputs(size_t nir,
+                            MA values_a,
+                            MB values_b,
+                            MV values) const
+        {
+            ApplySignedProductTable(nir, this->Dimension(), valid_indices, signs, lin_a, lin_b, terms_per_index, values_a, values_b, values);
+        }
+
+        template <typename MIR, typename T, ORDERING ORD>
+        void T_Evaluate(const MIR &ir, FlatArray<BareSliceMatrix<T, ORD>> input,
+                        BareSliceMatrix<T, ORD> values) const
+        {
+            EvalFromInputs(ir.Size(), input[0], input[1], values);
+        }
+
+        shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
+                                             shared_ptr<CoefficientFunction> dir) const override
+        {
+            if (this == var)
+                return dir;
+            auto da = DoubleFormCF(a->GetCoefficients()->Diff(var, dir), p, q, dim);
+            auto db = DoubleFormCF(b->GetCoefficients()->Diff(var, dir), r, s, dim);
+            return Wedge(da, b)->GetCoefficients() + Wedge(a, db)->GetCoefficients();
+        }
+
+        shared_ptr<CoefficientFunction> DiffJacobi(const CoefficientFunction *var, T_DJC &cache) const override
+        {
+            auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
+            if (cache.find(thisptr) != cache.end())
+                return cache[thisptr];
+
+            if (this == var)
+                return IdentityCF(this->Dimensions());
+
+            auto da = DoubleFormCF(a->GetCoefficients()->DiffJacobi(var, cache), p, q, dim);
+            auto db = DoubleFormCF(b->GetCoefficients()->DiffJacobi(var, cache), r, s, dim);
+            auto res = Wedge(da, b)->GetCoefficients() + Wedge(a, db)->GetCoefficients();
+            cache[thisptr] = res;
+            return res;
+        }
+
+        virtual bool IsZeroCF() const override { return structural_zero || a->IsZeroCF() || b->IsZeroCF(); }
+    };
 
     shared_ptr<KFormCoefficientFunction> KFormCF(shared_ptr<CoefficientFunction> cf, int k, int dim)
     {
@@ -1056,54 +1624,10 @@ namespace ngfem
         if (p + r > dim || q + s > dim)
             return ZeroDoubleForm(p + r, q + s, dim);
 
-        auto T = TensorProduct(a, b);
-        int total = p + q + r + s;
-        std::vector<int> order;
-        order.reserve(total);
-        for (int i = 0; i < p; ++i)
-            order.push_back(i);
-        for (int i = 0; i < r; ++i)
-            order.push_back(p + q + i);
-        for (int i = 0; i < q; ++i)
-            order.push_back(p + i);
-        for (int i = 0; i < s; ++i)
-            order.push_back(p + q + r + i);
-
-        auto reordered = PermuteTensorCF(T, order);
-        const int left_len = p + r;
-        const int right_len = q + s;
-        const auto &left_data = GetSignedPermutations(PermutationSpec{PermutationFamily::Shuffle, p, r});
-        const auto &right_data = GetSignedPermutations(PermutationSpec{PermutationFamily::Shuffle, q, s});
-
-        shared_ptr<CoefficientFunction> accum;
-        for (size_t pl = 0; pl < left_data.perms.size(); ++pl)
-        {
-            const auto &perm_left = left_data.perms[pl];
-            auto order_left = std::vector<int>(size_t(total));
-            for (int i = 0; i < total; ++i)
-                order_left[size_t(i)] = i;
-            for (int i = 0; i < left_len; ++i)
-                order_left[size_t(i)] = perm_left[size_t(i)];
-            auto left_tf = PermuteTensorCF(reordered, order_left);
-            int sign_left = left_data.signs[pl];
-
-            for (size_t pr = 0; pr < right_data.perms.size(); ++pr)
-            {
-                const auto &perm_right = right_data.perms[pr];
-                auto order_right = std::vector<int>(size_t(total));
-                for (int i = 0; i < total; ++i)
-                    order_right[size_t(i)] = i;
-                for (int i = 0; i < right_len; ++i)
-                    order_right[size_t(left_len + i)] = left_len + perm_right[size_t(i)];
-                shared_ptr<CoefficientFunction> term = PermuteTensorCF(left_tf, order_right);
-                int sign = sign_left * right_data.signs[pr];
-                if (sign == -1)
-                    term = (-1.0) * term;
-                accum = accum ? (accum + term) : term;
-            }
-        }
-
-        return DoubleFormCF(accum, p + r, q + s, dim);
+        auto wedge_cf = make_shared<DoubleFormWedgeCoefficientFunction>(a, b);
+        if (wedge_cf->IsZeroCF())
+            return ZeroDoubleForm(p + r, q + s, dim);
+        return DoubleFormCF(wedge_cf, p + r, q + s, dim);
     }
 
     shared_ptr<KFormCoefficientFunction> ExteriorDerivative(shared_ptr<KFormCoefficientFunction> a)
@@ -1365,6 +1889,8 @@ void ExportKForms(py::module m)
         .def_property_readonly("degree_left", &DoubleFormCoefficientFunction::LeftDegree)
         .def_property_readonly("degree_right", &DoubleFormCoefficientFunction::RightDegree)
         .def_property_readonly("dim_space", &DoubleFormCoefficientFunction::DimensionOfSpace)
+        .def_property_readonly("is_zero", [](shared_ptr<DoubleFormCoefficientFunction> a)
+                               { return a->IsZeroCF(); })
         .def("wedge", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<DoubleFormCoefficientFunction> b)
              { return Wedge(a, b); }, py::arg("b"))
         .def("star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, const std::string &slot)

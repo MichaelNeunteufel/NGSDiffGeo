@@ -302,20 +302,37 @@ namespace ngfem
             if (this->Dimension() == 1)
             {
                 code.body += Var(index).Declare(type);
+                code.body += Var(index).Assign(Var(inputs[0]), false);
             }
             else
             {
                 for (size_t i = 0; i < this->Dimension(); ++i)
+                {
                     code.body += Var(index, i, this->Dimensions()).Declare(type);
+                    code.body += Var(index, i, this->Dimensions())
+                                     .Assign(Var(inputs[0], i, c1->Dimensions()), false);
+                }
             }
-
-            code.body += Var(index).Assign(Var(inputs[0]), false);
         }
 
         virtual void NonZeroPattern(const class ProxyUserData &ud,
                                     FlatVector<AutoDiffDiff<1, NonZero>> values) const override
         {
-            return c1->NonZeroPattern(ud, values);
+            try
+            {
+                c1->NonZeroPattern(ud, values);
+            }
+            catch (Exception &)
+            {
+                values = AutoDiffDiff<1, NonZero>(!c1->IsZeroCF());
+            }
+        }
+
+        virtual void NonZeroPattern(const class ProxyUserData &ud,
+                                    FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> input,
+                                    FlatVector<AutoDiffDiff<1, NonZero>> values) const override
+        {
+            values = input[0];
         }
 
         shared_ptr<CoefficientFunction>
@@ -346,7 +363,10 @@ namespace ngfem
         void T_Evaluate(const MIR &ir, FlatArray<BareSliceMatrix<T, ORD>> input,
                         BareSliceMatrix<T, ORD> values) const
         {
-            c1->Evaluate(ir, input, values);
+            auto input_values = input[0];
+            for (size_t ip = 0; ip < ir.Size(); ++ip)
+                for (size_t i = 0; i < this->Dimension(); ++i)
+                    values(i, ip) = input_values(i, ip);
         }
 
         shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,

@@ -44,6 +44,23 @@ def test_equivalent_coercion_doubleform_sub_plain_matrix(make_unit_square_mesh):
     assert l2_error(mixed.coef, explicit, mesh) == pytest.approx(0.0)
 
 
+def test_scalar_doubleform_subtracts_raw_scalar_coefficient(make_unit_cube_mesh):
+    mesh = make_unit_cube_mesh(maxh=0.5)
+
+    df = dg.DoubleForm(x + y + z, p=0, q=0, dim=3)
+    scalar = CF(x + y + z)
+
+    left = df - scalar
+    right = scalar - df
+
+    assert isinstance(left, dg.DoubleForm)
+    assert isinstance(right, dg.DoubleForm)
+    assert left.degree_left == left.degree_right == 0
+    assert right.degree_left == right.degree_right == 0
+    assert l2_error(left.coef, 0, mesh) == pytest.approx(0.0)
+    assert l2_error(right.coef, 0, mesh) == pytest.approx(0.0)
+
+
 def test_equivalent_coercion_wedge_tensor11_autopromotion(make_unit_square_mesh):
     mesh = make_unit_square_mesh(maxh=0.3)
 
