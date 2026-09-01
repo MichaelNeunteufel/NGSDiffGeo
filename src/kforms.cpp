@@ -11,6 +11,41 @@ namespace ngfem
 {
     namespace
     {
+        std::string GeneratedCoefficientType(const Code &code, bool is_complex)
+        {
+            std::string type = is_complex ? "Complex" : "double";
+            if (code.is_simd)
+                type = "SIMD<" + type + ">";
+            if (code.deriv == 1)
+                type = "AutoDiff<1," + type + ">";
+            if (code.deriv == 2)
+                type = "AutoDiffDiff<1," + type + ">";
+            return type;
+        }
+
+        void DeclareGeneratedCoefficient(Code &code, int index,
+                                         FlatArray<int> dims, bool is_complex)
+        {
+            // Code::Declare is not exported by the NGSolve DLL on Windows.
+            // Generate the equivalent declaration locally so addon wheels link.
+            const std::string type = GeneratedCoefficientType(code, is_complex);
+
+            if (code_uses_tensors)
+            {
+                code.body += "Tens<" + type;
+                for (int dim : dims)
+                    code.body += ',' + ToLiteral(dim);
+                code.body += "> var_" + ToLiteral(index) + ";\n";
+                return;
+            }
+
+            size_t component_count = 1;
+            for (int dim : dims)
+                component_count *= size_t(dim);
+            for (size_t component = 0; component < component_count; ++component)
+                code.body += Var(index, int(component), dims).Declare(type);
+        }
+
         template <typename T>
         shared_ptr<T> RequireNonNull(shared_ptr<T> ptr, const char *name)
         {
@@ -1024,7 +1059,7 @@ namespace ngfem
 
         virtual void GenerateCode(Code &code, FlatArray<int> inputs, int index) const override
         {
-            code.Declare(index, Dimensions(), IsComplex());
+            DeclareGeneratedCoefficient(code, index, Dimensions(), IsComplex());
 
             size_t vi = 0;
             for (int idx = 0; idx < this->Dimension(); ++idx)
@@ -1333,7 +1368,7 @@ namespace ngfem
 
         virtual void GenerateCode(Code &code, FlatArray<int> inputs, int index) const override
         {
-            code.Declare(index, Dimensions(), IsComplex());
+            DeclareGeneratedCoefficient(code, index, Dimensions(), IsComplex());
 
             size_t vi = 0;
             for (int idx = 0; idx < this->Dimension(); ++idx)
