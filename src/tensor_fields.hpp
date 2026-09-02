@@ -1,15 +1,16 @@
 #ifndef TENSOR_FIELDS
 #define TENSOR_FIELDS
 
-// #include <fem.hpp>
 #include <coefficient.hpp>
+#include <array>
 #include <cstdint>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 /**
  * @file tensor_fields.hpp
- * @brief This file contains the definition and implementation of scalar, vector, 1-form, and tensor field coefficient functions.
+ * @brief Metadata-preserving coefficient-function wrappers for tensor fields.
  */
 
 namespace ngfem
@@ -19,18 +20,15 @@ namespace ngfem
     class OneFormCoefficientFunction;
     class VectorFieldCoefficientFunction;
     class ScalarFieldCoefficientFunction;
+
     inline constexpr int MAX_SPACE_DIM = 4;
     inline constexpr int MAX_PERMUTATION_RANK = 4;
     inline constexpr int MAX_FORM_RANK = 8;
     inline constexpr size_t MAX_SIGNATURE_LABELS = 52;
-    // /**
-    //  * @var const string SIGNATURE
-    //  * @brief A constant string containing all possible letters for building a signature for tensor field coefficient functions.
-    //  */
     inline constexpr std::string_view SIGNATURE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     static_assert(SIGNATURE_CHARS.size() == MAX_SIGNATURE_LABELS,
                   "SIGNATURE size must match MAX_SIGNATURE_LABELS");
-    inline const string SIGNATURE(SIGNATURE_CHARS);
+    inline const std::string SIGNATURE(SIGNATURE_CHARS);
 
     inline std::string EraseLabel(std::string s, size_t i)
     {
@@ -53,28 +51,110 @@ namespace ngfem
         return s;
     }
 
-    struct TensorMeta
+    inline std::string TensorFieldGeneratedCoefficientType(
+        const Code &code, bool is_complex)
     {
-        uint8_t rank = 0;     // up to MAX_SIGNATURE_LABELS
-        uint64_t covmask = 0; // bit i = 1 means covariant
+        std::string type = is_complex ? "Complex" : "double";
+        if (code.is_simd)
+            type = "SIMD<" + type + ">";
+        if (code.deriv == 1)
+            type = "AutoDiff<1," + type + ">";
+        if (code.deriv == 2)
+            type = "AutoDiffDiff<1," + type + ">";
+        return type;
+    }
+
+    inline void DeclareTensorFieldGeneratedCoefficient(
+        Code &code, int index, FlatArray<int> dims, bool is_complex)
+    {
+        // Code::Declare is not exported by the NGSolve DLL on Windows.
+        // Generate the equivalent declaration locally so addon wheels link.
+        const std::string type =
+            TensorFieldGeneratedCoefficientType(code, is_complex);
+
+        if (dims.Size() == 0)
+        {
+            code.body += Var(index).Declare(type);
+            return;
+        }
+
+        if (code_uses_tensors)
+        {
+            code.body += "Tens<" + type;
+            for (int dim : dims)
+                code.body += ',' + ToLiteral(dim);
+            code.body += "> var_" + ToLiteral(index) + ";\n";
+            return;
+        }
+
+        size_t component_count = 1;
+        for (int dim : dims)
+            component_count *= size_t(dim);
+        for (size_t component = 0; component < component_count; ++component)
+            code.body += Var(index, int(component), dims).Declare(type);
+    }
+
+    /**
+     * Variance metadata for the ordered component axes of a tensor.
+     *
+     * Bit i is one for a covariant axis and zero for a contravariant axis.
+     * Instances are validated on construction: the rank fits the einsum label
+     * alphabet and the mask contains no bits beyond that rank.
+     */
+    class TensorMeta
+    {
+        // rank of tensor
+        // E.g. 0 for scalar, 1 for vector/1-form, 2 for matrix, etc.
+        uint8_t rank = 0;
+        uint64_t covmask = 0;
+
+        static uint8_t CheckedRank(size_t arank)
+        {
+            if (arank > MAX_SIGNATURE_LABELS)
+                throw ngstd::Exception("TensorMeta: rank overflow (>" + ToString(MAX_SIGNATURE_LABELS) + ")");
+            return uint8_t(arank);
+        }
+
+        static uint64_t ValidBitsMask(size_t arank)
+        {
+            return arank == 0 ? 0 : (uint64_t(1) << arank) - 1;
+        }
+
+        TensorMeta(size_t arank, uint64_t acovmask)
+            : rank(CheckedRank(arank)), covmask(acovmask)
+        {
+            const uint64_t valid_bits = ValidBitsMask(arank);
+            if ((covmask & ~valid_bits) != 0)
+                throw ngstd::Exception("TensorMeta: covariance mask contains bits outside the tensor rank");
+        }
+
+    public:
+        TensorMeta() = default;
 
         static TensorMeta FromCovString(std::string_view cov)
         {
             if (cov.size() > SIGNATURE.size())
                 throw ngstd::Exception("TensorMeta: rank overflow (>" + ToString(MAX_SIGNATURE_LABELS) + ")");
 
-            TensorMeta m;
-            m.rank = uint8_t(cov.size());
+            uint64_t mask = 0;
             for (size_t i = 0; i < cov.size(); ++i)
             {
                 char c = cov[i];
                 if (c == '1')
-                    m.covmask |= (uint64_t(1) << i);
+                    mask |= (uint64_t(1) << i);
                 else if (c != '0')
                     throw ngstd::Exception("TensorMeta: covariant_indices must be only '0'/'1'");
             }
-            return m;
+            return TensorMeta(cov.size(), mask);
         }
+
+        static TensorMeta FromRaw(size_t rank, uint64_t covmask)
+        {
+            return TensorMeta(rank, covmask);
+        }
+
+        size_t Rank() const { return rank; }
+        uint64_t CovarianceMask() const { return covmask; }
 
         bool Covariant(size_t i) const
         {
@@ -101,60 +181,47 @@ namespace ngfem
 
         char FreshLabel(size_t offset = 0) const
         {
-            size_t id = size_t(rank) + offset;
-            if (id >= SIGNATURE.size())
+            if (offset >= SIGNATURE.size() - size_t(rank))
                 throw Exception("TensorMeta: signature overflow (>" + ToString(MAX_SIGNATURE_LABELS) + ")");
-            return SIGNATURE[id];
+            return SIGNATURE[size_t(rank) + offset];
         }
 
         std::string Sig() const { return SIGNATURE.substr(0, rank); }
 
-        // Set one slot (raise/lower)
         TensorMeta WithCovariant(size_t i, bool cov) const
         {
-            TensorMeta m = *this;
+            if (i >= rank)
+                throw ngstd::Exception("TensorMeta: index out of range");
             uint64_t bit = (uint64_t(1) << i);
-            if (cov)
-                m.covmask |= bit;
-            else
-                m.covmask &= ~bit;
-            return m;
+            uint64_t mask = cov ? (covmask | bit) : (covmask & ~bit);
+            return TensorMeta(rank, mask);
         }
 
-        // Append a new index at the end
         TensorMeta Appended(bool cov) const
         {
             if (rank >= SIGNATURE.size())
                 throw ngstd::Exception("TensorMeta: rank overflow (>" + ToString(MAX_SIGNATURE_LABELS) + ")");
-            TensorMeta m = *this;
+            uint64_t mask = covmask;
             if (cov)
-                m.covmask |= (uint64_t(1) << rank);
-            m.rank++;
-            return m;
+                mask |= (uint64_t(1) << rank);
+            return TensorMeta(size_t(rank) + 1, mask);
         }
 
         TensorMeta Prepended(bool cov) const
         {
             if (rank >= SIGNATURE.size())
                 throw Exception("TensorMeta: rank overflow (>" + ToString(MAX_SIGNATURE_LABELS) + ")");
-            TensorMeta m;
-            m.rank = uint8_t(rank + 1);
-            m.covmask = (cov ? 1ull : 0ull) | (covmask << 1);
-            return m;
+            return TensorMeta(size_t(rank) + 1,
+                              (cov ? 1ull : 0ull) | (covmask << 1));
         }
 
-        // Remove index slot i (used in trace/contraction)
         TensorMeta Erased(size_t i) const
         {
             if (i >= rank)
                 throw ngstd::Exception("TensorMeta: erase index out of range");
-            TensorMeta m;
-            m.rank = uint8_t(rank - 1);
-
             uint64_t low = covmask & ((uint64_t(1) << i) - 1);
             uint64_t high = covmask >> (i + 1);
-            m.covmask = low | (high << i);
-            return m;
+            return TensorMeta(size_t(rank) - 1, low | (high << i));
         }
 
         TensorMeta Erased2(size_t i, size_t j) const
@@ -170,10 +237,8 @@ namespace ngfem
         {
             if (size_t(rank) + size_t(b.rank) > SIGNATURE.size())
                 throw Exception("TensorMeta: concat overflow (>" + ToString(MAX_SIGNATURE_LABELS) + ")");
-            TensorMeta m;
-            m.rank = uint8_t(rank + b.rank);
-            m.covmask = covmask | (b.covmask << rank);
-            return m;
+            return TensorMeta(size_t(rank) + size_t(b.rank),
+                              covmask | (b.covmask << rank));
         }
 
         bool operator==(const TensorMeta &other) const
@@ -183,11 +248,10 @@ namespace ngfem
     };
 
     /**
-     * @fn shared_ptr<CoefficientFunction> TensorFieldCF(const shared_ptr<CoefficientFunction> &cf, const string &covariant_indices)
-     * @brief Creates a tensor field coefficient function.
-     * @param cf The input coefficient function.
-     * @param covariant_indices string of the from "0110" where "1" indicates a covariant index and "0" a contravariant one.
-     * @return A shared pointer to the created tensor field coefficient function.
+     * Canonically wrap a value graph with tensor variance metadata.
+     *
+     * Compatible wrappers are reused. Incompatible metadata-only wrappers are
+     * stripped so retyping does not grow the expression graph.
      */
     shared_ptr<TensorFieldCoefficientFunction> TensorFieldCF(const shared_ptr<CoefficientFunction> &cf,
                                                              const string &covariant_indices);
@@ -195,68 +259,97 @@ namespace ngfem
     shared_ptr<TensorFieldCoefficientFunction> TensorFieldCF(const shared_ptr<CoefficientFunction> &cf,
                                                              const TensorMeta &meta);
 
-    /**
-     * @fn shared_ptr<CoefficientFunction> VectorFieldCF(const shared_ptr<CoefficientFunction> &cf)
-     * @brief Creates a vector field coefficient function.
-     * @param cf The input coefficient function.
-     * @return A shared pointer to the created vector field coefficient function.
-     */
+    /// Canonical contravariant rank-one wrapper.
     shared_ptr<VectorFieldCoefficientFunction> VectorFieldCF(const shared_ptr<CoefficientFunction> &cf);
     shared_ptr<TensorFieldCoefficientFunction> PermuteTensorCF(shared_ptr<TensorFieldCoefficientFunction> tf,
                                                                const std::vector<int> &order);
     shared_ptr<TensorFieldCoefficientFunction> ApplyProjectorToIndex(shared_ptr<TensorFieldCoefficientFunction> tf,
                                                                      shared_ptr<CoefficientFunction> proj,
                                                                      size_t index);
-    int Factorial(int n);
+    inline int Factorial(int n)
+    {
+        static constexpr std::array<int, 13> table = {
+            1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880,
+            3628800, 39916800, 479001600};
+        if (n < 0)
+            throw Exception("Factorial: n must be non-negative");
+        if (n >= int(table.size()))
+            throw Exception("Factorial: n must not exceed 12 for an int result");
+        return table[size_t(n)];
+    }
 
     /**
-     * @class TensorFieldCoefficientFunction
-     * @brief A class representing a tensor field coefficient function.
+     * Metadata-only wrapper around an NGSolve coefficient-function value graph.
+     *
+     * Evaluation, compilation, domain information, and zero structure are
+     * delegated to the wrapped coefficient. The wrapper adds the ordered slot
+     * variance needed by geometric operations. Its rank must equal the number
+     * of component axes, and all component axes must have the same dimension.
+     *
+     * Derived semantic types override Rewrap so transformations and directional
+     * derivatives retain their type without duplicating those algorithms.
      */
     class TensorFieldCoefficientFunction : public T_CoefficientFunction<TensorFieldCoefficientFunction>
     {
+        using BASE = T_CoefficientFunction<TensorFieldCoefficientFunction>;
+
         shared_ptr<CoefficientFunction> c1;
         TensorMeta meta;
-        const std::string cov;
 
-    public:
-        /**
-         * @fn TensorFieldCoefficientFunction::TensorFieldCoefficientFunction(shared_ptr<CoefficientFunction> ac1, const string &acovariant_indices)
-         * @brief Constructor for TensorFieldCoefficientFunction.
-         * @param ac1 The input coefficient function.
-         * @param acovariant_indices string of the from "0110" where "1" indicates a covariant index and "0" a contravariant one.
-         * @throws Exception if the number of indices does not match the number of dimensions of the input coefficient function or if not all dimensions are the same.
-         */
-        TensorFieldCoefficientFunction(shared_ptr<CoefficientFunction> ac1, std::string_view acov)
-            : T_CoefficientFunction<TensorFieldCoefficientFunction>(ac1->Dimension(), ac1->IsComplex()), c1(ac1), meta(TensorMeta::FromCovString(acov)), cov(acov)
+        static const CoefficientFunction &CheckedCoefficient(
+            const shared_ptr<CoefficientFunction> &cf)
         {
-            this->SetDimensions(ac1->Dimensions());
-            if (Dimensions().Size() != meta.rank)
-                throw ngstd::Exception("TensorField: covariant_indices length must equal tensor rank. Received length " + ToString(meta.rank) + ", but dimensions " + ToString(Dimensions()));
+            if (!cf)
+                throw ngstd::Exception("TensorFieldCoefficientFunction: input coefficient is null");
+            return *cf;
+        }
 
-            if (ac1->Dimensions().Size() > 0)
+        void Initialize()
+        {
+            this->SetDimensions(c1->Dimensions());
+            this->elementwise_constant = c1->ElementwiseConstant();
+
+            if (Dimensions().Size() != meta.Rank())
+                throw ngstd::Exception(
+                    "TensorField: covariant_indices length must equal tensor rank. Received length " +
+                    ToString(meta.Rank()) + ", but dimensions " + ToString(Dimensions()));
+
+            if (c1->Dimensions().Size() > 0)
             {
-                auto dim = ac1->Dimensions()[0];
-                for (auto cf_dim : ac1->Dimensions())
+                auto dim = c1->Dimensions()[0];
+                for (auto cf_dim : c1->Dimensions())
                     if (cf_dim != dim)
                         throw Exception("TensorFieldCF: all dimensions must be the same");
             }
         }
 
-        TensorFieldCoefficientFunction(shared_ptr<CoefficientFunction> ac1, const TensorMeta &ameta)
-            : T_CoefficientFunction<TensorFieldCoefficientFunction>(ac1->Dimension(), ac1->IsComplex()), c1(ac1), meta(ameta), cov(ameta.CovString())
+    protected:
+        /**
+         * Reconstruct the semantic wrapper after an operation on the value graph.
+         *
+         * Implementations must preserve component axes. Factories should reuse
+         * compatible wrappers and avoid nesting metadata-only wrappers.
+         */
+        virtual shared_ptr<TensorFieldCoefficientFunction>
+        Rewrap(shared_ptr<CoefficientFunction> cf) const
         {
-            this->SetDimensions(ac1->Dimensions());
-            if (Dimensions().Size() != meta.rank)
-                throw ngstd::Exception("TensorField: covariant_indices length must equal tensor rank. Received length " + ToString(meta.rank) + ", but dimensions " + ToString(Dimensions()));
+            return TensorFieldCF(std::move(cf), meta);
+        }
 
-            if (ac1->Dimensions().Size() > 0)
-            {
-                auto dim = ac1->Dimensions()[0];
-                for (auto cf_dim : ac1->Dimensions())
-                    if (cf_dim != dim)
-                        throw Exception("TensorFieldCF: all dimensions must be the same");
-            }
+    public:
+        /// Construct from a slot string: '1' is covariant, '0' contravariant.
+        TensorFieldCoefficientFunction(shared_ptr<CoefficientFunction> ac1, std::string_view acov)
+            : BASE(CheckedCoefficient(ac1).Dimension(), CheckedCoefficient(ac1).IsComplex()),
+              c1(std::move(ac1)), meta(TensorMeta::FromCovString(acov))
+        {
+            Initialize();
+        }
+
+        TensorFieldCoefficientFunction(shared_ptr<CoefficientFunction> ac1, const TensorMeta &ameta)
+            : BASE(CheckedCoefficient(ac1).Dimension(), CheckedCoefficient(ac1).IsComplex()),
+              c1(std::move(ac1)), meta(ameta)
+        {
+            Initialize();
         }
 
         virtual string GetDescription() const override
@@ -265,24 +358,47 @@ namespace ngfem
         }
 
         const TensorMeta &Meta() const { return meta; }
-        const std::string &GetCovariantIndices() const { return cov; }
+        std::string GetCovariantIndices() const { return meta.CovString(); }
 
-        const shared_ptr<CoefficientFunction> &GetCoefficients() const { return c1; }
+        /**
+         * Full-shaped semantic value graph used by generic tensor operations.
+         *
+         * The returned node may later be backed by compact form storage, but its
+         * dimensions and values always match this wrapper.
+         */
+        const shared_ptr<CoefficientFunction> &GetFullCoefficient() const { return c1; }
+
+        // Compatibility name. New representation-sensitive code should use the
+        // explicit full-value accessor above.
+        const shared_ptr<CoefficientFunction> &GetCoefficients() const
+        {
+            return GetFullCoefficient();
+        }
 
         string GetSignature() const
         {
-            return SIGNATURE.substr(0, meta.rank);
+            return meta.Sig();
         }
 
-        auto GetCArgs() const { return tuple{c1}; }
+        // Constructor state used by NGSolve's polymorphic archive.
+        auto GetCArgs() const { return tuple{GetFullCoefficient(), meta.CovString()}; }
 
         void DoArchive(Archive &ar) override
         {
-            /*
             BASE::DoArchive(ar);
-            ar.Shallow(c1);
-            */
         }
+
+        virtual bool DefinedOn(const ElementTransformation &trafo) override
+        {
+            return c1->DefinedOn(trafo);
+        }
+
+        void CalcEquivalenceKey() override
+        {
+            this->equivalence_key =
+                GetDescription() + "[" + meta.CovString() + "](" + c1->EquivalenceKey() + ")";
+        }
+
         virtual void TraverseTree(const function<void(CoefficientFunction &)> &func) override
         {
             c1->TraverseTree(func);
@@ -296,36 +412,27 @@ namespace ngfem
 
         virtual void GenerateCode(Code &code, FlatArray<int> inputs, int index) const override
         {
-            // TensorFieldCF is metadata-only. Delegate code generation to the wrapped CF.
-            const string type = this->IsComplex() ? "Complex" : "double";
-
-            if (this->Dimension() == 1)
-            {
-                code.body += Var(index).Declare(type);
+            DeclareTensorFieldGeneratedCoefficient(
+                code, index, this->Dimensions(), this->IsComplex());
+            if (this->Dimensions().Size() == 0)
                 code.body += Var(index).Assign(Var(inputs[0]), false);
+            else if (code_uses_tensors)
+            {
+                code.body += "for (size_t i = 0; i < " +
+                             ToString(this->Dimension()) + "; i++)\n";
+                code.body += "var_" + ToString(index) + "[i] = var_" +
+                             ToString(inputs[0]) + "[i];\n";
             }
             else
-            {
                 for (size_t i = 0; i < this->Dimension(); ++i)
-                {
-                    code.body += Var(index, i, this->Dimensions()).Declare(type);
                     code.body += Var(index, i, this->Dimensions())
                                      .Assign(Var(inputs[0], i, c1->Dimensions()), false);
-                }
-            }
         }
 
         virtual void NonZeroPattern(const class ProxyUserData &ud,
                                     FlatVector<AutoDiffDiff<1, NonZero>> values) const override
         {
-            try
-            {
-                c1->NonZeroPattern(ud, values);
-            }
-            catch (Exception &)
-            {
-                values = AutoDiffDiff<1, NonZero>(!c1->IsZeroCF());
-            }
+            c1->NonZeroPattern(ud, values);
         }
 
         virtual void NonZeroPattern(const class ProxyUserData &ud,
@@ -343,7 +450,7 @@ namespace ngfem
                 return transformation.cache[thisptr];
             if (transformation.replace.count(thisptr))
                 return transformation.replace[thisptr];
-            auto newcf = make_shared<TensorFieldCoefficientFunction>(c1->Transform(transformation), meta);
+            auto newcf = Rewrap(c1->Transform(transformation));
             transformation.cache[thisptr] = newcf;
             return newcf;
         }
@@ -352,6 +459,18 @@ namespace ngfem
         {
             return c1->Evaluate(ip);
         }
+
+        virtual Complex EvaluateComplex(const BaseMappedIntegrationPoint &ip) const override
+        {
+            return c1->EvaluateComplex(ip);
+        }
+
+        virtual double EvaluateConst() const override
+        {
+            return c1->EvaluateConst();
+        }
+
+        using BASE::Evaluate;
 
         template <typename MIR, typename T, ORDERING ORD>
         void T_Evaluate(const MIR &ir, BareSliceMatrix<T, ORD> values) const
@@ -369,12 +488,19 @@ namespace ngfem
                     values(i, ip) = input_values(i, ip);
         }
 
+        void EvaluateDeriv(const BaseMappedIntegrationRule &ir,
+                           FlatMatrix<Complex> values,
+                           FlatMatrix<Complex> deriv) const override
+        {
+            c1->EvaluateDeriv(ir, values, deriv);
+        }
+
         shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
                                              shared_ptr<CoefficientFunction> dir) const override
         {
             if (this == var)
                 return dir;
-            return TensorFieldCF(c1->Diff(var, dir), cov);
+            return Rewrap(c1->Diff(var, dir));
         }
         shared_ptr<CoefficientFunction> DiffJacobi(const CoefficientFunction *var, T_DJC &cache) const override
         {
@@ -385,7 +511,13 @@ namespace ngfem
             if (this == var)
                 return IdentityCF(this->Dimensions());
 
-            auto res = TensorFieldCF(c1->DiffJacobi(var, cache), meta);
+            auto jacobi = c1->DiffJacobi(var, cache);
+            // Scalar differentiation adds no component axis, so the original
+            // slot metadata remains valid. A tensor-valued variable appends
+            // axes whose variance is not defined by this wrapper.
+            auto res = var->Dimensions().Size() == 0
+                           ? shared_ptr<CoefficientFunction>(Rewrap(jacobi))
+                           : jacobi;
             cache[thisptr] = res;
             return res;
         }
@@ -393,19 +525,17 @@ namespace ngfem
         virtual bool IsZeroCF() const override { return c1->IsZeroCF(); }
     };
 
-    /**
-     * @class VectorFieldCoefficientFunction
-     * @brief A class representing a vector field coefficient function.
-     * @details This class is derived from TensorFieldCoefficientFunction and represents a vector field.
-     */
+    /// Contravariant rank-one specialization.
     class VectorFieldCoefficientFunction : public TensorFieldCoefficientFunction
     {
+    protected:
+        shared_ptr<TensorFieldCoefficientFunction>
+        Rewrap(shared_ptr<CoefficientFunction> cf) const override
+        {
+            return VectorFieldCF(std::move(cf));
+        }
+
     public:
-        /**
-         * @fn VectorFieldCoefficientFunction::VectorFieldCoefficientFunction(shared_ptr<CoefficientFunction> ac1)
-         * @brief Constructor for VectorFieldCoefficientFunction.
-         * @param ac1 The input coefficient function.
-         */
         VectorFieldCoefficientFunction(shared_ptr<CoefficientFunction> ac1)
             : TensorFieldCoefficientFunction(ac1, "0")
         {
@@ -415,15 +545,11 @@ namespace ngfem
         {
             return "VectorFieldCF";
         }
+
+        auto GetCArgs() const { return tuple{GetFullCoefficient()}; }
     };
 
-    /**
-     * @fn shared_ptr<CoefficientFunction> TensorProduct(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2)
-     * @brief Computes the tensor product of two tensor field coefficient functions.
-     * @param c1 The first tensor field coefficient function.
-     * @param c2 The second tensor field coefficient function.
-     * @return A shared pointer to the resulting tensor field coefficient function.
-     */
+    /// Tensor product with left slots followed by right slots.
     shared_ptr<TensorFieldCoefficientFunction> TensorProduct(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2);
 
     bool IsVectorField(const TensorFieldCoefficientFunction &t);

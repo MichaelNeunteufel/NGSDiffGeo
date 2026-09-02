@@ -8,10 +8,21 @@ namespace ngfem
 {
     class RiemannianManifold;
 
+    /**
+     * Fully covariant rank-k tensor with an ambient-space dimension.
+     *
+     * This class records form semantics; it does not antisymmetrize arbitrary
+     * input components. Use the form operators when alternation is required.
+     */
     class KFormCoefficientFunction : public TensorFieldCoefficientFunction
     {
         uint8_t degree;
         uint8_t dim;
+
+    protected:
+        /// Preserve degree and ambient dimension after value-graph operations.
+        shared_ptr<TensorFieldCoefficientFunction>
+        Rewrap(shared_ptr<CoefficientFunction> cf) const override;
 
     public:
         KFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, uint8_t ak, uint8_t adim);
@@ -21,19 +32,37 @@ namespace ngfem
 
         virtual string GetDescription() const override { return "KFormCF"; }
 
-        shared_ptr<CoefficientFunction>
-        Transform(CoefficientFunction::T_Transform &transformation) const override;
+        void CalcEquivalenceKey() override
+        {
+            equivalence_key =
+                GetDescription() + "[k=" + ToString(int(degree)) +
+                ",dim=" + ToString(int(dim)) + "](" +
+                GetFullCoefficient()->EquivalenceKey() + ")";
+        }
 
-        shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
-                                             shared_ptr<CoefficientFunction> dir) const override;
-        shared_ptr<CoefficientFunction> DiffJacobi(const CoefficientFunction *var, T_DJC &cache) const override;
+        auto GetCArgs() const
+        {
+            return tuple{GetFullCoefficient(), degree, dim};
+        }
     };
 
+    /**
+     * Tensor interpreted as two form blocks of degrees p and q.
+     *
+     * Component axes are ordered as the p left slots followed by the q right
+     * slots. Construction validates shape and metadata but does not apply
+     * alternation to the input.
+     */
     class DoubleFormCoefficientFunction : public TensorFieldCoefficientFunction
     {
         uint8_t degree_left;
         uint8_t degree_right;
         uint8_t dim;
+
+    protected:
+        /// Preserve both block degrees and ambient dimension after rewrapping.
+        shared_ptr<TensorFieldCoefficientFunction>
+        Rewrap(shared_ptr<CoefficientFunction> cf) const override;
 
     public:
         DoubleFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, uint8_t ap, uint8_t aq, uint8_t adim);
@@ -44,12 +73,19 @@ namespace ngfem
 
         virtual string GetDescription() const override { return "DoubleFormCF"; }
 
-        shared_ptr<CoefficientFunction>
-        Transform(CoefficientFunction::T_Transform &transformation) const override;
+        void CalcEquivalenceKey() override
+        {
+            equivalence_key =
+                GetDescription() + "[p=" + ToString(int(degree_left)) +
+                ",q=" + ToString(int(degree_right)) +
+                ",dim=" + ToString(int(dim)) + "](" +
+                GetFullCoefficient()->EquivalenceKey() + ")";
+        }
 
-        shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
-                                             shared_ptr<CoefficientFunction> dir) const override;
-        shared_ptr<CoefficientFunction> DiffJacobi(const CoefficientFunction *var, T_DJC &cache) const override;
+        auto GetCArgs() const
+        {
+            return tuple{GetFullCoefficient(), degree_left, degree_right, dim};
+        }
     };
 
     class ScalarFieldCoefficientFunction : public KFormCoefficientFunction
@@ -60,6 +96,11 @@ namespace ngfem
         virtual string GetDescription() const override
         {
             return "ScalarFieldCF";
+        }
+
+        auto GetCArgs() const
+        {
+            return tuple{GetFullCoefficient(), int(DimensionOfSpace())};
         }
     };
 
@@ -72,6 +113,11 @@ namespace ngfem
         {
             return "OneFormCF";
         }
+
+        auto GetCArgs() const
+        {
+            return tuple{GetFullCoefficient(), int(DimensionOfSpace())};
+        }
     };
 
     class TwoFormCoefficientFunction : public KFormCoefficientFunction
@@ -83,6 +129,11 @@ namespace ngfem
         {
             return "TwoFormCF";
         }
+
+        auto GetCArgs() const
+        {
+            return tuple{GetFullCoefficient(), int(DimensionOfSpace())};
+        }
     };
 
     class ThreeFormCoefficientFunction : public KFormCoefficientFunction
@@ -93,6 +144,11 @@ namespace ngfem
         virtual string GetDescription() const override
         {
             return "ThreeFormCF";
+        }
+
+        auto GetCArgs() const
+        {
+            return tuple{GetFullCoefficient(), int(DimensionOfSpace())};
         }
     };
 
