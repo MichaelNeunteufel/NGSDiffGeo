@@ -143,6 +143,17 @@ def test_materialize_zero_rejects_negative_degree():
         dg.materialize_zero(dg.FormalZeroDoubleForm(-1, 0, 3))
 
 
+def test_materialize_zero_rejects_unsupported_concrete_rank_before_allocation():
+    with pytest.raises(ValueError, match="supported concrete rank 8"):
+        dg.materialize_zero(dg.FormalZeroKForm(9, 4))
+
+    with pytest.raises(ValueError, match="supported concrete rank 8"):
+        dg.materialize_zero(dg.FormalZeroDoubleForm(5, 4, 4))
+
+    with pytest.raises(ValueError, match="with dim 10000"):
+        dg.materialize_zero(dg.FormalZeroKForm(8, 10000))
+
+
 def test_wedge_formal_preserves_degree_sum():
     dim = 3
     alpha = dg.OneForm(CF((1 + x, 2 + y, 3 + z)))

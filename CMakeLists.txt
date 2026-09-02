@@ -10,6 +10,42 @@ include(ngsolve_addon.cmake)
 # change the source file arguments to your source files
 add_ngsolve_addon(${addon_name} src/ngsdiffgeo.cpp src/riemannian_manifold.cpp src/tensor_fields.cpp src/coefficient_grad.cpp src/kforms.cpp)
 
+include(CTest)
+if(BUILD_TESTING)
+  add_executable(test_tensor_meta tests/test_tensor_meta.cpp)
+  target_include_directories(
+    test_tensor_meta
+    BEFORE PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src
+      $<TARGET_PROPERTY:ngsolve,INTERFACE_INCLUDE_DIRECTORIES>
+  )
+  target_link_libraries(test_tensor_meta PRIVATE ngsolve Python3::Module)
+  set_target_properties(test_tensor_meta PROPERTIES CXX_STANDARD 17)
+  add_test(NAME tensor_meta COMMAND test_tensor_meta)
+
+  if(NOT WIN32)
+    add_executable(
+      test_tensor_field_forwarding
+      tests/test_tensor_field_forwarding.cpp
+    )
+    target_include_directories(
+      test_tensor_field_forwarding
+      BEFORE PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        $<TARGET_PROPERTY:ngsolve,INTERFACE_INCLUDE_DIRECTORIES>
+    )
+    target_link_libraries(
+      test_tensor_field_forwarding
+      PRIVATE ngsdiffgeo ngsolve Python3::Module
+    )
+    set_target_properties(
+      test_tensor_field_forwarding
+      PROPERTIES CXX_STANDARD 17
+    )
+    add_test(NAME tensor_field_forwarding COMMAND test_tensor_field_forwarding)
+  endif()
+endif()
+
 # install the compiled python module and __init__.py ( don't change this )
 set(install_dir ${ADDON_INSTALL_DIR_PYTHON}/${addon_name})
 install(TARGETS ${addon_name} DESTINATION ${install_dir})

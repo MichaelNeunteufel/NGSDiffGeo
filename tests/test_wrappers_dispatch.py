@@ -52,9 +52,11 @@ def test_as_tensorfield_dispatches_scalar_vector_and_oneform():
     assert isinstance(oneform, dg.OneForm)
 
 
-def test_as_tensorfield_scalar_requires_dim_if_not_inferable():
-    with pytest.raises(TypeError, match="dim must be provided or inferable"):
-        dg_wrappers.as_tensorfield(1, covariant_indices="", dim=None)
+def test_as_tensorfield_scalar_can_keep_dimension_unknown():
+    scalar = dg_wrappers.as_tensorfield(1, covariant_indices="", dim=None)
+
+    assert isinstance(scalar, dg.ScalarField)
+    assert scalar.dim_space == 0
 
 
 def test_wedge_rejects_non_covariant_tensorfield_as_doubleform():
