@@ -20,6 +20,8 @@ _CPP_DoubleForm = _cpp.DoubleForm
 _CPP_VectorField = _cpp.VectorField
 _CPP_TensorField = _cpp.TensorField
 _CPP_RiemannianManifold = _cpp.RiemannianManifold
+_MAX_CONCRETE_FORM_RANK = int(_cpp._MAX_FORM_RANK)
+_MAX_SPACE_DIM = int(_cpp._MAX_SPACE_DIM)
 
 
 # ---------------- helpers ----------------
@@ -38,9 +40,7 @@ def _unwrap_cf(obj):
 
 def _infer_dim(obj):
     """Try to infer dimension. Returns int or None."""
-    if hasattr(obj, "_dim") and isinstance(obj._dim, int) and obj._dim > 0:
-        return obj._dim
-    for attr in ("dim_space", "_dim", "dim"):
+    for attr in ("dim_space", "dim"):
         if hasattr(obj, attr):
             try:
                 val = _call_if_callable(getattr(obj, attr))
@@ -77,11 +77,15 @@ def _tensorfield_dim(tf):
     return None
 
 
+def _tensorfield_covariance(tf):
+    return getattr(tf, "covariant_indices", "")
+
+
 def _is_doubleform_like(obj):
     if isinstance(obj, (DoubleForm, _CPP_DoubleForm)):
         return True
     if isinstance(obj, TensorField):
-        return getattr(obj, "_covariant_indices", "") == "11"
+        return _tensorfield_covariance(obj) == "11"
     return False
 
 
@@ -121,7 +125,7 @@ def _raise_doubleform_scalar_op_error(op, other):
 def _as_doubleform_like(obj, *, dim=None):
     if isinstance(obj, (DoubleForm, _CPP_DoubleForm)):
         return obj
-    if isinstance(obj, TensorField) and getattr(obj, "_covariant_indices", "") == "11":
+    if isinstance(obj, TensorField) and _tensorfield_covariance(obj) == "11":
         inferred = _tensorfield_dim(obj)
         if dim is None or (inferred is not None and dim != inferred):
             dim = inferred
@@ -204,6 +208,16 @@ def _zero_tensor_cf(rank, dim):
     return ngsolve.CF(tuple(0 for _ in range(size)), dims=dims)
 
 
+def _validate_materialized_zero_shape(rank, dim, name):
+    if rank > _MAX_CONCRETE_FORM_RANK:
+        raise ValueError(
+            f"cannot materialize {name} above the supported concrete rank "
+            f"{_MAX_CONCRETE_FORM_RANK}"
+        )
+    if not (1 <= dim <= _MAX_SPACE_DIM or (rank == 0 and dim == 0)):
+        raise ValueError(f"cannot materialize {name} with dim {dim}")
+
+
 def _star_requires_formal(a, n, slot_id, *, double=False):
     if isinstance(a, FormalZeroDoubleForm) or isinstance(a, FormalZeroKForm):
         return True
@@ -271,10 +285,7 @@ def _kform_degree(obj):
     if isinstance(obj, FormalZeroKForm):
         return int(obj.degree), int(obj.dim_space)
     if isinstance(obj, (ScalarField, OneForm, TwoForm, ThreeForm, GenericKForm, _CPP_KForm)):
-        dim = _infer_dim(obj)
-        if dim is None:
-            raise TypeError("k-form input requires inferable dim")
-        return int(obj.degree), int(dim)
+        return int(obj.degree), int(obj.dim_space)
     if _is_scalarfield_like(obj):
         dim = _infer_dim(obj)
         if dim is None:
@@ -323,11 +334,14 @@ class KForm(metaclass=_KFormMeta):
             dim = args[1]
         if k is None:
             raise TypeError("KForm: missing required argument k")
+        k = int(k)
         if dim is None:
             dim = _infer_dim(cf)
-        if dim is None:
+        if dim is None and k == 0:
+            dim = 0
+        elif dim is None:
             raise TypeError("KForm: dim must be provided or inferable")
-        return as_kform(cf, k=int(k), dim=dim)
+        return as_kform(cf, k=k, dim=dim)
 
 
 # ----------------  wrappers  ----------------
@@ -336,11 +350,9 @@ class KForm(metaclass=_KFormMeta):
 class ScalarField(_CPP_ScalarField):
     def __init__(self, cf, *, dim=-1):
         _CPP_ScalarField.__init__(self, cf, dim=dim)
-        self._k = 0
-        self._dim = dim
 
     def _wrap(self, cf, k=0):
-        return as_kform(cf, k=k, dim=self._dim)
+        return as_kform(cf, k=k, dim=self.dim_space)
 
     def __add__(self, other):
         if is_formal_zero_kform(other):
@@ -352,7 +364,7 @@ class ScalarField(_CPP_ScalarField):
                 raise TypeError(
                     "cannot add double-forms of different left/right degree or dimension"
                 )
-            return as_doubleform(self, p=0, q=0, dim=self._dim)
+            return as_doubleform(self, p=0, q=0, dim=self.dim_space)
         return self._wrap(self.coef + _unwrap_cf(other))
 
     def __radd__(self, other):
@@ -368,7 +380,7 @@ class ScalarField(_CPP_ScalarField):
                 raise TypeError(
                     "cannot subtract double-forms of different left/right degree or dimension"
                 )
-            return as_doubleform(self, p=0, q=0, dim=self._dim)
+            return as_doubleform(self, p=0, q=0, dim=self.dim_space)
         return self._wrap(self.coef - _unwrap_cf(other))
 
     def __neg__(self):
@@ -388,7 +400,7 @@ class ScalarField(_CPP_ScalarField):
         elif isinstance(other, (VectorField, TensorField)):
             return as_tensorfield(
                 self.coef * _unwrap_cf(other),
-                covariant_indices=other._covariant_indices,
+                covariant_indices=_tensorfield_covariance(other),
             )
         return _CPP_ScalarField.__mul__(self, other)
 
@@ -411,11 +423,9 @@ class ScalarField(_CPP_ScalarField):
 class OneForm(_CPP_OneForm):
     def __init__(self, cf):
         _CPP_OneForm.__init__(self, cf)
-        self._k = 1
-        self._dim = cf.dim
 
     def _wrap(self, cf):
-        return as_kform(cf, k=1, dim=self._dim)
+        return as_kform(cf, k=1, dim=self.dim_space)
 
     def __add__(self, other):
         if is_formal_zero_kform(other):
@@ -450,11 +460,9 @@ class OneForm(_CPP_OneForm):
 class TwoForm(_CPP_TwoForm):
     def __init__(self, cf, *, dim=-1):
         _CPP_TwoForm.__init__(self, cf, dim=dim)
-        self._k = 2
-        self._dim = dim
 
     def _wrap(self, cf):
-        return as_kform(cf, k=2, dim=self._dim)
+        return as_kform(cf, k=2, dim=self.dim_space)
 
     def __add__(self, other):
         if is_formal_zero_kform(other):
@@ -489,11 +497,9 @@ class TwoForm(_CPP_TwoForm):
 class ThreeForm(_CPP_ThreeForm):
     def __init__(self, cf, *, dim=-1):
         _CPP_ThreeForm.__init__(self, cf, dim=dim)
-        self._k = 3
-        self._dim = dim
 
     def _wrap(self, cf):
-        return as_kform(cf, k=3, dim=self._dim)
+        return as_kform(cf, k=3, dim=self.dim_space)
 
     def __add__(self, other):
         if is_formal_zero_kform(other):
@@ -528,11 +534,9 @@ class ThreeForm(_CPP_ThreeForm):
 class GenericKForm(_CPP_KForm):
     def __init__(self, cf, *, k, dim):
         _CPP_KForm.__init__(self, cf, k=int(k), dim=int(dim))
-        self._k = int(k)
-        self._dim = int(dim)
 
     def _wrap(self, cf):
-        return as_kform(cf, k=self._k, dim=self._dim)
+        return as_kform(cf, k=self.degree, dim=self.dim_space)
 
     def __add__(self, other):
         if is_formal_zero_kform(other):
@@ -567,28 +571,38 @@ class GenericKForm(_CPP_KForm):
 class DoubleForm(_CPP_DoubleForm):
     def __init__(self, cf, *, p, q, dim):
         _CPP_DoubleForm.__init__(self, cf, p=int(p), q=int(q), dim=int(dim))
-        self._p = int(p)
-        self._q = int(q)
-        self._dim = int(dim)
 
     def _wrap(self, cf):
-        return as_doubleform(cf, p=self._p, q=self._q, dim=self._dim)
+        return as_doubleform(
+            cf,
+            p=self.degree_left,
+            q=self.degree_right,
+            dim=self.dim_space,
+        )
 
     def _is_overflow_zero_degree(self):
-        return self._p > self._dim or self._q > self._dim
+        return (
+            self.degree_left > self.dim_space
+            or self.degree_right > self.dim_space
+        )
 
     def _formal_zero(self, *, reason):
-        return FormalZeroDoubleForm(self._p, self._q, self._dim, reason=reason)
+        return FormalZeroDoubleForm(
+            self.degree_left,
+            self.degree_right,
+            self.dim_space,
+            reason=reason,
+        )
 
     def _can_add_scalar(self, other):
         if not _is_scalarfield_like(other):
             return False
-        if self._p != 0 or self._q != 0:
+        if self.degree_left != 0 or self.degree_right != 0:
             return False
         if _is_raw_scalar_coefficient(other):
             return True
         other_dim = _infer_dim(other)
-        return other_dim is None or other_dim == self._dim
+        return other_dim is None or other_dim == self.dim_space
 
     def __add__(self, other):
         if is_formal_zero_doubleform(other):
@@ -810,7 +824,8 @@ class FormalZeroDoubleForm(FormalZeroBase):
 
 def as_scalarfield(cf, *, dim=-1):
     if isinstance(cf, ScalarField):
-        return cf
+        if dim is None or int(dim) < 1 or int(cf.dim_space) == int(dim):
+            return cf
     if isinstance(cf, _CPP_ScalarField):
         return ScalarField(cf, dim=dim)
     return ScalarField(cf, dim=dim)
@@ -841,18 +856,19 @@ def as_threeform(cf, *, dim):
 
 
 def as_kform(cf, *, k, dim=None):
-    if isinstance(cf, (ScalarField, OneForm, TwoForm, ThreeForm, GenericKForm)):
-        return cf
-
+    k = int(k)
     if dim is None:
         dim = _infer_dim(cf)
-    if dim is None:
+    if dim is None and k == 0:
+        dim = 0
+    elif dim is None:
         raise TypeError("as_kform: dim must be provided or inferable")
 
-    if hasattr(cf, "_k") and hasattr(cf, "_dim") and cf._k == k and cf._dim == dim:
-        return cf
+    dim = int(dim)
+    if isinstance(cf, (ScalarField, OneForm, TwoForm, ThreeForm, GenericKForm)):
+        if int(cf.degree) == k and int(cf.dim_space) == dim:
+            return cf
 
-    k = int(k)
     if k == 0:
         return as_scalarfield(cf, dim=dim)
     if k == 1:
@@ -907,14 +923,21 @@ def materialize_zero(obj):
     if isinstance(obj, FormalZeroKForm):
         if obj.degree < 0:
             raise ValueError("cannot materialize FormalZeroKForm with negative degree")
+        _validate_materialized_zero_shape(
+            obj.degree, obj.dim_space, "FormalZeroKForm"
+        )
         return as_kform(_zero_tensor_cf(obj.degree, obj.dim_space), k=obj.degree, dim=obj.dim_space)
     if isinstance(obj, FormalZeroDoubleForm):
         if obj.degree_left < 0 or obj.degree_right < 0:
             raise ValueError(
                 "cannot materialize FormalZeroDoubleForm with negative degree"
             )
+        rank = obj.degree_left + obj.degree_right
+        _validate_materialized_zero_shape(
+            rank, obj.dim_space, "FormalZeroDoubleForm"
+        )
         return as_doubleform(
-            _zero_tensor_cf(obj.degree_left + obj.degree_right, obj.dim_space),
+            _zero_tensor_cf(rank, obj.dim_space),
             p=obj.degree_left,
             q=obj.degree_right,
             dim=obj.dim_space,
@@ -1486,10 +1509,9 @@ def as_vectorfield(cf):
 class TensorField(_CPP_TensorField):
     def __init__(self, cf, covariant_indices):
         _CPP_TensorField.__init__(self, cf, covariant_indices=covariant_indices)
-        self._covariant_indices = covariant_indices
 
     def _wrap(self, cf):
-        return as_tensorfield(cf, covariant_indices=self._covariant_indices)
+        return as_tensorfield(cf, covariant_indices=self.covariant_indices)
 
     def __add__(self, other):
         return self._wrap(self.coef + _unwrap_cf(other))
@@ -1520,7 +1542,7 @@ class TensorField(_CPP_TensorField):
         return self._wrap(self.coef / _unwrap_cf(other))
 
     def __pow__(self, power):
-        if self._covariant_indices != "11":
+        if self.covariant_indices != "11":
             return NotImplemented
         return WedgePower(self, power)
 
@@ -1540,9 +1562,7 @@ def as_tensorfield(cf, *, covariant_indices=None, dim=-1):
         if dim is None or dim < 1:
             dim = _infer_dim(cf)
         if dim is None:
-            raise TypeError(
-                "as_tensorfield: dim must be provided or inferable for scalars"
-            )
+            dim = 0
         return ScalarField(cf, dim=dim)
     elif covariant_indices == "0":
         return VectorField(cf)
@@ -1570,9 +1590,15 @@ def Wedge(a, b):
             da * b, p=da.degree_left, q=da.degree_right, dim=da.dim_space
         )
     if _is_scalarfield_like(a):
+        other_dim = _infer_dim(b)
+        if other_dim is not None:
+            a = as_scalarfield(a, dim=other_dim)
         out = _cpp.Wedge(a, b)
         return as_kform(out, k=out.degree, dim=out.dim_space)
     if _is_scalarfield_like(b):
+        other_dim = _infer_dim(a)
+        if other_dim is not None:
+            b = as_scalarfield(b, dim=other_dim)
         out = _cpp.Wedge(a, b)
         return as_kform(out, k=out.degree, dim=out.dim_space)
     if _is_doubleform_like(a) or _is_doubleform_like(b):

@@ -327,12 +327,12 @@ namespace ngfem
             // compiled/nonzero-pattern barrier behavior.
             // cov_der = TensorFieldCF(
             //     make_shared<NonZeroPatternBarrierCoefficientFunction>(
-            //         Compile(cov_der->GetCoefficients(), false, 0)),
+            //         Compile(cov_der->GetFullCoefficient(), false, 0)),
             //     cov_der->GetCovariantIndices());
 
             auto project_if_needed = [&](shared_ptr<DoubleFormCoefficientFunction> df)
             {
-                if (vb != BND || df->Meta().rank == 0)
+                if (vb != BND || df->Meta().Rank() == 0)
                     return df;
                 auto projected = M.ProjectTensorToEuclideanTangent(static_pointer_cast<TensorFieldCoefficientFunction>(df));
                 return DoubleFormCF(projected, df->LeftDegree(), df->RightDegree(), dim);
@@ -651,25 +651,25 @@ namespace ngfem
         std::string eins = lhs + "," + std::string(1, a) + std::string(1, b) + "->" + sig;
 
         auto mout = m.WithCovariant(index, false);
-        if (m.rank == 1 && index == 0)
+        if (m.Rank() == 1 && index == 0)
         {
-            auto out_cf = metric_inv * tf->GetCoefficients();
+            auto out_cf = metric_inv * tf->GetFullCoefficient();
             if (dynamic_pointer_cast<OneFormCoefficientFunction>(tf))
                 return VectorFieldCF(out_cf);
             return TensorFieldCF(out_cf, mout);
         }
-        if (m.rank == 2)
+        if (m.Rank() == 2)
         {
             shared_ptr<CoefficientFunction> out_cf;
             if (index == 0)
-                out_cf = metric_inv * tf->GetCoefficients();
+                out_cf = metric_inv * tf->GetFullCoefficient();
             else if (index == 1)
-                out_cf = tf->GetCoefficients() * metric_inv;
+                out_cf = tf->GetFullCoefficient() * metric_inv;
             if (out_cf)
                 return TensorFieldCF(out_cf, mout);
         }
 
-        auto out_cf = EinsumCF(eins, {tf->GetCoefficients(), metric_inv});
+        auto out_cf = EinsumCF(eins, {tf->GetFullCoefficient(), metric_inv});
 
         // if tf is a OneFormCoefficientFunction, return a VectorFieldCoefficientFunction
         if (dynamic_pointer_cast<OneFormCoefficientFunction>(tf))
@@ -711,7 +711,7 @@ namespace ngfem
         }
 
         auto m = tf->Meta();
-        if (index >= m.rank)
+        if (index >= m.Rank())
             throw Exception("Lower: index out of range");
         if (m.Covariant(index))
             throw Exception("Lower: index is already covariant");
@@ -726,25 +726,25 @@ namespace ngfem
         std::string eins = lhs + "," + std::string(1, a) + std::string(1, b) + "->" + sig;
 
         auto mout = m.WithCovariant(index, true);
-        if (m.rank == 1 && index == 0)
+        if (m.Rank() == 1 && index == 0)
         {
-            auto out_cf = metric * tf->GetCoefficients();
+            auto out_cf = metric * tf->GetFullCoefficient();
             if (dynamic_pointer_cast<VectorFieldCoefficientFunction>(tf))
                 return OneFormCF(out_cf);
             return TensorFieldCF(out_cf, mout);
         }
-        if (m.rank == 2)
+        if (m.Rank() == 2)
         {
             shared_ptr<CoefficientFunction> out_cf;
             if (index == 0)
-                out_cf = metric * tf->GetCoefficients();
+                out_cf = metric * tf->GetFullCoefficient();
             else if (index == 1)
-                out_cf = tf->GetCoefficients() * metric;
+                out_cf = tf->GetFullCoefficient() * metric;
             if (out_cf)
                 return TensorFieldCF(out_cf, mout);
         }
 
-        auto out_cf = EinsumCF(eins, {tf->GetCoefficients(), metric});
+        auto out_cf = EinsumCF(eins, {tf->GetFullCoefficient(), metric});
 
         // if tf is a VectorFieldCoefficientFunction, return a OneFormCoefficientFunction
         if (dynamic_pointer_cast<VectorFieldCoefficientFunction>(tf))
@@ -866,14 +866,14 @@ namespace ngfem
         if (!tf)
             throw Exception("ProjectTensorToEuclideanTangent: input must be non-null");
         auto m = tf->Meta();
-        if (m.rank == 0)
+        if (m.Rank() == 0)
             return tf;
 
         auto current = tf;
         const auto &cov_ind = tf->GetCovariantIndices();
         if (!P_F_g_T)
             P_F_g_T = TransposeCF(P_F_g);
-        for (size_t i = 0; i < m.rank; ++i)
+        for (size_t i = 0; i < m.Rank(); ++i)
         {
             auto proj = (cov_ind[i] == '1') ? P_F_g : P_F_g_T;
             current = ApplyProjectorToIndex(current, proj, i);
@@ -886,7 +886,7 @@ namespace ngfem
         if (!tf)
             throw Exception("ProjectTensor: input must be non-null");
         auto m = tf->Meta();
-        if (m.rank == 0)
+        if (m.Rank() == 0)
         {
             if (mode == 2)
                 throw Exception("ProjectTensor: cannot take normal component of rank-0 tensor");
@@ -906,7 +906,7 @@ namespace ngfem
 
         if (mode == 1)
         {
-            for (size_t i = 0; i < m.rank; ++i)
+            for (size_t i = 0; i < m.Rank(); ++i)
             {
                 auto proj = (cov_ind[i] == '1') ? P_F_g : P_F_g_T;
                 current = ApplyProjectorToIndex(current, proj, i);
@@ -916,7 +916,7 @@ namespace ngfem
 
         if (mode == 2)
         {
-            for (size_t i = 1; i < m.rank; ++i)
+            for (size_t i = 1; i < m.Rank(); ++i)
             {
                 auto proj = (cov_ind[i] == '1') ? P_F_g : P_F_g_T;
                 current = ApplyProjectorToIndex(current, proj, i);
@@ -928,7 +928,7 @@ namespace ngfem
         {
             if (!edge_proj)
                 throw Exception("ProjectTensor: edge projector not available");
-            for (size_t i = 0; i < m.rank; ++i)
+            for (size_t i = 0; i < m.Rank(); ++i)
             {
                 auto proj = (cov_ind[i] == '1') ? edge_proj : P_E_g_T;
                 current = ApplyProjectorToIndex(current, proj, i);
@@ -1015,26 +1015,26 @@ namespace ngfem
                 throw Exception("IP: form degrees must match");
 
             double scale = 1.0 / double(Factorial(k1->Degree()));
-            return ScalarFieldCF(scale * result->GetCoefficients(), dim);
+            return ScalarFieldCF(scale * result->GetFullCoefficient(), dim);
         };
 
         if (cov_ind1.size() == 1)
         {
-            shared_ptr<CoefficientFunction> left = c1->GetCoefficients();
+            shared_ptr<CoefficientFunction> left = c1->GetFullCoefficient();
             if (cov_ind1[0] == cov_ind2[0])
                 left = cov_ind1[0] == '1' ? metric_inv * left : metric * left;
-            auto result = ScalarFieldCF(InnerProduct(left, c2->GetCoefficients()), dim);
+            auto result = ScalarFieldCF(InnerProduct(left, c2->GetFullCoefficient()), dim);
             return apply_form_scaling(result);
         }
 
         if (cov_ind1.size() == 2)
         {
-            shared_ptr<CoefficientFunction> left = c1->GetCoefficients();
+            shared_ptr<CoefficientFunction> left = c1->GetFullCoefficient();
             if (cov_ind1[0] == cov_ind2[0])
                 left = cov_ind1[0] == '1' ? metric_inv * left : metric * left;
             if (cov_ind1[1] == cov_ind2[1])
                 left = cov_ind1[1] == '1' ? left * metric_inv : left * metric;
-            auto result = ScalarFieldCF(InnerProduct(left, c2->GetCoefficients()), dim);
+            auto result = ScalarFieldCF(InnerProduct(left, c2->GetFullCoefficient()), dim);
             return apply_form_scaling(result);
         }
 
@@ -1096,7 +1096,7 @@ namespace ngfem
             return result;
 
         double scale = 1.0 / double(Factorial(c1->LeftDegree()) * Factorial(c1->RightDegree()));
-        return ScalarFieldCF(scale * result->GetCoefficients(), dim);
+        return ScalarFieldCF(scale * result->GetFullCoefficient(), dim);
     }
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::Cross(shared_ptr<TensorFieldCoefficientFunction> c1, shared_ptr<TensorFieldCoefficientFunction> c2) const
@@ -1188,7 +1188,7 @@ namespace ngfem
         if (sign == 1)
             return second_star;
 
-        auto signed_cf = (-1.0) * second_star->GetCoefficients();
+        auto signed_cf = (-1.0) * second_star->GetFullCoefficient();
         return KFormCF(signed_cf, k - 1, dim);
     }
 
@@ -1239,18 +1239,18 @@ namespace ngfem
         // vector field
         else if (auto vf = dynamic_pointer_cast<VectorFieldCoefficientFunction>(c1))
         {
-            auto result_cf = GradCF(vf->GetCoefficients(), dim);
+            auto result_cf = GradCF(vf->GetFullCoefficient(), dim);
             if (!zero_connection)
-                result_cf = result_cf + EinsumCF("ikj,k->ij", {chr2, vf->GetCoefficients()});
+                result_cf = result_cf + EinsumCF("ikj,k->ij", {chr2, vf->GetFullCoefficient()});
             result = TensorFieldCF(result_cf, "10");
         }
 
         // one-form field
         else if (auto of = dynamic_pointer_cast<OneFormCoefficientFunction>(c1))
         {
-            auto result_cf = GradCF(of->GetCoefficients(), dim);
+            auto result_cf = GradCF(of->GetFullCoefficient(), dim);
             if (!zero_connection)
-                result_cf = result_cf - EinsumCF("ijk,k->ij", {chr2, of->GetCoefficients()});
+                result_cf = result_cf - EinsumCF("ijk,k->ij", {chr2, of->GetFullCoefficient()});
             result = TensorFieldCF(result_cf, "11");
         }
 
@@ -1262,7 +1262,7 @@ namespace ngfem
             string cov_ind = c1->GetCovariantIndices();
             char new_char = FreshLabel(signature);
 
-            auto result_cf = GradCF(c1->GetCoefficients(), dim);
+            auto result_cf = GradCF(c1->GetFullCoefficient(), dim);
             if (!zero_connection)
             {
                 for (size_t i = 0; i < signature.size(); i++)
@@ -1273,13 +1273,13 @@ namespace ngfem
                     {
                         // covariant
                         string einsum_signature = ToString(new_char) + signature[i] + tmp_signature[i] + "," + tmp_signature + "->" + new_char + signature;
-                        result_cf = result_cf - EinsumCF(einsum_signature, {chr2, c1->GetCoefficients()});
+                        result_cf = result_cf - EinsumCF(einsum_signature, {chr2, c1->GetFullCoefficient()});
                     }
                     else
                     {
                         // contravariant
                         string einsum_signature = ToString(new_char) + tmp_signature[i] + signature[i] + "," + tmp_signature + "->" + new_char + signature;
-                        result_cf = result_cf + EinsumCF(einsum_signature, {chr2, c1->GetCoefficients()});
+                        result_cf = result_cf + EinsumCF(einsum_signature, {chr2, c1->GetFullCoefficient()});
                     }
                 }
             }
@@ -1341,7 +1341,7 @@ namespace ngfem
 
         int out_p = (slot == 0) ? p - 1 : p;
         int out_q = (slot == 1) ? q - 1 : q;
-        return DoubleFormCF(tr->GetCoefficients(), out_p, out_q, dim);
+        return DoubleFormCF(tr->GetFullCoefficient(), out_p, out_q, dim);
     }
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::CovCurl(shared_ptr<TensorFieldCoefficientFunction> c1) const
@@ -1386,7 +1386,7 @@ namespace ngfem
             }
             else if (c1->Dimensions().Size() == 2 && c1->GetCovariantIndices() == "11")
             {
-                return OneFormCF(EinsumCF("jk,jik->i", {GetLeviCivitaSymbol(false), GradCF(c1, dim) - EinsumCF("jim,mk->jik", {chr2, c1->GetCoefficients()})}));
+                return OneFormCF(EinsumCF("jk,jik->i", {GetLeviCivitaSymbol(false), GradCF(c1, dim) - EinsumCF("jim,mk->jik", {chr2, c1->GetFullCoefficient()})}));
             }
             else
                 throw Exception("CovCurl: only available for vector fields, 1-forms, and (2,0)-tensors yet. Invoked with signature " + c1->GetSignature() + " and covariant indices " + c1->GetCovariantIndices());
@@ -1498,7 +1498,7 @@ namespace ngfem
 
         if (index1 == index2)
             throw Exception("Trace: indices must be different");
-        if (std::max(index1, index2) >= m.rank)
+        if (std::max(index1, index2) >= m.Rank())
             throw Exception("Trace: index out of range");
 
         auto mout = m.Erased2(index1, index2);
@@ -1511,15 +1511,15 @@ namespace ngfem
         bool cov1 = m.Covariant(index1);
         bool cov2 = m.Covariant(index2);
 
-        if (m.rank == 2 && ((index1 == 0 && index2 == 1) || (index1 == 1 && index2 == 0)))
+        if (m.Rank() == 2 && ((index1 == 0 && index2 == 1) || (index1 == 1 && index2 == 0)))
         {
             if (cov1 != cov2)
             {
-                auto result = EinsumCF("ii->", {tf->GetCoefficients()});
+                auto result = EinsumCF("ii->", {tf->GetFullCoefficient()});
                 return ScalarFieldCF(result, dim);
             }
-            auto result = cov1 ? InnerProduct(metric_inv, tf->GetCoefficients())
-                               : InnerProduct(metric, tf->GetCoefficients());
+            auto result = cov1 ? InnerProduct(metric_inv, tf->GetFullCoefficient())
+                               : InnerProduct(metric, tf->GetFullCoefficient());
             return ScalarFieldCF(result, dim);
         }
 
@@ -1529,7 +1529,7 @@ namespace ngfem
             sigmod[index2] = sigmod[index1];
 
             std::string eins = sigmod + "->" + sigout;
-            result = EinsumCF(eins, {tf->GetCoefficients()});
+            result = EinsumCF(eins, {tf->GetFullCoefficient()});
         }
         else
         {
@@ -1543,10 +1543,10 @@ namespace ngfem
             metric_idx.push_back(sig[index1]);
 
             std::string eins = sigmod + "," + metric_idx + "->" + sigout;
-            result = EinsumCF(eins, {tf->GetCoefficients(), cov1 ? metric_inv : metric});
+            result = EinsumCF(eins, {tf->GetFullCoefficient(), cov1 ? metric_inv : metric});
         }
 
-        return mout.rank ? TensorFieldCF(result, mout.CovString())
+        return mout.Rank() ? TensorFieldCF(result, mout.CovString())
                          : ScalarFieldCF(result, dim);
     }
 
@@ -1579,7 +1579,7 @@ namespace ngfem
         }
 
         if (current->LeftDegree() == 0 && current->RightDegree() == 0)
-            return ScalarFieldCF(current->GetCoefficients(), dim);
+            return ScalarFieldCF(current->GetFullCoefficient(), dim);
 
         return current;
     }
@@ -1638,7 +1638,7 @@ namespace ngfem
 
             std::string eins = lhs + "," + std::string(1, a) + std::string(1, b) + "->" + sig;
             auto mout = m.WithCovariant(index, false);
-            auto out_cf = EinsumCF(eins, {tf_in->GetCoefficients(), metric_inv});
+            auto out_cf = EinsumCF(eins, {tf_in->GetFullCoefficient(), metric_inv});
             return TensorFieldCF(out_cf, mout);
         };
 
@@ -1654,7 +1654,7 @@ namespace ngfem
         sigma_sig.push_back(sig[size_t(p)]);
 
         std::string eins = sig + "," + sigma_sig + "->" + sig_out;
-        auto out_cf = EinsumCF(eins, {tf->GetCoefficients(), sigma_raised});
+        auto out_cf = EinsumCF(eins, {tf->GetFullCoefficient(), sigma_raised});
 
         if (sig_out.empty())
             return ScalarFieldCF(out_cf, dim);
@@ -1674,7 +1674,7 @@ namespace ngfem
             throw Exception("SlotInnerProduct: double-form degrees must match");
 
         if (p == 0)
-            return ScalarFieldCF(tf->GetCoefficients(), dim);
+            return ScalarFieldCF(tf->GetFullCoefficient(), dim);
 
         auto res = Trace(tf, size_t(p), vb);
         if (auto sf = dynamic_pointer_cast<ScalarFieldCoefficientFunction>(res))
@@ -1682,13 +1682,13 @@ namespace ngfem
             if (!forms)
                 return sf;
             double scale = 1.0 / double(Factorial(p));
-            return ScalarFieldCF(scale * sf->GetCoefficients(), dim);
+            return ScalarFieldCF(scale * sf->GetFullCoefficient(), dim);
         }
         auto out = ScalarFieldCF(res, dim);
         if (!forms)
             return out;
         double scale = 1.0 / double(Factorial(p));
-        return ScalarFieldCF(scale * out->GetCoefficients(), dim);
+        return ScalarFieldCF(scale * out->GetFullCoefficient(), dim);
     }
 
     shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::ProjectDoubleForm(shared_ptr<DoubleFormCoefficientFunction> tf, int left_mode, int right_mode,
@@ -1827,7 +1827,7 @@ namespace ngfem
     {
 
         auto m = tf->Meta();
-        if (slot >= m.rank)
+        if (slot >= m.Rank())
             throw Exception("Contraction: slot out of range");
 
         char a = m.Label(slot);
@@ -1839,16 +1839,16 @@ namespace ngfem
         if (m.Covariant(slot))
         {
             std::string eins = sig + "," + std::string(1, a) + "->" + sig_out;
-            out_cf = EinsumCF(eins, {tf->GetCoefficients(), vf->GetCoefficients()});
+            out_cf = EinsumCF(eins, {tf->GetFullCoefficient(), vf->GetFullCoefficient()});
         }
         else
         {
             char b = m.FreshLabel();
             std::string eins = sig + "," + std::string(1, a) + std::string(1, b) + "," + std::string(1, b) + "->" + sig_out;
-            out_cf = EinsumCF(eins, {tf->GetCoefficients(), g, vf->GetCoefficients()});
+            out_cf = EinsumCF(eins, {tf->GetFullCoefficient(), g, vf->GetFullCoefficient()});
         }
 
-        return m.Erased(slot).rank ? TensorFieldCF(out_cf, m.Erased(slot).CovString()) : ScalarFieldCF(out_cf, dim);
+        return m.Erased(slot).Rank() ? TensorFieldCF(out_cf, m.Erased(slot).CovString()) : ScalarFieldCF(out_cf, dim);
     }
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::Transpose(shared_ptr<TensorFieldCoefficientFunction> tf, size_t index1, size_t index2) const
@@ -1863,7 +1863,7 @@ namespace ngfem
         string signature_result = signature;
         swap(signature_result[index1], signature_result[index2]);
         swap(cov_ind[index1], cov_ind[index2]);
-        return TensorFieldCF(EinsumCF(signature + "->" + signature_result, {tf->GetCoefficients()}), cov_ind);
+        return TensorFieldCF(EinsumCF(signature + "->" + signature_result, {tf->GetFullCoefficient()}), cov_ind);
     }
 
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::S_op(shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb) const
@@ -1895,7 +1895,7 @@ namespace ngfem
             throw Exception("S_op: DoubleForm input must be a (1,1) double form");
 
         auto out = S_op(static_pointer_cast<TensorFieldCoefficientFunction>(tf), vb);
-        return DoubleFormCF(out->GetCoefficients(), 1, 1, dim);
+        return DoubleFormCF(out->GetFullCoefficient(), 1, 1, dim);
     }
 
     shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::s_op(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb) const
@@ -1943,7 +1943,7 @@ namespace ngfem
         gsig.push_back(right_sig[0]);
 
         std::string eins = gsig + "," + sig + "->" + out_sig;
-        auto contracted = EinsumCF(eins, {mix, tf->GetCoefficients()});
+        auto contracted = EinsumCF(eins, {mix, tf->GetFullCoefficient()});
         auto alt = BlockAlternationByPermutationCF(contracted, p + q, 0, p + 1);
 
         double scale = 1.0 / double(Factorial(p));
@@ -1980,7 +1980,7 @@ namespace ngfem
             throw Exception("J_op: DoubleForm input must be a (1,1) double form");
 
         auto out = J_op(static_pointer_cast<TensorFieldCoefficientFunction>(tf), vb);
-        return DoubleFormCF(out->GetCoefficients(), 1, 1, dim);
+        return DoubleFormCF(out->GetFullCoefficient(), 1, 1, dim);
     }
 
 }

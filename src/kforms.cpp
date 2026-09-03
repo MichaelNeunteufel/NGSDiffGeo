@@ -3,6 +3,8 @@
 
 #include <algorithm>
 #include <array>
+#include <core/register_archive.hpp>
+#include <limits>
 #include <numeric>
 #include <mutex>
 #include <vector>
@@ -67,10 +69,55 @@ namespace ngfem
             return 0;
         }
 
-        void RequireScalarFormDimension(int used_dim, const char *name)
+        void ValidateFormSpaceDimension(int used_dim, bool allow_unknown,
+                                        const char *name)
         {
-            if (used_dim <= 0)
-                throw Exception(std::string(name) + ": dim must be provided for scalar forms");
+            if ((allow_unknown && used_dim == 0) ||
+                (used_dim >= 1 && used_dim <= MAX_SPACE_DIM))
+                return;
+            throw Exception(std::string(name) + ": dim must be in {1,...," +
+                            ToString(MAX_SPACE_DIM) +
+                            "}" + (allow_unknown ? " (or 0 for scalar forms)" : ""));
+        }
+
+        uint8_t CheckedFormSpaceDimension(int dim, bool allow_unknown,
+                                          const char *name)
+        {
+            ValidateFormSpaceDimension(dim, allow_unknown, name);
+            return uint8_t(dim);
+        }
+
+        int CheckedKFormDegree(int k, const char *name)
+        {
+            if (k < 0)
+                throw Exception(std::string(name) + ": degree must be non-negative");
+            if (k > MAX_FORM_RANK)
+                throw Exception(std::string(name) + ": only ranks up to " +
+                                ToString(MAX_FORM_RANK) + " are supported");
+            return k;
+        }
+
+        int CheckedDoubleFormRank(int p, int q, const char *name)
+        {
+            if (p < 0 || q < 0)
+                throw Exception(std::string(name) + ": degrees must be non-negative");
+            if (size_t(p) > MAX_SIGNATURE_LABELS ||
+                size_t(q) > MAX_SIGNATURE_LABELS - size_t(p))
+                throw Exception(std::string(name) + ": combined rank must not exceed " +
+                                ToString(MAX_SIGNATURE_LABELS));
+            return p + q;
+        }
+
+        void ValidateTensorComponentCount(int dim, int rank, const char *name)
+        {
+            size_t count = 1;
+            for (int i = 0; i < rank; ++i)
+            {
+                if (count > std::numeric_limits<size_t>::max() / size_t(dim))
+                    throw Exception(std::string(name) +
+                                    ": tensor component count exceeds size_t");
+                count *= size_t(dim);
+            }
         }
 
         void ValidateKFormInput(const CoefficientFunction &cf, int k)
@@ -91,16 +138,28 @@ namespace ngfem
             auto existing = dynamic_pointer_cast<TWrapped>(cf);
             if (!existing)
                 return nullptr;
+            if (existing->DimensionOfSpace() == 0 && used_dim > 0)
+                return nullptr;
             if (used_dim > 0 && existing->DimensionOfSpace() != used_dim)
                 throw Exception(std::string(name) + ": requested dim does not match wrapped dimension");
             return existing;
         }
 
+        shared_ptr<CoefficientFunction>
+        UnwrapTensorFieldFullValue(shared_ptr<CoefficientFunction> cf)
+        {
+            // Only the full semantic value crosses a wrapper boundary. Future
+            // compact form storage must remain behind a full-shaped value node.
+            while (auto tf =
+                       dynamic_pointer_cast<TensorFieldCoefficientFunction>(cf))
+                cf = tf->GetFullCoefficient();
+            return cf;
+        }
+
         shared_ptr<KFormCoefficientFunction> WrapKFormImpl(shared_ptr<CoefficientFunction> cf, int k, int dim)
         {
             int used_dim = InferWrappedOrTensorDimension(cf, dim);
-            if (k == 0)
-                RequireScalarFormDimension(used_dim, "KFormCF");
+            ValidateFormSpaceDimension(used_dim, k == 0, "KFormCF");
 
             ValidateKFormInput(*cf, k);
 
@@ -108,25 +167,29 @@ namespace ngfem
             {
                 if (auto sf = ReuseIfCompatible<ScalarFieldCoefficientFunction>(cf, used_dim, "KFormCF"))
                     return sf;
-                return make_shared<ScalarFieldCoefficientFunction>(cf, used_dim);
+                return make_shared<ScalarFieldCoefficientFunction>(
+                    UnwrapTensorFieldFullValue(std::move(cf)), used_dim);
             }
             if (k == 1)
             {
                 if (auto of = ReuseIfCompatible<OneFormCoefficientFunction>(cf, used_dim, "KFormCF"))
                     return of;
-                return make_shared<OneFormCoefficientFunction>(cf, used_dim);
+                return make_shared<OneFormCoefficientFunction>(
+                    UnwrapTensorFieldFullValue(std::move(cf)), used_dim);
             }
             if (k == 2)
             {
                 if (auto tf = ReuseIfCompatible<TwoFormCoefficientFunction>(cf, used_dim, "KFormCF"))
                     return tf;
-                return make_shared<TwoFormCoefficientFunction>(cf, used_dim);
+                return make_shared<TwoFormCoefficientFunction>(
+                    UnwrapTensorFieldFullValue(std::move(cf)), used_dim);
             }
             if (k == 3)
             {
                 if (auto tf = ReuseIfCompatible<ThreeFormCoefficientFunction>(cf, used_dim, "KFormCF"))
                     return tf;
-                return make_shared<ThreeFormCoefficientFunction>(cf, used_dim);
+                return make_shared<ThreeFormCoefficientFunction>(
+                    UnwrapTensorFieldFullValue(std::move(cf)), used_dim);
             }
 
             if (auto kf = dynamic_pointer_cast<KFormCoefficientFunction>(cf))
@@ -138,14 +201,15 @@ namespace ngfem
                 return kf;
             }
 
-            return make_shared<KFormCoefficientFunction>(cf, uint8_t(k), uint8_t(used_dim));
+            return make_shared<KFormCoefficientFunction>(
+                UnwrapTensorFieldFullValue(std::move(cf)),
+                uint8_t(k), uint8_t(used_dim));
         }
 
         shared_ptr<DoubleFormCoefficientFunction> WrapDoubleFormImpl(shared_ptr<CoefficientFunction> cf, int p, int q, int dim)
         {
             int used_dim = InferWrappedOrTensorDimension(cf, dim);
-            if (p + q == 0)
-                RequireScalarFormDimension(used_dim, "DoubleFormCF");
+            ValidateFormSpaceDimension(used_dim, p + q == 0, "DoubleFormCF");
 
             ValidateDoubleFormInput(*cf, p, q);
 
@@ -158,7 +222,9 @@ namespace ngfem
                 return df;
             }
 
-            return make_shared<DoubleFormCoefficientFunction>(cf, uint8_t(p), uint8_t(q), uint8_t(used_dim));
+            return make_shared<DoubleFormCoefficientFunction>(
+                UnwrapTensorFieldFullValue(std::move(cf)),
+                uint8_t(p), uint8_t(q), uint8_t(used_dim));
         }
 
         template <typename TWrapped>
@@ -462,13 +528,8 @@ namespace ngfem
             auto star_vol = HodgeStar(a, M, VOL);
             auto normal = M.GetNV();
             auto contracted = M.Contraction(star_vol, normal); // reduce degree by 1
-            // if (!extended && (n - k) > 0)
-            // {
-            //     auto projected = M.ProjectTensorToEuclideanTangent(contracted);
-            //     return KFormCF(projected, n - k, ambient_dim);
-            // }
             double sign = (k % 2 == 0) ? 1.0 : -1.0;
-            return KFormCF(sign * contracted->GetCoefficients(), n - k, ambient_dim);
+            return KFormCF(sign * contracted->GetFullCoefficient(), n - k, ambient_dim);
         }
 
         shared_ptr<DoubleFormCoefficientFunction> BoundaryHodgeStarDoubleForm(shared_ptr<DoubleFormCoefficientFunction> a,
@@ -485,13 +546,8 @@ namespace ngfem
             int left_deg = star_vol->LeftDegree();
             auto contracted_left = M.Contraction(star_vol, normal, 0);
             auto contracted_right = M.Contraction(contracted_left, normal, size_t(left_deg - 1));
-            // if (!extended && (n - p + n - q) > 0)
-            // {
-            //     auto projected = M.ProjectTensorToEuclideanTangent(contracted_right);
-            //     return DoubleFormCF(projected, n - p, n - q, ambient_dim);
-            // }
             double sign = ((p + q) % 2 == 0) ? 1.0 : -1.0;
-            return DoubleFormCF(sign * contracted_right->GetCoefficients(), n - p, n - q, ambient_dim);
+            return DoubleFormCF(sign * contracted_right->GetFullCoefficient(), n - p, n - q, ambient_dim);
         }
 
         shared_ptr<KFormCoefficientFunction> BBNDHodgeStarKForm(shared_ptr<KFormCoefficientFunction> a,
@@ -508,7 +564,7 @@ namespace ngfem
                 return ZeroKForm(n - k, ambient_dim);
 
             if (n == 0)
-                return KFormCF(a->GetCoefficients(), 0, ambient_dim);
+                return KFormCF(a->GetFullCoefficient(), 0, ambient_dim);
 
             auto star_vol = HodgeStar(a, M, VOL);
             auto n1 = M.GetEdgeNormal(0);
@@ -517,7 +573,7 @@ namespace ngfem
             auto c2 = M.Contraction(c1, cn1);
 
             // Codim-2 induced orientation uses two contractions; no extra k-dependent sign.
-            return KFormCF(c2->GetCoefficients(), n - k, ambient_dim);
+            return KFormCF(c2->GetFullCoefficient(), n - k, ambient_dim);
         }
 
         shared_ptr<DoubleFormCoefficientFunction> BBNDHodgeStarDoubleForm(shared_ptr<DoubleFormCoefficientFunction> a,
@@ -535,7 +591,7 @@ namespace ngfem
                 return ZeroDoubleForm(n - p, n - q, ambient_dim);
 
             if (n == 0)
-                return DoubleFormCF(a->GetCoefficients(), 0, 0, ambient_dim);
+                return DoubleFormCF(a->GetFullCoefficient(), 0, 0, ambient_dim);
 
             auto n1 = M.GetEdgeNormal(0);
             auto cn1 = M.GetEdgeConormal(0);
@@ -548,7 +604,7 @@ namespace ngfem
             auto c_r2 = M.Contraction(c_r1, cn1, size_t(left_deg - 2));
 
             // Codim-2 induced orientation uses two contractions per slot; no extra degree sign.
-            return DoubleFormCF(c_r2->GetCoefficients(), n - p, n - q, ambient_dim);
+            return DoubleFormCF(c_r2->GetFullCoefficient(), n - p, n - q, ambient_dim);
         }
 
     } // namespace
@@ -556,155 +612,70 @@ namespace ngfem
     KFormCoefficientFunction::KFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, uint8_t ak, uint8_t adim)
         : TensorFieldCoefficientFunction(ac1, std::string(size_t(ak), '1')), degree(ak), dim(adim)
     {
-        if (!((adim >= 1 && adim <= MAX_SPACE_DIM) || (adim == 0 && ak == 0)))
-            throw Exception("KFormCF: dim must be in {1,...," + ToString(MAX_SPACE_DIM) + "} (or 0 for scalar forms)");
-        if (ak > MAX_FORM_RANK)
-            throw Exception("KFormCF: only ranks up to " + ToString(MAX_FORM_RANK) + " are supported");
+        ValidateFormSpaceDimension(adim, ak == 0, "KFormCF");
+        CheckedKFormDegree(ak, "KFormCF");
 
         const auto &dims = ac1->Dimensions();
-        if (dims.Size() != degree)
-            throw Exception("KFormCF: underlying coefficient must have rank " + ToString(int(degree)));
-        for (auto d : dims)
-            if (dim > 0 && d != dim)
-            {
-                throw Exception("KFormCF: tensor dimensions must all equal dim. dim = " + ToString(int(dim)) + ", but found dimension " + ToString(int(d)));
-            }
+        if (dim > 0 && dims.Size() > 0 && dims[0] != dim)
+            throw Exception("KFormCF: tensor dimensions must all equal dim. dim = " +
+                            ToString(int(dim)) + ", but found dimension " +
+                            ToString(int(dims[0])));
 
         if (dim > 0 && degree > dim && !ac1->IsZeroCF())
             throw Exception("KFormCF: degree exceeds dimension (only zero forms allowed in that case)");
-
-        auto meta = Meta();
-        if (meta.rank != degree)
-            throw Exception("KFormCF: rank mismatch");
-        uint64_t expected_covmask = (degree == 0) ? 0 : ((uint64_t(1) << degree) - 1);
-        if (meta.covmask != expected_covmask)
-            throw Exception("KFormCF: k-forms must be fully covariant");
     }
 
-    shared_ptr<CoefficientFunction>
-    KFormCoefficientFunction::Transform(CoefficientFunction::T_Transform &transformation) const
+    shared_ptr<TensorFieldCoefficientFunction>
+    KFormCoefficientFunction::Rewrap(shared_ptr<CoefficientFunction> cf) const
     {
-        auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
-        if (transformation.cache.count(thisptr))
-            return transformation.cache[thisptr];
-        if (transformation.replace.count(thisptr))
-            return transformation.replace[thisptr];
-        auto newcf = KFormCF(GetCoefficients()->Transform(transformation), degree, dim);
-        transformation.cache[thisptr] = newcf;
-        return newcf;
-    }
-
-    shared_ptr<CoefficientFunction> KFormCoefficientFunction::Diff(const CoefficientFunction *var,
-                                                                   shared_ptr<CoefficientFunction> dir) const
-    {
-        if (this == var)
-            return dir;
-        return KFormCF(GetCoefficients()->Diff(var, dir), degree, dim);
-    }
-
-    shared_ptr<CoefficientFunction> KFormCoefficientFunction::DiffJacobi(const CoefficientFunction *var, T_DJC &cache) const
-    {
-        auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
-        if (cache.find(thisptr) != cache.end())
-            return cache[thisptr];
-
-        if (this == var)
-            return IdentityCF(this->Dimensions());
-
-        auto res = KFormCF(GetCoefficients()->DiffJacobi(var, cache), degree, dim);
-        cache[thisptr] = res;
-        return res;
+        return KFormCF(std::move(cf), degree, dim);
     }
 
     DoubleFormCoefficientFunction::DoubleFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, uint8_t ap, uint8_t aq, uint8_t adim)
         : TensorFieldCoefficientFunction(ac1, std::string(size_t(ap + aq), '1')), degree_left(ap), degree_right(aq), dim(adim)
     {
-        if (!((adim >= 1 && adim <= MAX_SPACE_DIM) || (adim == 0 && ap == 0 && aq == 0)))
-            throw Exception("DoubleFormCF: dim must be in {1,...," + ToString(MAX_SPACE_DIM) + "} (or 0 for scalar forms)");
+        ValidateFormSpaceDimension(adim, ap == 0 && aq == 0, "DoubleFormCF");
         if (ap + aq > MAX_FORM_RANK && !ac1->IsZeroCF())
             throw Exception("DoubleFormCF: only ranks up to " + ToString(MAX_FORM_RANK) + " are supported");
 
         const auto &dims = ac1->Dimensions();
-        if (dims.Size() != ap + aq)
-            throw Exception("DoubleFormCF: underlying coefficient must have rank " + ToString(int(ap + aq)));
-        for (auto d : dims)
-            if (dim > 0 && d != dim)
-            {
-                throw Exception("DoubleFormCF: tensor dimensions must all equal dim. dim = " + ToString(int(dim)) + ", but found dimension " + ToString(int(d)));
-            }
+        if (dim > 0 && dims.Size() > 0 && dims[0] != dim)
+            throw Exception("DoubleFormCF: tensor dimensions must all equal dim. dim = " +
+                            ToString(int(dim)) + ", but found dimension " +
+                            ToString(int(dims[0])));
 
         if (dim > 0 && (ap > dim || aq > dim) && !ac1->IsZeroCF())
             throw Exception("DoubleFormCF: degree exceeds dimension (only zero forms allowed in that case)");
-
-        auto meta = Meta();
-        if (meta.rank != ap + aq)
-            throw Exception("DoubleFormCF: rank mismatch");
-        uint64_t expected_covmask = (meta.rank == 0) ? 0 : ((uint64_t(1) << meta.rank) - 1);
-        if (meta.covmask != expected_covmask)
-            throw Exception("DoubleFormCF: double-forms must be fully covariant");
     }
 
-    shared_ptr<CoefficientFunction>
-    DoubleFormCoefficientFunction::Transform(CoefficientFunction::T_Transform &transformation) const
+    shared_ptr<TensorFieldCoefficientFunction>
+    DoubleFormCoefficientFunction::Rewrap(shared_ptr<CoefficientFunction> cf) const
     {
-        auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
-        if (transformation.cache.count(thisptr))
-            return transformation.cache[thisptr];
-        if (transformation.replace.count(thisptr))
-            return transformation.replace[thisptr];
-        auto newcf = DoubleFormCF(GetCoefficients()->Transform(transformation), degree_left, degree_right, dim);
-        transformation.cache[thisptr] = newcf;
-        return newcf;
-    }
-
-    shared_ptr<CoefficientFunction> DoubleFormCoefficientFunction::Diff(const CoefficientFunction *var,
-                                                                        shared_ptr<CoefficientFunction> dir) const
-    {
-        if (this == var)
-            return dir;
-        return DoubleFormCF(GetCoefficients()->Diff(var, dir), degree_left, degree_right, dim);
-    }
-
-    shared_ptr<CoefficientFunction> DoubleFormCoefficientFunction::DiffJacobi(const CoefficientFunction *var, T_DJC &cache) const
-    {
-        auto thisptr = const_pointer_cast<CoefficientFunction>(this->shared_from_this());
-        if (cache.find(thisptr) != cache.end())
-            return cache[thisptr];
-
-        if (this == var)
-            return IdentityCF(this->Dimensions());
-
-        auto res = DoubleFormCF(GetCoefficients()->DiffJacobi(var, cache), degree_left, degree_right, dim);
-        cache[thisptr] = res;
-        return res;
+        return DoubleFormCF(std::move(cf), degree_left, degree_right, dim);
     }
 
     ScalarFieldCoefficientFunction::ScalarFieldCoefficientFunction(shared_ptr<CoefficientFunction> cf, int dim)
-        : KFormCoefficientFunction(cf, 0, uint8_t(dim))
+        : KFormCoefficientFunction(
+              cf, 0, CheckedFormSpaceDimension(dim, true, "ScalarFieldCF"))
     {
-        if (cf->Dimensions().Size() != 0)
-            throw Exception("ScalarFieldCF: input must be scalar");
     }
 
     OneFormCoefficientFunction::OneFormCoefficientFunction(shared_ptr<CoefficientFunction> cf, int dim)
-        : KFormCoefficientFunction(cf, 1, uint8_t(dim))
+        : KFormCoefficientFunction(
+              cf, 1, CheckedFormSpaceDimension(dim, false, "OneFormCF"))
     {
-        if (cf->Dimensions().Size() != 1)
-            throw Exception("OneFormCF: input must be vector-valued");
     }
 
     TwoFormCoefficientFunction::TwoFormCoefficientFunction(shared_ptr<CoefficientFunction> cf, int dim)
-        : KFormCoefficientFunction(cf, 2, uint8_t(dim))
+        : KFormCoefficientFunction(
+              cf, 2, CheckedFormSpaceDimension(dim, false, "TwoFormCF"))
     {
-        if (cf->Dimensions().Size() != 2)
-            throw Exception("TwoFormCF: input must be rank-2");
     }
 
     ThreeFormCoefficientFunction::ThreeFormCoefficientFunction(shared_ptr<CoefficientFunction> cf, int dim)
-        : KFormCoefficientFunction(cf, 3, uint8_t(dim))
+        : KFormCoefficientFunction(
+              cf, 3, CheckedFormSpaceDimension(dim, false, "ThreeFormCF"))
     {
-        if (cf->Dimensions().Size() != 3)
-            throw Exception("ThreeFormCF: input must be rank-3");
     }
 
     template <typename VIN, typename VOUT>
@@ -781,6 +752,12 @@ namespace ngfem
         }
     }
 
+    /**
+     * Unnormalized signed sum over all permutations of the tensor axes.
+     *
+     * Lookup tables are built once and shared by interpreted evaluation,
+     * generated code, and nonzero-pattern propagation.
+     */
     class AlternationCoefficientFunction : public T_CoefficientFunction<AlternationCoefficientFunction>
     {
         shared_ptr<CoefficientFunction> c1;
@@ -867,7 +844,7 @@ namespace ngfem
         int Rank() const { return rank; }
         int DimSpace() const { return dim; }
 
-        auto GetCArgs() const { return tuple{c1}; }
+        auto GetCArgs() const { return tuple{c1, rank, dim}; }
 
         void DoArchive(Archive &ar) override
         {
@@ -950,6 +927,9 @@ namespace ngfem
             if (cache.find(thisptr) != cache.end())
                 return cache[thisptr];
 
+            if (var->Dimensions().Size() != 0)
+                return CoefficientFunction::DiffJacobi(var, cache);
+
             if (this == var)
                 return IdentityCF(this->Dimensions());
 
@@ -963,9 +943,11 @@ namespace ngfem
 
     shared_ptr<CoefficientFunction> AlternationCF(shared_ptr<CoefficientFunction> T, int rank, int dim)
     {
+        T = RequireNonNull(std::move(T), "AlternationCF");
         return make_shared<AlternationCoefficientFunction>(T, rank, dim);
     }
 
+    /// Unnormalized alternation restricted to one contiguous block of axes.
     class BlockAlternationCoefficientFunction : public T_CoefficientFunction<BlockAlternationCoefficientFunction>
     {
         shared_ptr<CoefficientFunction> c1;
@@ -1059,7 +1041,10 @@ namespace ngfem
             return "BlockAlternationCF";
         }
 
-        auto GetCArgs() const { return tuple{c1}; }
+        auto GetCArgs() const
+        {
+            return tuple{c1, rank_total, block_start, block_len};
+        }
 
         void DoArchive(Archive &ar) override
         {
@@ -1180,6 +1165,9 @@ namespace ngfem
             if (cache.find(thisptr) != cache.end())
                 return cache[thisptr];
 
+            if (var->Dimensions().Size() != 0)
+                return CoefficientFunction::DiffJacobi(var, cache);
+
             if (this == var)
                 return IdentityCF(this->Dimensions());
 
@@ -1238,6 +1226,12 @@ namespace ngfem
         return lin;
     }
 
+    /**
+     * Double-form wedge evaluated from precomputed left/right shuffle tables.
+     *
+     * Result axes are ordered as the combined left block followed by the
+     * combined right block.
+     */
     class DoubleFormWedgeCoefficientFunction : public T_CoefficientFunction<DoubleFormWedgeCoefficientFunction>
     {
         shared_ptr<DoubleFormCoefficientFunction> a;
@@ -1353,8 +1347,8 @@ namespace ngfem
             structural_zero = true;
             for (size_t i = 0; i < lin_a.size(); ++i)
             {
-                auto ca = MakeComponentCoefficientFunction(a->GetCoefficients(), lin_a[i]);
-                auto cb = MakeComponentCoefficientFunction(b->GetCoefficients(), lin_b[i]);
+                auto ca = MakeComponentCoefficientFunction(a->GetFullCoefficient(), lin_a[i]);
+                auto cb = MakeComponentCoefficientFunction(b->GetFullCoefficient(), lin_b[i]);
                 if (!ca->IsZeroCF() && !cb->IsZeroCF())
                 {
                     structural_zero = false;
@@ -1447,8 +1441,8 @@ namespace ngfem
             if (transformation.replace.count(thisptr))
                 return transformation.replace[thisptr];
 
-            auto ta = DoubleFormCF(a->GetCoefficients()->Transform(transformation), p, q, dim);
-            auto tb = DoubleFormCF(b->GetCoefficients()->Transform(transformation), r, s, dim);
+            auto ta = DoubleFormCF(a->GetFullCoefficient()->Transform(transformation), p, q, dim);
+            auto tb = DoubleFormCF(b->GetFullCoefficient()->Transform(transformation), r, s, dim);
             auto newcf = make_shared<DoubleFormWedgeCoefficientFunction>(ta, tb);
             transformation.cache[thisptr] = newcf;
             return newcf;
@@ -1471,8 +1465,8 @@ namespace ngfem
             Array<T> temp_b(dim_b * mir.Size());
             FlatMatrix<T, ORD> values_a(dim_a, mir.Size(), temp_a.Data());
             FlatMatrix<T, ORD> values_b(dim_b, mir.Size(), temp_b.Data());
-            a->GetCoefficients()->Evaluate(mir, values_a);
-            b->GetCoefficients()->Evaluate(mir, values_b);
+            a->GetFullCoefficient()->Evaluate(mir, values_a);
+            b->GetFullCoefficient()->Evaluate(mir, values_b);
 
             EvalFromInputs(mir.Size(), values_a, values_b, values);
         }
@@ -1498,9 +1492,9 @@ namespace ngfem
         {
             if (this == var)
                 return dir;
-            auto da = DoubleFormCF(a->GetCoefficients()->Diff(var, dir), p, q, dim);
-            auto db = DoubleFormCF(b->GetCoefficients()->Diff(var, dir), r, s, dim);
-            return Wedge(da, b)->GetCoefficients() + Wedge(a, db)->GetCoefficients();
+            auto da = DoubleFormCF(a->GetFullCoefficient()->Diff(var, dir), p, q, dim);
+            auto db = DoubleFormCF(b->GetFullCoefficient()->Diff(var, dir), r, s, dim);
+            return Wedge(da, b)->GetFullCoefficient() + Wedge(a, db)->GetFullCoefficient();
         }
 
         shared_ptr<CoefficientFunction> DiffJacobi(const CoefficientFunction *var, T_DJC &cache) const override
@@ -1509,12 +1503,15 @@ namespace ngfem
             if (cache.find(thisptr) != cache.end())
                 return cache[thisptr];
 
+            if (var->Dimensions().Size() != 0)
+                return CoefficientFunction::DiffJacobi(var, cache);
+
             if (this == var)
                 return IdentityCF(this->Dimensions());
 
-            auto da = DoubleFormCF(a->GetCoefficients()->DiffJacobi(var, cache), p, q, dim);
-            auto db = DoubleFormCF(b->GetCoefficients()->DiffJacobi(var, cache), r, s, dim);
-            auto res = Wedge(da, b)->GetCoefficients() + Wedge(a, db)->GetCoefficients();
+            auto da = DoubleFormCF(a->GetFullCoefficient()->DiffJacobi(var, cache), p, q, dim);
+            auto db = DoubleFormCF(b->GetFullCoefficient()->DiffJacobi(var, cache), r, s, dim);
+            auto res = Wedge(da, b)->GetFullCoefficient() + Wedge(a, db)->GetFullCoefficient();
             cache[thisptr] = res;
             return res;
         }
@@ -1525,19 +1522,15 @@ namespace ngfem
     shared_ptr<KFormCoefficientFunction> KFormCF(shared_ptr<CoefficientFunction> cf, int k, int dim)
     {
         cf = RequireNonNull(std::move(cf), "KFormCF");
-        if (k < 0)
-            throw Exception("KFormCF: degree must be non-negative");
-        if (k > MAX_FORM_RANK)
-            throw Exception("KFormCF: only ranks up to " + ToString(MAX_FORM_RANK) + " are supported");
+        CheckedKFormDegree(k, "KFormCF");
         return WrapKFormImpl(cf, k, dim);
     }
 
     shared_ptr<DoubleFormCoefficientFunction> DoubleFormCF(shared_ptr<CoefficientFunction> cf, int p, int q, int dim)
     {
         cf = RequireNonNull(std::move(cf), "DoubleFormCF");
-        if (p < 0 || q < 0)
-            throw Exception("DoubleFormCF: degrees must be non-negative");
-        if (p + q > MAX_FORM_RANK && !cf->IsZeroCF())
+        const int rank = CheckedDoubleFormRank(p, q, "DoubleFormCF");
+        if (rank > MAX_FORM_RANK && !cf->IsZeroCF())
             throw Exception("DoubleFormCF: only ranks up to " + ToString(MAX_FORM_RANK) + " are supported");
         return WrapDoubleFormImpl(cf, p, q, dim);
     }
@@ -1569,6 +1562,9 @@ namespace ngfem
 
     shared_ptr<KFormCoefficientFunction> ZeroKForm(int k, int dim)
     {
+        CheckedKFormDegree(k, "ZeroKForm");
+        ValidateFormSpaceDimension(dim, k == 0, "ZeroKForm");
+        ValidateTensorComponentCount(dim, k, "ZeroKForm");
         Array<int> dims;
         for (int i = 0; i < k; ++i)
             dims.Append(dim);
@@ -1578,8 +1574,11 @@ namespace ngfem
 
     shared_ptr<DoubleFormCoefficientFunction> ZeroDoubleForm(int p, int q, int dim)
     {
+        const int rank = CheckedDoubleFormRank(p, q, "ZeroDoubleForm");
+        ValidateFormSpaceDimension(dim, rank == 0, "ZeroDoubleForm");
+        ValidateTensorComponentCount(dim, rank, "ZeroDoubleForm");
         Array<int> dims;
-        for (int i = 0; i < p + q; ++i)
+        for (int i = 0; i < rank; ++i)
             dims.Append(dim);
         auto zero_cf = ZeroCF(dims);
         return DoubleFormCF(zero_cf, p, q, dim);
@@ -1587,6 +1586,8 @@ namespace ngfem
 
     shared_ptr<KFormCoefficientFunction> Wedge(shared_ptr<KFormCoefficientFunction> a, shared_ptr<KFormCoefficientFunction> b)
     {
+        a = RequireNonNull(std::move(a), "Wedge");
+        b = RequireNonNull(std::move(b), "Wedge");
         if (a->DimensionOfSpace() != b->DimensionOfSpace())
             throw Exception("Wedge: input forms must have the same dimension of space");
         int dim = a->DimensionOfSpace();
@@ -1595,7 +1596,7 @@ namespace ngfem
         if (k + l > dim)
             return ZeroKForm(k + l, dim);
         if (k == 0 || l == 0)
-            return KFormCF(a->GetCoefficients() * b->GetCoefficients(), k + l, dim);
+            return KFormCF(a->GetFullCoefficient() * b->GetFullCoefficient(), k + l, dim);
 
         auto T = TensorProduct(a, b);
         const auto &shuffle_data = GetSignedWedgeOrders(k, l);
@@ -1613,6 +1614,8 @@ namespace ngfem
 
     shared_ptr<DoubleFormCoefficientFunction> Wedge(shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<DoubleFormCoefficientFunction> b)
     {
+        a = RequireNonNull(std::move(a), "Wedge");
+        b = RequireNonNull(std::move(b), "Wedge");
         if (a->DimensionOfSpace() != b->DimensionOfSpace())
             throw Exception("Wedge: input double-forms must have the same dimension of space");
         int dim = a->DimensionOfSpace();
@@ -1632,12 +1635,13 @@ namespace ngfem
 
     shared_ptr<KFormCoefficientFunction> ExteriorDerivative(shared_ptr<KFormCoefficientFunction> a)
     {
+        a = RequireNonNull(std::move(a), "ExteriorDerivative");
         int dim = a->DimensionOfSpace();
         int k = a->Degree();
         if (k + 1 > dim)
             return ZeroKForm(k + 1, dim);
 
-        auto G = GradCF(a->GetCoefficients(), dim);
+        auto G = GradCF(a->GetFullCoefficient(), dim);
         auto alt = AlternationCF(G, k + 1, dim);
 
         double scale = 1.0 / double(Factorial(k));
@@ -1716,7 +1720,7 @@ namespace ngfem
         auto star = HodgeStar(a, M, vb);
         if (sign == 1)
             return star;
-        return KFormCF((-1.0) * star->GetCoefficients(), n - k, vb == VOL ? n : M.Dimension());
+        return KFormCF((-1.0) * star->GetFullCoefficient(), n - k, vb == VOL ? n : M.Dimension());
     }
 
     shared_ptr<DoubleFormCoefficientFunction> HodgeStar(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, int slot)
@@ -1738,14 +1742,14 @@ namespace ngfem
             if (vb == BBND)
             {
                 if (n == 0)
-                    return DoubleFormCF(a->GetCoefficients(), 0, q, ambient_dim);
+                    return DoubleFormCF(a->GetFullCoefficient(), 0, q, ambient_dim);
                 auto n1 = M.GetEdgeNormal(0);
                 auto n2 = M.GetEdgeConormal(0);
                 auto star_vol_left = BlockHodgeStar(a, 0, p, ambient_dim, M);
                 auto left_tf = TensorFieldCF(star_vol_left, std::string(size_t(ambient_dim - p + q), '1'));
                 auto c1 = M.Contraction(left_tf, n1, 0);
                 auto c2 = M.Contraction(c1, n2, 0);
-                return DoubleFormCF(c2->GetCoefficients(), n - p, q, ambient_dim);
+                return DoubleFormCF(c2->GetFullCoefficient(), n - p, q, ambient_dim);
             }
             if (vb == BND)
             {
@@ -1753,7 +1757,7 @@ namespace ngfem
                 auto left_tf = TensorFieldCF(star_vol_left, std::string(size_t(ambient_dim - p + q), '1'));
                 auto contracted = M.Contraction(left_tf, M.GetNV(), 0);
                 double sign = (p % 2 == 0) ? 1.0 : -1.0;
-                return DoubleFormCF(sign * contracted->GetCoefficients(), n - p, q, ambient_dim);
+                return DoubleFormCF(sign * contracted->GetFullCoefficient(), n - p, q, ambient_dim);
             }
             auto left_star = BlockHodgeStar(a, 0, p, n, M);
             return DoubleFormCF(left_star, n - p, q, n);
@@ -1764,14 +1768,14 @@ namespace ngfem
             if (vb == BBND)
             {
                 if (n == 0)
-                    return DoubleFormCF(a->GetCoefficients(), p, 0, ambient_dim);
+                    return DoubleFormCF(a->GetFullCoefficient(), p, 0, ambient_dim);
                 auto n1 = M.GetEdgeNormal(0);
                 auto n2 = M.GetEdgeConormal(0);
                 auto star_vol_right = BlockHodgeStar(a, p, q, ambient_dim, M);
                 auto right_tf = TensorFieldCF(star_vol_right, std::string(size_t(p + ambient_dim - q), '1'));
                 auto c1 = M.Contraction(right_tf, n1, size_t(p));
                 auto c2 = M.Contraction(c1, n2, size_t(p));
-                return DoubleFormCF(c2->GetCoefficients(), p, n - q, ambient_dim);
+                return DoubleFormCF(c2->GetFullCoefficient(), p, n - q, ambient_dim);
             }
             if (vb == BND)
             {
@@ -1779,7 +1783,7 @@ namespace ngfem
                 auto right_tf = TensorFieldCF(star_vol_right, std::string(size_t(p + ambient_dim - q), '1'));
                 auto contracted = M.Contraction(right_tf, M.GetNV(), size_t(p));
                 double sign = (q % 2 == 0) ? 1.0 : -1.0;
-                return DoubleFormCF(sign * contracted->GetCoefficients(), p, n - q, ambient_dim);
+                return DoubleFormCF(sign * contracted->GetFullCoefficient(), p, n - q, ambient_dim);
             }
             auto right_star = BlockHodgeStar(a, p, q, n, M);
             return DoubleFormCF(right_star, p, n - q, n);
@@ -1817,7 +1821,7 @@ namespace ngfem
         auto star = HodgeStar(a, M, vb, slot);
         if (sign == 1)
             return star;
-        return DoubleFormCF((-1.0) * star->GetCoefficients(), star->LeftDegree(), star->RightDegree(), vb == VOL ? n : M.Dimension());
+        return DoubleFormCF((-1.0) * star->GetFullCoefficient(), star->LeftDegree(), star->RightDegree(), vb == VOL ? n : M.Dimension());
     }
 
     shared_ptr<ScalarFieldCoefficientFunction> SlotInnerProduct(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, bool forms)
@@ -1842,11 +1846,50 @@ namespace ngfem
         auto reordered = PermuteTensorCF(a, order);
         return DoubleFormCF(reordered, q, p, dim);
     }
+
+    static ngcore::RegisterClassForArchive<KFormCoefficientFunction,
+                                           TensorFieldCoefficientFunction>
+        reg_kform_cf;
+    static ngcore::RegisterClassForArchive<DoubleFormCoefficientFunction,
+                                           TensorFieldCoefficientFunction>
+        reg_double_form_cf;
+    static ngcore::RegisterClassForArchive<ScalarFieldCoefficientFunction,
+                                           KFormCoefficientFunction>
+        reg_scalar_field_cf;
+    static ngcore::RegisterClassForArchive<OneFormCoefficientFunction,
+                                           KFormCoefficientFunction>
+        reg_one_form_cf;
+    static ngcore::RegisterClassForArchive<TwoFormCoefficientFunction,
+                                           KFormCoefficientFunction>
+        reg_two_form_cf;
+    static ngcore::RegisterClassForArchive<ThreeFormCoefficientFunction,
+                                           KFormCoefficientFunction>
+        reg_three_form_cf;
+    static ngcore::RegisterClassForArchive<AlternationCoefficientFunction,
+                                           CoefficientFunction>
+        reg_alternation_cf;
+    static ngcore::RegisterClassForArchive<BlockAlternationCoefficientFunction,
+                                           CoefficientFunction>
+        reg_block_alternation_cf;
+    static ngcore::RegisterClassForArchive<DoubleFormWedgeCoefficientFunction,
+                                           CoefficientFunction>
+        reg_double_form_wedge_cf;
 }
 
 void ExportKForms(py::module m)
 {
     using namespace ngfem;
+
+    m.attr("_MAX_FORM_RANK") = MAX_FORM_RANK;
+    m.attr("_MAX_SPACE_DIM") = MAX_SPACE_DIM;
+
+    auto warn_deprecated = [](const char *old_name, const char *replacement)
+    {
+        const std::string message = std::string(old_name) +
+                                    " is deprecated; use " + replacement;
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, message.c_str(), 2) < 0)
+            throw py::error_already_set();
+    };
 
     py::class_<AlternationCoefficientFunction,
                CoefficientFunction,
@@ -1860,7 +1903,8 @@ void ExportKForms(py::module m)
                           return casted; }),
              py::arg("cf"), py::arg("rank"), py::arg("dim"))
         .def_property_readonly("rank", &AlternationCoefficientFunction::Rank)
-        .def_property_readonly("dim", &AlternationCoefficientFunction::DimSpace);
+        .def_property_readonly("dim", &AlternationCoefficientFunction::DimSpace)
+        .def(NGSPickle<AlternationCoefficientFunction>());
 
     py::class_<KFormCoefficientFunction,
                TensorFieldCoefficientFunction,
@@ -1878,7 +1922,7 @@ void ExportKForms(py::module m)
              { return HodgeStar(a, *M, vb); }, py::arg("M"), py::arg("vb") = VOL)
         .def("inv_star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
              { return InverseHodgeStar(a, *M, vb); }, py::arg("M"), py::arg("vb") = VOL)
-        .def_property_readonly("coef", &KFormCoefficientFunction::GetCoefficients);
+        .def(NGSPickle<KFormCoefficientFunction>());
 
     py::class_<DoubleFormCoefficientFunction,
                TensorFieldCoefficientFunction,
@@ -1899,7 +1943,7 @@ void ExportKForms(py::module m)
              { return InverseHodgeStar(a, *M, vb, ParseDoubleFormSlot(slot)); }, py::arg("M"), py::arg("vb") = VOL, py::arg("slot") = "both")
         .def_property_readonly("trans", [](shared_ptr<DoubleFormCoefficientFunction> a)
                                { return SwapDoubleFormSlots(a); })
-        .def_property_readonly("coef", &DoubleFormCoefficientFunction::GetCoefficients);
+        .def(NGSPickle<DoubleFormCoefficientFunction>());
 
     py::class_<ScalarFieldCoefficientFunction,
                KFormCoefficientFunction,
@@ -1907,8 +1951,12 @@ void ExportKForms(py::module m)
         .def(py::init([](shared_ptr<CoefficientFunction> cf, int dim)
                       { return ScalarFieldCF(cf, dim); }),
              py::arg("cf"), py::arg("dim"))
-        .def_static("from_cf", [](shared_ptr<CoefficientFunction> cf, int dim)
-                    { return ScalarFieldCF(cf, dim); }, py::arg("cf"), py::arg("dim"));
+        .def_static("from_cf", [warn_deprecated](shared_ptr<CoefficientFunction> cf, int dim)
+                    {
+                        warn_deprecated("ScalarField.from_cf", "ScalarField(cf, dim=...)");
+                        return ScalarFieldCF(cf, dim);
+                    }, py::arg("cf"), py::arg("dim"))
+        .def(NGSPickle<ScalarFieldCoefficientFunction>());
 
     py::class_<OneFormCoefficientFunction,
                KFormCoefficientFunction,
@@ -1916,8 +1964,12 @@ void ExportKForms(py::module m)
         .def(py::init([](shared_ptr<CoefficientFunction> cf)
                       { return OneFormCF(cf); }),
              py::arg("cf"))
-        .def_static("from_cf", [](shared_ptr<CoefficientFunction> cf)
-                    { return OneFormCF(cf); }, py::arg("cf"));
+        .def_static("from_cf", [warn_deprecated](shared_ptr<CoefficientFunction> cf)
+                    {
+                        warn_deprecated("OneForm.from_cf", "OneForm(cf)");
+                        return OneFormCF(cf);
+                    }, py::arg("cf"))
+        .def(NGSPickle<OneFormCoefficientFunction>());
 
     py::class_<TwoFormCoefficientFunction,
                KFormCoefficientFunction,
@@ -1925,8 +1977,12 @@ void ExportKForms(py::module m)
         .def(py::init([](shared_ptr<CoefficientFunction> cf, int dim)
                       { return TwoFormCF(cf, dim); }),
              py::arg("cf"), py::arg("dim") = -1)
-        .def_static("from_cf", [](shared_ptr<CoefficientFunction> cf, int dim)
-                    { return TwoFormCF(cf, dim); }, py::arg("cf"), py::arg("dim") = -1);
+        .def_static("from_cf", [warn_deprecated](shared_ptr<CoefficientFunction> cf, int dim)
+                    {
+                        warn_deprecated("TwoForm.from_cf", "TwoForm(cf, dim=...)");
+                        return TwoFormCF(cf, dim);
+                    }, py::arg("cf"), py::arg("dim") = -1)
+        .def(NGSPickle<TwoFormCoefficientFunction>());
 
     py::class_<ThreeFormCoefficientFunction,
                KFormCoefficientFunction,
@@ -1934,8 +1990,12 @@ void ExportKForms(py::module m)
         .def(py::init([](shared_ptr<CoefficientFunction> cf, int dim)
                       { return ThreeFormCF(cf, dim); }),
              py::arg("cf"), py::arg("dim") = -1)
-        .def_static("from_cf", [](shared_ptr<CoefficientFunction> cf, int dim)
-                    { return ThreeFormCF(cf, dim); }, py::arg("cf"), py::arg("dim") = -1);
+        .def_static("from_cf", [warn_deprecated](shared_ptr<CoefficientFunction> cf, int dim)
+                    {
+                        warn_deprecated("ThreeForm.from_cf", "ThreeForm(cf, dim=...)");
+                        return ThreeFormCF(cf, dim);
+                    }, py::arg("cf"), py::arg("dim") = -1)
+        .def(NGSPickle<ThreeFormCoefficientFunction>());
 
     m.def("Wedge", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<KFormCoefficientFunction> b)
           { return Wedge(a, b); }, py::arg("a"), py::arg("b"));
