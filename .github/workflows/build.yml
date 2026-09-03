@@ -79,6 +79,22 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install "ngsolve>=6.2.2505.post105.dev0" cmake ninja
 
+      - name: Expose Netgen runtime libraries
+        run: |
+          python - <<'PY' >> "$GITHUB_ENV"
+          import os
+          import sysconfig
+          from pathlib import Path
+
+          lib_dir = Path(sysconfig.get_path("data")) / "lib"
+          if not any(lib_dir.glob("libTKOffset*.dylib")):
+              raise SystemExit(f"OpenCASCADE libraries not found in {lib_dir}")
+
+          current = os.environ.get("DYLD_LIBRARY_PATH", "")
+          suffix = os.pathsep + current if current else ""
+          print("DYLD_LIBRARY_PATH=" + str(lib_dir) + suffix)
+          PY
+
       - name: Configure and build C++ tests
         run: |
           cmake -S . -B build -G Ninja \
