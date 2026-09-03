@@ -36,9 +36,11 @@ impact:
 * changes to shared base classes, serialization, generated code, or wrapper
   dispatch require the dependent tests and normally the full suites.
 
-Build and install the current extension before running Python tests. The source
-installation options are described in :doc:`../install`. With ``build`` as the
-CMake build directory, the common commands are::
+Build and install the current extension before running Python tests. Package
+builds exclude the C++ test executables, so configure a developer build with
+``-DBUILD_TESTING=ON`` when they are needed. The source installation options
+are described in :doc:`../install`. With ``build`` as the CMake build
+directory, the common commands are::
 
    cmake --build build
    cmake --install build
