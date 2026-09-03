@@ -12,6 +12,11 @@ add_ngsolve_addon(${addon_name} src/ngsdiffgeo.cpp src/riemannian_manifold.cpp s
 
 include(CTest)
 if(BUILD_TESTING)
+  # NGSolve's C++ libraries use the Python C API.  Extension modules obtain
+  # those symbols from the interpreter that imports them, but these tests are
+  # standalone executables and therefore need to embed/link Python explicitly.
+  find_package(Python3 REQUIRED COMPONENTS Development)
+
   add_executable(test_tensor_meta tests/test_tensor_meta.cpp)
   target_include_directories(
     test_tensor_meta
@@ -19,7 +24,7 @@ if(BUILD_TESTING)
       ${CMAKE_CURRENT_SOURCE_DIR}/src
       $<TARGET_PROPERTY:ngsolve,INTERFACE_INCLUDE_DIRECTORIES>
   )
-  target_link_libraries(test_tensor_meta PRIVATE ngsolve Python3::Module)
+  target_link_libraries(test_tensor_meta PRIVATE ngsolve Python3::Python)
   set_target_properties(test_tensor_meta PROPERTIES CXX_STANDARD 17)
   add_test(NAME tensor_meta COMMAND test_tensor_meta)
 
@@ -36,7 +41,7 @@ if(BUILD_TESTING)
     )
     target_link_libraries(
       test_tensor_field_forwarding
-      PRIVATE ngsdiffgeo ngsolve Python3::Module
+      PRIVATE ngsdiffgeo ngsolve Python3::Python
     )
     set_target_properties(
       test_tensor_field_forwarding
