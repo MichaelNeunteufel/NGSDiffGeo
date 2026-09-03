@@ -36,4 +36,8 @@ Welcome
    tutorials/13_kforms_exterior_derivative.ipynb
    tutorials/14_double_forms.ipynb
 
+.. toctree::
+   :caption: Developer Guide
+   :maxdepth: 1
 
+   developer_docs/index
