@@ -100,8 +100,7 @@ jobs:
           cmake -S . -B build -G Ninja \
             -DBUILD_TESTING=ON \
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build build \
-            --target test_tensor_meta test_tensor_field_forwarding
+          cmake --build build --target cpp_tests
 
       - name: Run C++ tests
         run: ctest --test-dir build --output-on-failure
