@@ -27,6 +27,7 @@ if(BUILD_TESTING)
   target_link_libraries(test_tensor_meta PRIVATE ngsolve Python3::Python)
   set_target_properties(test_tensor_meta PROPERTIES CXX_STANDARD 17)
   add_test(NAME tensor_meta COMMAND test_tensor_meta)
+  set(cpp_test_targets test_tensor_meta)
 
   if(NOT WIN32)
     add_executable(
@@ -68,7 +69,15 @@ if(BUILD_TESTING)
       PROPERTIES CXX_STANDARD 17
     )
     add_test(NAME coefficient_grad COMMAND test_coefficient_grad)
+
+    list(
+      APPEND cpp_test_targets
+      test_tensor_field_forwarding
+      test_coefficient_grad
+    )
   endif()
+
+  add_custom_target(cpp_tests DEPENDS ${cpp_test_targets})
 endif()
 
 # install the compiled python module and __init__.py ( don't change this )
