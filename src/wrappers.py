@@ -1250,13 +1250,25 @@ def _delta_formal(a, M):
     )
 
 
-def _d_cov_formal(M, tf, slot="left", vb=ngsolve.VOL):
+def _parse_compile_inner(compile_inner):
+    if compile_inner is None or compile_inner is False:
+        return False
+    if isinstance(compile_inner, str) and compile_inner == "graph":
+        return True
+    raise ValueError("compile_inner must be False, None, or 'graph'")
+
+
+def _d_cov_formal(
+    M, tf, slot="left", vb=ngsolve.VOL, *, compile_inner_graph=False
+):
     slot_id = _parse_slot(slot)
     if slot_id not in (0, 1):
         raise ValueError("d_cov: slot must be 'left' or 'right'")
 
     if isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
-        out = _CPP_RiemannianManifold.d_cov(M, tf, slot, vb)
+        out = _CPP_RiemannianManifold.d_cov(
+            M, tf, slot, vb, compile_inner_graph
+        )
         return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=M.dim)
 
     if isinstance(tf, FormalZeroDoubleForm):
@@ -1267,10 +1279,17 @@ def _d_cov_formal(M, tf, slot="left", vb=ngsolve.VOL):
             reason="d_cov",
         )
 
-    return M.d_cov(tf, slot=slot, vb=vb)
+    return M.d_cov(
+        tf,
+        slot=slot,
+        vb=vb,
+        compile_inner="graph" if compile_inner_graph else False,
+    )
 
 
-def _delta_cov_formal(M, tf, slot="left", vb=ngsolve.VOL):
+def _delta_cov_formal(
+    M, tf, slot="left", vb=ngsolve.VOL, *, compile_inner_graph=False
+):
     slot_id = _parse_slot(slot)
     if slot_id not in (0, 1):
         raise ValueError("delta_cov: slot must be 'left' or 'right'")
@@ -1285,7 +1304,9 @@ def _delta_cov_formal(M, tf, slot="left", vb=ngsolve.VOL):
                 tf.dim_space,
                 reason="delta_cov",
             )
-        out = _CPP_RiemannianManifold.delta_cov(M, tf, slot, vb)
+        out = _CPP_RiemannianManifold.delta_cov(
+            M, tf, slot, vb, compile_inner_graph
+        )
         return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=M.dim)
 
     if isinstance(tf, FormalZeroDoubleForm):
@@ -1296,7 +1317,12 @@ def _delta_cov_formal(M, tf, slot="left", vb=ngsolve.VOL):
             reason="delta_cov",
         )
 
-    return M.delta_cov(tf, slot=slot, vb=vb)
+    return M.delta_cov(
+        tf,
+        slot=slot,
+        vb=vb,
+        compile_inner="graph" if compile_inner_graph else False,
+    )
 
 
 def _covdiv_formal(M, tf, slot="left", vb=ngsolve.VOL):
@@ -1965,16 +1991,43 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         out = _CPP_RiemannianManifold.delta(self, a)
         return as_kform(out, k=out.degree, dim=self.dim)
 
-    def d_cov(self, tf, slot="left", vb=ngsolve.VOL):
+    def d_cov(self, tf, slot="left", vb=ngsolve.VOL, compile_inner=False):
+        """Apply the exterior covariant derivative in one double-form slot.
+
+        ``compile_inner="graph"`` compiles the input expression graph shared by
+        the gradient and connection terms. The default keeps the original path.
+        """
+        compile_inner_graph = _parse_compile_inner(compile_inner)
         if is_formal_zero(tf) or isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
-            return _d_cov_formal(self, tf, slot=slot, vb=vb)
-        out = _CPP_RiemannianManifold.d_cov(self, tf, slot, vb)
+            return _d_cov_formal(
+                self,
+                tf,
+                slot=slot,
+                vb=vb,
+                compile_inner_graph=compile_inner_graph,
+            )
+        out = _CPP_RiemannianManifold.d_cov(
+            self, tf, slot, vb, compile_inner_graph
+        )
         return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=self.dim)
 
-    def delta_cov(self, tf, slot="left", vb=ngsolve.VOL):
+    def delta_cov(self, tf, slot="left", vb=ngsolve.VOL, compile_inner=False):
+        """Apply the covariant codifferential in one double-form slot.
+
+        ``compile_inner`` has the same opt-in graph mode as :meth:`d_cov`.
+        """
+        compile_inner_graph = _parse_compile_inner(compile_inner)
         if is_formal_zero(tf) or isinstance(tf, (DoubleForm, _CPP_DoubleForm)):
-            return _delta_cov_formal(self, tf, slot=slot, vb=vb)
-        out = _CPP_RiemannianManifold.delta_cov(self, tf, slot, vb)
+            return _delta_cov_formal(
+                self,
+                tf,
+                slot=slot,
+                vb=vb,
+                compile_inner_graph=compile_inner_graph,
+            )
+        out = _CPP_RiemannianManifold.delta_cov(
+            self, tf, slot, vb, compile_inner_graph
+        )
         return as_doubleform(out, p=out.degree_left, q=out.degree_right, dim=self.dim)
 
     def ProjectDoubleForm(
@@ -2088,11 +2141,17 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         out = _CPP_RiemannianManifold.Cross(self, tf1, tf2)
         return as_vectorfield(out)
 
-    def CovDeriv(self, tf, vb=None):
-        if vb is None:
-            out = _CPP_RiemannianManifold.CovDeriv(self, tf)
-        else:
-            out = _CPP_RiemannianManifold.CovDeriv(self, tf, vb)
+    def CovDeriv(self, tf, vb=None, compile_inner=False):
+        """Apply the covariant derivative to a tensor field.
+
+        Use ``compile_inner="graph"`` to opt into NGSolve graph compilation of
+        the input used by the gradient and connection terms.
+        """
+        compile_inner_graph = _parse_compile_inner(compile_inner)
+        vb = ngsolve.VOL if vb is None else vb
+        out = _CPP_RiemannianManifold.CovDeriv(
+            self, tf, vb, compile_inner_graph
+        )
         return as_tensorfield(out)
 
     def CovHesse(self, tf):
