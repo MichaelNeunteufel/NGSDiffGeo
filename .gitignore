@@ -50,3 +50,8 @@ src/_version.py
 
 ideas.txt
 code_conventions.txt
+
+/docs/_build/
+.pytest_cache/
+htmlcov/
+
