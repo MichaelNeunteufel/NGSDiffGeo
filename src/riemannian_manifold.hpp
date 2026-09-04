@@ -172,13 +172,13 @@ namespace ngfem
         shared_ptr<KFormCoefficientFunction> InvStar(shared_ptr<KFormCoefficientFunction> a, VorB vb = VOL) const;
         shared_ptr<DoubleFormCoefficientFunction> InvStar(shared_ptr<DoubleFormCoefficientFunction> a, VorB vb = VOL) const;
         shared_ptr<KFormCoefficientFunction> Coderivative(shared_ptr<KFormCoefficientFunction> a) const;
-        shared_ptr<DoubleFormCoefficientFunction> CovExteriorDerivative1(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL) const;
-        shared_ptr<DoubleFormCoefficientFunction> CovExteriorDerivative2(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL) const;
-        shared_ptr<DoubleFormCoefficientFunction> CovCodifferential1(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL) const;
-        shared_ptr<DoubleFormCoefficientFunction> CovCodifferential2(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL) const;
+        shared_ptr<DoubleFormCoefficientFunction> CovExteriorDerivative1(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL, bool compile_inner = false) const;
+        shared_ptr<DoubleFormCoefficientFunction> CovExteriorDerivative2(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL, bool compile_inner = false) const;
+        shared_ptr<DoubleFormCoefficientFunction> CovCodifferential1(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL, bool compile_inner = false) const;
+        shared_ptr<DoubleFormCoefficientFunction> CovCodifferential2(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL, bool compile_inner = false) const;
 
         // ------- Covariant differential operators --------
-        shared_ptr<TensorFieldCoefficientFunction> CovDerivative(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb = VOL) const;
+        shared_ptr<TensorFieldCoefficientFunction> CovDerivative(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb = VOL, bool compile_inner = false) const;
 
         shared_ptr<TensorFieldCoefficientFunction> CovHessian(shared_ptr<TensorFieldCoefficientFunction> c1) const;
 

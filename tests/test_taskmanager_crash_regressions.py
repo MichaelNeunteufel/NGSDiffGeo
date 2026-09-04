@@ -142,13 +142,90 @@ def test_taskmanager_high_rank_double_form_sum_does_not_crash():
             mf.d_cov(star_phi, slot="left"), slot="right"
         )
 
+        serial = Integrate(InnerProduct(cf, cf) * dx(bonus_intorder=1), mesh)
         with TaskManager():
-            value = Integrate(InnerProduct(cf, cf) * dx(bonus_intorder=1), mesh)
-        print("RESULT", value)
+            parallel = Integrate(InnerProduct(cf, cf) * dx(bonus_intorder=1), mesh)
+        print("RESULT", abs(parallel - serial) / max(1.0, abs(serial)))
         """)
     )
 
-    assert value == pytest.approx(4.164037077593433)
+    assert value < 1e-12
+
+
+def test_component_and_composite_proxy_gradients_do_not_crash_and_are_correct():
+    value = run_python_reproducer(
+        script(
+            """
+        from netgen.occ import unit_square
+        from ngsolve import *
+        import ngsdiffgeo as dg
+
+        mesh = Mesh(unit_square.GenerateMesh(maxh=0.5))
+        space = VectorH1(mesh, order=2)
+        trial, test = space.TnT()
+        native = Grad(trial)
+
+        component = dg.GradCF(trial[0], 2)
+        scaled = dg.GradCF(2 * trial, 2)
+        rebuilt = dg.GradCF(CF((trial[0], trial[1]), dims=(2,)), 2)
+
+        errors = []
+        for direction in range(2):
+            form = BilinearForm(space)
+            form += SymbolicBFI(
+                (component[direction] - native[0, direction]) * test[0],
+                simd_evaluate=False,
+            )
+            form.Assemble()
+            errors.append(Norm(form.mat.AsVector()))
+
+            for candidate, scale in ((scaled, 2), (rebuilt, 1)):
+                for tensor_component in range(2):
+                    form = BilinearForm(space)
+                    form += SymbolicBFI(
+                        (
+                            candidate[direction, tensor_component]
+                            - scale * native[tensor_component, direction]
+                        )
+                        * test[tensor_component],
+                        simd_evaluate=False,
+                    )
+                    form.Assemble()
+                    errors.append(Norm(form.mat.AsVector()))
+
+        print("RESULT", max(errors))
+        """
+        )
+    )
+
+    assert value < 2e-10
+
+
+def test_taskmanager_graph_compiled_boundary_covariant_derivative_matches_default():
+    value = run_python_reproducer(
+        script(
+            DERIVATIVE_PART3_SETUP,
+            """
+        projected = mf.ProjectDoubleForm(B11, left="F", right="F")
+        default = mf.d_cov(projected, slot="right", vb=BND)
+        compiled = mf.d_cov(
+            projected,
+            slot="right",
+            vb=BND,
+            compile_inner="graph",
+        )
+        difference = default - compiled
+
+        with TaskManager():
+            value = Integrate(
+                InnerProduct(difference, difference) * dx(element_vb=BND),
+                mesh,
+            )
+        print("RESULT", value)
+        """,
+        )
+    )
+    assert abs(value) < 1e-12
 
 
 def test_derivative_part3_taskmanager_regressions_do_not_crash():

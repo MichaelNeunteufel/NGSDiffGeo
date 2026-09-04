@@ -312,13 +312,13 @@ def test_integration_by_parts_3d():
     assert (
         abs(
             Integrate(
-                mf.InnerProduct(mf.CovCurl(X), Y) * omega_T * dx(bonus_intorder=1), mesh
+                mf.InnerProduct(mf.CovCurl(X), Y) * omega_T * dx(bonus_intorder=3), mesh
             )
             - Integrate(
-                mf.InnerProduct(X, mf.CovCurl(Y)) * omega_T * dx(bonus_intorder=1)
+                mf.InnerProduct(X, mf.CovCurl(Y)) * omega_T * dx(bonus_intorder=3)
                 - mf.InnerProduct(mf.Cross(X, mf.normal), Y)
                 * omega_S
-                * ds(bonus_intorder=1),
+                * ds(bonus_intorder=3),
                 mesh,
             )
         )

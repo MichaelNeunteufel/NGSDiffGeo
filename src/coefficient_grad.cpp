@@ -1,7 +1,5 @@
 #include "coefficient_grad.hpp"
-#include <hcurlhdiv_dshape.hpp>
-#include <fespace.hpp>
-#include <gridfunction.hpp>
+#include <core/register_archive.hpp>
 #include <set>
 
 namespace ngfem
@@ -13,7 +11,6 @@ namespace ngfem
     {
         bool has_trial = false;
         bool has_test = false;
-        ProxyFunction *proxy = nullptr;
     };
 
     ProxyInfo GetProxyInfo(const shared_ptr<CoefficientFunction> &cf)
@@ -23,19 +20,12 @@ namespace ngfem
                          {
           if (auto proxy = dynamic_cast<ProxyFunction*> (&nodecf))
             {
-              if (!info.proxy)
-                info.proxy = proxy;
               if (proxy->IsTestFunction())
                   info.has_test = true;
               else
                   info.has_trial = true;
             } });
         return info;
-    }
-
-    bool HasDescriptionPrefix(const CoefficientFunction &cf, const string &prefix)
-    {
-        return cf.GetDescription().rfind(prefix, 0) == 0;
     }
 
     bool SameDimensions(FlatArray<int> a, FlatArray<int> b)
@@ -73,14 +63,15 @@ namespace ngfem
     shared_ptr<CoefficientFunction> NormalizeDerivativeSlots(shared_ptr<CoefficientFunction> result,
                                                              const shared_ptr<CoefficientFunction> &cf,
                                                              size_t dim,
-                                                             size_t difforder)
+                                                             size_t difforder,
+                                                             bool derivatives_are_last = false)
     {
-        auto first = DerivativeFirstDimensions(cf, dim, difforder);
-        if (SameDimensions(result->Dimensions(), first))
-            return result;
+        if (!result)
+            throw Exception("derivative operator returned nullptr");
 
+        auto first = DerivativeFirstDimensions(cf, dim, difforder);
         auto last = DerivativeLastDimensions(cf, dim, difforder);
-        if (SameDimensions(result->Dimensions(), last))
+        auto move_last_to_first = [&]()
         {
             auto transposed = result;
             size_t cfdim = cf->Dimensions().Size();
@@ -90,15 +81,29 @@ namespace ngfem
                     transposed = transposed->TensorTranspose(int(pos - 1), int(pos));
             }
             return transposed;
-        }
+        };
+
+        if (derivatives_are_last && SameDimensions(result->Dimensions(), last))
+            return move_last_to_first();
+
+        if (SameDimensions(result->Dimensions(), first))
+            return result;
+
+        if (SameDimensions(result->Dimensions(), last))
+            return move_last_to_first();
 
         size_t expected_dim = 1;
         for (int d : first)
             expected_dim *= d;
         if (result->Dimension() == expected_dim)
-            return result->Reshape(first);
+        {
+            result = result->Reshape(
+                derivatives_are_last ? last : first);
+            return derivatives_are_last ? move_last_to_first() : result;
+        }
 
-        return result;
+        throw Exception(
+            "derivative operator returned dimensions " + ToString(result->Dimensions()) + ", expected " + ToString(first));
     }
 
     shared_ptr<CoefficientFunction> ProxyDirection(ProxyFunction &proxy, const string &opname)
@@ -117,34 +122,48 @@ namespace ngfem
     }
 
     shared_ptr<CoefficientFunction> DerivativeOfVariable(const shared_ptr<CoefficientFunction> &var,
-                                                        size_t dim,
-                                                        bool surface)
+                                                         size_t dim,
+                                                         bool surface)
     {
         if (auto proxy = dynamic_pointer_cast<ProxyFunction>(var))
-            return ProxyDirection(*proxy, surface ? "Gradboundary" : "Grad");
+            return NormalizeDerivativeSlots(
+                ProxyDirection(*proxy, surface ? "Gradboundary" : "Grad"),
+                var,
+                dim,
+                1,
+                true);
         return GradCF(var, dim, surface);
     }
 
+    shared_ptr<CoefficientFunction> DerivativeDirection(
+        const shared_ptr<CoefficientFunction> &var,
+        size_t dim,
+        bool surface,
+        size_t direction)
+    {
+        auto derivative = DerivativeOfVariable(var, dim, surface);
+        if (var->Dimensions().Size() == 0)
+            return MakeComponentCoefficientFunction(derivative, int(direction));
+
+        Array<shared_ptr<CoefficientFunction>> components(var->Dimension());
+        for (size_t component = 0; component < var->Dimension(); component++)
+            components[component] = MakeComponentCoefficientFunction(
+                derivative,
+                int(direction * var->Dimension() + component));
+        return MakeVectorialCoefficientFunction(std::move(components))
+            ->Reshape(var->Dimensions());
+    }
+
     shared_ptr<CoefficientFunction> SymbolicGradByChainRule(const shared_ptr<CoefficientFunction> &cf,
-                                                           size_t dim,
-                                                           bool surface)
+                                                            size_t dim,
+                                                            bool surface)
     {
         Array<shared_ptr<CoefficientFunction>> vars;
         set<const CoefficientFunction *> seen;
-        bool has_component_wrapper = false;
 
         cf->TraverseTree([&](CoefficientFunction &nodecf)
                          {
-          if (HasDescriptionPrefix(nodecf, "ComponentCoefficientFunction"))
-            has_component_wrapper = true; });
-
-        cf->TraverseTree([&](CoefficientFunction &nodecf)
-                         {
-          bool is_component_wrapper =
-            HasDescriptionPrefix(nodecf, "ComponentCoefficientFunction");
-          if (!is_component_wrapper && nodecf.InputCoefficientFunctions().Size() != 0)
-            return;
-          if (has_component_wrapper && dynamic_cast<ngcomp::GridFunctionCoefficientFunction *>(&nodecf))
+          if (nodecf.InputCoefficientFunctions().Size() != 0)
             return;
 
           shared_ptr<CoefficientFunction> var;
@@ -165,9 +184,8 @@ namespace ngfem
             comps[d] = ZeroCF(cf->Dimensions());
             for (auto var : vars)
             {
-                auto dvar = DerivativeOfVariable(var, dim, surface);
-                auto dvar_comp = MakeComponentCoefficientFunction(dvar, d);
-                comps[d] = comps[d] + cf->Diff(var.get(), dvar_comp);
+                auto direction = DerivativeDirection(var, dim, surface, d);
+                comps[d] = comps[d] + cf->Diff(var.get(), direction);
             }
         }
 
@@ -175,8 +193,56 @@ namespace ngfem
         return result->Reshape(DerivativeFirstDimensions(cf, dim, 1));
     }
 
-    shared_ptr<CoefficientFunction> GradCF(const shared_ptr<CoefficientFunction> &cf, size_t dim, bool surface)
+    shared_ptr<CoefficientFunction> ProjectSecondDerivativeSlotToBoundary(
+        const shared_ptr<CoefficientFunction> &hessian,
+        const shared_ptr<CoefficientFunction> &cf,
+        size_t dim)
     {
+        auto normal = NormalVectorCF(int(dim));
+        auto normal_column = normal->Reshape(Array<int>{int(dim), 1});
+        auto projection = IdentityCF(int(dim)) - normal_column * TransposeCF(normal_column);
+        const size_t value_dimension = cf->Dimension();
+        Array<shared_ptr<CoefficientFunction>> components(
+            dim * dim * value_dimension);
+
+        for (size_t first = 0; first < dim; first++)
+            for (size_t second = 0; second < dim; second++)
+                for (size_t component = 0;
+                     component < value_dimension;
+                     component++)
+                {
+                    shared_ptr<CoefficientFunction> projected_component;
+                    for (size_t contracted = 0; contracted < dim; contracted++)
+                    {
+                        auto term = MakeComponentCoefficientFunction(
+                                        hessian,
+                                        int((first * dim + contracted) * value_dimension + component)) *
+                                    MakeComponentCoefficientFunction(
+                                        projection,
+                                        int(contracted * dim + second));
+                        projected_component = projected_component
+                                                  ? projected_component + term
+                                                  : term;
+                    }
+                    components[(first * dim + second) * value_dimension + component] = projected_component;
+                }
+
+        return MakeVectorialCoefficientFunction(std::move(components))
+            ->Reshape(DerivativeFirstDimensions(cf, dim, 2));
+    }
+
+    shared_ptr<CoefficientFunction> GradCF(
+        const shared_ptr<CoefficientFunction> &cf,
+        int dim,
+        bool surface)
+    {
+        if (!cf)
+            throw Exception("GradCF: input coefficient is null");
+        if (dim < 1 || dim > 3)
+            throw Exception("GradCF: only dimensions 1,2,3 supported");
+        if (surface && dim < 2)
+            throw Exception("GradCF(surface): only dimensions 2,3 supported");
+
         // create new ZeroCF with updated dimensions
         if (cf->IsZeroCF())
         {
@@ -187,11 +253,6 @@ namespace ngfem
 
         auto proxy_info = GetProxyInfo(cf);
 
-        if (dim < 1 || dim > 3)
-            throw Exception("GradCF: only dimensions 1,2,3 supported");
-        if (surface && dim < 2)
-            throw Exception("GradCF(surface): only dimensions 2,3 supported");
-
         if (proxy_info.has_trial && proxy_info.has_test)
             throw Exception("GradCF: expressions containing trial and test functions in the same GradCF are not supported yet");
 
@@ -201,11 +262,11 @@ namespace ngfem
             {
                 cf->SetSpaceDim(int(dim));
                 return NormalizeDerivativeSlots(cf->Operator(surface ? "Gradboundary" : "Grad"),
-                                                cf, dim, 1);
+                                                cf, dim, 1, true);
             }
-            catch (...)
+            catch (const Exception &)
             {
-                ;
+                // Fall back when this proxy type has no native operator.
             }
             return NormalizeDerivativeSlots(SymbolicGradByChainRule(cf, dim, surface),
                                             cf, dim, 1);
@@ -224,6 +285,13 @@ namespace ngfem
 
     shared_ptr<CoefficientFunction> HesseCF(const shared_ptr<CoefficientFunction> &cf, size_t dim, bool boundary)
     {
+        if (!cf)
+            throw Exception("HesseCF: input coefficient is null");
+        if (dim < 1 || dim > 3)
+            throw Exception("HesseCF: only dimensions 1,2,3 supported");
+        if (boundary && dim < 2)
+            throw Exception("HesseCF(boundary): only dimensions 2,3 supported");
+
         if (cf->IsZeroCF())
         {
             Array<int> resultdims = {int(dim), int(dim)};
@@ -232,9 +300,6 @@ namespace ngfem
         }
 
         auto proxy_info = GetProxyInfo(cf);
-
-        if (dim < 1 || dim > 3)
-            throw Exception("HesseCF: only dimensions 1,2,3 supported");
 
         if (proxy_info.has_trial && proxy_info.has_test)
             throw Exception("HesseCF: expressions containing trial and test functions in the same HesseCF are not supported yet");
@@ -245,28 +310,99 @@ namespace ngfem
             try
             {
                 cf->SetSpaceDim(int(dim));
-                return NormalizeDerivativeSlots(cf->Operator(opname), cf, dim, 2);
+                return NormalizeDerivativeSlots(
+                    cf->Operator(opname), cf, dim, 2, true);
             }
             catch (const Exception &e)
             {
+                // H1(dim=...) exposes a scalar Hessian evaluator even though
+                // its identity and gradient evaluators are block-valued.
+                // Rebuild that direct proxy operator with one scalar Hessian
+                // block per component. BlockDifferentialOperator stores the
+                // differential-operator slots before the component slot.
+                if (auto proxy = dynamic_pointer_cast<ProxyFunction>(cf))
+                {
+                    auto evaluator = proxy->GetAdditionalEvaluator(opname);
+                    if (evaluator && evaluator->Dim() == dim * dim && cf->Dimension() > 1)
+                    {
+                        auto block_evaluator =
+                            make_shared<BlockDifferentialOperator>(
+                                evaluator, cf->Dimension());
+                        return NormalizeDerivativeSlots(
+                            proxy->Operator(block_evaluator),
+                            cf,
+                            dim,
+                            2,
+                            false);
+                    }
+                }
                 throw Exception(string("HesseCF: symbolic proxy Hessian requires Operator(\"") +
                                 opname + string("\") support for the full expression. Original error: ") +
                                 e.What());
             }
         }
 
-        return NormalizeDerivativeSlots(GradCF(GradCF(cf, dim, boundary), dim, boundary),
-                                        cf, dim, 2);
+        auto hessian = NormalizeDerivativeSlots(
+            GradCF(GradCF(cf, dim, boundary), dim, boundary),
+            cf,
+            dim,
+            2);
+        return boundary
+                   ? ProjectSecondDerivativeSlotToBoundary(hessian, cf, dim)
+                   : hessian;
     }
 
-};
+    static ngcore::RegisterClassForArchive<
+        GradCoefficientFunction<1>, CoefficientFunction>
+        reg_grad_cf_1;
+    static ngcore::RegisterClassForArchive<
+        GradCoefficientFunction<2>, CoefficientFunction>
+        reg_grad_cf_2;
+    static ngcore::RegisterClassForArchive<
+        GradCoefficientFunction<3>, CoefficientFunction>
+        reg_grad_cf_3;
+
+}
 
 void ExportGradCF(py::module m)
 {
     using namespace ngfem;
 
-    m.def("GradCF", [](shared_ptr<CoefficientFunction> cf, int dim, bool surface)
-          { return GradCF(cf, dim, surface); }, "Create a GradientCoefficientFunction. Uses numerical differentiation to compute the gradient of a given CoefficientFunction. Set surface=True for tangential surface gradients.", py::arg("cf"), py::arg("dim"), py::arg("surface") = false);
-    m.def("HesseCF", [](shared_ptr<CoefficientFunction> cf, int dim, bool boundary)
-          { return HesseCF(cf, dim, boundary); }, "Create a Hessian CoefficientFunction. Uses numerical differentiation for pure coefficient functions and symbolic finite element operators for trial/test functions.", py::arg("cf"), py::arg("dim"), py::arg("boundary") = false);
+    m.attr("GradProxy") =
+        py::module_::import("ngsolve.comp").attr("ProxyFunction");
+    m.def(
+        "GradCF",
+        [](shared_ptr<CoefficientFunction> cf, int dim, bool surface)
+        {
+            return GradCF(cf, dim, surface);
+        },
+        R"doc(
+Differentiate a coefficient function in physical coordinates.
+
+The derivative direction is the first result axis, so the output dimensions
+are ``(dim, *cf.dims)``. Proxy expressions use NGSolve's symbolic gradient
+operators. Pure coefficient graphs use fourth-order numerical differentiation.
+With ``surface=True``, the result is the tangential surface gradient in ambient
+coordinates.
+)doc",
+        py::arg("cf"),
+        py::arg("dim"),
+        py::arg("surface") = false);
+    m.def(
+        "HesseCF",
+        [](shared_ptr<CoefficientFunction> cf, int dim, bool boundary)
+        {
+            return HesseCF(cf, dim, boundary);
+        },
+        R"doc(
+Return the physical Hessian with derivative axes first.
+
+Pure coefficient graphs and direct ``VectorH1`` or ``H1(dim=...)`` proxies are
+supported. Composite proxy expressions require NGSolve to provide the
+corresponding native Hessian operator. With ``boundary=True``, return the
+tangential boundary Hessian in ambient coordinates.
+)doc",
+        py::arg("cf"),
+        py::arg("dim"),
+        py::arg("boundary") = false);
 }
