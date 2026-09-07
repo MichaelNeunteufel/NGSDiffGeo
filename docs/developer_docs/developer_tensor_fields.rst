@@ -69,8 +69,11 @@ On the Python side, arithmetic implemented by ``TensorField`` and
 ``VectorField`` operates on ``.coef`` and calls the corresponding ``as_*``
 adapter to restore metadata. ``as_tensorfield`` also dispatches the signatures
 ``""``, ``"0"``, and ``"1"`` to the scalar-field, vector-field, and one-form
-specializations. Those derived objects define their additional behavior in
-their own components.
+specializations. An explicitly requested covariance string is validated and
+applied even when the input is already a Python tensor wrapper. Only an omitted
+or matching string permits immediate reuse. Numeric scaling accepts complex
+scalars in either operand order. Derived objects define their additional
+behavior in their own components.
 
 
 Value-graph behavior
@@ -82,9 +85,21 @@ code declares an output with the same shape and real or complex scalar type,
 then copies the generated input values into it.
 
 ``GetFullCoefficient`` is the C++ accessor for the full-shaped semantic value
-graph. Python ``.coef`` exposes the same graph. Generic tensor operations must
-use this accessor rather than retaining a metadata wrapper as a value-graph
-node.
+graph. Python ``.coef`` exposes the same graph. Canonical conversions use this
+accessor when removing metadata-only wrapper layers. Operations whose
+operands must remain targets for ``Diff`` or ``Replace`` instead retain those
+semantic operand wrappers in their expression graphs.
+
+``SymbolicExpressionCoefficientFunction`` in ``src/symbolic_expression.*``
+shares evaluation, transformation, nonzero-pattern caching, and Jacobian
+construction between tensor algebra and proxy derivatives. It retains semantic
+operands independently of the native evaluation graph. Evaluation, child
+discovery, nonzero patterns, and code generation must use a consistent graph
+layout that keeps native proxy leaves visible to NGSolve.
+``SymbolicEinsumCF`` retains its original operands for symbolic operations while
+removing metadata-only wrapper layers from the native evaluation inputs.
+Projection uses this same helper: its archive retains the original tensor
+operand, and ``Replace`` reconstructs the contraction from that operand.
 
 ``Transform`` transforms the value graph and reconstructs the semantic wrapper
 through the virtual ``Rewrap`` hook. It also participates in NGSolve's
@@ -97,12 +112,9 @@ directly.
 
 For Jacobian differentiation:
 
-* a scalar-valued variable appends no component axis, so ``Rewrap`` preserves
-  the original semantic wrapper,
-* a tensor-valued variable appends axes whose variance is not defined by the
-  original wrapper, so the Jacobian is an untyped ``CoefficientFunction``, and
-* differentiating a wrapper with respect to itself returns NGSolve's identity
-  coefficient function directly.
+* a scalar-valued variable appends no component axis, so ``Rewrap`` preserves the original semantic wrapper,
+* a tensor-valued variable appends axes whose variance is not defined by the original wrapper, so the Jacobian is an untyped ``CoefficientFunction``, and
+* differentiating a wrapper with respect to itself returns NGSolve's identity coefficient function directly.
 
 ``Compile`` preserves shape, scalar type, and values, but returns NGSolve's
 compiled coefficient-function type. Code that subsequently needs tensor
@@ -123,6 +135,19 @@ metadata as follows:
 ``PermuteTensorCF``
    Validates that the supplied order is a permutation of all axes, then applies
    the same permutation to component values and the covariance string.
+
+``SymbolicEinsumCF``
+   Delegates evaluation and code generation to native einsum, and reconstructs
+   transformations and derivatives from the original signature and operands.
+   Tensor products, permutations, and the contractions used by form Hodge
+   operations use this helper. Its constructor arguments reconstruct the
+   native evaluator on archive input. See :doc:`developer_kforms` for the
+   operand-identity contract and native auxiliary-node limitations.
+
+``SymbolicSumCF`` and ``ScaleCoefficientCF``
+   Preserve operands when constructing sums and scalar products, including
+   operands whose current value is zero. Form operations use these helpers where native
+   zero simplification would otherwise erase an operand or a scalar factor.
 
 ``ApplyProjectorToIndex``
    Contracts a projector with one selected component axis. It uses a fresh
@@ -184,3 +209,15 @@ manifold cases because those types derive from or consume tensor fields::
 Changes to the base wrapper, generated code, or serialization can affect every
 derived form type. For those changes, follow the full-suite guidance in
 :doc:`index`.
+
+
+Zero-valued Jacobians
+---------------------
+
+Jacobian axes are the result axes followed by the variable axes. Construction
+retains every directional column in a symbolic Jacobian node, even when native
+stacking simplifies its evaluation to zero. This is needed for mixed derivatives
+and subsequent replacement: for zero scalar wrappers ``a`` and ``b``,
+``Wedge(a, b).Diff(a).Diff(b, CF(1))`` must still equal one. Column dependencies
+survive archive round trips. A childless native ``ZeroCF`` remains a constant.
+Its differentiation behavior is not changed.

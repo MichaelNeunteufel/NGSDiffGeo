@@ -118,11 +118,22 @@ def test_angle_defect_matches_manual_formula(make_unit_cube_mesh):
     assert l2_error_bbnd(rm.AngleDefect, theta_manual, mesh) == pytest.approx(0)
 
 
-def test_angle_defect_raises_in_2d():
-    rm = dg.RiemannianManifold(Id(2))
+@pytest.mark.parametrize("metric", [Id(2), (1 + x*x + y*y)*Id(2),
+                                     CF((2+x*x, 0.3, 0.3, 1+y*y), dims=(2, 2))])
+def test_angle_defect_2d_matches_vertex_angle(make_unit_square_mesh, metric):
+    from ngsolve import Integrate, dx
 
-    with pytest.raises(Exception, match="Angle defect only available in 3D"):
-        _ = rm.AngleDefect
+    mesh = make_unit_square_mesh(maxh=0.5)
+    rm = dg.RiemannianManifold(metric)
+    tangents = specialcf.VertexTangentialVectors(2)
+    a, b = tangents[:, 0], tangents[:, 1]
+    expected = acos(a*b) - acos((metric*a*b) / sqrt((metric*a*a)*(metric*b*b)))
+    theta = rm.AngleDefect
+    assert isinstance(theta, dg.ScalarField)
+    assert theta.dim_space == 2
+    for value in (theta, theta.Compile()):
+        error = sqrt(Integrate((value-expected)**2 * dx(element_vb=BBND), mesh))
+        assert error < 1e-12
 
 
 def test_doubleform_slot_inner_product_full_contraction(make_unit_square_mesh, rm_euclidean_2d):

@@ -33,10 +33,8 @@ namespace ngfem
         bool ContainsProxy(const shared_ptr<CoefficientFunction> &cf)
         {
             bool contains_proxy = false;
-            cf->TraverseTree([&](CoefficientFunction &node) {
-                contains_proxy = contains_proxy
-                                 || dynamic_cast<ProxyFunction *>(&node);
-            });
+            cf->TraverseTree([&](CoefficientFunction &node)
+                             { contains_proxy = contains_proxy || dynamic_cast<ProxyFunction *>(&node); });
             return contains_proxy;
         }
 
@@ -489,6 +487,10 @@ namespace ngfem
             cnv[1] = MakeSubTensorCoefficientFunction(v_tang_vec, 1, {2}, {2});
             g_cnv[0] = VectorFieldCF(1 / sqrt(InnerProduct(g * cnv[0], cnv[0])) * cnv[0]);
             g_cnv[1] = VectorFieldCF(1 / sqrt(InnerProduct(g * cnv[1], cnv[1])) * cnv[1]);
+            // Element-local reference angle minus the metric angle at a vertex.
+            AngleDefect = ScalarFieldCF(
+                acos(InnerProduct(cnv[0], cnv[1])) - acos(InnerProduct(g * g_cnv[0], g_cnv[1])),
+                dim);
         }
         else if (dim == 3)
         {
@@ -541,7 +543,6 @@ namespace ngfem
         }
 
         P_F_g = IdentityCF(dim) - TensorProduct(g_nv, Lower(g_nv));
-
     }
 
     void RiemannianManifold::EnsureCurvature() const
@@ -847,8 +848,6 @@ namespace ngfem
 
     shared_ptr<ScalarFieldCoefficientFunction> RiemannianManifold::GetAngleDefect() const
     {
-        if (dim != 3)
-            throw Exception("In RMF: Angle defect only available in 3D");
         if (!AngleDefect)
             throw Exception("In RMF: Angle defect not available");
         return AngleDefect;
@@ -1544,7 +1543,7 @@ namespace ngfem
         }
 
         return mout.Rank() ? TensorFieldCF(result, mout.CovString())
-                         : ScalarFieldCF(result, dim);
+                           : ScalarFieldCF(result, dim);
     }
 
     shared_ptr<CoefficientFunction> RiemannianManifold::Trace(shared_ptr<DoubleFormCoefficientFunction> tf, size_t l, VorB vb) const
@@ -2073,7 +2072,7 @@ void ExportRiemannianManifold(py::module m)
         .def_property_readonly("SFF", &RiemannianManifold::GetSecondFundamentalForm, "return the second fundamental form")
         .def_property_readonly("GeodesicCurvature", &RiemannianManifold::GetGeodesicCurvature, "return the geodesic curvature")
         .def_property_readonly("MeanCurvature", &RiemannianManifold::GetMeanCurvature, "return the mean curvature")
-        .def_property_readonly("AngleDefect", &RiemannianManifold::GetAngleDefect, "return the edge angle defect in 3D")
+        .def_property_readonly("AngleDefect", &RiemannianManifold::GetAngleDefect, "Element-local Euclidean reference angle minus metric angle: at vertices in 2D and edges in 3D. Evaluate with dx(element_vb=BBND).")
         .def("KForm", [](shared_ptr<RiemannianManifold> self, shared_ptr<CoefficientFunction> cf, int k)
              { return self->MakeKForm(cf, k); }, "Wrap a CoefficientFunction as a k-form using the manifold dimension", py::arg("cf"), py::arg("k"))
         .def("star", [](shared_ptr<RiemannianManifold> self, shared_ptr<KFormCoefficientFunction> a, VorB vb)
