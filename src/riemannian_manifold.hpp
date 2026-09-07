@@ -141,7 +141,7 @@ namespace ngfem
         // Gauss curvature in 2D
         shared_ptr<ScalarFieldCoefficientFunction> GetGaussCurvature() const;
 
-        // Curvature operator
+        // Normalized geometric curvature: K in 2D, contravariant Q in 3D.
         // 2D -> scalar Gauss curvature, 3D -> 3x3 symmetric curvature operator
         shared_ptr<TensorFieldCoefficientFunction> GetCurvatureOperator() const;
 

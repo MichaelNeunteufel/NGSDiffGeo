@@ -1649,6 +1649,11 @@ class RiemannianManifold(_CPP_RiemannianManifold):
 
     @property
     def Curvature(self):
+        """Normalized geometric curvature: Gauss curvature in 2D, contravariant Q in 3D.
+
+        In 3D, Einstein = -g Q g. For Regge metrics this is the native
+        ``Operator("curvature")`` divided by ``Det(g)``.
+        """
         return self._cached_property(
             "Curvature",
             lambda: as_tensorfield(

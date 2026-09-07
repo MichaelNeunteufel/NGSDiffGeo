@@ -170,6 +170,17 @@ namespace ngfem
             shared_ptr<ScalarFieldCoefficientFunction> Scalar;
         };
 
+        // Native Regge operators omit the determinant normalization used by
+        // the geometric curvature operator (Gauss curvature in dimension two).
+        shared_ptr<TensorFieldCoefficientFunction> NormalizeReggeCurvature(
+            shared_ptr<CoefficientFunction> raw, shared_ptr<CoefficientFunction> metric, int dim)
+        {
+            auto normalized = ScaleCoefficientCF(raw, 1 / DeterminantCF(metric));
+            if (dim == 2)
+                return ScalarFieldCF(normalized, dim);
+            return TensorFieldCF(normalized, "00");
+        }
+
         CurvatureSources FromProxy(shared_ptr<ProxyFunction> g_proxy, int dim, bool change_riemann_sign = false)
         {
             CurvatureSources src;
@@ -180,7 +191,7 @@ namespace ngfem
                 src.Riemann = DoubleFormCF(EinsumCF("ijkl->ijlk", {g_proxy->GetAdditionalProxy("Riemann")}), 2, 2, dim);
             else
                 src.Riemann = DoubleFormCF(g_proxy->GetAdditionalProxy("Riemann"), 2, 2, dim);
-            src.Curvature = TensorFieldCF(g_proxy->GetAdditionalProxy("curvature"), "00");
+            src.Curvature = NormalizeReggeCurvature(g_proxy->GetAdditionalProxy("curvature"), g_proxy, dim);
             src.Ricci = DoubleFormCF(g_proxy->GetAdditionalProxy("Ricci"), 1, 1, dim);
             src.Einstein = DoubleFormCF(g_proxy->GetAdditionalProxy("Einstein"), 1, 1, dim);
             src.Scalar = ScalarFieldCF(g_proxy->GetAdditionalProxy("scalar"), dim);
@@ -222,10 +233,7 @@ namespace ngfem
 
             auto Curvature_gf = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop_curvature);
             Curvature_gf->SetDimensions(diffop_curvature->Dimensions());
-            if (dim == 2)
-                src.Curvature = ScalarFieldCF(Curvature_gf, dim);
-            else
-                src.Curvature = TensorFieldCF(Curvature_gf, "00");
+            src.Curvature = NormalizeReggeCurvature(Curvature_gf, gf, dim);
 
             auto Ricci_gf = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop_Ricci);
             Ricci_gf->SetDimensions(diffop_Ricci->Dimensions());
@@ -825,7 +833,7 @@ namespace ngfem
         if (dim != 2)
             throw Exception("In RMF: Gauss curvature only available in 2D");
         EnsureCurvature();
-        return ScalarFieldCF(1 / det_g * Curvature, dim);
+        return dynamic_pointer_cast<ScalarFieldCoefficientFunction>(Curvature);
     }
 
     shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::GetSecondFundamentalForm() const
@@ -2064,7 +2072,7 @@ void ExportRiemannianManifold(py::module m)
         .def("Lower", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, const std::vector<size_t> &indices, VorB vb)
              { return self->Lower(tf, indices, vb); }, "Lower tensor indices using the manifold metric", py::arg("tf"), py::arg("indices"), py::arg("vb") = VOL)
         .def_property_readonly("Riemann", &RiemannianManifold::GetRiemannCurvatureTensor, "return the Riemann curvature tensor")
-        .def_property_readonly("Curvature", &RiemannianManifold::GetCurvatureOperator, "return the curvature operator")
+        .def_property_readonly("Curvature", &RiemannianManifold::GetCurvatureOperator, "Normalized geometric curvature operator: Gauss curvature in 2D, contravariant Q with Einstein = -g Q g in 3D. Equals the native Regge curvature operator divided by det(g).")
         .def_property_readonly("Gauss", &RiemannianManifold::GetGaussCurvature, "return the Gauss curvature in 2D")
         .def_property_readonly("Ricci", &RiemannianManifold::GetRicciTensor, "return the Ricci tensor")
         .def_property_readonly("Einstein", &RiemannianManifold::GetEinsteinTensor, "return the Einstein tensor")
