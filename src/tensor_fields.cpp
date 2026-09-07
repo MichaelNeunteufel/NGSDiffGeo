@@ -1,4 +1,5 @@
 #include "tensor_fields.hpp"
+#include "symbolic_expression.hpp"
 
 #include <core/register_archive.hpp>
 #include <tensorcoefficient.hpp>
@@ -26,6 +27,111 @@ namespace ngfem
       return sig1 + "," + sig2 + "->" + sigout;
     }
   } // namespace
+
+  class SymbolicEinsumCoefficientFunction : public SymbolicExpressionCoefficientFunction
+  {
+    std::string signature;
+
+    static shared_ptr<CoefficientFunction> MakeEvaluator(
+        const std::string &signature, const Array<shared_ptr<CoefficientFunction>> &inputs)
+    {
+      Array<shared_ptr<CoefficientFunction>> values;
+      for (auto input : inputs)
+      {
+        RequireNonNull(input, "SymbolicEinsumCF");
+        // Metadata wrappers remain semantic operands, but add no work to the
+        // native evaluator. Keep canonical value graphs free of wrapper layers.
+        while (auto tensor = dynamic_pointer_cast<TensorFieldCoefficientFunction>(input))
+          input = tensor->GetFullCoefficient();
+        values.Append(input);
+      }
+      return EinsumCF(signature, values);
+    }
+    shared_ptr<CoefficientFunction> Rebuild(
+        const Array<shared_ptr<CoefficientFunction>> &inputs) const override
+    { return SymbolicEinsumCF(signature, inputs); }
+
+  public:
+    SymbolicEinsumCoefficientFunction(
+        std::string asig, const Array<shared_ptr<CoefficientFunction>> &inputs)
+        : SymbolicExpressionCoefficientFunction(inputs, MakeEvaluator(asig, inputs)),
+          signature(std::move(asig)) {}
+    auto GetCArgs() const { return tuple{signature, Array<shared_ptr<CoefficientFunction>>(operands)}; }
+    string GetDescription() const override { return "SymbolicEinsumCF " + signature; }
+    shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
+                                         shared_ptr<CoefficientFunction> dir) const override
+    {
+      if (this == var) return dir;
+      shared_ptr<CoefficientFunction> result;
+      for (size_t i : Range(operands))
+      {
+        auto differentiated = operands[i]->Diff(var, dir);
+        // A childless native zero has no symbolic dependencies. A zero-valued
+        // operation can still depend on other variables (e.g. a mixed Hessian).
+        if (IsConstantZero(differentiated)) continue;
+        Array<shared_ptr<CoefficientFunction>> inputs(operands);
+        inputs[i] = differentiated;
+        auto term = SymbolicEinsumCF(signature, inputs);
+        result = result ? SymbolicSumCF(result, term) : term;
+      }
+      return result ? result : ZeroCF(Dimensions());
+    }
+  };
+
+  class SymbolicSumCoefficientFunction : public SymbolicExpressionCoefficientFunction
+  {
+    shared_ptr<CoefficientFunction> Rebuild(
+        const Array<shared_ptr<CoefficientFunction>> &inputs) const override
+    { return SymbolicSumCF(inputs[0], inputs[1]); }
+  public:
+    SymbolicSumCoefficientFunction(shared_ptr<CoefficientFunction> a,
+                                   shared_ptr<CoefficientFunction> b)
+        : SymbolicExpressionCoefficientFunction({a, b}, a + b) {}
+    auto GetCArgs() const { return tuple{operands[0], operands[1]}; }
+    string GetDescription() const override { return "SymbolicSumCF"; }
+    shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
+                                         shared_ptr<CoefficientFunction> dir) const override
+    {
+      if (this == var) return dir;
+      return SymbolicSumCF(operands[0]->Diff(var, dir), operands[1]->Diff(var, dir));
+    }
+  };
+
+  shared_ptr<CoefficientFunction> SymbolicEinsumCF(
+      const std::string &signature,
+      const Array<shared_ptr<CoefficientFunction>> &inputs)
+  {
+    return make_shared<SymbolicEinsumCoefficientFunction>(signature, inputs);
+  }
+
+  static ngcore::RegisterClassForArchive<SymbolicEinsumCoefficientFunction,
+                                         CoefficientFunction> reg_symbolic_einsum;
+
+  shared_ptr<CoefficientFunction> SymbolicSumCF(
+      shared_ptr<CoefficientFunction> a, shared_ptr<CoefficientFunction> b)
+  {
+    RequireNonNull(a, "SymbolicSumCF");
+    RequireNonNull(b, "SymbolicSumCF");
+    if (a->Dimensions() != b->Dimensions())
+      throw Exception("SymbolicSumCF: operand shapes must match");
+    return make_shared<SymbolicSumCoefficientFunction>(a, b);
+  }
+
+  shared_ptr<CoefficientFunction> ScaleCoefficientCF(
+      shared_ptr<CoefficientFunction> value, shared_ptr<CoefficientFunction> scalar)
+  {
+    RequireNonNull(value, "ScaleCoefficientCF");
+    RequireNonNull(scalar, "ScaleCoefficientCF");
+    if (scalar->Dimensions().Size() != 0)
+      throw Exception("ScaleCoefficientCF: scalar factor must have scalar shape");
+    if (value->Dimensions().Size() > MAX_SIGNATURE_LABELS)
+      throw Exception("ScaleCoefficientCF: tensor rank exceeds signature limit");
+    auto sig = SIGNATURE.substr(0, value->Dimensions().Size());
+    return SymbolicEinsumCF(sig + ",->" + sig, {value, scalar});
+  }
+
+  static ngcore::RegisterClassForArchive<SymbolicSumCoefficientFunction,
+                                         CoefficientFunction> reg_symbolic_sum;
 
   bool IsVectorField(const TensorFieldCoefficientFunction &t)
   {
@@ -103,7 +209,7 @@ namespace ngfem
       out_cov[size_t(i)] = cov[size_t(oi)];
     }
 
-    auto out_cf = EinsumCF(sig + "->" + out_sig, {tf->GetFullCoefficient()});
+    auto out_cf = SymbolicEinsumCF(sig + "->" + out_sig, {tf});
     return TensorFieldCF(out_cf, out_cov);
   }
 
@@ -118,7 +224,7 @@ namespace ngfem
 
     const auto eins = MakeTensorProductSignature(m1.Rank(), m2.Rank());
 
-    auto out_cf = EinsumCF(eins, {c1->GetFullCoefficient(), c2->GetFullCoefficient()});
+    auto out_cf = SymbolicEinsumCF(eins, {c1, c2});
     return TensorFieldCF(out_cf, mout);
   }
 
@@ -141,7 +247,7 @@ namespace ngfem
     // the original label and slot order in the output.
     std::string eins = ToString(new_label) + old_label + "," + sigmod + "->" + sig;
 
-    auto result = EinsumCF(eins, {proj, tf->GetFullCoefficient()});
+    auto result = SymbolicEinsumCF(eins, {proj, tf});
     return TensorFieldCF(result, tf->GetCovariantIndices());
   }
 
@@ -215,4 +321,6 @@ void ExportTensorFields(py::module m)
 
   m.def("TensorProduct", [](shared_ptr<TensorFieldCoefficientFunction> a, shared_ptr<TensorFieldCoefficientFunction> b)
         { return TensorProduct(a, b); }, py::arg("a"), py::arg("b"), "Return the tensor product, with axes and variance metadata of a followed by those of b.");
+  m.def("_ScaleCoefficient", &ScaleCoefficientCF);
+  m.def("_SumCoefficients", &SymbolicSumCF);
 }

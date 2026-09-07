@@ -455,20 +455,19 @@ def test_tensorproduct_signature_rank_boundary():
         dg.TensorField(CF((0,), dims=(1,) * 53), "0" * 53)
 
 
-def test_projected_tensor_graph_does_not_retain_metadata_wrappers(rm_euclidean_2d):
+def test_projected_tensor_archives_its_semantic_operand(rm_euclidean_2d):
     vector = dg.VectorField(CF((x, y)))
     projected = rm_euclidean_2d.ProjectTensor(vector, "F")
     projected_twice = rm_euclidean_2d.ProjectTensor(projected, "F")
 
-    for result in (projected, projected_twice):
+    for operand, result in ((vector, projected), (projected, projected_twice)):
         assert isinstance(result, dg.VectorField)
         assert not isinstance(result.coef, _cpp.TensorField)
         archive_children = result.coef.data["childs"]
-        assert not any(
-            isinstance(child, _cpp.TensorField)
-            for child in archive_children
-            if child is not None
-        )
+        # Archives retain the original operand for Diff/Replace; metadata is
+        # stripped only from the native evaluation graph, not this semantic graph.
+        tensor_children = [child for child in archive_children if isinstance(child, _cpp.TensorField)]
+        assert tensor_children == [operand]
 
 
 def test_complex_scalar_tensorfield_evaluates_like_wrapped_coefficient():

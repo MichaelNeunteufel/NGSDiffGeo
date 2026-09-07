@@ -8,7 +8,7 @@ project(${addon_name})
 include(ngsolve_addon.cmake)
 
 # change the source file arguments to your source files
-add_ngsolve_addon(${addon_name} src/ngsdiffgeo.cpp src/riemannian_manifold.cpp src/tensor_fields.cpp src/coefficient_grad.cpp src/kforms.cpp)
+add_ngsolve_addon(${addon_name} src/ngsdiffgeo.cpp src/riemannian_manifold.cpp src/tensor_fields.cpp src/symbolic_expression.cpp src/coefficient_grad.cpp src/kforms.cpp)
 
 include(CTest)
 if(BUILD_TESTING)

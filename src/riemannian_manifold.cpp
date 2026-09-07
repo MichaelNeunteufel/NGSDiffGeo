@@ -662,25 +662,7 @@ namespace ngfem
         std::string eins = lhs + "," + std::string(1, a) + std::string(1, b) + "->" + sig;
 
         auto mout = m.WithCovariant(index, false);
-        if (m.Rank() == 1 && index == 0)
-        {
-            auto out_cf = metric_inv * tf->GetFullCoefficient();
-            if (dynamic_pointer_cast<OneFormCoefficientFunction>(tf))
-                return VectorFieldCF(out_cf);
-            return TensorFieldCF(out_cf, mout);
-        }
-        if (m.Rank() == 2)
-        {
-            shared_ptr<CoefficientFunction> out_cf;
-            if (index == 0)
-                out_cf = metric_inv * tf->GetFullCoefficient();
-            else if (index == 1)
-                out_cf = tf->GetFullCoefficient() * metric_inv;
-            if (out_cf)
-                return TensorFieldCF(out_cf, mout);
-        }
-
-        auto out_cf = EinsumCF(eins, {tf->GetFullCoefficient(), metric_inv});
+        auto out_cf = SymbolicEinsumCF(eins, {static_pointer_cast<CoefficientFunction>(tf), metric_inv});
 
         // if tf is a OneFormCoefficientFunction, return a VectorFieldCoefficientFunction
         if (dynamic_pointer_cast<OneFormCoefficientFunction>(tf))
@@ -1866,13 +1848,13 @@ namespace ngfem
         if (m.Covariant(slot))
         {
             std::string eins = sig + "," + std::string(1, a) + "->" + sig_out;
-            out_cf = EinsumCF(eins, {tf->GetFullCoefficient(), vf->GetFullCoefficient()});
+            out_cf = SymbolicEinsumCF(eins, {static_pointer_cast<CoefficientFunction>(tf), static_pointer_cast<CoefficientFunction>(vf)});
         }
         else
         {
             char b = m.FreshLabel();
             std::string eins = sig + "," + std::string(1, a) + std::string(1, b) + "," + std::string(1, b) + "->" + sig_out;
-            out_cf = EinsumCF(eins, {tf->GetFullCoefficient(), g, vf->GetFullCoefficient()});
+            out_cf = SymbolicEinsumCF(eins, {static_pointer_cast<CoefficientFunction>(tf), g, static_pointer_cast<CoefficientFunction>(vf)});
         }
 
         return m.Erased(slot).Rank() ? TensorFieldCF(out_cf, m.Erased(slot).CovString()) : ScalarFieldCF(out_cf, dim);

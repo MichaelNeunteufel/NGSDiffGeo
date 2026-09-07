@@ -261,6 +261,17 @@ namespace ngfem
 
     /// Canonical contravariant rank-one wrapper.
     shared_ptr<VectorFieldCoefficientFunction> VectorFieldCF(const shared_ptr<CoefficientFunction> &cf);
+    /// Native einsum evaluation with reconstructible symbolic operands.
+    shared_ptr<CoefficientFunction> SymbolicEinsumCF(
+        const std::string &signature,
+        const Array<shared_ptr<CoefficientFunction>> &inputs);
+
+    /// Sum and scalar product retaining zero-valued symbolic operands.
+    shared_ptr<CoefficientFunction> SymbolicSumCF(
+        shared_ptr<CoefficientFunction> a, shared_ptr<CoefficientFunction> b);
+    shared_ptr<CoefficientFunction> ScaleCoefficientCF(
+        shared_ptr<CoefficientFunction> value, shared_ptr<CoefficientFunction> scalar);
+
     shared_ptr<TensorFieldCoefficientFunction> PermuteTensorCF(shared_ptr<TensorFieldCoefficientFunction> tf,
                                                                const std::vector<int> &order);
     shared_ptr<TensorFieldCoefficientFunction> ApplyProjectorToIndex(shared_ptr<TensorFieldCoefficientFunction> tf,
