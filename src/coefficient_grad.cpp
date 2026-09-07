@@ -1,4 +1,6 @@
 #include "coefficient_grad.hpp"
+#include "tensor_fields.hpp"
+#include "symbolic_expression.hpp"
 #include <core/register_archive.hpp>
 #include <set>
 
@@ -6,6 +8,41 @@ namespace ngfem
 {
 
     using namespace ngcomp;
+
+    class SymbolicDerivativeCoefficientFunction : public SymbolicExpressionCoefficientFunction
+    {
+        int dim, order;
+        bool surface;
+        shared_ptr<CoefficientFunction> Rebuild(
+            const Array<shared_ptr<CoefficientFunction>> &inputs) const override
+        {
+            return order == 1 ? GradCF(inputs[0], dim, surface)
+                              : HesseCF(inputs[0], dim, surface);
+        }
+    public:
+        SymbolicDerivativeCoefficientFunction(shared_ptr<CoefficientFunction> input,
+            int adim, int aorder, bool asurface, shared_ptr<CoefficientFunction> value)
+            : SymbolicExpressionCoefficientFunction({input}, value, true),
+              dim(adim), order(aorder), surface(asurface) {}
+        auto GetCArgs() const { return tuple{operands[0], dim, order, surface, evaluator}; }
+        string GetDescription() const override
+        { return "SymbolicDerivativeCF<" + ToString(dim) + "," + ToString(order) + "," + ToString(surface) + ">"; }
+        shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
+                                             shared_ptr<CoefficientFunction> dir) const override
+        {
+            if (this == var) return dir;
+            return Rebuild({operands[0]->Diff(var, dir)});
+        }
+        shared_ptr<CoefficientFunction> NestedGradient(int next_dim, bool next_surface) const
+        {
+            if (order == 1 && dim == next_dim && surface == next_surface)
+                return HesseCF(operands[0], dim, surface);
+            throw Exception("GradCF: this nested symbolic derivative requires a higher native operator");
+        }
+    };
+
+    static ngcore::RegisterClassForArchive<SymbolicDerivativeCoefficientFunction,
+                                           CoefficientFunction> reg_symbolic_derivative;
 
     struct ProxyInfo
     {
@@ -16,7 +53,7 @@ namespace ngfem
     ProxyInfo GetProxyInfo(const shared_ptr<CoefficientFunction> &cf)
     {
         ProxyInfo info;
-        cf->TraverseTree([&](CoefficientFunction &nodecf)
+        cf->TraverseDAG([&](CoefficientFunction &nodecf)
                          {
           if (auto proxy = dynamic_cast<ProxyFunction*> (&nodecf))
             {
@@ -114,24 +151,35 @@ namespace ngfem
         return op;
     }
 
-    shared_ptr<CoefficientFunction> ProxyVariable(ProxyFunction &proxy)
-    {
-        if (auto primary = dynamic_pointer_cast<ProxyFunction>(proxy.Primary()))
-            return primary;
-        return dynamic_pointer_cast<CoefficientFunction>(proxy.shared_from_this());
-    }
-
     shared_ptr<CoefficientFunction> DerivativeOfVariable(const shared_ptr<CoefficientFunction> &var,
                                                          size_t dim,
                                                          bool surface)
     {
         if (auto proxy = dynamic_pointer_cast<ProxyFunction>(var))
+        {
+            // A native gradient proxy is an independent leaf of this spatial
+            // chain rule. Its spatial derivative is the primary proxy's Hessian.
+            if (auto primary = dynamic_pointer_cast<ProxyFunction>(proxy->Primary()))
+            {
+                auto gradient = dynamic_pointer_cast<ProxyFunction>(
+                    ProxyDirection(*primary, surface ? "Gradboundary" : "Grad"));
+                if (gradient && *gradient->Evaluator() == *proxy->Evaluator())
+                {
+                    auto hessian = HesseCF(primary, dim, surface);
+                    // Hessian: (new derivative, old derivative, components).
+                    // Native Grad proxy: (components, old derivative).
+                    for (int axis = 1; axis < primary->Dimensions().Size() + 1; ++axis)
+                        hessian = hessian->TensorTranspose(axis, axis + 1);
+                    return hessian;
+                }
+            }
             return NormalizeDerivativeSlots(
                 ProxyDirection(*proxy, surface ? "Gradboundary" : "Grad"),
                 var,
                 dim,
                 1,
                 true);
+        }
         return GradCF(var, dim, surface);
     }
 
@@ -161,22 +209,19 @@ namespace ngfem
         Array<shared_ptr<CoefficientFunction>> vars;
         set<const CoefficientFunction *> seen;
 
-        cf->TraverseTree([&](CoefficientFunction &nodecf)
-                         {
-          if (nodecf.InputCoefficientFunctions().Size() != 0)
-            return;
-
-          shared_ptr<CoefficientFunction> var;
-          if (auto proxy = dynamic_cast<ProxyFunction *>(&nodecf))
-            var = ProxyVariable(*proxy);
-          else
-            var = const_pointer_cast<CoefficientFunction>(nodecf.shared_from_this());
-
-          if (var && !seen.count(var.get()))
-            {
-              seen.insert(var.get());
-              vars.Append(var);
-            } });
+        // A retained differential expression is itself a spatial-chain-rule
+        // variable. Descending into its evaluator would lose that identity and
+        // differentiate a different graph. Visit every shared node only once.
+        function<void(shared_ptr<CoefficientFunction>)> collect = [&](auto node) {
+            if (!node || !seen.insert(node.get()).second) return;
+            auto inputs = node->InputCoefficientFunctions();
+            if (dynamic_pointer_cast<SymbolicDerivativeCoefficientFunction>(node)
+                || inputs.Size() == 0)
+                vars.Append(node);
+            else
+                for (auto input : inputs) collect(input);
+        };
+        collect(cf);
 
         Array<shared_ptr<CoefficientFunction>> comps(dim);
         for (size_t d = 0; d < dim; d++)
@@ -243,8 +288,11 @@ namespace ngfem
         if (surface && dim < 2)
             throw Exception("GradCF(surface): only dimensions 2,3 supported");
 
-        // create new ZeroCF with updated dimensions
-        if (cf->IsZeroCF())
+        if (auto derivative = dynamic_pointer_cast<SymbolicDerivativeCoefficientFunction>(cf))
+            return derivative->NestedGradient(dim, surface);
+
+        // Keep zero-valued expressions with semantic dependencies.
+        if (IsConstantZero(cf))
         {
             Array<int> resultdims = {int(dim)};
             resultdims += cf->Dimensions();
@@ -261,15 +309,18 @@ namespace ngfem
             try
             {
                 cf->SetSpaceDim(int(dim));
-                return NormalizeDerivativeSlots(cf->Operator(surface ? "Gradboundary" : "Grad"),
-                                                cf, dim, 1, true);
+                auto value = NormalizeDerivativeSlots(cf->Operator(surface ? "Gradboundary" : "Grad"),
+                                                      cf, dim, 1, true);
+                // Keep the public GradProxy alias for direct native proxies.
+                if (dynamic_pointer_cast<ProxyFunction>(cf)) return value;
+                return make_shared<SymbolicDerivativeCoefficientFunction>(cf, dim, 1, surface, value);
             }
             catch (const Exception &)
             {
                 // Fall back when this proxy type has no native operator.
             }
-            return NormalizeDerivativeSlots(SymbolicGradByChainRule(cf, dim, surface),
-                                            cf, dim, 1);
+            auto value = NormalizeDerivativeSlots(SymbolicGradByChainRule(cf, dim, surface), cf, dim, 1);
+            return make_shared<SymbolicDerivativeCoefficientFunction>(cf, dim, 1, surface, value);
         }
         else
             switch (dim)
@@ -292,7 +343,7 @@ namespace ngfem
         if (boundary && dim < 2)
             throw Exception("HesseCF(boundary): only dimensions 2,3 supported");
 
-        if (cf->IsZeroCF())
+        if (IsConstantZero(cf))
         {
             Array<int> resultdims = {int(dim), int(dim)};
             resultdims += cf->Dimensions();
@@ -307,11 +358,18 @@ namespace ngfem
         if (proxy_info.has_trial || proxy_info.has_test)
         {
             string opname = boundary ? "hesseboundary" : "hesse";
+            auto native_input = cf;
+            while (auto tensor = dynamic_pointer_cast<TensorFieldCoefficientFunction>(native_input))
+                native_input = tensor->GetFullCoefficient();
+            auto wrap = [&](shared_ptr<CoefficientFunction> value) -> shared_ptr<CoefficientFunction> {
+                if (dynamic_pointer_cast<ProxyFunction>(cf)) return value;
+                return make_shared<SymbolicDerivativeCoefficientFunction>(cf, dim, 2, boundary, value);
+            };
             try
             {
-                cf->SetSpaceDim(int(dim));
-                return NormalizeDerivativeSlots(
-                    cf->Operator(opname), cf, dim, 2, true);
+                native_input->SetSpaceDim(int(dim));
+                return wrap(NormalizeDerivativeSlots(
+                    native_input->Operator(opname), cf, dim, 2, true));
             }
             catch (const Exception &e)
             {
@@ -320,7 +378,7 @@ namespace ngfem
                 // Rebuild that direct proxy operator with one scalar Hessian
                 // block per component. BlockDifferentialOperator stores the
                 // differential-operator slots before the component slot.
-                if (auto proxy = dynamic_pointer_cast<ProxyFunction>(cf))
+                if (auto proxy = dynamic_pointer_cast<ProxyFunction>(native_input))
                 {
                     auto evaluator = proxy->GetAdditionalEvaluator(opname);
                     if (evaluator && evaluator->Dim() == dim * dim && cf->Dimension() > 1)
@@ -328,12 +386,12 @@ namespace ngfem
                         auto block_evaluator =
                             make_shared<BlockDifferentialOperator>(
                                 evaluator, cf->Dimension());
-                        return NormalizeDerivativeSlots(
+                        return wrap(NormalizeDerivativeSlots(
                             proxy->Operator(block_evaluator),
                             cf,
                             dim,
                             2,
-                            false);
+                            false));
                     }
                 }
                 throw Exception(string("HesseCF: symbolic proxy Hessian requires Operator(\"") +

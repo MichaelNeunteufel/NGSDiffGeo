@@ -102,6 +102,59 @@ namespace ngfem
             return *cf;
         }
 
+        // Volume and intrinsic boundary rules differ only in reference
+        // dimension. Both map the same batched stencil with a Jacobian inverse
+        // (the tangential pseudoinverse for an intrinsic boundary rule).
+        template <int REF_D, typename MAPSCAL, typename T, ORDERING ORD>
+        void T_EvaluateIntrinsic(
+            const MappedIntegrationRule<REF_D, D, MAPSCAL> &mir,
+            BareSliceMatrix<T, ORD> values) const
+        {
+            auto &lh = TLHeap();
+            HeapReset hr_lh(lh);
+            const size_t hd = c1->Dimension();
+            const size_t nip = mir.Size();
+            const auto &ir = mir.IR();
+            FlatMatrix<T, ORD> values_c1(hd, stencil_size * nip, lh);
+            FlatMatrix<T, ORD> derivatives(hd * nip, REF_D, lh);
+
+            for (int direction = 0; direction < REF_D; ++direction)
+            {
+                HeapReset hr(lh);
+                IntegrationRule perturbed_rule(stencil_size * nip, lh);
+                for (size_t i = 0; i < nip; ++i)
+                    FillCenteredStencil(perturbed_rule, stencil_size * i, ir[i], direction);
+                MappedIntegrationRule<REF_D, D, MAPSCAL> perturbed_mir(
+                    perturbed_rule, mir.GetTransformation(), lh);
+                {
+                    // Cached values belong to the original integration rule.
+                    auto reset_userdata = mir.GetTransformation().PushUserData();
+                    c1->Evaluate(perturbed_mir, values_c1);
+                }
+                for (size_t i = 0; i < nip; ++i)
+                    for (size_t component = 0; component < hd; ++component)
+                        derivatives(i * hd + component, direction) = CenteredDerivative(
+                            values_c1(component, stencil_size * i),
+                            values_c1(component, stencil_size * i + 1),
+                            values_c1(component, stencil_size * i + 2),
+                            values_c1(component, stencil_size * i + 3));
+            }
+            for (size_t i = 0; i < nip; ++i)
+            {
+                const auto jacobian_inverse = mir[i].GetJacobianInverse();
+                for (size_t component = 0; component < hd; ++component)
+                    for (int physical_direction = 0; physical_direction < D; ++physical_direction)
+                    {
+                        T value = 0.0;
+                        for (int reference_direction = 0; reference_direction < REF_D; ++reference_direction)
+                            value += derivatives(i * hd + component, reference_direction)
+                                * jacobian_inverse(reference_direction, physical_direction);
+                        // GradCF stores the derivative index first.
+                        values(physical_direction * hd + component, i) = value;
+                    }
+            }
+        }
+
         template <typename MAPSCAL, typename T, ORDERING ORD>
         void T_EvaluateMapped(
             const BaseMappedIntegrationRule &bmir,
@@ -113,68 +166,7 @@ namespace ngfem
 
             if (!surface)
             {
-                const auto &mir = static_cast<
-                    const MappedIntegrationRule<D, D, MAPSCAL> &>(bmir);
-                const auto &ir = mir.IR();
-                const size_t nip = mir.Size();
-
-                FlatMatrix<T, ORD> values_c1(hd, stencil_size * nip, lh);
-                FlatMatrix<T, ORD> derivatives(hd * nip, D, lh);
-
-                // Batch all four stencil points for one reference direction.
-                // This reduces child evaluations from D*nip to D per element.
-                for (int direction = 0; direction < D; ++direction)
-                {
-                    HeapReset hr(lh);
-                    IntegrationRule perturbed_rule(stencil_size * nip, lh);
-                    for (size_t i = 0; i < nip; ++i)
-                        FillCenteredStencil(
-                            perturbed_rule, stencil_size * i, ir[i], direction);
-
-                    MappedIntegrationRule<D, D, MAPSCAL> perturbed_mir(
-                        perturbed_rule, mir.GetTransformation(), lh);
-                    {
-                        // Cached values belong to the original rule, not to
-                        // the finite-difference stencil points.
-                        auto reset_userdata =
-                            mir.GetTransformation().PushUserData();
-                        c1->Evaluate(perturbed_mir, values_c1);
-                    }
-
-                    for (size_t i = 0; i < nip; ++i)
-                        for (size_t component = 0; component < hd; ++component)
-                            derivatives(i * hd + component, direction) =
-                                CenteredDerivative(
-                                    values_c1(component, stencil_size * i),
-                                    values_c1(component, stencil_size * i + 1),
-                                    values_c1(component, stencil_size * i + 2),
-                                    values_c1(component, stencil_size * i + 3));
-                }
-
-                for (size_t i = 0; i < nip; ++i)
-                {
-                    const auto jacobian_inverse = mir[i].GetJacobianInverse();
-                    for (size_t component = 0; component < hd; ++component)
-                        for (int physical_direction = 0;
-                             physical_direction < D;
-                             ++physical_direction)
-                        {
-                            T value = 0.0;
-                            for (int reference_direction = 0;
-                                 reference_direction < D;
-                                 ++reference_direction)
-                                value += derivatives(
-                                             i * hd + component,
-                                             reference_direction) *
-                                         jacobian_inverse(
-                                             reference_direction,
-                                             physical_direction);
-                            values(
-                                // GradCF stores the derivative index first.
-                                physical_direction * hd + component,
-                                i) = value;
-                        }
-                }
+                T_EvaluateIntrinsic(static_cast<const MappedIntegrationRule<D, D, MAPSCAL> &>(bmir), values);
                 return;
             }
 
@@ -189,78 +181,7 @@ namespace ngfem
 
                 if (bmir.DimElement() == D - 1)
                 {
-                    // A boundary-element transformation exposes an intrinsic
-                    // (D-1)-dimensional rule. Its Jacobian inverse already is
-                    // the tangential pseudoinverse into ambient coordinates.
-                    const auto &mir = static_cast<const MappedIntegrationRule<
-                        D - 1, D, MAPSCAL> &>(bmir);
-                    const auto &ir = mir.IR();
-                    const size_t nip = mir.Size();
-                    FlatMatrix<T, ORD> values_c1(
-                        hd, stencil_size * nip, lh);
-                    FlatMatrix<T, ORD> derivatives(
-                        hd * nip, reference_dim, lh);
-
-                    for (int direction = 0; direction < D - 1; ++direction)
-                    {
-                        HeapReset hr(lh);
-                        IntegrationRule perturbed_rule(
-                            stencil_size * nip, lh);
-                        for (size_t i = 0; i < nip; ++i)
-                            FillCenteredStencil(
-                                perturbed_rule,
-                                stencil_size * i,
-                                ir[i],
-                                direction);
-
-                        MappedIntegrationRule<D - 1, D, MAPSCAL> perturbed_mir(
-                            perturbed_rule, mir.GetTransformation(), lh);
-                        {
-                            auto reset_userdata =
-                                mir.GetTransformation().PushUserData();
-                            c1->Evaluate(perturbed_mir, values_c1);
-                        }
-
-                        for (size_t i = 0; i < nip; ++i)
-                            for (size_t component = 0;
-                                 component < hd;
-                                 ++component)
-                                derivatives(i * hd + component, direction) =
-                                    CenteredDerivative(
-                                        values_c1(
-                                            component, stencil_size * i),
-                                        values_c1(
-                                            component, stencil_size * i + 1),
-                                        values_c1(
-                                            component, stencil_size * i + 2),
-                                        values_c1(
-                                            component, stencil_size * i + 3));
-                    }
-
-                    for (size_t i = 0; i < nip; ++i)
-                    {
-                        const auto jacobian_inverse =
-                            mir[i].GetJacobianInverse();
-                        for (size_t component = 0; component < hd; ++component)
-                            for (int physical_direction = 0;
-                                 physical_direction < D;
-                                 ++physical_direction)
-                            {
-                                T value = 0.0;
-                                for (int reference_direction = 0;
-                                     reference_direction < D - 1;
-                                     ++reference_direction)
-                                    value += derivatives(
-                                                 i * hd + component,
-                                                 reference_direction) *
-                                             jacobian_inverse(
-                                                 reference_direction,
-                                                 physical_direction);
-                                values(
-                                    physical_direction * hd + component,
-                                    i) = value;
-                            }
-                    }
+                    T_EvaluateIntrinsic(static_cast<const MappedIntegrationRule<D - 1, D, MAPSCAL> &>(bmir), values);
                     return;
                 }
 
