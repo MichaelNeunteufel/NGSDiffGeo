@@ -70,10 +70,23 @@ if(BUILD_TESTING)
     )
     add_test(NAME coefficient_grad COMMAND test_coefficient_grad)
 
+    add_executable(test_kforms tests/test_kforms.cpp)
+    target_include_directories(
+      test_kforms BEFORE PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src
+      $<TARGET_PROPERTY:ngsolve,INTERFACE_INCLUDE_DIRECTORIES>
+    )
+    target_link_libraries(test_kforms PRIVATE ngsdiffgeo ngsolve Python3::Python)
+    set_target_properties(test_kforms PROPERTIES CXX_STANDARD 17)
+    foreach(check properties equivalence patterns codegen validation transforms shared_gradient shared_wedge simd)
+      add_test(NAME kforms_${check} COMMAND test_kforms ${check})
+    endforeach()
+
     list(
       APPEND cpp_test_targets
       test_tensor_field_forwarding
       test_coefficient_grad
+      test_kforms
     )
   endif()
 

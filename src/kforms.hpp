@@ -12,7 +12,7 @@ namespace ngfem
      * Fully covariant rank-k tensor with an ambient-space dimension.
      *
      * This class records form semantics; it does not antisymmetrize arbitrary
-     * input components. Use the form operators when alternation is required.
+     * input components. Apply AlternationCF explicitly when input alternation is required.
      */
     class KFormCoefficientFunction : public TensorFieldCoefficientFunction
     {
@@ -25,7 +25,7 @@ namespace ngfem
         Rewrap(shared_ptr<CoefficientFunction> cf) const override;
 
     public:
-        KFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, uint8_t ak, uint8_t adim);
+        KFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, int ak, int adim);
 
         uint8_t Degree() const { return degree; }
         uint8_t DimensionOfSpace() const { return dim; }
@@ -65,7 +65,7 @@ namespace ngfem
         Rewrap(shared_ptr<CoefficientFunction> cf) const override;
 
     public:
-        DoubleFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, uint8_t ap, uint8_t aq, uint8_t adim);
+        DoubleFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, int ap, int aq, int adim);
 
         uint8_t LeftDegree() const { return degree_left; }
         uint8_t RightDegree() const { return degree_right; }
@@ -172,11 +172,13 @@ namespace ngfem
     shared_ptr<DoubleFormCoefficientFunction> SwapDoubleFormSlots(shared_ptr<DoubleFormCoefficientFunction> a);
     shared_ptr<CoefficientFunction> BlockAlternationByPermutationCF(shared_ptr<CoefficientFunction> T, int rank_total, int block_start, int block_len);
 
+    /// Unnormalized alternation; rank-zero and rank-one inputs retain their shapes.
     shared_ptr<CoefficientFunction> AlternationCF(shared_ptr<CoefficientFunction> T, int rank, int dim);
 
     shared_ptr<KFormCoefficientFunction> Wedge(shared_ptr<KFormCoefficientFunction> a, shared_ptr<KFormCoefficientFunction> b);
     shared_ptr<DoubleFormCoefficientFunction> Wedge(shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<DoubleFormCoefficientFunction> b);
 
+    /// Exterior derivative with derivative-first GradCF; nontrivial derivatives require dim <= 3.
     shared_ptr<KFormCoefficientFunction> ExteriorDerivative(shared_ptr<KFormCoefficientFunction> a);
 
     shared_ptr<KFormCoefficientFunction> ZeroKForm(int k, int dim);

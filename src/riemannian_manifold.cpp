@@ -1137,28 +1137,16 @@ namespace ngfem
 
     shared_ptr<KFormCoefficientFunction> RiemannianManifold::Star(shared_ptr<KFormCoefficientFunction> a, VorB vb) const
     {
-        if (!a)
-            throw Exception("Star: input must be non-null");
-        if (a->DimensionOfSpace() != dim)
-            throw Exception("Star: form dimension does not match manifold dimension");
         return HodgeStar(a, *this, vb);
     }
 
     shared_ptr<KFormCoefficientFunction> RiemannianManifold::InvStar(shared_ptr<KFormCoefficientFunction> a, VorB vb) const
     {
-        if (!a)
-            throw Exception("InvStar: input must be non-null");
-        if (a->DimensionOfSpace() != dim)
-            throw Exception("InvStar: form dimension does not match manifold dimension");
         return InverseHodgeStar(a, *this, vb);
     }
 
     shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::InvStar(shared_ptr<DoubleFormCoefficientFunction> a, VorB vb) const
     {
-        if (!a)
-            throw Exception("InvStar: input must be non-null");
-        if (a->DimensionOfSpace() != dim)
-            throw Exception("InvStar: double-form dimension does not match manifold dimension");
         return InverseHodgeStar(a, *this, vb);
     }
 

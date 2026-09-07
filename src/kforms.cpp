@@ -13,47 +13,36 @@ namespace ngfem
 {
     namespace
     {
-        std::string GeneratedCoefficientType(const Code &code, bool is_complex)
-        {
-            std::string type = is_complex ? "Complex" : "double";
-            if (code.is_simd)
-                type = "SIMD<" + type + ">";
-            if (code.deriv == 1)
-                type = "AutoDiff<1," + type + ">";
-            if (code.deriv == 2)
-                type = "AutoDiffDiff<1," + type + ">";
-            return type;
-        }
-
-        void DeclareGeneratedCoefficient(Code &code, int index,
-                                         FlatArray<int> dims, bool is_complex)
-        {
-            // Code::Declare is not exported by the NGSolve DLL on Windows.
-            // Generate the equivalent declaration locally so addon wheels link.
-            const std::string type = GeneratedCoefficientType(code, is_complex);
-
-            if (code_uses_tensors)
-            {
-                code.body += "Tens<" + type;
-                for (int dim : dims)
-                    code.body += ',' + ToLiteral(dim);
-                code.body += "> var_" + ToLiteral(index) + ";\n";
-                return;
-            }
-
-            size_t component_count = 1;
-            for (int dim : dims)
-                component_count *= size_t(dim);
-            for (size_t component = 0; component < component_count; ++component)
-                code.body += Var(index, int(component), dims).Declare(type);
-        }
-
         template <typename T>
         shared_ptr<T> RequireNonNull(shared_ptr<T> ptr, const char *name)
         {
             if (!ptr)
                 throw Exception(std::string(name) + ": input coefficient is null");
             return ptr;
+        }
+
+        template <typename T>
+        int CheckedHodgeDimension(const shared_ptr<T> &form,
+                                  const RiemannianManifold &M, VorB vb,
+                                  const char *name)
+        {
+            RequireNonNull(form, name);
+            if (form->DimensionOfSpace() != M.Dimension())
+                throw Exception(std::string(name) +
+                                ": form dimension does not match manifold dimension");
+            if (vb != VOL && vb != BND && vb != BBND)
+                throw Exception(std::string(name) +
+                                ": only implemented for VOL, BND, and BBND");
+            const int n = M.Dimension() - (vb == VOL ? 0 : (vb == BND ? 1 : 2));
+            if (n < 0)
+                throw Exception(std::string(name) + ": invalid manifold codimension");
+            return n;
+        }
+
+        void ValidateDoubleFormSlot(int slot)
+        {
+            if (slot != -1 && slot != 0 && slot != 1)
+                throw Exception("slot must be -1 (both), 0 (left), or 1 (right)");
         }
 
         int InferWrappedOrTensorDimension(shared_ptr<CoefficientFunction> cf, int dim)
@@ -203,7 +192,7 @@ namespace ngfem
 
             return make_shared<KFormCoefficientFunction>(
                 UnwrapTensorFieldFullValue(std::move(cf)),
-                uint8_t(k), uint8_t(used_dim));
+                k, used_dim);
         }
 
         shared_ptr<DoubleFormCoefficientFunction> WrapDoubleFormImpl(shared_ptr<CoefficientFunction> cf, int p, int q, int dim)
@@ -224,7 +213,7 @@ namespace ngfem
 
             return make_shared<DoubleFormCoefficientFunction>(
                 UnwrapTensorFieldFullValue(std::move(cf)),
-                uint8_t(p), uint8_t(q), uint8_t(used_dim));
+                p, q, used_dim);
         }
 
         template <typename TWrapped>
@@ -502,7 +491,7 @@ namespace ngfem
             if (block_start + block_len > int(sig.size()))
                 throw Exception("BlockHodgeStar: block range out of bounds");
             if (sig.empty())
-                return raised * eps;
+                return ScaleCoefficientCF(eps, raised);
 
             std::string pre = sig.substr(0, size_t(block_start));
             std::string block = sig.substr(size_t(block_start), size_t(block_len));
@@ -513,9 +502,9 @@ namespace ngfem
             std::string out_sig = pre + new_block + post;
 
             std::string eins = sig + "," + eps_sig + "->" + out_sig;
-            auto contracted = EinsumCF(eins, {raised, eps});
+            auto contracted = SymbolicEinsumCF(eins, {raised, eps});
             double scale = 1.0 / double(Factorial(block_len));
-            return scale * contracted;
+            return ScaleCoefficientCF(contracted, ConstantCF(scale));
         }
 
         shared_ptr<KFormCoefficientFunction> BoundaryHodgeStarKForm(shared_ptr<KFormCoefficientFunction> a,
@@ -529,7 +518,7 @@ namespace ngfem
             auto normal = M.GetNV();
             auto contracted = M.Contraction(star_vol, normal); // reduce degree by 1
             double sign = (k % 2 == 0) ? 1.0 : -1.0;
-            return KFormCF(sign * contracted->GetFullCoefficient(), n - k, ambient_dim);
+            return KFormCF(ScaleCoefficientCF(contracted, ConstantCF(sign)), n - k, ambient_dim);
         }
 
         shared_ptr<DoubleFormCoefficientFunction> BoundaryHodgeStarDoubleForm(shared_ptr<DoubleFormCoefficientFunction> a,
@@ -547,7 +536,7 @@ namespace ngfem
             auto contracted_left = M.Contraction(star_vol, normal, 0);
             auto contracted_right = M.Contraction(contracted_left, normal, size_t(left_deg - 1));
             double sign = ((p + q) % 2 == 0) ? 1.0 : -1.0;
-            return DoubleFormCF(sign * contracted_right->GetFullCoefficient(), n - p, n - q, ambient_dim);
+            return DoubleFormCF(ScaleCoefficientCF(contracted_right, ConstantCF(sign)), n - p, n - q, ambient_dim);
         }
 
         shared_ptr<KFormCoefficientFunction> BBNDHodgeStarKForm(shared_ptr<KFormCoefficientFunction> a,
@@ -560,11 +549,8 @@ namespace ngfem
             if (k > n)
                 throw Exception("HodgeStar (BBND): form degree exceeds codimension-2 manifold dimension");
 
-            if (a->IsZeroCF())
-                return ZeroKForm(n - k, ambient_dim);
-
             if (n == 0)
-                return KFormCF(a->GetFullCoefficient(), 0, ambient_dim);
+                return a;
 
             auto star_vol = HodgeStar(a, M, VOL);
             auto n1 = M.GetEdgeNormal(0);
@@ -587,11 +573,8 @@ namespace ngfem
             if (p > n || q > n)
                 throw Exception("HodgeStar (double-form, BBND): form degree exceeds codimension-2 manifold dimension");
 
-            if (a->IsZeroCF())
-                return ZeroDoubleForm(n - p, n - q, ambient_dim);
-
             if (n == 0)
-                return DoubleFormCF(a->GetFullCoefficient(), 0, 0, ambient_dim);
+                return a;
 
             auto n1 = M.GetEdgeNormal(0);
             auto cn1 = M.GetEdgeConormal(0);
@@ -609,12 +592,10 @@ namespace ngfem
 
     } // namespace
 
-    KFormCoefficientFunction::KFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, uint8_t ak, uint8_t adim)
-        : TensorFieldCoefficientFunction(ac1, std::string(size_t(ak), '1')), degree(ak), dim(adim)
+    KFormCoefficientFunction::KFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, int ak, int adim)
+        : TensorFieldCoefficientFunction(ac1, std::string(size_t(CheckedKFormDegree(ak, "KFormCF")), '1')),
+          degree(uint8_t(ak)), dim(CheckedFormSpaceDimension(adim, ak == 0, "KFormCF"))
     {
-        ValidateFormSpaceDimension(adim, ak == 0, "KFormCF");
-        CheckedKFormDegree(ak, "KFormCF");
-
         const auto &dims = ac1->Dimensions();
         if (dim > 0 && dims.Size() > 0 && dims[0] != dim)
             throw Exception("KFormCF: tensor dimensions must all equal dim. dim = " +
@@ -631,10 +612,11 @@ namespace ngfem
         return KFormCF(std::move(cf), degree, dim);
     }
 
-    DoubleFormCoefficientFunction::DoubleFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, uint8_t ap, uint8_t aq, uint8_t adim)
-        : TensorFieldCoefficientFunction(ac1, std::string(size_t(ap + aq), '1')), degree_left(ap), degree_right(aq), dim(adim)
+    DoubleFormCoefficientFunction::DoubleFormCoefficientFunction(shared_ptr<CoefficientFunction> ac1, int ap, int aq, int adim)
+        : TensorFieldCoefficientFunction(ac1, std::string(size_t(CheckedDoubleFormRank(ap, aq, "DoubleFormCF")), '1')),
+          degree_left(uint8_t(ap)), degree_right(uint8_t(aq)),
+          dim(CheckedFormSpaceDimension(adim, ap == 0 && aq == 0, "DoubleFormCF"))
     {
-        ValidateFormSpaceDimension(adim, ap == 0 && aq == 0, "DoubleFormCF");
         if (ap + aq > MAX_FORM_RANK && !ac1->IsZeroCF())
             throw Exception("DoubleFormCF: only ranks up to " + ToString(MAX_FORM_RANK) + " are supported");
 
@@ -752,10 +734,43 @@ namespace ngfem
         }
     }
 
+    // Full and block alternation share one signed-linear code-generation rule.
+    static void GenerateSignedLinearCode(
+        Code &code, const CoefficientFunction &output,
+        const CoefficientFunction &input, int input_index, int index,
+        const std::vector<int> &valid_indices, const std::vector<int> &signs,
+        const std::vector<int> &lin_table)
+    {
+        DeclareTensorFieldGeneratedCoefficient(
+            code, index, output.Dimensions(), output.IsComplex());
+        size_t vi = 0;
+        for (size_t component = 0; component < output.Dimension(); ++component)
+        {
+            const int idx = int(component);
+            if (vi >= valid_indices.size() || valid_indices[vi] != idx)
+            {
+                code.body += Var(index, idx, output.Dimensions()).Assign(string("0.0"), false);
+                continue;
+            }
+            CodeExpr result;
+            const size_t base = vi * signs.size();
+            for (size_t term = 0; term < signs.size(); ++term)
+            {
+                CodeExpr value = Var(input_index, lin_table[base + term], input.Dimensions());
+                if (signs[term] == -1)
+                    result -= value;
+                else
+                    result += value;
+            }
+            code.body += Var(index, idx, output.Dimensions()).Assign(result.S(), false);
+            ++vi;
+        }
+    }
+
     /**
      * Unnormalized signed sum over all permutations of the tensor axes.
      *
-     * Lookup tables are built once and shared by interpreted evaluation,
+     * Each node builds lookup tables used by interpreted evaluation,
      * generated code, and nonzero-pattern propagation.
      */
     class AlternationCoefficientFunction : public T_CoefficientFunction<AlternationCoefficientFunction>
@@ -763,14 +778,15 @@ namespace ngfem
         shared_ptr<CoefficientFunction> c1;
         int rank;
         int dim;
-        std::vector<std::array<int, 4>> perms;
         std::vector<int> signs;
         std::vector<int> valid_indices;
         std::vector<int> lin_table;
 
     public:
         AlternationCoefficientFunction(shared_ptr<CoefficientFunction> ac1, int arank, int adim)
-            : T_CoefficientFunction<AlternationCoefficientFunction>(ac1->Dimension(), ac1->IsComplex()), c1(ac1), rank(arank), dim(adim)
+            : T_CoefficientFunction<AlternationCoefficientFunction>(
+                  RequireNonNull(ac1, "AlternationCF")->Dimension(),
+                  RequireNonNull(ac1, "AlternationCF")->IsComplex()), c1(ac1), rank(arank), dim(adim)
         {
             if (rank < 0 || rank > MAX_PERMUTATION_RANK)
                 throw Exception("AlternationCF: only ranks 0-" + ToString(MAX_PERMUTATION_RANK) + " supported");
@@ -786,19 +802,17 @@ namespace ngfem
                     throw Exception("AlternationCF: tensor dimensions must equal dim");
 
             this->SetDimensions(c1->Dimensions());
+            this->elementwise_constant = c1->ElementwiseConstant();
 
-            perms = GeneratePermutations(rank);
-            if ((int)perms.size() != Factorial(rank))
-                throw Exception("AlternationCF: permutation generation broken");
-
-            signs.resize(perms.size());
-            for (size_t i = 0; i < perms.size(); ++i)
-                signs[i] = PermutationSign(perms[i], rank);
+            const auto &data = GetSignedPermutations(
+                PermutationSpec{PermutationFamily::Full, rank, 0});
+            const auto &perms = data.perms;
+            signs = data.signs;
 
             int comp_dim = this->Dimension();
             valid_indices.reserve(comp_dim);
             lin_table.clear();
-            lin_table.reserve(size_t(comp_dim) * perms.size());
+            lin_table.reserve(size_t(comp_dim) * signs.size());
 
             std::array<int, 4> multi = {0, 0, 0, 0};
             for (int idx = 0; idx < comp_dim; ++idx)
@@ -822,7 +836,7 @@ namespace ngfem
                     continue;
 
                 valid_indices.push_back(idx);
-                for (size_t p = 0; p < perms.size(); ++p)
+                for (size_t p = 0; p < signs.size(); ++p)
                 {
                     int lin = 0;
                     int stride = 1;
@@ -841,6 +855,18 @@ namespace ngfem
             return "AlternationCF";
         }
 
+        bool DefinedOn(const ElementTransformation &trafo) override
+        {
+            return c1->DefinedOn(trafo);
+        }
+
+        void CalcEquivalenceKey() override
+        {
+            equivalence_key = "AlternationCF[rank=" + ToString(rank) +
+                              ",dim=" + ToString(dim) + "](" +
+                              c1->EquivalenceKey() + ")";
+        }
+
         int Rank() const { return rank; }
         int DimSpace() const { return dim; }
 
@@ -849,6 +875,12 @@ namespace ngfem
         void DoArchive(Archive &ar) override
         {
         }
+        virtual void GenerateCode(Code &code, FlatArray<int> inputs, int index) const override
+        {
+            GenerateSignedLinearCode(code, *this, *c1, inputs[0], index,
+                                     valid_indices, signs, lin_table);
+        }
+
         virtual void TraverseTree(const function<void(CoefficientFunction &)> &func) override
         {
             c1->TraverseTree(func);
@@ -865,14 +897,14 @@ namespace ngfem
         {
             Vector<AutoDiffDiff<1, NonZero>> input(values.Size());
             c1->NonZeroPattern(ud, input);
-            ApplyLinearNonZeroPattern(valid_indices, lin_table, perms.size(), input, values);
+            ApplyLinearNonZeroPattern(valid_indices, lin_table, signs.size(), input, values);
         }
 
         virtual void NonZeroPattern(const class ProxyUserData &ud,
                                     FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> input,
                                     FlatVector<AutoDiffDiff<1, NonZero>> values) const override
         {
-            ApplyLinearNonZeroPattern(valid_indices, lin_table, perms.size(), input[0], values);
+            ApplyLinearNonZeroPattern(valid_indices, lin_table, signs.size(), input[0], values);
         }
 
         shared_ptr<CoefficientFunction>
@@ -890,9 +922,11 @@ namespace ngfem
 
         using T_CoefficientFunction<AlternationCoefficientFunction>::Evaluate;
 
-        virtual double Evaluate(const BaseMappedIntegrationPoint &ip) const override
+        double Evaluate(const BaseMappedIntegrationPoint &ip) const override
         {
-            throw Exception("AlternationCF:: scalar evaluate called");
+            if (Dimensions().Size() != 0)
+                throw Exception("AlternationCoefficientFunction: scalar evaluation requires scalar shape");
+            return T_CoefficientFunction<AlternationCoefficientFunction>::Evaluate(ip);
         }
 
         template <typename MIR, typename T, ORDERING ORD>
@@ -903,14 +937,14 @@ namespace ngfem
             Array<T> temp(comp_dim * mir.Size());
             FlatMatrix<T, ORD> input(comp_dim, mir.Size(), temp.Data());
             c1->Evaluate(mir, input);
-            ApplySignedLinearTable(mir.Size(), comp_dim, valid_indices, signs, lin_table, perms.size(), input, values);
+            ApplySignedLinearTable(mir.Size(), comp_dim, valid_indices, signs, lin_table, signs.size(), input, values);
         }
 
         template <typename MIR, typename T, ORDERING ORD>
         void T_Evaluate(const MIR &ir, FlatArray<BareSliceMatrix<T, ORD>> input,
                         BareSliceMatrix<T, ORD> values) const
         {
-            ApplySignedLinearTable(ir.Size(), this->Dimension(), valid_indices, signs, lin_table, perms.size(), input[0], values);
+            ApplySignedLinearTable(ir.Size(), this->Dimension(), valid_indices, signs, lin_table, signs.size(), input[0], values);
         }
 
         shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
@@ -955,7 +989,6 @@ namespace ngfem
         int block_start;
         int block_len;
         int dim;
-        std::vector<std::array<int, 4>> perms;
         std::vector<int> signs;
         std::vector<int> valid_indices;
         std::vector<int> lin_table;
@@ -965,14 +998,16 @@ namespace ngfem
                                             int arank_total,
                                             int ablock_start,
                                             int ablock_len)
-            : T_CoefficientFunction<BlockAlternationCoefficientFunction>(ac1->Dimension(), ac1->IsComplex()),
+            : T_CoefficientFunction<BlockAlternationCoefficientFunction>(
+                  RequireNonNull(ac1, "BlockAlternationCF")->Dimension(),
+                  RequireNonNull(ac1, "BlockAlternationCF")->IsComplex()),
               c1(ac1), rank_total(arank_total), block_start(ablock_start), block_len(ablock_len)
         {
             if (rank_total < 0 || rank_total > MAX_FORM_RANK)
                 throw Exception("BlockAlternationCF: only ranks 0-" + ToString(MAX_FORM_RANK) + " supported");
             if (block_len < 0 || block_len > MAX_PERMUTATION_RANK)
                 throw Exception("BlockAlternationCF: block size must be in [0, " + ToString(MAX_PERMUTATION_RANK) + "]");
-            if (block_start < 0 || block_start + block_len > rank_total)
+            if (block_start < 0 || block_start > rank_total || block_len > rank_total - block_start)
                 throw Exception("BlockAlternationCF: block range out of bounds");
             if (c1->Dimensions().Size() != size_t(rank_total))
                 throw Exception("BlockAlternationCF: tensor rank mismatch");
@@ -987,15 +1022,16 @@ namespace ngfem
                     throw Exception("BlockAlternationCF: tensor dimensions must equal dim");
 
             this->SetDimensions(c1->Dimensions());
+            this->elementwise_constant = c1->ElementwiseConstant();
 
-            perms = GeneratePermutations(block_len);
-            signs.resize(perms.size());
-            for (size_t i = 0; i < perms.size(); ++i)
-                signs[i] = PermutationSign(perms[i], block_len);
+            const auto &data = GetSignedPermutations(
+                PermutationSpec{PermutationFamily::Full, block_len, 0});
+            const auto &perms = data.perms;
+            signs = data.signs;
 
             int comp_dim = this->Dimension();
             valid_indices.reserve(comp_dim);
-            lin_table.reserve(size_t(comp_dim) * perms.size());
+            lin_table.reserve(size_t(comp_dim) * signs.size());
 
             std::array<int, MAX_FORM_RANK> multi = {};
             std::array<int, MAX_FORM_RANK> src_multi = {};
@@ -1021,7 +1057,7 @@ namespace ngfem
                     continue;
 
                 valid_indices.push_back(idx);
-                for (size_t p = 0; p < perms.size(); ++p)
+                for (size_t p = 0; p < signs.size(); ++p)
                 {
                     for (int j = 0; j < rank_total; ++j)
                         src_multi[size_t(j)] = multi[size_t(j)];
@@ -1041,6 +1077,20 @@ namespace ngfem
             return "BlockAlternationCF";
         }
 
+        bool DefinedOn(const ElementTransformation &trafo) override
+        {
+            return c1->DefinedOn(trafo);
+        }
+
+        void CalcEquivalenceKey() override
+        {
+            equivalence_key = "BlockAlternationCF[rank=" + ToString(rank_total) +
+                              ",start=" + ToString(block_start) +
+                              ",length=" + ToString(block_len) +
+                              ",dim=" + ToString(dim) + "](" +
+                              c1->EquivalenceKey() + ")";
+        }
+
         auto GetCArgs() const
         {
             return tuple{c1, rank_total, block_start, block_len};
@@ -1052,30 +1102,8 @@ namespace ngfem
 
         virtual void GenerateCode(Code &code, FlatArray<int> inputs, int index) const override
         {
-            DeclareGeneratedCoefficient(code, index, Dimensions(), IsComplex());
-
-            size_t vi = 0;
-            for (int idx = 0; idx < this->Dimension(); ++idx)
-            {
-                if (vi >= valid_indices.size() || valid_indices[vi] != idx)
-                {
-                    code.body += Var(index, idx, Dimensions()).Assign(string("0.0"), false);
-                    continue;
-                }
-
-                CodeExpr result;
-                const size_t base = vi * perms.size();
-                for (size_t p = 0; p < perms.size(); ++p)
-                {
-                    CodeExpr term = Var(inputs[0], lin_table[base + p], c1->Dimensions());
-                    if (signs[p] == -1)
-                        result -= term;
-                    else
-                        result += term;
-                }
-                code.body += Var(index, idx, Dimensions()).Assign(result.S(), false);
-                ++vi;
-            }
+            GenerateSignedLinearCode(code, *this, *c1, inputs[0], index,
+                                     valid_indices, signs, lin_table);
         }
 
         virtual void TraverseTree(const function<void(CoefficientFunction &)> &func) override
@@ -1094,14 +1122,14 @@ namespace ngfem
         {
             Vector<AutoDiffDiff<1, NonZero>> input(values.Size());
             c1->NonZeroPattern(ud, input);
-            ApplyLinearNonZeroPattern(valid_indices, lin_table, perms.size(), input, values);
+            ApplyLinearNonZeroPattern(valid_indices, lin_table, signs.size(), input, values);
         }
 
         virtual void NonZeroPattern(const class ProxyUserData &ud,
                                     FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> input,
                                     FlatVector<AutoDiffDiff<1, NonZero>> values) const override
         {
-            ApplyLinearNonZeroPattern(valid_indices, lin_table, perms.size(), input[0], values);
+            ApplyLinearNonZeroPattern(valid_indices, lin_table, signs.size(), input[0], values);
         }
 
         shared_ptr<CoefficientFunction>
@@ -1120,9 +1148,11 @@ namespace ngfem
 
         using T_CoefficientFunction<BlockAlternationCoefficientFunction>::Evaluate;
 
-        virtual double Evaluate(const BaseMappedIntegrationPoint &ip) const override
+        double Evaluate(const BaseMappedIntegrationPoint &ip) const override
         {
-            throw Exception("BlockAlternationCF:: scalar evaluate called");
+            if (Dimensions().Size() != 0)
+                throw Exception("BlockAlternationCoefficientFunction: scalar evaluation requires scalar shape");
+            return T_CoefficientFunction<BlockAlternationCoefficientFunction>::Evaluate(ip);
         }
 
         template <typename MIR, typename T, ORDERING ORD>
@@ -1140,7 +1170,7 @@ namespace ngfem
         template <typename MI, typename MV>
         void EvalFromInput(size_t nir, MI input, MV values) const
         {
-            ApplySignedLinearTable(nir, this->Dimension(), valid_indices, signs, lin_table, perms.size(), input, values);
+            ApplySignedLinearTable(nir, this->Dimension(), valid_indices, signs, lin_table, signs.size(), input, values);
         }
 
         template <typename MIR, typename T, ORDERING ORD>
@@ -1188,11 +1218,8 @@ namespace ngfem
             throw Exception("BlockAlternationByPermutationCF: only ranks 0-" + ToString(MAX_FORM_RANK) + " supported");
         if (block_len < 0 || block_len > MAX_PERMUTATION_RANK)
             throw Exception("BlockAlternationByPermutationCF: block size must be in [0, " + ToString(MAX_PERMUTATION_RANK) + "]");
-        if (block_start < 0 || block_start + block_len > rank_total)
+        if (block_start < 0 || block_start > rank_total || block_len > rank_total - block_start)
             throw Exception("BlockAlternationByPermutationCF: block range out of bounds");
-        if (block_len <= 1)
-            return T;
-
         shared_ptr<TensorFieldCoefficientFunction> tf;
         if (auto ttf = dynamic_pointer_cast<TensorFieldCoefficientFunction>(T))
         {
@@ -1207,14 +1234,29 @@ namespace ngfem
         if (int(tf->Dimensions().Size()) != rank_total)
             throw Exception("BlockAlternationByPermutationCF: tensor rank mismatch");
 
+        if (rank_total > 0)
+            ValidateFormSpaceDimension(int(tf->Dimensions()[0]), false, "BlockAlternationByPermutationCF");
+        if (block_len <= 1)
+            return T;
+
         return make_shared<BlockAlternationCoefficientFunction>(tf, rank_total, block_start, block_len);
     }
 
-    int TensorComponentCount(int dim, int rank)
+    int CheckedDoubleWedgeComponentCount(
+        const shared_ptr<DoubleFormCoefficientFunction> &a,
+        const shared_ptr<DoubleFormCoefficientFunction> &b)
     {
+        RequireNonNull(a, "DoubleFormWedgeCF");
+        RequireNonNull(b, "DoubleFormWedgeCF");
+        if (a->DimensionOfSpace() != b->DimensionOfSpace())
+            throw Exception("DoubleFormWedgeCF: input double-forms must have the same dimension of space");
+        const int rank = a->LeftDegree() + a->RightDegree() +
+                         b->LeftDegree() + b->RightDegree();
+        if (rank > MAX_FORM_RANK)
+            throw Exception("DoubleFormWedgeCF: only ranks up to " + ToString(MAX_FORM_RANK) + " are supported");
         int count = 1;
         for (int i = 0; i < rank; ++i)
-            count *= dim;
+            count *= a->DimensionOfSpace(); // bounded by 4^8
         return count;
     }
 
@@ -1253,25 +1295,20 @@ namespace ngfem
         DoubleFormWedgeCoefficientFunction(shared_ptr<DoubleFormCoefficientFunction> aa,
                                            shared_ptr<DoubleFormCoefficientFunction> bb)
             : T_CoefficientFunction<DoubleFormWedgeCoefficientFunction>(
-                  TensorComponentCount(aa->DimensionOfSpace(), aa->LeftDegree() + bb->LeftDegree() + aa->RightDegree() + bb->RightDegree()),
-                  aa->IsComplex() || bb->IsComplex()),
+                  CheckedDoubleWedgeComponentCount(aa, bb),
+                  RequireNonNull(aa, "DoubleFormWedgeCF")->IsComplex() ||
+                  RequireNonNull(bb, "DoubleFormWedgeCF")->IsComplex()),
               a(aa), b(bb),
               p(aa->LeftDegree()), q(aa->RightDegree()),
               r(bb->LeftDegree()), s(bb->RightDegree()),
               dim(aa->DimensionOfSpace()),
               total(p + q + r + s)
         {
-            if (!a || !b)
-                throw Exception("DoubleFormWedgeCF: inputs must be non-null");
-            if (a->DimensionOfSpace() != b->DimensionOfSpace())
-                throw Exception("DoubleFormWedgeCF: input double-forms must have the same dimension of space");
-            if (total > MAX_FORM_RANK)
-                throw Exception("DoubleFormWedgeCF: only ranks up to " + ToString(MAX_FORM_RANK) + " are supported");
-
             Array<int> dims(total);
             for (int i = 0; i < total; ++i)
                 dims[i] = dim;
             this->SetDimensions(dims);
+            this->elementwise_constant = a->ElementwiseConstant() && b->ElementwiseConstant();
 
             const int left_len = p + r;
             const int right_len = q + s;
@@ -1362,6 +1399,20 @@ namespace ngfem
             return "DoubleFormWedgeCF";
         }
 
+        bool DefinedOn(const ElementTransformation &trafo) override
+        {
+            return a->DefinedOn(trafo) && b->DefinedOn(trafo);
+        }
+
+        void CalcEquivalenceKey() override
+        {
+            equivalence_key = "DoubleFormWedgeCF[p=" + ToString(p) +
+                              ",q=" + ToString(q) + ",r=" + ToString(r) +
+                              ",s=" + ToString(s) + ",dim=" + ToString(dim) +
+                              "](" + a->EquivalenceKey() + "," +
+                              b->EquivalenceKey() + ")";
+        }
+
         auto GetCArgs() const { return tuple{a, b}; }
 
         void DoArchive(Archive &ar) override
@@ -1370,7 +1421,7 @@ namespace ngfem
 
         virtual void GenerateCode(Code &code, FlatArray<int> inputs, int index) const override
         {
-            DeclareGeneratedCoefficient(code, index, Dimensions(), IsComplex());
+            DeclareTensorFieldGeneratedCoefficient(code, index, Dimensions(), IsComplex());
 
             size_t vi = 0;
             for (int idx = 0; idx < this->Dimension(); ++idx)
@@ -1412,9 +1463,12 @@ namespace ngfem
         virtual void NonZeroPattern(const class ProxyUserData &ud,
                                     FlatVector<AutoDiffDiff<1, NonZero>> values) const override
         {
-            values = AutoDiffDiff<1, NonZero>(false);
-            for (int idx : valid_indices)
-                values(idx) = AutoDiffDiff<1, NonZero>(true);
+            Vector<AutoDiffDiff<1, NonZero>> left(a->Dimension()), right(b->Dimension());
+            a->NonZeroPattern(ud, left);
+            b->NonZeroPattern(ud, right);
+            FlatVector<AutoDiffDiff<1, NonZero>> input_storage[] = {left, right};
+            FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> inputs(2, input_storage);
+            NonZeroPattern(ud, inputs, values);
         }
 
         virtual void NonZeroPattern(const class ProxyUserData &ud,
@@ -1441,8 +1495,8 @@ namespace ngfem
             if (transformation.replace.count(thisptr))
                 return transformation.replace[thisptr];
 
-            auto ta = DoubleFormCF(a->GetFullCoefficient()->Transform(transformation), p, q, dim);
-            auto tb = DoubleFormCF(b->GetFullCoefficient()->Transform(transformation), r, s, dim);
+            auto ta = DoubleFormCF(a->Transform(transformation), p, q, dim);
+            auto tb = DoubleFormCF(b->Transform(transformation), r, s, dim);
             auto newcf = make_shared<DoubleFormWedgeCoefficientFunction>(ta, tb);
             transformation.cache[thisptr] = newcf;
             return newcf;
@@ -1450,9 +1504,11 @@ namespace ngfem
 
         using T_CoefficientFunction<DoubleFormWedgeCoefficientFunction>::Evaluate;
 
-        virtual double Evaluate(const BaseMappedIntegrationPoint &ip) const override
+        double Evaluate(const BaseMappedIntegrationPoint &ip) const override
         {
-            throw Exception("DoubleFormWedgeCF:: scalar evaluate called");
+            if (Dimensions().Size() != 0)
+                throw Exception("DoubleFormWedgeCoefficientFunction: scalar evaluation requires scalar shape");
+            return T_CoefficientFunction<DoubleFormWedgeCoefficientFunction>::Evaluate(ip);
         }
 
         template <typename MIR, typename T, ORDERING ORD>
@@ -1465,8 +1521,8 @@ namespace ngfem
             Array<T> temp_b(dim_b * mir.Size());
             FlatMatrix<T, ORD> values_a(dim_a, mir.Size(), temp_a.Data());
             FlatMatrix<T, ORD> values_b(dim_b, mir.Size(), temp_b.Data());
-            a->GetFullCoefficient()->Evaluate(mir, values_a);
-            b->GetFullCoefficient()->Evaluate(mir, values_b);
+            static_cast<const CoefficientFunction &>(*a).Evaluate(mir, values_a);
+            static_cast<const CoefficientFunction &>(*b).Evaluate(mir, values_b);
 
             EvalFromInputs(mir.Size(), values_a, values_b, values);
         }
@@ -1492,9 +1548,9 @@ namespace ngfem
         {
             if (this == var)
                 return dir;
-            auto da = DoubleFormCF(a->GetFullCoefficient()->Diff(var, dir), p, q, dim);
-            auto db = DoubleFormCF(b->GetFullCoefficient()->Diff(var, dir), r, s, dim);
-            return Wedge(da, b)->GetFullCoefficient() + Wedge(a, db)->GetFullCoefficient();
+            auto da = DoubleFormCF(a->Diff(var, dir), p, q, dim);
+            auto db = DoubleFormCF(b->Diff(var, dir), r, s, dim);
+            return SymbolicSumCF(Wedge(da, b), Wedge(a, db));
         }
 
         shared_ptr<CoefficientFunction> DiffJacobi(const CoefficientFunction *var, T_DJC &cache) const override
@@ -1509,14 +1565,14 @@ namespace ngfem
             if (this == var)
                 return IdentityCF(this->Dimensions());
 
-            auto da = DoubleFormCF(a->GetFullCoefficient()->DiffJacobi(var, cache), p, q, dim);
-            auto db = DoubleFormCF(b->GetFullCoefficient()->DiffJacobi(var, cache), r, s, dim);
-            auto res = Wedge(da, b)->GetFullCoefficient() + Wedge(a, db)->GetFullCoefficient();
+            auto da = DoubleFormCF(a->DiffJacobi(var, cache), p, q, dim);
+            auto db = DoubleFormCF(b->DiffJacobi(var, cache), r, s, dim);
+            auto res = SymbolicSumCF(Wedge(da, b), Wedge(a, db));
             cache[thisptr] = res;
             return res;
         }
 
-        virtual bool IsZeroCF() const override { return structural_zero || a->IsZeroCF() || b->IsZeroCF(); }
+        virtual bool IsZeroCF() const override { return structural_zero; }
     };
 
     shared_ptr<KFormCoefficientFunction> KFormCF(shared_ptr<CoefficientFunction> cf, int k, int dim)
@@ -1596,7 +1652,9 @@ namespace ngfem
         if (k + l > dim)
             return ZeroKForm(k + l, dim);
         if (k == 0 || l == 0)
-            return KFormCF(a->GetFullCoefficient() * b->GetFullCoefficient(), k + l, dim);
+        {
+            return KFormCF(ScaleCoefficientCF(k == 0 ? b : a, k == 0 ? a : b), k + l, dim);
+        }
 
         auto T = TensorProduct(a, b);
         const auto &shuffle_data = GetSignedWedgeOrders(k, l);
@@ -1605,8 +1663,8 @@ namespace ngfem
         {
             shared_ptr<CoefficientFunction> term = PermuteTensorCF(T, shuffle_data.orders[p]);
             if (shuffle_data.signs[p] == -1)
-                term = (-1.0) * term;
-            accum = accum ? (accum + term) : term;
+                term = ScaleCoefficientCF(term, ConstantCF(-1));
+            accum = accum ? SymbolicSumCF(accum, term) : term;
         }
 
         return KFormCF(accum, k + l, dim);
@@ -1628,8 +1686,6 @@ namespace ngfem
             return ZeroDoubleForm(p + r, q + s, dim);
 
         auto wedge_cf = make_shared<DoubleFormWedgeCoefficientFunction>(a, b);
-        if (wedge_cf->IsZeroCF())
-            return ZeroDoubleForm(p + r, q + s, dim);
         return DoubleFormCF(wedge_cf, p + r, q + s, dim);
     }
 
@@ -1641,26 +1697,20 @@ namespace ngfem
         if (k + 1 > dim)
             return ZeroKForm(k + 1, dim);
 
-        auto G = GradCF(a->GetFullCoefficient(), dim);
+        auto G = GradCF(a, dim);
         auto alt = AlternationCF(G, k + 1, dim);
 
         double scale = 1.0 / double(Factorial(k));
-        auto out = scale * alt;
+        auto out = ScaleCoefficientCF(alt, ConstantCF(scale));
         return KFormCF(out, k + 1, dim);
     }
 
     shared_ptr<KFormCoefficientFunction> HodgeStar(shared_ptr<KFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb)
     {
-        int ambient_dim = M.Dimension();
-        if (vb != VOL && vb != BND && vb != BBND)
-            throw Exception("HodgeStar: only implemented for VOL, BND, and BBND");
-        int n = (vb == VOL) ? ambient_dim : (vb == BND ? ambient_dim - 1 : ambient_dim - 2);
+        const int n = CheckedHodgeDimension(a, M, vb, "HodgeStar");
         int k = a->Degree();
         if (k > n)
             throw Exception("HodgeStar: form degree exceeds manifold dimension");
-
-        if (a->IsZeroCF())
-            return ZeroKForm(n - k, vb == VOL ? n : ambient_dim);
 
         if (vb == BND)
             return BoundaryHodgeStarKForm(a, M);
@@ -1670,13 +1720,15 @@ namespace ngfem
         if (k == 0)
         {
             auto eps = M.GetLeviCivitaSymbol(true);
-            return KFormCF(a->GetCoefficients() * eps->GetCoefficients(), n, n);
+            return KFormCF(ScaleCoefficientCF(eps, a), n, n);
         }
 
         if (k == n)
         {
-            auto component = MakeComponentCoefficientFunction(a->GetCoefficients(), TopFormComponentIndex(n));
-            return KFormCF(component / M.GetVolumeForm(VOL), 0, n);
+            auto selector = UnitVectorCF(a->Dimension(), TopFormComponentIndex(n))->Reshape(a->Dimensions());
+            auto sig = a->GetSignature();
+            auto component = SymbolicEinsumCF(sig + "," + sig + "->", {a, selector});
+            return KFormCF(ScaleCoefficientCF(component, 1 / M.GetVolumeForm(VOL)), 0, n);
         }
 
         shared_ptr<TensorFieldCoefficientFunction> raised = a;
@@ -1687,32 +1739,17 @@ namespace ngfem
 
         std::string alpha_sig = raised->GetSignature(); // length k
         std::string eps_sig = alpha_sig + SIGNATURE.substr(k, n - k);
-        std::string out_sig = SIGNATURE.substr(k, n - k); // empty if n==k
-
-        std::string eins;
-        Array<shared_ptr<CoefficientFunction>> args;
-        if (alpha_sig.empty())
-        {
-            eins = eps_sig + "->" + out_sig;
-            args = {a * eps};
-        }
-        else
-        {
-            eins = alpha_sig + "," + eps_sig + "->" + out_sig;
-            args = {raised, eps};
-        }
-
-        auto contracted = EinsumCF(eins, args);
-        auto scaled = 1 / double(Factorial(k)) * contracted;
+        std::string out_sig = SIGNATURE.substr(k, n - k);
+        auto contracted = SymbolicEinsumCF(alpha_sig + "," + eps_sig + "->" + out_sig,
+                                           {raised, eps});
+        auto scaled = ScaleCoefficientCF(contracted, ConstantCF(1 / double(Factorial(k))));
 
         return KFormCF(scaled, n - k, n);
     }
 
     shared_ptr<KFormCoefficientFunction> InverseHodgeStar(shared_ptr<KFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb)
     {
-        if (vb != VOL && vb != BND && vb != BBND)
-            throw Exception("InverseHodgeStar: only implemented for VOL, BND, and BBND");
-        int n = (vb == VOL) ? M.Dimension() : (vb == BND ? M.Dimension() - 1 : M.Dimension() - 2);
+        const int n = CheckedHodgeDimension(a, M, vb, "InverseHodgeStar");
         int k = a->Degree();
         int exponent = k * (n - k);
         int sign = (exponent % 2 == 0) ? 1 : -1;
@@ -1720,29 +1757,25 @@ namespace ngfem
         auto star = HodgeStar(a, M, vb);
         if (sign == 1)
             return star;
-        return KFormCF((-1.0) * star->GetFullCoefficient(), n - k, vb == VOL ? n : M.Dimension());
+        return KFormCF(ScaleCoefficientCF(star, ConstantCF(-1)), n - k, vb == VOL ? n : M.Dimension());
     }
 
     shared_ptr<DoubleFormCoefficientFunction> HodgeStar(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, int slot)
     {
+        const int n = CheckedHodgeDimension(a, M, vb, "HodgeStar (double-form)");
+        ValidateDoubleFormSlot(slot);
         int ambient_dim = M.Dimension();
-        if (vb != VOL && vb != BND && vb != BBND)
-            throw Exception("HodgeStar (double-form): only implemented for VOL, BND, and BBND");
-        int n = (vb == VOL) ? ambient_dim : (vb == BND ? ambient_dim - 1 : ambient_dim - 2);
         int p = a->LeftDegree();
         int q = a->RightDegree();
-        if (p > n || q > n)
-            throw Exception("HodgeStar (double-form): form degree exceeds manifold dimension");
-
-        if (a->IsZeroCF())
-            return ZeroDoubleForm(n - p, n - q, vb == VOL ? n : ambient_dim);
+        if ((slot != 1 && p > n) || (slot != 0 && q > n))
+            throw Exception("HodgeStar (double-form): selected form degree exceeds manifold dimension");
 
         if (slot == 0)
         {
             if (vb == BBND)
             {
                 if (n == 0)
-                    return DoubleFormCF(a->GetFullCoefficient(), 0, q, ambient_dim);
+                    return a;
                 auto n1 = M.GetEdgeNormal(0);
                 auto n2 = M.GetEdgeConormal(0);
                 auto star_vol_left = BlockHodgeStar(a, 0, p, ambient_dim, M);
@@ -1757,7 +1790,7 @@ namespace ngfem
                 auto left_tf = TensorFieldCF(star_vol_left, std::string(size_t(ambient_dim - p + q), '1'));
                 auto contracted = M.Contraction(left_tf, M.GetNV(), 0);
                 double sign = (p % 2 == 0) ? 1.0 : -1.0;
-                return DoubleFormCF(sign * contracted->GetFullCoefficient(), n - p, q, ambient_dim);
+                return DoubleFormCF(ScaleCoefficientCF(contracted, ConstantCF(sign)), n - p, q, ambient_dim);
             }
             auto left_star = BlockHodgeStar(a, 0, p, n, M);
             return DoubleFormCF(left_star, n - p, q, n);
@@ -1768,7 +1801,7 @@ namespace ngfem
             if (vb == BBND)
             {
                 if (n == 0)
-                    return DoubleFormCF(a->GetFullCoefficient(), p, 0, ambient_dim);
+                    return a;
                 auto n1 = M.GetEdgeNormal(0);
                 auto n2 = M.GetEdgeConormal(0);
                 auto star_vol_right = BlockHodgeStar(a, p, q, ambient_dim, M);
@@ -1783,7 +1816,7 @@ namespace ngfem
                 auto right_tf = TensorFieldCF(star_vol_right, std::string(size_t(p + ambient_dim - q), '1'));
                 auto contracted = M.Contraction(right_tf, M.GetNV(), size_t(p));
                 double sign = (q % 2 == 0) ? 1.0 : -1.0;
-                return DoubleFormCF(sign * contracted->GetFullCoefficient(), p, n - q, ambient_dim);
+                return DoubleFormCF(ScaleCoefficientCF(contracted, ConstantCF(sign)), p, n - q, ambient_dim);
             }
             auto right_star = BlockHodgeStar(a, p, q, n, M);
             return DoubleFormCF(right_star, p, n - q, n);
@@ -1804,9 +1837,8 @@ namespace ngfem
 
     shared_ptr<DoubleFormCoefficientFunction> InverseHodgeStar(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, int slot)
     {
-        if (vb != VOL && vb != BND && vb != BBND)
-            throw Exception("InverseHodgeStar (double-form): only implemented for VOL, BND, and BBND");
-        int n = (vb == VOL) ? M.Dimension() : (vb == BND ? M.Dimension() - 1 : M.Dimension() - 2);
+        const int n = CheckedHodgeDimension(a, M, vb, "InverseHodgeStar (double-form)");
+        ValidateDoubleFormSlot(slot);
         int p = a->LeftDegree();
         int q = a->RightDegree();
         int exponent = 0;
@@ -1821,16 +1853,17 @@ namespace ngfem
         auto star = HodgeStar(a, M, vb, slot);
         if (sign == 1)
             return star;
-        return DoubleFormCF((-1.0) * star->GetFullCoefficient(), star->LeftDegree(), star->RightDegree(), vb == VOL ? n : M.Dimension());
+        return DoubleFormCF(ScaleCoefficientCF(star, ConstantCF(-1)), star->LeftDegree(), star->RightDegree(), vb == VOL ? n : M.Dimension());
     }
 
     shared_ptr<ScalarFieldCoefficientFunction> SlotInnerProduct(shared_ptr<DoubleFormCoefficientFunction> a, const RiemannianManifold &M, VorB vb, bool forms)
     {
-        return M.SlotInnerProduct(a, vb, forms);
+        return M.SlotInnerProduct(RequireNonNull(a, "SlotInnerProduct"), vb, forms);
     }
 
     shared_ptr<DoubleFormCoefficientFunction> SwapDoubleFormSlots(shared_ptr<DoubleFormCoefficientFunction> a)
     {
+        a = RequireNonNull(std::move(a), "SwapDoubleFormSlots");
         int p = a->LeftDegree();
         int q = a->RightDegree();
         int dim = a->DimensionOfSpace();
@@ -1893,7 +1926,8 @@ void ExportKForms(py::module m)
 
     py::class_<AlternationCoefficientFunction,
                CoefficientFunction,
-               shared_ptr<AlternationCoefficientFunction>>(m, "Alternation")
+               shared_ptr<AlternationCoefficientFunction>>(m, "Alternation",
+                   "Unnormalized signed sum over all tensor-axis permutations.")
         .def(py::init([](shared_ptr<CoefficientFunction> cf, int rank, int dim)
                       {
                           auto base = AlternationCF(cf, rank, dim);
@@ -1908,7 +1942,8 @@ void ExportKForms(py::module m)
 
     py::class_<KFormCoefficientFunction,
                TensorFieldCoefficientFunction,
-               shared_ptr<KFormCoefficientFunction>>(m, "KForm")
+               shared_ptr<KFormCoefficientFunction>>(m, "KForm",
+                   "Fully covariant rank-k wrapper; construction preserves unchecked input entries.")
         .def(py::init([](shared_ptr<CoefficientFunction> cf, int k, int dim)
                       { return KFormCF(cf, k, dim); }),
              py::arg("cf"), py::arg("k"), py::arg("dim"))
@@ -1919,14 +1954,15 @@ void ExportKForms(py::module m)
         .def("d", [](shared_ptr<KFormCoefficientFunction> a)
              { return ExteriorDerivative(a); })
         .def("star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
-             { return HodgeStar(a, *M, vb); }, py::arg("M"), py::arg("vb") = VOL)
+             { return HodgeStar(a, *RequireNonNull(M, "HodgeStar"), vb); }, py::arg("M"), py::arg("vb") = VOL)
         .def("inv_star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
-             { return InverseHodgeStar(a, *M, vb); }, py::arg("M"), py::arg("vb") = VOL)
+             { return InverseHodgeStar(a, *RequireNonNull(M, "InverseHodgeStar"), vb); }, py::arg("M"), py::arg("vb") = VOL)
         .def(NGSPickle<KFormCoefficientFunction>());
 
     py::class_<DoubleFormCoefficientFunction,
                TensorFieldCoefficientFunction,
-               shared_ptr<DoubleFormCoefficientFunction>>(m, "DoubleForm")
+               shared_ptr<DoubleFormCoefficientFunction>>(m, "DoubleForm",
+                   "Covariant tensor with left/right form degrees; construction does not alternate entries.")
         .def(py::init([](shared_ptr<CoefficientFunction> cf, int p, int q, int dim)
                       { return DoubleFormCF(cf, p, q, dim); }),
              py::arg("cf"), py::arg("p"), py::arg("q"), py::arg("dim"))
@@ -1938,16 +1974,16 @@ void ExportKForms(py::module m)
         .def("wedge", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<DoubleFormCoefficientFunction> b)
              { return Wedge(a, b); }, py::arg("b"))
         .def("star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, const std::string &slot)
-             { return HodgeStar(a, *M, vb, ParseDoubleFormSlot(slot)); }, py::arg("M"), py::arg("vb") = VOL, py::arg("slot") = "both")
+             { return HodgeStar(a, *RequireNonNull(M, "HodgeStar"), vb, ParseDoubleFormSlot(slot)); }, py::arg("M"), py::arg("vb") = VOL, py::arg("slot") = "both")
         .def("inv_star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, const std::string &slot)
-             { return InverseHodgeStar(a, *M, vb, ParseDoubleFormSlot(slot)); }, py::arg("M"), py::arg("vb") = VOL, py::arg("slot") = "both")
+             { return InverseHodgeStar(a, *RequireNonNull(M, "InverseHodgeStar"), vb, ParseDoubleFormSlot(slot)); }, py::arg("M"), py::arg("vb") = VOL, py::arg("slot") = "both")
         .def_property_readonly("trans", [](shared_ptr<DoubleFormCoefficientFunction> a)
                                { return SwapDoubleFormSlots(a); })
         .def(NGSPickle<DoubleFormCoefficientFunction>());
 
     py::class_<ScalarFieldCoefficientFunction,
                KFormCoefficientFunction,
-               shared_ptr<ScalarFieldCoefficientFunction>>(m, "ScalarField")
+               shared_ptr<ScalarFieldCoefficientFunction>>(m, "ScalarField", "Scalar zero-form with optional ambient-dimension metadata.")
         .def(py::init([](shared_ptr<CoefficientFunction> cf, int dim)
                       { return ScalarFieldCF(cf, dim); }),
              py::arg("cf"), py::arg("dim"))
@@ -1960,7 +1996,7 @@ void ExportKForms(py::module m)
 
     py::class_<OneFormCoefficientFunction,
                KFormCoefficientFunction,
-               shared_ptr<OneFormCoefficientFunction>>(m, "OneForm")
+               shared_ptr<OneFormCoefficientFunction>>(m, "OneForm", "Covariant one-form with ambient dimension inferred from its vector shape.")
         .def(py::init([](shared_ptr<CoefficientFunction> cf)
                       { return OneFormCF(cf); }),
              py::arg("cf"))
@@ -1973,7 +2009,7 @@ void ExportKForms(py::module m)
 
     py::class_<TwoFormCoefficientFunction,
                KFormCoefficientFunction,
-               shared_ptr<TwoFormCoefficientFunction>>(m, "TwoForm")
+               shared_ptr<TwoFormCoefficientFunction>>(m, "TwoForm", "Rank-two form wrapper; input alternation is not checked.")
         .def(py::init([](shared_ptr<CoefficientFunction> cf, int dim)
                       { return TwoFormCF(cf, dim); }),
              py::arg("cf"), py::arg("dim") = -1)
@@ -1986,7 +2022,7 @@ void ExportKForms(py::module m)
 
     py::class_<ThreeFormCoefficientFunction,
                KFormCoefficientFunction,
-               shared_ptr<ThreeFormCoefficientFunction>>(m, "ThreeForm")
+               shared_ptr<ThreeFormCoefficientFunction>>(m, "ThreeForm", "Rank-three form wrapper; input alternation is not checked.")
         .def(py::init([](shared_ptr<CoefficientFunction> cf, int dim)
                       { return ThreeFormCF(cf, dim); }),
              py::arg("cf"), py::arg("dim") = -1)
@@ -2005,16 +2041,16 @@ void ExportKForms(py::module m)
     m.def("d", [](shared_ptr<KFormCoefficientFunction> a)
           { return ExteriorDerivative(a); }, py::arg("a"));
     m.def("star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
-          { return M->Star(a, vb); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL);
+          { return RequireNonNull(M, "Star")->Star(a, vb); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL);
     m.def("inv_star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
-          { return InverseHodgeStar(a, *M, vb); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL);
+          { return InverseHodgeStar(a, *RequireNonNull(M, "InverseHodgeStar"), vb); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL);
     m.def("star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, const std::string &slot)
-          { return HodgeStar(a, *M, vb, ParseDoubleFormSlot(slot)); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL, py::arg("slot") = "both");
+          { return HodgeStar(a, *RequireNonNull(M, "HodgeStar"), vb, ParseDoubleFormSlot(slot)); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL, py::arg("slot") = "both");
     m.def("inv_star", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, const std::string &slot)
-          { return InverseHodgeStar(a, *M, vb, ParseDoubleFormSlot(slot)); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL, py::arg("slot") = "both");
+          { return InverseHodgeStar(a, *RequireNonNull(M, "InverseHodgeStar"), vb, ParseDoubleFormSlot(slot)); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL, py::arg("slot") = "both");
     m.def("slot_inner_product", [](shared_ptr<DoubleFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb, bool forms)
-          { return SlotInnerProduct(a, *M, vb, forms); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL, py::arg("forms") = true);
+          { return SlotInnerProduct(a, *RequireNonNull(M, "SlotInnerProduct"), vb, forms); }, py::arg("a"), py::arg("M"), py::arg("vb") = VOL, py::arg("forms") = true);
 
     m.def("delta", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M)
-          { return M->Coderivative(a); }, py::arg("a"), py::arg("M"));
+          { return RequireNonNull(M, "Coderivative")->Coderivative(a); }, py::arg("a"), py::arg("M"));
 }
