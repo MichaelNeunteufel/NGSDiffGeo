@@ -295,7 +295,8 @@ namespace ngfem
 
     auto GetCArgs() const
     {
-      return tuple{Array<shared_ptr<CoefficientFunction>>(operands), metric_axes};
+      return tuple{Array<shared_ptr<CoefficientFunction>>(operands),
+                   Array<int>(metric_axes)};
     }
     string GetDescription() const override
     {
