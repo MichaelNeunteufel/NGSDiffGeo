@@ -19,18 +19,22 @@ namespace ngfem
             return order == 1 ? GradCF(inputs[0], dim, surface)
                               : HesseCF(inputs[0], dim, surface);
         }
+
     public:
         SymbolicDerivativeCoefficientFunction(shared_ptr<CoefficientFunction> input,
-            int adim, int aorder, bool asurface, shared_ptr<CoefficientFunction> value)
+                                              int adim, int aorder, bool asurface, shared_ptr<CoefficientFunction> value)
             : SymbolicExpressionCoefficientFunction({input}, value, true),
               dim(adim), order(aorder), surface(asurface) {}
         auto GetCArgs() const { return tuple{operands[0], dim, order, surface, evaluator}; }
         string GetDescription() const override
-        { return "SymbolicDerivativeCF<" + ToString(dim) + "," + ToString(order) + "," + ToString(surface) + ">"; }
+        {
+            return "SymbolicDerivativeCF<" + ToString(dim) + "," + ToString(order) + "," + ToString(surface) + ">";
+        }
         shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
                                              shared_ptr<CoefficientFunction> dir) const override
         {
-            if (this == var) return dir;
+            if (this == var)
+                return dir;
             return Rebuild({operands[0]->Diff(var, dir)});
         }
         shared_ptr<CoefficientFunction> NestedGradient(int next_dim, bool next_surface) const
@@ -42,7 +46,8 @@ namespace ngfem
     };
 
     static ngcore::RegisterClassForArchive<SymbolicDerivativeCoefficientFunction,
-                                           CoefficientFunction> reg_symbolic_derivative;
+                                           CoefficientFunction>
+        reg_symbolic_derivative;
 
     struct ProxyInfo
     {
@@ -53,8 +58,8 @@ namespace ngfem
     ProxyInfo GetProxyInfo(const shared_ptr<CoefficientFunction> &cf)
     {
         ProxyInfo info;
-        cf->TraverseDAG([&](CoefficientFunction &nodecf)
-                         {
+        TraverseSemanticDAG(cf, [&](CoefficientFunction &nodecf)
+                            {
           if (auto proxy = dynamic_cast<ProxyFunction*> (&nodecf))
             {
               if (proxy->IsTestFunction())
@@ -212,14 +217,16 @@ namespace ngfem
         // A retained differential expression is itself a spatial-chain-rule
         // variable. Descending into its evaluator would lose that identity and
         // differentiate a different graph. Visit every shared node only once.
-        function<void(shared_ptr<CoefficientFunction>)> collect = [&](auto node) {
-            if (!node || !seen.insert(node.get()).second) return;
+        function<void(shared_ptr<CoefficientFunction>)> collect = [&](auto node)
+        {
+            if (!node || !seen.insert(node.get()).second)
+                return;
             auto inputs = node->InputCoefficientFunctions();
-            if (dynamic_pointer_cast<SymbolicDerivativeCoefficientFunction>(node)
-                || inputs.Size() == 0)
+            if (dynamic_pointer_cast<SymbolicDerivativeCoefficientFunction>(node) || inputs.Size() == 0)
                 vars.Append(node);
             else
-                for (auto input : inputs) collect(input);
+                for (auto input : inputs)
+                    collect(input);
         };
         collect(cf);
 
@@ -299,6 +306,13 @@ namespace ngfem
             return ZeroCF(resultdims);
         }
 
+        // Keep the semantic expression as the differentiation operand, but
+        // build the numerical derivative from its already optimized evaluator.
+        auto native_cf = NativeCoefficientValue(cf);
+        if (native_cf != cf)
+            return make_shared<SymbolicDerivativeCoefficientFunction>(
+                cf, dim, 1, surface, GradCF(native_cf, dim, surface));
+
         auto proxy_info = GetProxyInfo(cf);
 
         if (proxy_info.has_trial && proxy_info.has_test)
@@ -312,7 +326,8 @@ namespace ngfem
                 auto value = NormalizeDerivativeSlots(cf->Operator(surface ? "Gradboundary" : "Grad"),
                                                       cf, dim, 1, true);
                 // Keep the public GradProxy alias for direct native proxies.
-                if (dynamic_pointer_cast<ProxyFunction>(cf)) return value;
+                if (dynamic_pointer_cast<ProxyFunction>(cf))
+                    return value;
                 return make_shared<SymbolicDerivativeCoefficientFunction>(cf, dim, 1, surface, value);
             }
             catch (const Exception &)
@@ -350,6 +365,11 @@ namespace ngfem
             return ZeroCF(resultdims);
         }
 
+        auto native_cf = NativeCoefficientValue(cf);
+        if (native_cf != cf)
+            return make_shared<SymbolicDerivativeCoefficientFunction>(
+                cf, int(dim), 2, boundary, HesseCF(native_cf, dim, boundary));
+
         auto proxy_info = GetProxyInfo(cf);
 
         if (proxy_info.has_trial && proxy_info.has_test)
@@ -361,8 +381,10 @@ namespace ngfem
             auto native_input = cf;
             while (auto tensor = dynamic_pointer_cast<TensorFieldCoefficientFunction>(native_input))
                 native_input = tensor->GetFullCoefficient();
-            auto wrap = [&](shared_ptr<CoefficientFunction> value) -> shared_ptr<CoefficientFunction> {
-                if (dynamic_pointer_cast<ProxyFunction>(cf)) return value;
+            auto wrap = [&](shared_ptr<CoefficientFunction> value) -> shared_ptr<CoefficientFunction>
+            {
+                if (dynamic_pointer_cast<ProxyFunction>(cf))
+                    return value;
                 return make_shared<SymbolicDerivativeCoefficientFunction>(cf, dim, 2, boundary, value);
             };
             try

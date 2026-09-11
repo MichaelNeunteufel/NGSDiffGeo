@@ -3,6 +3,7 @@
 
 #include <core/register_archive.hpp>
 #include <map>
+#include <set>
 
 namespace ngfem
 {
@@ -37,7 +38,8 @@ namespace ngfem
         evaluator_as_input(as_input)
   {
     for (auto operand : operands)
-      if (!operand) throw Exception("SymbolicExpressionCF: null operand");
+      if (!operand)
+        throw Exception("SymbolicExpressionCF: null operand");
     SetDimensions(evaluator->Dimensions());
     is_complex = evaluator->IsComplex();
     elementwise_constant = true;
@@ -46,15 +48,19 @@ namespace ngfem
   }
 
   void SymbolicExpressionCoefficientFunction::DoArchive(Archive &)
-  {}
+  {
+  }
 
   bool SymbolicExpressionCoefficientFunction::IsZeroCF() const
-  { return evaluator->IsZeroCF(); }
+  {
+    return evaluator->IsZeroCF();
+  }
 
   bool SymbolicExpressionCoefficientFunction::DefinedOn(const ElementTransformation &trafo)
   {
     for (auto operand : operands)
-      if (!operand->DefinedOn(trafo)) return false;
+      if (!operand->DefinedOn(trafo))
+        return false;
     return true;
   }
 
@@ -67,35 +73,45 @@ namespace ngfem
   }
 
   Array<shared_ptr<CoefficientFunction>> SymbolicExpressionCoefficientFunction::InputCoefficientFunctions() const
-  { return evaluator_as_input ? Array<shared_ptr<CoefficientFunction>>{evaluator}
-                              : evaluator->InputCoefficientFunctions(); }
+  {
+    return evaluator_as_input ? Array<shared_ptr<CoefficientFunction>>{evaluator}
+                              : evaluator->InputCoefficientFunctions();
+  }
 
   void SymbolicExpressionCoefficientFunction::TraverseTree(const function<void(CoefficientFunction &)> &func)
   {
-    for (auto input : InputCoefficientFunctions()) input->TraverseTree(func);
+    for (auto input : InputCoefficientFunctions())
+      input->TraverseTree(func);
     func(*this);
   }
 
   double SymbolicExpressionCoefficientFunction::Evaluate(const BaseMappedIntegrationPoint &ip) const
-  { return evaluator->Evaluate(ip); }
+  {
+    return evaluator->Evaluate(ip);
+  }
 
   void SymbolicExpressionCoefficientFunction::GenerateCode(Code &code, FlatArray<int> inputs, int index) const
   {
-    if (!evaluator_as_input) { evaluator->GenerateCode(code, inputs, index); return; }
+    if (!evaluator_as_input)
+    {
+      evaluator->GenerateCode(code, inputs, index);
+      return;
+    }
     DeclareTensorFieldGeneratedCoefficient(code, index, Dimensions(), IsComplex());
     for (int i = 0; i < Dimension(); ++i)
       code.body += Var(index, i, Dimensions()).Assign(Var(inputs[0], i, Dimensions()), false);
   }
 
   void SymbolicExpressionCoefficientFunction::NonZeroPattern(const ProxyUserData &ud,
-                      FlatVector<AutoDiffDiff<1, NonZero>> values) const
+                                                             FlatVector<AutoDiffDiff<1, NonZero>> values) const
   {
     using Pattern = AutoDiffDiff<1, NonZero>;
     // Native einsum queries operand patterns while rebuilding its evaluator.
     // Use precomputed child patterns to avoid expanding shared DAGs into trees.
     // Keep this cache local: patterns depend on the current proxy/component.
     std::map<CoefficientFunction *, Vector<Pattern>> patterns;
-    evaluator->TraverseDAG([&](CoefficientFunction &node) {
+    evaluator->TraverseDAG([&](CoefficientFunction &node)
+                           {
       auto &output = patterns.try_emplace(&node, node.Dimension()).first->second;
       auto children = node.InputCoefficientFunctions();
       if (children.Size() == 0)
@@ -109,24 +125,27 @@ namespace ngfem
         inputs.emplace_back(child ? FlatVector<Pattern>(patterns.at(child.get()))
                                   : FlatVector<Pattern>(0, nullptr));
       node.NonZeroPattern(ud,
-          FlatArray<FlatVector<Pattern>>(inputs.size(), inputs.data()), output);
-    });
+          FlatArray<FlatVector<Pattern>>(inputs.size(), inputs.data()), output); });
     values = patterns.at(evaluator.get());
   }
 
   void SymbolicExpressionCoefficientFunction::NonZeroPattern(const ProxyUserData &ud,
-                      FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> inputs,
-                      FlatVector<AutoDiffDiff<1, NonZero>> values) const
+                                                             FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> inputs,
+                                                             FlatVector<AutoDiffDiff<1, NonZero>> values) const
   {
-    if (evaluator_as_input) values = inputs[0];
-    else evaluator->NonZeroPattern(ud, inputs, values);
+    if (evaluator_as_input)
+      values = inputs[0];
+    else
+      evaluator->NonZeroPattern(ud, inputs, values);
   }
 
   shared_ptr<CoefficientFunction> SymbolicExpressionCoefficientFunction::Transform(T_Transform &transformation) const
   {
     auto self = const_pointer_cast<CoefficientFunction>(shared_from_this());
-    if (transformation.cache.count(self)) return transformation.cache[self];
-    if (transformation.replace.count(self)) return transformation.replace[self];
+    if (transformation.cache.count(self))
+      return transformation.cache[self];
+    if (transformation.replace.count(self))
+      return transformation.replace[self];
     Array<shared_ptr<CoefficientFunction>> transformed;
     bool changed = false;
     for (auto operand : operands)
@@ -142,8 +161,52 @@ namespace ngfem
 
   bool IsConstantZero(const shared_ptr<CoefficientFunction> &cf)
   {
-    return cf->IsZeroCF() && cf->InputCoefficientFunctions().Size() == 0
-        && !dynamic_pointer_cast<SymbolicExpressionCoefficientFunction>(cf);
+    return cf->IsZeroCF() && cf->InputCoefficientFunctions().Size() == 0 && !dynamic_pointer_cast<SymbolicExpressionCoefficientFunction>(cf);
+  }
+
+  shared_ptr<CoefficientFunction> NativeCoefficientValue(
+      shared_ptr<CoefficientFunction> cf)
+  {
+    if (!cf)
+      throw Exception("NativeCoefficientValue: input is null");
+    while (auto tensor = dynamic_pointer_cast<TensorFieldCoefficientFunction>(cf))
+      cf = tensor->GetFullCoefficient();
+
+    // Unwrap one semantic layer only. Recursively flattening a shared chain
+    // here would revisit every descendant whenever a parent is rebuilt and
+    // turn linear DAG construction into quadratic work.
+    if (auto symbolic = dynamic_pointer_cast<SymbolicExpressionCoefficientFunction>(cf))
+      cf = symbolic->NativeEvaluator();
+
+    while (auto tensor = dynamic_pointer_cast<TensorFieldCoefficientFunction>(cf))
+      cf = tensor->GetFullCoefficient();
+    return cf;
+  }
+
+  void TraverseSemanticDAG(
+      const shared_ptr<CoefficientFunction> &cf,
+      const function<void(CoefficientFunction &)> &func)
+  {
+    std::set<const CoefficientFunction *> seen;
+    function<void(const shared_ptr<CoefficientFunction> &)> visit =
+        [&](const shared_ptr<CoefficientFunction> &node)
+    {
+      if (!node || !seen.insert(node.get()).second)
+        return;
+      if (auto symbolic =
+              dynamic_pointer_cast<SymbolicExpressionCoefficientFunction>(node))
+      {
+        for (auto operand : symbolic->SemanticOperands())
+          visit(operand);
+      }
+      else
+      {
+        for (auto input : node->InputCoefficientFunctions())
+          visit(input);
+      }
+      func(*node);
+    };
+    visit(cf);
   }
 
   // Retain Jacobian columns even when their current evaluations are all zero.
@@ -154,11 +217,16 @@ namespace ngfem
         const Array<shared_ptr<CoefficientFunction>> &columns, const Array<int> &dims)
     {
       return MakeVectorialCoefficientFunction(Array<shared_ptr<CoefficientFunction>>(columns))
-          ->Reshape(columns.Size(), columns[0]->Dimension())->Transpose()->Reshape(dims);
+          ->Reshape(columns.Size(), columns[0]->Dimension())
+          ->Transpose()
+          ->Reshape(dims);
     }
     shared_ptr<CoefficientFunction> Rebuild(
         const Array<shared_ptr<CoefficientFunction>> &inputs) const override
-    { return make_shared<SymbolicJacobianCoefficientFunction>(inputs, dimensions); }
+    {
+      return make_shared<SymbolicJacobianCoefficientFunction>(inputs, dimensions);
+    }
+
   public:
     SymbolicJacobianCoefficientFunction(
         const Array<shared_ptr<CoefficientFunction>> &columns, const Array<int> &dims)
@@ -168,9 +236,11 @@ namespace ngfem
     shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
                                          shared_ptr<CoefficientFunction> dir) const override
     {
-      if (this == var) return dir;
+      if (this == var)
+        return dir;
       Array<shared_ptr<CoefficientFunction>> columns;
-      for (auto operand : operands) columns.Append(operand->Diff(var, dir));
+      for (auto operand : operands)
+        columns.Append(operand->Diff(var, dir));
       return Rebuild(columns);
     }
   };
@@ -179,8 +249,10 @@ namespace ngfem
       const CoefficientFunction *var, T_DJC &cache) const
   {
     auto self = const_pointer_cast<CoefficientFunction>(shared_from_this());
-    if (auto it = cache.find(self); it != cache.end()) return it->second;
-    if (this == var) return IdentityCF(Dimensions());
+    if (auto it = cache.find(self); it != cache.end())
+      return it->second;
+    if (this == var)
+      return IdentityCF(Dimensions());
     Array<shared_ptr<CoefficientFunction>> columns(var->Dimension());
     for (size_t i : Range(columns))
       columns[i] = Diff(var, UnitVectorCF(var->Dimension(), int(i))->Reshape(var->Dimensions()));
@@ -190,6 +262,7 @@ namespace ngfem
   }
 
   static ngcore::RegisterClassForArchive<SymbolicJacobianCoefficientFunction,
-                                         CoefficientFunction> reg_symbolic_jacobian;
+                                         CoefficientFunction>
+      reg_symbolic_jacobian;
 
 }
