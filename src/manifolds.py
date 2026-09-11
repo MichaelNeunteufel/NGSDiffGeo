@@ -336,7 +336,7 @@ class HyperbolicH2:
     def __init__(self):
         self.metric = TensorField(1 / ngsolve.y**2 * ngsolve.Id(2), "11")
         self.chr1 = (
-            -1 / ngsolve.y**3 * ngsolve.CF((0, -1, 1, 0, 1, 0, 0, -1), dims=(2, 2, 2))
+            -1 / ngsolve.y**3 * ngsolve.CF((0, -1, 1, 0, 1, 0, 0, 1), dims=(2, 2, 2))
         )
         self.chr2 = (
             -1 / ngsolve.y * ngsolve.CF((0, -1, 1, 0, 1, 0, 0, 1), dims=(2, 2, 2))
@@ -443,12 +443,8 @@ class HyperbolicH3:
         # G_{ij}=R_{ij}-0.5*g_{ij}R
         self.Einstein = TensorField(1 / ngsolve.z**2 * ngsolve.Id(3), "11")
         self.Riemann = DoubleForm(
-            1
-            / ngsolve.z**4
-            * (
-                Einsum("ik,jl->ijkl", self.metric, self.metric)
-                - Einsum("il,jk->ijkl", self.metric, self.metric)
-            ),
+            Einsum("ik,jl->ijkl", self.metric, self.metric)
+            - Einsum("il,jk->ijkl", self.metric, self.metric),
             dim=3,
             p=2,
             q=2,
