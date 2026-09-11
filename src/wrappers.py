@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import importlib
 import numbers
+import warnings
 import ngsolve
 
 _cpp = importlib.import_module(".ngsdiffgeo", __package__)
@@ -1966,7 +1967,7 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         out = _CPP_RiemannianManifold.Cross(self, tf1, tf2)
         return as_vectorfield(out)
 
-    def CovDeriv(self, tf, vb=None, compile_inner=False):
+    def CovDerivative(self, tf, vb=None, compile_inner=False):
         """Apply the covariant derivative to a tensor field.
 
         Use ``compile_inner="graph"`` to opt into NGSolve graph compilation of
@@ -1974,14 +1975,30 @@ class RiemannianManifold(_CPP_RiemannianManifold):
         """
         compile_inner_graph = _parse_compile_inner(compile_inner)
         vb = ngsolve.VOL if vb is None else vb
-        out = _CPP_RiemannianManifold.CovDeriv(
+        out = _CPP_RiemannianManifold.CovDerivative(
             self, tf, vb, compile_inner_graph
         )
         return as_tensorfield(out)
 
-    def CovHesse(self, tf):
-        out = _CPP_RiemannianManifold.CovHesse(self, tf)
+    def CovDeriv(self, tf, vb=None, compile_inner=False):
+        warnings.warn(
+            "CovDeriv is deprecated; use CovDerivative instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.CovDerivative(tf, vb=vb, compile_inner=compile_inner)
+
+    def CovHessian(self, tf):
+        out = _CPP_RiemannianManifold.CovHessian(self, tf)
         return as_tensorfield(out)
+
+    def CovHesse(self, tf):
+        warnings.warn(
+            "CovHesse is deprecated; use CovHessian instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.CovHessian(tf)
 
     def CovCurl(self, tf):
         out = _CPP_RiemannianManifold.CovCurl(self, tf)

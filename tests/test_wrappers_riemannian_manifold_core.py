@@ -158,6 +158,27 @@ def test_normal_sign_flips_boundary_normal():
     assert l2_norm_bnd(mf_pos.normal + mf_neg.normal, mesh) < 1e-8
 
 
+@pytest.mark.parametrize("normal_sign", [0, 2, -0.5, float("nan")])
+def test_normal_sign_rejects_values_other_than_unit_orientation(normal_sign):
+    with pytest.raises(Exception, match="normal_sign"):
+        dg.RiemannianManifold(Id(2), normal_sign=normal_sign)
+
+
+def test_canonical_covariant_names_and_compatibility_aliases():
+    manifold = dg.RiemannianManifold(Id(2))
+    scalar = dg.ScalarField(x + y, dim=2)
+
+    derivative = manifold.CovDerivative(scalar)
+    hessian = manifold.CovHessian(scalar)
+    with pytest.warns(DeprecationWarning, match="CovDerivative"):
+        old_derivative = manifold.CovDeriv(scalar)
+    with pytest.warns(DeprecationWarning, match="CovHessian"):
+        old_hessian = manifold.CovHesse(scalar)
+
+    assert derivative.covariant_indices == old_derivative.covariant_indices
+    assert hessian.covariant_indices == old_hessian.covariant_indices
+
+
 def test_riemann_sign_flips_tensor():
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.3))
     metric = dg.Sphere2().metric
