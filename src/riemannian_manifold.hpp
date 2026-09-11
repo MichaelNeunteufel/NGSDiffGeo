@@ -17,28 +17,28 @@ namespace ngfem
     class DoubleFormCoefficientFunction;
 
     /**
-     * @class RiemannianManifold
-     * @brief Represents a Riemannian manifold with various geometric and differential properties.
+     * Metric-dependent tensor algebra and differential geometry in dimension 2 or 3.
      *
-     * This class encapsulates the properties and operations related to a Riemannian manifold,
-     * including metric tensors, Christoffel symbols, curvature tensors, and various covariant
-     * differential operators.
+     * The metric may be an ordinary CoefficientFunction or a Regge trial/grid
+     * function. Curvature data is initialized lazily. Public operations validate
+     * tensor dimensions and retain semantic wrapper operands so later Diff and
+     * Replace transformations remain valid for zero-valued inputs.
      */
     class RiemannianManifold
     {
         // Dimension of the manifold
         int dim;
+        // Retained for future trial-dependent dispatch and policy checks.
         bool has_trial;
         bool is_regge;
         bool is_proxy;
-        double normal_sign;
         bool change_riemann_sign;
-        shared_ptr<ProxyFunction> regge_proxy;
         shared_ptr<ngcomp::FESpace> regge_space;
 
         // metric tensor, its inverse, derivative, and volume forms
         shared_ptr<CoefficientFunction> g;
         shared_ptr<CoefficientFunction> g_inv;
+        // Share the determinant node between all present and future consumers.
         shared_ptr<CoefficientFunction> det_g;
         shared_ptr<CoefficientFunction> g_F;
         shared_ptr<CoefficientFunction> g_F_inv;
@@ -66,7 +66,6 @@ namespace ngfem
         mutable shared_ptr<TensorFieldCoefficientFunction> Scalar;
 
         mutable shared_ptr<DoubleFormCoefficientFunction> SFF;
-        mutable shared_ptr<DoubleFormCoefficientFunction> SFF_restricted;
         shared_ptr<ScalarFieldCoefficientFunction> AngleDefect;
 
         // Euclidean and g-normalized normal and tangent vectors
@@ -77,9 +76,6 @@ namespace ngfem
         shared_ptr<VectorFieldCoefficientFunction> g_tv;
         shared_ptr<VectorFieldCoefficientFunction> g_nv_BBND[2];
         shared_ptr<VectorFieldCoefficientFunction> g_cnv[2];
-
-        shared_ptr<CoefficientFunction> P_n;
-        shared_ptr<CoefficientFunction> P_F;
 
         shared_ptr<CoefficientFunction> P_F_g;
         shared_ptr<CoefficientFunction> P_E_g;
@@ -92,11 +88,9 @@ namespace ngfem
         void EnsureCurvature() const;
 
     public:
-        /**
-         * @fn RiemannianManifold::RiemannianManifold(shared_ptr<CoefficientFunction> _g)
-         * @brief Constructor for RiemannianManifold.
-         * @param _g The metric tensor.
-         */
+        /// Construct from a non-null square metric in dimension 2 or 3.
+        /// normal_sign selects orientation. Change_riemann_sign selects the
+        /// alternate supported curvature convention.
         RiemannianManifold(shared_ptr<CoefficientFunction> _g, double normal_sign = 1.0, bool change_riemann_sign = false);
 
         int GetDimension() const { return dim; }
@@ -110,13 +104,16 @@ namespace ngfem
 
         shared_ptr<CoefficientFunction> GetMetricInverse() const;
 
+        /// Return the stored volume density for VOL, BND, BBND, or BBBND.
         shared_ptr<CoefficientFunction> GetVolumeForm(VorB vb) const;
         int Dimension() const { return dim; }
 
-        // -------  musical isomorphisms -------
+        // ------- musical isomorphisms -------
+        /// Raise one or more covariant axes using the metric selected by vb.
         shared_ptr<TensorFieldCoefficientFunction> Raise(shared_ptr<TensorFieldCoefficientFunction> c1, size_t index = 0, VorB vb = VOL) const;
         shared_ptr<TensorFieldCoefficientFunction> Raise(shared_ptr<TensorFieldCoefficientFunction> c1, const std::vector<size_t> &indices, VorB vb = VOL) const;
 
+        /// Lower one or more contravariant axes using the metric selected by vb.
         shared_ptr<TensorFieldCoefficientFunction> Lower(shared_ptr<TensorFieldCoefficientFunction> c1, size_t index = 0, VorB vb = VOL) const;
         shared_ptr<TensorFieldCoefficientFunction> Lower(shared_ptr<TensorFieldCoefficientFunction> c1, const std::vector<size_t> &indices, VorB vb = VOL) const;
 
@@ -152,6 +149,7 @@ namespace ngfem
         shared_ptr<ScalarFieldCoefficientFunction> GetAngleDefect() const;
 
         shared_ptr<TensorFieldCoefficientFunction> ProjectTensorToEuclideanTangent(shared_ptr<TensorFieldCoefficientFunction> tf) const;
+        /// Project with mode 0=identity, 1=face tangent, 2=normal, or 3=edge tangent.
         shared_ptr<TensorFieldCoefficientFunction> ProjectTensor(shared_ptr<TensorFieldCoefficientFunction> tf, int mode) const;
 
         // ------- Normal and tangent vectors --------
@@ -178,6 +176,9 @@ namespace ngfem
         shared_ptr<DoubleFormCoefficientFunction> CovCodifferential2(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL, bool compile_inner = false) const;
 
         // ------- Covariant differential operators --------
+        /// Prepend a covariant derivative axis. Only VOL and BND are supported.
+        /// compile_inner compiles the native value graph and therefore does not
+        /// retain wrapper-target transformations across that compiled boundary.
         shared_ptr<TensorFieldCoefficientFunction> CovDerivative(shared_ptr<TensorFieldCoefficientFunction> c1, VorB vb = VOL, bool compile_inner = false) const;
 
         shared_ptr<TensorFieldCoefficientFunction> CovHessian(shared_ptr<TensorFieldCoefficientFunction> c1) const;
@@ -199,6 +200,7 @@ namespace ngfem
         shared_ptr<TensorFieldCoefficientFunction> LichnerowiczLaplacian(shared_ptr<TensorFieldCoefficientFunction> c1) const;
 
         // ------- Algebraic operations --------
+        /// Contract two tensor axes, inserting a metric for equal variance.
         shared_ptr<TensorFieldCoefficientFunction> Trace(shared_ptr<TensorFieldCoefficientFunction> c1, size_t index1 = 0, size_t index2 = 1, VorB vb = VOL) const;
         shared_ptr<CoefficientFunction> Trace(shared_ptr<DoubleFormCoefficientFunction> c1, size_t l = 1, VorB vb = VOL) const;
         shared_ptr<CoefficientFunction> TraceSigma(shared_ptr<DoubleFormCoefficientFunction> c1, shared_ptr<DoubleFormCoefficientFunction> sigma, VorB vb = VOL) const;
@@ -211,6 +213,8 @@ namespace ngfem
         shared_ptr<TensorFieldCoefficientFunction> S_op(shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb = VOL) const;
         shared_ptr<DoubleFormCoefficientFunction> S_op(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL) const;
         shared_ptr<DoubleFormCoefficientFunction> s_op(shared_ptr<DoubleFormCoefficientFunction> tf, VorB vb = VOL) const;
+        /// Apply slot modes 0=identity, 1=face tangent, 2=normal contraction,
+        /// 3=edge tangent, or 4=conormal contraction.
         shared_ptr<DoubleFormCoefficientFunction> ProjectDoubleForm(shared_ptr<DoubleFormCoefficientFunction> tf, int left_mode, int right_mode,
                                                                     shared_ptr<VectorFieldCoefficientFunction> normal = nullptr,
                                                                     shared_ptr<VectorFieldCoefficientFunction> conormal = nullptr,
