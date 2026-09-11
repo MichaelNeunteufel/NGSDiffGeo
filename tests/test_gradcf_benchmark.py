@@ -10,11 +10,12 @@ import pytest
 @pytest.mark.parametrize(
     ("mode", "expected_simd"),
     [
+        ("volume", True),
         ("element-boundary", True),
         ("surface-boundary", False),
     ],
 )
-def test_gradcf_benchmark_exercises_boundary_modes(mode, expected_simd):
+def test_gradcf_benchmark_exercises_all_modes(mode, expected_simd):
     benchmark = (
         Path(__file__).resolve().parents[1]
         / "benchmarks"

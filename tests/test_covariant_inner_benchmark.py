@@ -4,8 +4,11 @@ from pathlib import Path
 import subprocess
 import sys
 
+import pytest
 
-def test_covariant_inner_benchmark_smoke():
+
+@pytest.mark.parametrize("simd", [False, True])
+def test_covariant_inner_benchmark_smoke(simd):
     benchmark = (
         Path(__file__).resolve().parents[1]
         / "benchmarks"
@@ -27,6 +30,7 @@ def test_covariant_inner_benchmark_smoke():
             "1",
             "--construction-iterations",
             "1",
+            "--simd" if simd else "--no-simd",
             "--json",
         ],
         check=False,
@@ -38,12 +42,13 @@ def test_covariant_inner_benchmark_smoke():
 
     assert process.returncode == 0, process.stderr
     report = json.loads(process.stdout)
+    assert report["simd_requested"] is simd
     assert report["relative_value_error"] < 2e-8
     assert report["input_graph"]["unique_nodes"] > 0
     assert set(report["construction"]) == {"default", "graph"}
     assert set(report["assembly"]) == {"default", "graph"}
-    assert report["assembly"]["default"]["simd_active"]
-    assert report["assembly"]["graph"]["simd_active"]
+    assert report["assembly"]["default"]["simd_active"] is simd
+    assert report["assembly"]["graph"]["simd_active"] is simd
     assert report["break_even_assemblies"] is None or report[
         "break_even_assemblies"
     ] >= 0
