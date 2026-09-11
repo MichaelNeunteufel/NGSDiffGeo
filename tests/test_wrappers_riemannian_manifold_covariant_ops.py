@@ -85,7 +85,7 @@ def test_cov_der_scalar():
     sf = dg.ScalarField(f, dim=2)
 
     term1 = cov_der_s(f, mesh, gf_metric, cov=True)
-    term2 = mf.CovDeriv(sf)
+    term2 = mf.CovDerivative(sf)
     assert Integrate(term1, mesh) == pytest.approx(Integrate(term2, mesh))
 
     return
@@ -103,11 +103,11 @@ def test_cov_der_vector():
     ov = dg.OneForm(v)
 
     term1 = cov_der_v(v, mesh, gf_metric, contra=True)
-    term2 = mf.CovDeriv(vv)
+    term2 = mf.CovDerivative(vv)
     assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 5e-7
 
     term1 = cov_der_v(v, mesh, gf_metric, contra=False)
-    term2 = mf.CovDeriv(ov)
+    term2 = mf.CovDerivative(ov)
     assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 5e-7
 
     return
@@ -127,19 +127,19 @@ def test_cov_der_matrix():
     Amix2 = dg.TensorField(A, "01")
 
     term1 = cov_der_t(A, mesh, gf_metric, contra=(True, True))
-    term2 = mf.CovDeriv(Acon)
+    term2 = mf.CovDerivative(Acon)
     assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 5e-7
 
     term1 = cov_der_t(A, mesh, gf_metric, contra=(False, False))
-    term2 = mf.CovDeriv(Acov)
+    term2 = mf.CovDerivative(Acov)
     assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 5e-7
 
     term1 = cov_der_t(A, mesh, gf_metric, contra=(False, True))
-    term2 = mf.CovDeriv(Amix1)
+    term2 = mf.CovDerivative(Amix1)
     assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 5e-7
 
     term1 = cov_der_t(A, mesh, gf_metric, contra=(True, False))
-    term2 = mf.CovDeriv(Amix2)
+    term2 = mf.CovDerivative(Amix2)
     assert sqrt(Integrate(InnerProduct(term1 - term2, term1 - term2), mesh)) < 5e-7
 
     return
@@ -174,7 +174,7 @@ def test_integration_by_parts_2d():
 
     assert (
         abs(
-            Integrate(mf.InnerProduct(mf.CovDeriv(f), X) * omega_T * dx, mesh)
+            Integrate(mf.InnerProduct(mf.CovDerivative(f), X) * omega_T * dx, mesh)
             - Integrate(
                 -mf.InnerProduct(mf.CovDiv(X), f) * omega_T * dx
                 + f * mf.InnerProduct(X, mf.normal) * omega_S * ds,
@@ -186,7 +186,7 @@ def test_integration_by_parts_2d():
 
     assert (
         abs(
-            Integrate(mf.InnerProduct(mf.CovDeriv(X), A) * omega_T * dx, mesh)
+            Integrate(mf.InnerProduct(mf.CovDerivative(X), A) * omega_T * dx, mesh)
             - Integrate(
                 -mf.InnerProduct(mf.CovDiv(A), X) * omega_T * dx
                 + mf.InnerProduct(dg.TensorProduct(mf.normal, X), A) * omega_S * ds,
@@ -250,11 +250,11 @@ def test_integration_by_parts_2d():
     assert (
         abs(
             Integrate(
-                mf.InnerProduct(mf.CovDiv(B), mf.CovDeriv(f)) * omega_T * dx, mesh
+                mf.InnerProduct(mf.CovDiv(B), mf.CovDerivative(f)) * omega_T * dx, mesh
             )
             - Integrate(
-                -mf.InnerProduct(B, mf.CovHesse(f)) * omega_T * dx
-                + mf.InnerProduct(B, dg.TensorProduct(mf.normal, mf.CovDeriv(f)))
+                -mf.InnerProduct(B, mf.CovHessian(f)) * omega_T * dx
+                + mf.InnerProduct(B, dg.TensorProduct(mf.normal, mf.CovDerivative(f)))
                 * omega_S
                 * dx(element_boundary=True),
                 mesh,
@@ -265,10 +265,10 @@ def test_integration_by_parts_2d():
 
     assert (
         abs(
-            Integrate(mf.InnerProduct(mf.Trace(mf.CovHesse(f)), g) * omega_T * dx, mesh)
+            Integrate(mf.InnerProduct(mf.Trace(mf.CovHessian(f)), g) * omega_T * dx, mesh)
             - Integrate(
-                -mf.InnerProduct(mf.CovDeriv(f), mf.CovDeriv(g)) * omega_T * dx
-                + mf.InnerProduct(mf.CovDeriv(f), mf.normal)
+                -mf.InnerProduct(mf.CovDerivative(f), mf.CovDerivative(g)) * omega_T * dx
+                + mf.InnerProduct(mf.CovDerivative(f), mf.normal)
                 * g
                 * omega_S
                 * dx(element_boundary=True),

@@ -65,7 +65,7 @@ def test_proxy_hessian_matches_native(operation, simd, custom_gradient, make_uni
     native = u.Operator("hesse")
     gradient = dg.GradCF(dg.ScalarField(u, dim=2), 2) if custom_gradient else Grad(u)
     if operation == "covariant":
-        actual = dg.RiemannianManifold(Id(2)).CovHesse(dg.ScalarField(u, dim=2))
+        actual = dg.RiemannianManifold(Id(2)).CovHessian(dg.ScalarField(u, dim=2))
     elif operation == "component":
         actual = dg.GradCF(gradient[0], 2)
         native = CF((native[0, 0], native[1, 0]))

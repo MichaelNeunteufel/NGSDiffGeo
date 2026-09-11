@@ -55,9 +55,9 @@ def test_covderiv_graph_compilation_matches_default_and_preserves_metadata(mesh)
         "10",
     )
 
-    default = manifold.CovDeriv(tensor)
-    explicit_default = manifold.CovDeriv(tensor, compile_inner=False)
-    compiled = manifold.CovDeriv(tensor, compile_inner="graph")
+    default = manifold.CovDerivative(tensor)
+    explicit_default = manifold.CovDerivative(tensor, compile_inner=False)
+    compiled = manifold.CovDerivative(tensor, compile_inner="graph")
 
     assert tuple(compiled.dims) == tuple(default.dims)
     assert compiled.covariant_indices == default.covariant_indices == "110"
@@ -149,7 +149,7 @@ def test_covariant_operators_reject_unknown_compile_inner_modes(compile_inner):
     for operation in (
         lambda: manifold.d_cov(form, compile_inner=compile_inner),
         lambda: manifold.delta_cov(form, compile_inner=compile_inner),
-        lambda: manifold.CovDeriv(tensor, compile_inner=compile_inner),
+        lambda: manifold.CovDerivative(tensor, compile_inner=compile_inner),
     ):
         with pytest.raises(
             ValueError,
@@ -188,7 +188,7 @@ def test_graph_compilation_rejects_trial_function_input(mesh):
         Exception,
         match="inner graph compilation is not supported for trial/test functions",
     ):
-        manifold.CovDeriv(scalar, compile_inner="graph")
+        manifold.CovDerivative(scalar, compile_inner="graph")
 
 
 @pytest.mark.parametrize("compile_inner", [False, "graph"])
@@ -196,4 +196,4 @@ def test_covderiv_rejects_null_input(compile_inner):
     manifold = dg.RiemannianManifold(Id(2))
 
     with pytest.raises(Exception, match="CovDerivative: input must be non-null"):
-        manifold.CovDeriv(None, compile_inner=compile_inner)
+        manifold.CovDerivative(None, compile_inner=compile_inner)

@@ -81,14 +81,14 @@ def test_covariant_derivative_preserves_zero_wrapper_transformations(
     vector = dg.VectorField(CF((0, 0)))
     replacement = dg.VectorField(CF((x, y)))
 
-    expression = manifold.CovDeriv(vector)
+    expression = manifold.CovDerivative(vector)
     actual = (
         expression.Diff(vector, replacement)
         if action == "diff"
         else expression.Replace({vector: replacement})
     )
 
-    assert_l2_close(actual, manifold.CovDeriv(replacement), mesh, tol=2e-6)
+    assert_l2_close(actual, manifold.CovDerivative(replacement), mesh, tol=2e-6)
 
 
 @pytest.mark.parametrize("action", ["diff", "replace"])
