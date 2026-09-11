@@ -1,16 +1,22 @@
 """Smoke-test the benchmark interface without imposing timing thresholds."""
 
 import json
+from pathlib import Path
 import subprocess
 import sys
 
 
 def test_tensor_algebra_benchmark_smoke(tmp_path):
+    benchmark = (
+        Path(__file__).resolve().parents[1]
+        / "benchmarks"
+        / "benchmark_tensor_algebra.py"
+    )
     output = tmp_path / "report.json"
     subprocess.run(
         [
             sys.executable,
-            "benchmarks/benchmark_tensor_algebra.py",
+            str(benchmark),
             "--label",
             "smoke",
             "--maxh",

@@ -67,3 +67,4 @@ Components
    developer_tensor_fields
    developer_coefficient_grad
    developer_kforms
+   developer_riemannian_manifold

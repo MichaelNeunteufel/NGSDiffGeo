@@ -302,6 +302,18 @@ def _same_doubleform_degree(a, b):
     return da == db
 
 
+def _can_preserve_11_doubleform_refinement(double_form, tensor):
+    """A covariant matrix is intrinsically a (1,1) double form."""
+    return (
+        int(double_form.degree_left) == 1
+        and int(double_form.degree_right) == 1
+        and isinstance(tensor, _CPP_TensorField)
+        and not isinstance(tensor, _CPP_KForm)
+        and _tensorfield_covariance(tensor) == "11"
+        and tuple(tensor.dims) == tuple(double_form.dims)
+    )
+
+
 # ---------------- KForm factory + isinstance ----------------
 
 
@@ -505,7 +517,49 @@ class DoubleForm(_CPP_DoubleForm):
                 return neutral
             if self._is_overflow_zero_degree():
                 return self._formal_zero(reason=reason)
-        return self._wrap(_sum_coefficients(self, other, subtract=subtract))
+            return self._wrap(
+                _sum_coefficients(self, other, subtract=subtract)
+            )
+
+        if isinstance(other, _CPP_TensorField):
+            covariance = "1" * (self.degree_left + self.degree_right)
+            if _tensorfield_covariance(other) != covariance:
+                raise TypeError(
+                    "cannot add/subtract double forms and tensor fields "
+                    "with different variance"
+                )
+            if tuple(other.dims) != tuple(self.dims):
+                raise TypeError("tensor field shapes must match")
+
+            if _can_preserve_11_doubleform_refinement(self, other):
+                return self._wrap(
+                    _sum_coefficients(self, other, subtract=subtract)
+                )
+
+            # An arbitrary typed tensor does not carry a proof of separate
+            # alternation in the two double-form blocks.  Keep the sum typed,
+            # but deliberately discard the stronger DoubleForm refinement.
+            return as_tensorfield(
+                _sum_coefficients(self, other, subtract=subtract),
+                covariant_indices=covariance,
+            )
+
+        if isinstance(other, numbers.Number) or _is_scalarfield_like(other):
+            raise TypeError(
+                "cannot add/subtract a scalar and a non-scalar double form"
+            )
+
+        if isinstance(other, ngsolve.CoefficientFunction):
+            if tuple(other.dims) != tuple(self.dims):
+                raise TypeError("double-form coefficient shapes must match")
+            # Raw coefficient functions intentionally remain the untyped
+            # compatibility escape hatch and inherit this double-form's
+            # semantic metadata.
+            return self._wrap(
+                _sum_coefficients(self, other, subtract=subtract)
+            )
+
+        raise TypeError(f"unsupported double-form operand {type(other)!r}")
 
     def __add__(self, other):
         return self._add(other)
@@ -1320,7 +1374,17 @@ class _TensorFieldOperations:
 
     def _add(self, other, subtract=False):
         self._validate_addend(other)
-        return self._wrap(_sum_coefficients(self, other, subtract=subtract))
+        result = _sum_coefficients(self, other, subtract=subtract)
+        if isinstance(other, _CPP_DoubleForm) and (
+            _can_preserve_11_doubleform_refinement(other, self)
+        ):
+            return as_doubleform(
+                result,
+                p=other.degree_left,
+                q=other.degree_right,
+                dim=other.dim_space,
+            )
+        return self._wrap(result)
 
     def __add__(self, other):
         return self._add(other)

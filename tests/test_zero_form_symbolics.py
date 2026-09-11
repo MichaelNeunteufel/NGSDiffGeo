@@ -52,17 +52,25 @@ def _zero_operation(name):
     raise AssertionError(name)
 
 
-@pytest.mark.parametrize("name", [
+_ZERO_OPERATIONS = [
     "scale", "divide", "negate", "wedge", "star", "inv_star", "d",
     "scalar_star", "scalar_wedge", "top_star", "double_wedge", "double_star", "composed",
-])
-@pytest.mark.parametrize("action", ["diff", "replace", "jacobian"])
+]
+
+_ZERO_OPERATION_ACTIONS = [
+    pytest.param(name, action, id=f"{name}-{action}")
+    for name in _ZERO_OPERATIONS
+    for action in ("diff", "replace", "jacobian")
+    # d is a spatial differential operator, not a pointwise map.
+    if not (name == "d" and action == "jacobian")
+]
+
+
+@pytest.mark.parametrize(("name", "action"), _ZERO_OPERATION_ACTIONS)
 @pytest.mark.parametrize("roundtrip", [False, True])
 def test_zero_form_operation_keeps_symbolic_operand(
     name, action, roundtrip, make_unit_square_mesh
 ):
-    if name == "d" and action == "jacobian":
-        pytest.skip("spatial differentiation has no pointwise matrix Jacobian")
     a, result, direction, expected = _zero_operation(name)
     direction, expected = CF(direction), CF(expected)
     mesh = make_unit_square_mesh(maxh=0.7)
