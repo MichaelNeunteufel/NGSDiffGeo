@@ -1,9 +1,9 @@
 #ifndef RIEMANNIAN_MANIFOLD
 #define RIEMANNIAN_MANIFOLD
 
-// #include <fem.hpp>
 #include <coefficient.hpp>
 #include <fespace.hpp>
+#include <mutex>
 #include <symbolicintegrator.hpp>
 #include <vector>
 
@@ -50,7 +50,7 @@ namespace ngfem
         mutable shared_ptr<CoefficientFunction> g_F_inv_typed;
         mutable shared_ptr<CoefficientFunction> g_E_typed;
         mutable shared_ptr<CoefficientFunction> g_E_inv_typed;
-        mutable bool curvature_initialized;
+        mutable std::once_flag curvature_once;
         mutable shared_ptr<CoefficientFunction> g_deriv;
         shared_ptr<CoefficientFunction> vol[4];
 

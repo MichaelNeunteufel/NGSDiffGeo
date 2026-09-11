@@ -173,15 +173,17 @@ namespace ngfem
         // Native Regge operators omit the determinant normalization used by
         // the geometric curvature operator (Gauss curvature in dimension two).
         shared_ptr<TensorFieldCoefficientFunction> NormalizeReggeCurvature(
-            shared_ptr<CoefficientFunction> raw, shared_ptr<CoefficientFunction> metric, int dim)
+            shared_ptr<CoefficientFunction> raw, shared_ptr<CoefficientFunction> determinant, int dim)
         {
-            auto normalized = ScaleCoefficientCF(raw, 1 / DeterminantCF(metric));
+            auto normalized = ScaleCoefficientCF(raw, 1 / determinant);
             if (dim == 2)
                 return ScalarFieldCF(normalized, dim);
             return TensorFieldCF(normalized, "00");
         }
 
-        CurvatureSources FromProxy(shared_ptr<ProxyFunction> g_proxy, int dim, bool change_riemann_sign = false)
+        CurvatureSources FromProxy(shared_ptr<ProxyFunction> g_proxy,
+                                   shared_ptr<CoefficientFunction> determinant,
+                                   int dim, bool change_riemann_sign = false)
         {
             CurvatureSources src;
             src.g_deriv = g_proxy->GetAdditionalProxy("grad");
@@ -191,7 +193,8 @@ namespace ngfem
                 src.Riemann = DoubleFormCF(EinsumCF("ijkl->ijlk", {g_proxy->GetAdditionalProxy("Riemann")}), 2, 2, dim);
             else
                 src.Riemann = DoubleFormCF(g_proxy->GetAdditionalProxy("Riemann"), 2, 2, dim);
-            src.Curvature = NormalizeReggeCurvature(g_proxy->GetAdditionalProxy("curvature"), g_proxy, dim);
+            src.Curvature = NormalizeReggeCurvature(
+                g_proxy->GetAdditionalProxy("curvature"), determinant, dim);
             src.Ricci = DoubleFormCF(g_proxy->GetAdditionalProxy("Ricci"), 1, 1, dim);
             src.Einstein = DoubleFormCF(g_proxy->GetAdditionalProxy("Einstein"), 1, 1, dim);
             src.Scalar = ScalarFieldCF(g_proxy->GetAdditionalProxy("scalar"), dim);
@@ -200,7 +203,10 @@ namespace ngfem
             return src;
         }
 
-        CurvatureSources FromRegge(shared_ptr<ngcomp::GridFunction> gf, shared_ptr<ngcomp::FESpace> regge_space, int dim, bool change_riemann_sign = false)
+        CurvatureSources FromRegge(shared_ptr<ngcomp::GridFunction> gf,
+                                   shared_ptr<ngcomp::FESpace> regge_space,
+                                   shared_ptr<CoefficientFunction> determinant,
+                                   int dim, bool change_riemann_sign = false)
         {
             CurvatureSources src;
             auto diffop_grad = regge_space->GetAdditionalEvaluators()["grad"];
@@ -233,7 +239,7 @@ namespace ngfem
 
             auto Curvature_gf = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop_curvature);
             Curvature_gf->SetDimensions(diffop_curvature->Dimensions());
-            src.Curvature = NormalizeReggeCurvature(Curvature_gf, gf, dim);
+            src.Curvature = NormalizeReggeCurvature(Curvature_gf, determinant, dim);
 
             auto Ricci_gf = make_shared<ngcomp::GridFunctionCoefficientFunction>(gf, diffop_Ricci);
             Ricci_gf->SetDimensions(diffop_Ricci->Dimensions());
@@ -555,38 +561,39 @@ namespace ngfem
 
     void RiemannianManifold::EnsureCurvature() const
     {
-        if (curvature_initialized)
-            return;
-
-        CurvatureSources sources;
-        if (is_regge)
+        std::call_once(curvature_once, [this]
         {
-            if (is_proxy)
+            CurvatureSources sources;
+            if (is_regge)
             {
-                auto g_proxy = dynamic_pointer_cast<ProxyFunction>(g);
-                sources = FromProxy(g_proxy, dim, change_riemann_sign);
+                if (is_proxy)
+                {
+                    auto g_proxy = dynamic_pointer_cast<ProxyFunction>(g);
+                    sources = FromProxy(
+                        g_proxy, det_g, dim, change_riemann_sign);
+                }
+                else
+                {
+                    auto gf = dynamic_pointer_cast<ngcomp::GridFunction>(g);
+                    sources = FromRegge(
+                        gf, regge_space, det_g, dim, change_riemann_sign);
+                }
             }
             else
             {
-                auto gf = dynamic_pointer_cast<ngcomp::GridFunction>(g);
-                sources = FromRegge(gf, regge_space, dim, change_riemann_sign);
+                sources = FromCF(*this, g, g_inv, change_riemann_sign);
             }
-        }
-        else
-        {
-            sources = FromCF(*this, g, g_inv, change_riemann_sign);
-        }
 
-        g_deriv = sources.g_deriv;
-        chr1 = sources.chr1;
-        chr2 = sources.chr2;
-        Riemann = sources.Riemann;
-        Curvature = sources.Curvature;
-        Ricci = sources.Ricci;
-        Einstein = sources.Einstein;
-        Scalar = sources.Scalar;
-        SFF = DoubleFormCF(EinsumCF("ia,ijk,k,jb->ab", {P_F_g, chr1->Reshape(Array<int>({dim, dim, dim})), g_nv, P_F_g}), 1, 1, dim);
-        curvature_initialized = true;
+            g_deriv = sources.g_deriv;
+            chr1 = sources.chr1;
+            chr2 = sources.chr2;
+            Riemann = sources.Riemann;
+            Curvature = sources.Curvature;
+            Ricci = sources.Ricci;
+            Einstein = sources.Einstein;
+            Scalar = sources.Scalar;
+            SFF = DoubleFormCF(EinsumCF("ia,ijk,k,jb->ab", {P_F_g, chr1->Reshape(Array<int>({dim, dim, dim})), g_nv, P_F_g}), 1, 1, dim);
+        });
     }
 
     shared_ptr<CoefficientFunction> RiemannianManifold::GetMetric() const
