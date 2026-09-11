@@ -252,14 +252,6 @@ namespace ngfem
                 throw Exception(string(name) + ": slot must be 0/1 or 'left'/'right'");
 
             auto cov_der = M.CovDerivative(tf, vb, compile_inner);
-            // Temporarily disabled for investigating raw-expression crashes.
-            // The connection terms can produce very large mixed coefficient
-            // expression trees. Re-enable this block to compare against the
-            // compiled/nonzero-pattern barrier behavior.
-            // cov_der = TensorFieldCF(
-            //     make_shared<NonZeroPatternBarrierCoefficientFunction>(
-            //         Compile(cov_der->GetFullCoefficient(), false, 0)),
-            //     cov_der->GetCovariantIndices());
 
             auto project_if_needed = [&](shared_ptr<DoubleFormCoefficientFunction> df)
             {
@@ -282,7 +274,8 @@ namespace ngfem
                 {
                     auto alt = BlockAlternationByPermutationCF(cov_der, total, 0, p + 1);
                     double scale = 1.0 / double(Factorial(p));
-                    auto out = scale * alt;
+                    auto out = ScaleCoefficientCF(
+                        alt, make_shared<ConstantCoefficientFunction>(scale));
                     return project_if_needed(DoubleFormCF(out, p + 1, q, dim));
                 }
 
@@ -297,7 +290,8 @@ namespace ngfem
                 auto reordered = PermuteTensorCF(cov_der, order);
                 auto alt = BlockAlternationByPermutationCF(reordered, total, p, q + 1);
                 double scale = 1.0 / double(Factorial(q));
-                auto out = scale * alt;
+                auto out = ScaleCoefficientCF(
+                    alt, make_shared<ConstantCoefficientFunction>(scale));
                 return project_if_needed(DoubleFormCF(out, p, q + 1, dim));
             }
 
@@ -309,12 +303,14 @@ namespace ngfem
             if (slot == 0)
             {
                 auto traced = M.Trace(cov_der, 0, 1, vb);
-                auto out = (-1.0) * traced;
+                auto out = ScaleCoefficientCF(
+                    traced, make_shared<ConstantCoefficientFunction>(-1.0));
                 return project_if_needed(DoubleFormCF(out, p - 1, q, dim));
             }
 
             auto traced = M.Trace(cov_der, 0, size_t(p + 1), vb);
-            auto out = (-1.0) * traced;
+            auto out = ScaleCoefficientCF(
+                traced, make_shared<ConstantCoefficientFunction>(-1.0));
             return project_if_needed(DoubleFormCF(out, p, q - 1, dim));
         }
 
@@ -345,8 +341,7 @@ namespace ngfem
         // check if _g itself is a Regge trial function
         if (dynamic_pointer_cast<ProxyFunction>(g))
         {
-            // cout << "In RMF: g is a ProxyFunction" << endl;
-            regge_proxy = dynamic_pointer_cast<ProxyFunction>(g);
+            auto regge_proxy = dynamic_pointer_cast<ProxyFunction>(g);
             is_proxy = true;
             is_regge = true;
             if (regge_proxy->GetFESpace()->GetClassName().find(string("HCurlCurlFESpace")) == string::npos)
@@ -355,8 +350,6 @@ namespace ngfem
         }
         else if (auto gf = dynamic_pointer_cast<ngcomp::GridFunction>(g))
         {
-            // cout << "In RMF: g is a GridFunction from space " << gf->GetFESpace()->GetClassName() << endl;
-
             is_regge = true;
             if (gf->GetFESpace()->GetClassName().find(string("HCurlCurlFESpace")) == string::npos)
                 throw Exception("In RMF: GridFunction must be from HCurlCurlFESpace");
@@ -375,10 +368,7 @@ namespace ngfem
         vol[VOL] = sqrt(det_g);
         auto one_cf = make_shared<ConstantCoefficientFunction>(1.0);
         tv = TangentialVectorCF(dim, false);
-        nv = normal_sign * NormalVectorCF(dim);
-        auto nv_mat = nv->Reshape(Array<int>({dim, 1}));
-        P_n = nv_mat * TransposeCF(nv_mat);
-        P_F = IdentityCF(dim) - P_n;
+        nv = normal_sign_ * NormalVectorCF(dim);
 
         vol[BND] = one_cf;
         vol[BBND] = one_cf;
@@ -392,16 +382,9 @@ namespace ngfem
             vol[BND] = sqrt(g_tv_norm);
             g_tv = VectorFieldCF(1 / vol[BND] * tv);
 
-            // more efficient?
-            // auto tv_mat = tv->Reshape(Array<int>({dim, 1}));
-            // auto P_F = tv_mat * TransposeCF(tv_mat);
-            // g_F = InnerProduct(g * tv, tv) * P_F;
-            // g_F_inv = 1/InnerProduct(g * tv, tv) * P_F;
             shared_ptr<OneFormCoefficientFunction> g_nv_lower = OneFormCF(vol[VOL] / vol[BND] * nv);
             g_nv = dynamic_pointer_cast<VectorFieldCoefficientFunction>(Raise(g_nv_lower));
 
-            // g_F = P_F * g * P_F;
-            // g_F_inv = P_F * InverseCF(g_F + P_n) * P_F;
             g_F = g - TensorProduct(g_nv_lower, g_nv_lower);
             g_F_inv = g_inv - TensorProduct(g_nv, g_nv);
             g_E = one_cf;
@@ -429,8 +412,6 @@ namespace ngfem
             shared_ptr<OneFormCoefficientFunction> g_nv_lower = OneFormCF(vol[VOL] / vol[BND] * nv);
             g_nv = dynamic_pointer_cast<VectorFieldCoefficientFunction>(Raise(g_nv_lower));
 
-            // g_F = P_F * g * P_F;
-            // g_F_inv = P_F * InverseCF(g_F + P_n) * P_F;
             g_F = g - TensorProduct(g_nv_lower, g_nv_lower);
             g_F_inv = g_inv - TensorProduct(g_nv, g_nv);
 
@@ -456,11 +437,6 @@ namespace ngfem
             AngleDefect = ScalarFieldCF(
                 acos(InnerProduct(n_euc_0, n_euc_1)) - acos(InnerProduct(g * g_nv_BBND[0], g_nv_BBND[1])),
                 dim);
-
-            // auto tv_mat = tv->Reshape(Array<int>({dim, 1}));
-            // auto P_E = tv_mat * TransposeCF(tv_mat);
-            // g_E = g_tv_norm * P_E;
-            // g_E_inv = 1 / g_tv_norm * P_E;
 
             shared_ptr<OneFormCoefficientFunction> g_tv_lower = OneFormCF(g * g_tv);
             g_E = TensorProduct(g_tv_lower, g_tv_lower);
@@ -593,9 +569,24 @@ namespace ngfem
         std::string eins = lhs + "," + std::string(1, a) + std::string(1, b) + "->" + sig;
 
         auto mout = m.WithCovariant(index, false);
-        auto out_cf = SymbolicEinsumCF(eins, {static_pointer_cast<CoefficientFunction>(tf), metric_inv});
+        if (m.Rank() == 1 && index == 0)
+        {
+            auto out_cf = SymbolicMatrixProductCF(metric_inv, tf);
+            if (dynamic_pointer_cast<OneFormCoefficientFunction>(tf))
+                return VectorFieldCF(out_cf);
+            return TensorFieldCF(out_cf, mout);
+        }
+        if (m.Rank() == 2)
+        {
+            auto out_cf = index == 0
+                              ? SymbolicMatrixProductCF(metric_inv, tf)
+                              : SymbolicMatrixProductCF(tf, metric_inv);
+            return TensorFieldCF(out_cf, mout);
+        }
+        auto out_cf = SymbolicEinsumCF(
+            eins, {static_pointer_cast<CoefficientFunction>(tf), metric_inv});
 
-        // if tf is a OneFormCoefficientFunction, return a VectorFieldCoefficientFunction
+        // Higher-rank specializations retain their generic tensor type.
         if (dynamic_pointer_cast<OneFormCoefficientFunction>(tf))
             return VectorFieldCF(out_cf);
 
@@ -654,23 +645,20 @@ namespace ngfem
         auto mout = m.WithCovariant(index, true);
         if (m.Rank() == 1 && index == 0)
         {
-            auto out_cf = metric * tf->GetFullCoefficient();
+            auto out_cf = SymbolicMatrixProductCF(metric, tf);
             if (dynamic_pointer_cast<VectorFieldCoefficientFunction>(tf))
                 return OneFormCF(out_cf);
             return TensorFieldCF(out_cf, mout);
         }
         if (m.Rank() == 2)
         {
-            shared_ptr<CoefficientFunction> out_cf;
-            if (index == 0)
-                out_cf = metric * tf->GetFullCoefficient();
-            else if (index == 1)
-                out_cf = tf->GetFullCoefficient() * metric;
-            if (out_cf)
-                return TensorFieldCF(out_cf, mout);
+            auto out_cf = index == 0
+                              ? SymbolicMatrixProductCF(metric, tf)
+                              : SymbolicMatrixProductCF(tf, metric);
+            return TensorFieldCF(out_cf, mout);
         }
-
-        auto out_cf = EinsumCF(eins, {tf->GetFullCoefficient(), metric});
+        auto out_cf = SymbolicEinsumCF(
+            eins, {static_pointer_cast<CoefficientFunction>(tf), metric});
 
         // if tf is a VectorFieldCoefficientFunction, return a OneFormCoefficientFunction
         if (dynamic_pointer_cast<VectorFieldCoefficientFunction>(tf))
@@ -860,7 +848,7 @@ namespace ngfem
             return current;
         }
 
-        throw Exception("ProjectTensor: mode must be 0 (none), 1 (tangent), 2 (normal), or 3 (edge)");
+        throw Exception("ProjectTensor: unreachable projection mode");
     }
 
     shared_ptr<VectorFieldCoefficientFunction> RiemannianManifold::GetNV() const
@@ -941,68 +929,63 @@ namespace ngfem
                 throw Exception("IP: form degrees must match");
 
             double scale = 1.0 / double(Factorial(k1->Degree()));
-            return ScalarFieldCF(scale * result->GetFullCoefficient(), dim);
+            return ScalarFieldCF(
+                ScaleCoefficientCF(result, make_shared<ConstantCoefficientFunction>(scale)), dim);
         };
 
         if (cov_ind1.size() == 1)
         {
-            shared_ptr<CoefficientFunction> left = c1->GetFullCoefficient();
+            Array<shared_ptr<CoefficientFunction>> metrics;
+            Array<int> axes;
             if (cov_ind1[0] == cov_ind2[0])
-                left = cov_ind1[0] == '1' ? metric_inv * left : metric * left;
-            auto result = ScalarFieldCF(InnerProduct(left, c2->GetFullCoefficient()), dim);
-            return apply_form_scaling(result);
+            {
+                metrics.Append(cov_ind1[0] == '1' ? metric_inv : metric);
+                axes.Append(0);
+            }
+            return apply_form_scaling(
+                ScalarFieldCF(SymbolicMetricInnerProductCF(c1, c2, metrics, axes), dim));
         }
 
         if (cov_ind1.size() == 2)
         {
-            shared_ptr<CoefficientFunction> left = c1->GetFullCoefficient();
+            Array<shared_ptr<CoefficientFunction>> metrics;
+            Array<int> axes;
             if (cov_ind1[0] == cov_ind2[0])
-                left = cov_ind1[0] == '1' ? metric_inv * left : metric * left;
+            {
+                metrics.Append(cov_ind1[0] == '1' ? metric_inv : metric);
+                axes.Append(0);
+            }
             if (cov_ind1[1] == cov_ind2[1])
-                left = cov_ind1[1] == '1' ? left * metric_inv : left * metric;
-            auto result = ScalarFieldCF(InnerProduct(left, c2->GetFullCoefficient()), dim);
-            return apply_form_scaling(result);
-        }
-
-        // create boolean array with true if cov_ind1 and ind_cov2 coincide at the position
-        Array<bool> same_index(cov_ind1.size());
-        Array<size_t> position_same_index;
-        for (size_t i = 0; i < cov_ind1.size(); i++)
-        {
-            same_index[i] = cov_ind1[i] == cov_ind2[i];
-            if (same_index[i])
-                position_same_index.Append(i);
-        }
-
-        char new_char = 'a';
-        char new_char_g = 'A';
-
-        string signature_c1 = "";
-        string signature_c2 = "";
-        string raise_lower_signatures;
-
-        for (size_t i = 0; i < cov_ind1.size(); i++)
-        {
-            signature_c1 += new_char;
-            if (same_index[i])
             {
-                raise_lower_signatures += "," + ToString(new_char++) + new_char_g;
-                signature_c2 += char(new_char_g++);
+                metrics.Append(cov_ind1[1] == '1' ? metric_inv : metric);
+                axes.Append(1);
             }
-            else
-            {
-                signature_c2 += char(new_char++);
-            }
+            return apply_form_scaling(
+                ScalarFieldCF(SymbolicMetricInnerProductCF(c1, c2, metrics, axes), dim));
         }
 
-        Array<shared_ptr<CoefficientFunction>> cfs(2 + position_same_index.Size());
-        cfs[0] = c1;
-        cfs[1] = c2;
-        for (size_t i = 0; i < position_same_index.Size(); i++)
+        auto meta = c1->Meta();
+        string signature_c1 = meta.Sig();
+        string signature_c2 = signature_c1;
+        string metric_signatures;
+        Array<shared_ptr<CoefficientFunction>> cfs;
+        cfs.Append(c1);
+        cfs.Append(c2);
+
+        size_t fresh_count = 0;
+        for (size_t i = 0; i < cov_ind1.size(); ++i)
         {
-            cfs[2 + i] = cov_ind1[position_same_index[i]] == '1' ? metric_inv : metric;
+            if (cov_ind1[i] != cov_ind2[i])
+                continue;
+            char fresh = meta.FreshLabel(fresh_count++);
+            signature_c2[i] = fresh;
+            metric_signatures += "," + string(1, signature_c1[i]) + string(1, fresh);
+            cfs.Append(cov_ind1[i] == '1' ? metric_inv : metric);
         }
-        auto result = ScalarFieldCF(EinsumCF(signature_c1 + "," + signature_c2 + raise_lower_signatures, cfs), dim);
+
+        auto result = ScalarFieldCF(
+            SymbolicEinsumCF(signature_c1 + "," + signature_c2 + metric_signatures + "->", cfs),
+            dim);
         return apply_form_scaling(result);
     }
 
@@ -1044,23 +1027,23 @@ namespace ngfem
             if (cov_ind1[0] == '1')
             {
                 // both 1-forms
-                return VectorFieldCF(EinsumCF("ijk,j,k->i", {GetLeviCivitaSymbol(false), c1, c2}));
+                return VectorFieldCF(SymbolicEinsumCF("ijk,j,k->i", {GetLeviCivitaSymbol(false), c1, c2}));
             }
             else
             {
                 // both vector-fields
-                return VectorFieldCF(EinsumCF("ai,ijk,j,k->a", {g_inv, GetLeviCivitaSymbol(true), c1, c2}));
+                return VectorFieldCF(SymbolicEinsumCF("ai,ijk,j,k->a", {g_inv, GetLeviCivitaSymbol(true), c1, c2}));
             }
         }
         if (cov_ind1[0] == '1')
         {
             // c1 1-form, c2 vector field
-            return VectorFieldCF(EinsumCF("ijk,j,kl,l->i", {GetLeviCivitaSymbol(false), c1, g, c2}));
+            return VectorFieldCF(SymbolicEinsumCF("ijk,j,kl,l->i", {GetLeviCivitaSymbol(false), c1, g, c2}));
         }
         else
         {
             // c1 vector field, c2 1-form
-            return VectorFieldCF(EinsumCF("ijk,jl,l,k->i", {g_inv, GetLeviCivitaSymbol(false), g, c1, c2}));
+            return VectorFieldCF(SymbolicEinsumCF("ijk,jl,l,k->i", {g_inv, GetLeviCivitaSymbol(false), g, c1, c2}));
         }
     }
 
@@ -1103,7 +1086,7 @@ namespace ngfem
         if (sign == 1)
             return second_star;
 
-        auto signed_cf = (-1.0) * second_star->GetFullCoefficient();
+        auto signed_cf = ScaleCoefficientCF(second_star, make_shared<ConstantCoefficientFunction>(-1.0));
         return KFormCF(signed_cf, k - 1, dim);
     }
 
@@ -1153,10 +1136,7 @@ namespace ngfem
         // scalar field
         if (c1->Dimensions().Size() == 0)
         {
-            auto grad_input = compile_inner
-                                  ? input_cf
-                                  : static_pointer_cast<CoefficientFunction>(c1);
-            result = OneFormCF(GradCF(grad_input, dim));
+            result = OneFormCF(GradCF(input_cf, dim));
         }
 
         // vector field
@@ -1164,7 +1144,8 @@ namespace ngfem
         {
             auto result_cf = GradCF(input_cf, dim);
             if (!zero_connection)
-                result_cf = result_cf + EinsumCF("ikj,k->ij", {chr2, input_cf});
+                result_cf = SymbolicSumCF(
+                    result_cf, SymbolicEinsumCF("ikj,k->ij", {chr2, input_cf}));
             result = TensorFieldCF(result_cf, "10");
         }
 
@@ -1173,7 +1154,11 @@ namespace ngfem
         {
             auto result_cf = GradCF(input_cf, dim);
             if (!zero_connection)
-                result_cf = result_cf - EinsumCF("ijk,k->ij", {chr2, input_cf});
+                result_cf = SymbolicSumCF(
+                    result_cf,
+                    ScaleCoefficientCF(
+                        SymbolicEinsumCF("ijk,k->ij", {chr2, input_cf}),
+                        make_shared<ConstantCoefficientFunction>(-1.0)));
             result = TensorFieldCF(result_cf, "11");
         }
 
@@ -1196,13 +1181,17 @@ namespace ngfem
                     {
                         // covariant
                         string einsum_signature = ToString(new_char) + signature[i] + tmp_signature[i] + "," + tmp_signature + "->" + new_char + signature;
-                        result_cf = result_cf - EinsumCF(einsum_signature, {chr2, input_cf});
+                        auto term = SymbolicEinsumCF(einsum_signature, {chr2, input_cf});
+                        result_cf = SymbolicSumCF(
+                            result_cf,
+                            ScaleCoefficientCF(term, make_shared<ConstantCoefficientFunction>(-1.0)));
                     }
                     else
                     {
                         // contravariant
                         string einsum_signature = ToString(new_char) + tmp_signature[i] + signature[i] + "," + tmp_signature + "->" + new_char + signature;
-                        result_cf = result_cf + EinsumCF(einsum_signature, {chr2, input_cf});
+                        result_cf = SymbolicSumCF(
+                            result_cf, SymbolicEinsumCF(einsum_signature, {chr2, input_cf}));
                     }
                 }
             }
@@ -1469,9 +1458,6 @@ namespace ngfem
         }
 
         auto m = tf->Meta();
-
-        if (index1 == index2)
-            throw Exception("Trace: indices must be different");
         if (std::max(index1, index2) >= m.Rank())
             throw Exception("Trace: index out of range");
 
@@ -1485,16 +1471,13 @@ namespace ngfem
         bool cov1 = m.Covariant(index1);
         bool cov2 = m.Covariant(index2);
 
-        if (m.Rank() == 2 && ((index1 == 0 && index2 == 1) || (index1 == 1 && index2 == 0)))
+        if (m.Rank() == 2)
         {
-            if (cov1 != cov2)
-            {
-                auto result = EinsumCF("ii->", {tf->GetFullCoefficient()});
-                return ScalarFieldCF(result, dim);
-            }
-            auto result = cov1 ? InnerProduct(metric_inv, tf->GetFullCoefficient())
-                               : InnerProduct(metric, tf->GetFullCoefficient());
-            return ScalarFieldCF(result, dim);
+            auto native_trace = cov1 != cov2
+                                    ? SymbolicTraceCF(tf)
+                                    : SymbolicInnerProductCF(
+                                          cov1 ? metric_inv : metric, tf);
+            return ScalarFieldCF(native_trace, dim);
         }
 
         if (cov1 != cov2)
@@ -1503,7 +1486,7 @@ namespace ngfem
             sigmod[index2] = sigmod[index1];
 
             std::string eins = sigmod + "->" + sigout;
-            result = EinsumCF(eins, {tf->GetFullCoefficient()});
+            result = SymbolicEinsumCF(eins, {tf});
         }
         else
         {
@@ -1517,7 +1500,7 @@ namespace ngfem
             metric_idx.push_back(sig[index1]);
 
             std::string eins = sigmod + "," + metric_idx + "->" + sigout;
-            result = EinsumCF(eins, {tf->GetFullCoefficient(), cov1 ? metric_inv : metric});
+            result = SymbolicEinsumCF(eins, {tf, cov1 ? metric_inv : metric});
         }
 
         return mout.Rank() ? TensorFieldCF(result, mout.CovString())
@@ -1530,6 +1513,7 @@ namespace ngfem
             throw Exception("Trace: input must be non-null");
         if (tf->DimensionOfSpace() != dim)
             throw Exception("Trace: double-form dimension does not match manifold dimension");
+        ValidateMetricVorB(vb, "Trace");
 
         int p = tf->LeftDegree();
         int q = tf->RightDegree();
@@ -1566,6 +1550,7 @@ namespace ngfem
             throw Exception("TraceSigma: double-form dimension does not match manifold dimension");
         if (sigma->DimensionOfSpace() != dim)
             throw Exception("TraceSigma: sigma dimension does not match manifold dimension");
+        ValidateMetricVorB(vb, "TraceSigma");
 
         if (sigma->LeftDegree() != 1 || sigma->RightDegree() != 1)
             throw Exception("TraceSigma: sigma must be a (1,1) double form");
@@ -1579,46 +1564,8 @@ namespace ngfem
             return ScalarFieldCF(zero_cf, dim);
         }
 
-        shared_ptr<CoefficientFunction> metric_inv;
-        switch (vb)
-        {
-        case VOL:
-            metric_inv = g_inv;
-            break;
-        case BND:
-            metric_inv = g_F_inv;
-            break;
-        case BBND:
-            metric_inv = g_E_inv;
-            break;
-        default:
-            throw Exception("TraceSigma: VorB must be VOL, BND, or BBND");
-        }
-
-        auto raise_with_metric = [&](shared_ptr<TensorFieldCoefficientFunction> tf_in, size_t index)
-        {
-            if (tf_in->Dimensions().Size() <= index)
-                throw Exception("TraceSigma: sigma index out of range");
-
-            auto m = tf_in->Meta();
-            if (!m.Covariant(index))
-                throw Exception("TraceSigma: sigma indices must be covariant");
-
-            std::string sig = tf_in->GetSignature();
-            char a = sig[index];
-            char b = m.FreshLabel();
-            std::string lhs = sig;
-            lhs[index] = b;
-
-            std::string eins = lhs + "," + std::string(1, a) + std::string(1, b) + "->" + sig;
-            auto mout = m.WithCovariant(index, false);
-            auto out_cf = EinsumCF(eins, {tf_in->GetFullCoefficient(), metric_inv});
-            return TensorFieldCF(out_cf, mout);
-        };
-
         auto sigma_tf = static_pointer_cast<TensorFieldCoefficientFunction>(sigma);
-        auto sigma_raised = raise_with_metric(sigma_tf, 0);
-        sigma_raised = raise_with_metric(sigma_raised, 1);
+        auto sigma_raised = Raise(sigma_tf, std::vector<size_t>{0, 1}, vb);
 
         std::string sig = tf->GetSignature();
         std::string sig_out = Erase2Labels(sig, 0, size_t(p));
@@ -1628,7 +1575,7 @@ namespace ngfem
         sigma_sig.push_back(sig[size_t(p)]);
 
         std::string eins = sig + "," + sigma_sig + "->" + sig_out;
-        auto out_cf = EinsumCF(eins, {tf->GetFullCoefficient(), sigma_raised});
+        auto out_cf = SymbolicEinsumCF(eins, {tf, sigma_raised});
 
         if (sig_out.empty())
             return ScalarFieldCF(out_cf, dim);
@@ -1641,6 +1588,7 @@ namespace ngfem
             throw Exception("SlotInnerProduct: input must be non-null");
         if (tf->DimensionOfSpace() != dim)
             throw Exception("SlotInnerProduct: double-form dimension does not match manifold dimension");
+        ValidateMetricVorB(vb, "SlotInnerProduct");
 
         int p = tf->LeftDegree();
         int q = tf->RightDegree();
@@ -1648,7 +1596,8 @@ namespace ngfem
             throw Exception("SlotInnerProduct: double-form degrees must match");
 
         if (p == 0)
-            return ScalarFieldCF(tf->GetFullCoefficient(), dim);
+            return ScalarFieldCF(
+                ScaleCoefficientCF(tf, make_shared<ConstantCoefficientFunction>(1.0)), dim);
 
         auto res = Trace(tf, size_t(p), vb);
         if (auto sf = dynamic_pointer_cast<ScalarFieldCoefficientFunction>(res))
@@ -1656,13 +1605,15 @@ namespace ngfem
             if (!forms)
                 return sf;
             double scale = 1.0 / double(Factorial(p));
-            return ScalarFieldCF(scale * sf->GetFullCoefficient(), dim);
+            return ScalarFieldCF(
+                ScaleCoefficientCF(sf, make_shared<ConstantCoefficientFunction>(scale)), dim);
         }
         auto out = ScalarFieldCF(res, dim);
         if (!forms)
             return out;
         double scale = 1.0 / double(Factorial(p));
-        return ScalarFieldCF(scale * out->GetFullCoefficient(), dim);
+        return ScalarFieldCF(
+            ScaleCoefficientCF(out, make_shared<ConstantCoefficientFunction>(scale)), dim);
     }
 
     shared_ptr<DoubleFormCoefficientFunction> RiemannianManifold::ProjectDoubleForm(shared_ptr<DoubleFormCoefficientFunction> tf, int left_mode, int right_mode,
@@ -1674,6 +1625,8 @@ namespace ngfem
             throw Exception("ProjectDoubleForm: input must be non-null");
         if (tf->DimensionOfSpace() != dim)
             throw Exception("ProjectDoubleForm: double-form dimension does not match manifold dimension");
+        ValidateProjectionMode(left_mode, 4, "ProjectDoubleForm");
+        ValidateProjectionMode(right_mode, 4, "ProjectDoubleForm");
         if (normal && normal->Dimensions().Size() && normal->Dimensions()[0] != dim)
             throw Exception("ProjectDoubleForm: normal dimension does not match manifold dimension");
         if (conormal && conormal->Dimensions().Size() && conormal->Dimensions()[0] != dim)
@@ -1718,9 +1671,6 @@ namespace ngfem
 
             if (mode == 2)
             {
-                // if (project_remaining)
-                //     for (size_t i = start + 1; i < start + size_t(count); ++i)
-                //         current = ApplyProjectorToIndex(current, proj, i);
                 current = Contraction(current, n, start);
                 if (slot == 0)
                     --p;
@@ -1756,7 +1706,7 @@ namespace ngfem
                 return;
             }
 
-            throw Exception("ProjectDoubleForm: mode must be 0 (none), 1 (F/tangent), 2 (n/normal), 3 (E/edge), or 4 (m/conormal)");
+            throw Exception("ProjectDoubleForm: unreachable projection mode");
         };
 
         apply_slot(0, left_mode);
@@ -2132,7 +2082,7 @@ void ExportRiemannianManifold(py::module m)
                      n = py::cast<shared_ptr<VectorFieldCoefficientFunction>>(normal);
                  if (!conormal.is_none())
                      cn = py::cast<shared_ptr<VectorFieldCoefficientFunction>>(conormal);
-                 return self->ProjectDoubleForm(tf, left_mode, right_mode, n, cn, project_remaining); }, "Project a double-form in left/right slots onto tangent or normal components (normal/conormal reduce the slot degree by one). Optional normal/conormal override the defaults for boundary/edge projections. Set project_remaining=False to contract without projecting the remaining indices in that slot.", py::arg("tf"), py::arg("left") = "none", py::arg("right") = "none", py::arg("normal") = py::none(), py::arg("conormal") = py::none(), py::arg("project_remaining") = true)
+                 return self->ProjectDoubleForm(tf, left_mode, right_mode, n, cn, project_remaining); }, "Project a double form independently in its left and right slots. Normal and conormal modes reduce the selected degree by one. project_remaining controls edge projection of the indices remaining after conormal contraction.", py::arg("tf"), py::arg("left") = "none", py::arg("right") = "none", py::arg("normal") = py::none(), py::arg("conormal") = py::none(), py::arg("project_remaining") = true)
         .def("ProjectTensor", [parse_proj](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, py::object mode)
              {
                  int proj_mode = parse_proj(mode, "ProjectTensor");
@@ -2147,10 +2097,14 @@ void ExportRiemannianManifold(py::module m)
              { return self->IP(tf1, tf2, vb, forms); }, "InnerProduct of two TensorFields", py::arg("tf1"), py::arg("tf2"), py::arg("vb") = VOL, py::arg("forms") = false)
         .def("Cross", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf1, shared_ptr<TensorFieldCoefficientFunction> tf2)
              { return self->Cross(tf1, tf2); }, "Cross product in 3D of two vector fields, 1-forms, or both mixed. Returns the resulting vector-field.", py::arg("tf1"), py::arg("tf2"))
+        .def("CovDerivative", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb, bool compile_inner)
+             { return self->CovDerivative(tf, vb, compile_inner); }, "Covariant derivative of a TensorField on VOL or BND. compile_inner compiles the native value graph and does not preserve later wrapper-targeted transformations across that boundary.", py::arg("tf"), py::arg("vb") = VOL, py::arg("compile_inner") = false)
         .def("CovDeriv", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, VorB vb, bool compile_inner)
-             { return self->CovDerivative(tf, vb, compile_inner); }, "Covariant derivative of a TensorField", py::arg("tf"), py::arg("vb") = VOL, py::arg("compile_inner") = false)
-        .def("CovHesse", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf)
+             { return self->CovDerivative(tf, vb, compile_inner); }, "Deprecated alias for CovDerivative.", py::arg("tf"), py::arg("vb") = VOL, py::arg("compile_inner") = false)
+        .def("CovHessian", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf)
              { return self->CovHessian(tf); }, "Covariant Hessian of a TensorField.", py::arg("tf"))
+        .def("CovHesse", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf)
+             { return self->CovHessian(tf); }, "Deprecated alias for CovHessian.", py::arg("tf"))
         .def("CovCurl", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf)
              { return self->CovCurl(tf); }, "Covariant curl of a TensorField in 3D", py::arg("tf"))
         .def("CovInc", [](shared_ptr<RiemannianManifold> self, shared_ptr<TensorFieldCoefficientFunction> tf, bool matrix = false)
