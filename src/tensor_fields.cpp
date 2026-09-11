@@ -323,4 +323,7 @@ void ExportTensorFields(py::module m)
         { return TensorProduct(a, b); }, py::arg("a"), py::arg("b"), "Return the tensor product, with axes and variance metadata of a followed by those of b.");
   m.def("_ScaleCoefficient", &ScaleCoefficientCF);
   m.def("_SumCoefficients", &SymbolicSumCF);
+  m.def("_EinsumCoefficient", &SymbolicEinsumCF,
+        py::arg("signature"), py::arg("inputs"),
+        "Internal benchmark/testing hook for a reconstructible symbolic einsum.");
 }

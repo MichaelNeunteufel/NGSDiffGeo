@@ -352,6 +352,19 @@ class _KFormOperations:
                 return neutral
             return as_doubleform(_sum_coefficients(self, other, subtract=subtract),
                                  p=0, q=0, dim=_common_form_dimension(self, other))
+        if isinstance(other, _CPP_TensorField) and not isinstance(other, _CPP_KForm):
+            if (
+                _tensorfield_covariance(other) != _tensorfield_covariance(self)
+                or tuple(other.dims) != tuple(self.dims)
+            ):
+                raise TypeError(
+                    "cannot add/subtract tensor fields with different variance or shape"
+                )
+            # Adding an arbitrary tensor loses the form's proven alternation.
+            return as_tensorfield(
+                _sum_coefficients(self, other, subtract=subtract),
+                covariant_indices=_tensorfield_covariance(self),
+            )
         if isinstance(other, _CPP_KForm) and self.degree != other.degree:
             raise TypeError("cannot add/subtract k-forms of different degree")
         return as_kform(_sum_coefficients(self, other, subtract=subtract), k=self.degree,
@@ -1286,34 +1299,103 @@ def _contraction_formal(M, tf, vf, slot=0):
 # ---------------- VectorField / TensorField ----------------
 
 
-class VectorField(_CPP_VectorField):
+class _TensorFieldOperations:
+    """Arithmetic shared by typed non-form tensor fields."""
+
+    def _validate_addend(self, other):
+        if isinstance(other, _CPP_TensorField):
+            if _tensorfield_covariance(other) != self.covariant_indices:
+                raise TypeError(
+                    "cannot add/subtract tensor fields with different variance"
+                )
+            return
+        if isinstance(other, numbers.Number) or _is_scalarfield_like(other):
+            raise TypeError("cannot add/subtract a scalar and a non-scalar tensor field")
+        if isinstance(other, ngsolve.CoefficientFunction):
+            if tuple(other.dims) != tuple(self.dims):
+                raise TypeError("tensor field shapes must match")
+            return
+        raise TypeError(f"unsupported tensor-field operand {type(other)!r}")
+
+    def _add(self, other, subtract=False):
+        self._validate_addend(other)
+        return self._wrap(_sum_coefficients(self, other, subtract=subtract))
+
+    def __add__(self, other):
+        return self._add(other)
+
+    def __radd__(self, other):
+        return self._add(other)
+
+    def __sub__(self, other):
+        return self._add(other, subtract=True)
+
+    def __rsub__(self, other):
+        self._validate_addend(other)
+        return self._wrap(_sum_coefficients(other, self, subtract=True))
+
+    def __neg__(self):
+        return self._wrap(_cpp._ScaleCoefficient(self, ngsolve.CF(-1)))
+
+    def _scale(self, other, divide=False):
+        _require_scalar(other, type(self).__name__, "/" if divide else "*")
+        factor = other if isinstance(other, ngsolve.CoefficientFunction) else ngsolve.CF(other)
+        if divide:
+            factor = 1 / factor
+        return self._wrap(_cpp._ScaleCoefficient(self, factor))
+
+    def __mul__(self, other):
+        if isinstance(other, numbers.Number) or _is_scalarfield_like(other):
+            return self._scale(other)
+        if isinstance(other, _CPP_TensorField):
+            left_covariance = self.covariant_indices
+            right_covariance = _tensorfield_covariance(other)
+            if (
+                len(self.dims) == 2
+                and len(other.dims) == 2
+                and self.dims[1] == other.dims[0]
+                and left_covariance[1] != right_covariance[0]
+            ):
+                result = _cpp._EinsumCoefficient("ab,bc->ac", [self, other])
+                return as_tensorfield(
+                    result,
+                    covariant_indices=left_covariance[0] + right_covariance[1],
+                )
+            raise TypeError(
+                "typed tensor '*' only supports scalar operands or a rank-two "
+                "contraction over opposite-variance axes; use M.InnerProduct(...) "
+                "for a metric inner product"
+            )
+        # Preserve NGSolve's matrix/vector product for explicitly untyped raw
+        # coefficients. Its result is intentionally raw because no variance
+        # metadata can be inferred. Typed tensor operands remain forbidden.
+        if (
+            isinstance(other, ngsolve.CoefficientFunction)
+            and not isinstance(other, _CPP_TensorField)
+            and not _is_scalarfield_like(other)
+        ):
+            return self.coef * other
+        return self._scale(other)
+
+    def __rmul__(self, other):
+        if (
+            isinstance(other, ngsolve.CoefficientFunction)
+            and not isinstance(other, _CPP_TensorField)
+            and not _is_scalarfield_like(other)
+        ):
+            return other * self.coef
+        return self._scale(other)
+
+    def __truediv__(self, other):
+        return self._scale(other, divide=True)
+
+
+class VectorField(_TensorFieldOperations, _CPP_VectorField):
     def __init__(self, cf):
         _CPP_VectorField.__init__(self, cf)
 
     def _wrap(self, cf):
         return as_vectorfield(cf)
-
-    def __add__(self, other):
-        return self._wrap(self.coef + _unwrap_cf(other))
-
-    def __radd__(self, other):
-        return self.__add__(other)
-
-    def __sub__(self, other):
-        return self._wrap(self.coef - _unwrap_cf(other))
-
-    def __neg__(self):
-        return self._wrap(-self.coef)
-
-    def __mul__(self, other):
-        return self._wrap(self.coef * _unwrap_cf(other))
-
-    def __rmul__(self, other):
-        return self.__mul__(other)
-
-    def __truediv__(self, other):
-        return self._wrap(self.coef / _unwrap_cf(other))
-
 
 def as_vectorfield(cf):
     if isinstance(cf, VectorField):
@@ -1323,39 +1405,12 @@ def as_vectorfield(cf):
     return VectorField(cf)
 
 
-class TensorField(_CPP_TensorField):
+class TensorField(_TensorFieldOperations, _CPP_TensorField):
     def __init__(self, cf, covariant_indices):
         _CPP_TensorField.__init__(self, cf, covariant_indices=covariant_indices)
 
     def _wrap(self, cf):
         return as_tensorfield(cf, covariant_indices=self.covariant_indices)
-
-    def __add__(self, other):
-        return self._wrap(self.coef + _unwrap_cf(other))
-
-    def __radd__(self, other):
-        return self.__add__(other)
-
-    def __sub__(self, other):
-        return self._wrap(self.coef - _unwrap_cf(other))
-
-    def __neg__(self):
-        return self._wrap(-self.coef)
-
-    def __mul__(self, other):
-        return self._wrap(self.coef * _unwrap_cf(other))
-
-    def __rmul__(self, other):
-        # if other is a number or a ngsolve CoefficientFunction with dim=1:
-        if isinstance(other, (numbers.Number, ngsolve.CoefficientFunction)) and (
-            not hasattr(other, "dim") or other.dim == 1
-        ):
-            return self._wrap(self.coef * _unwrap_cf(other))
-        else:
-            return NotImplemented
-
-    def __truediv__(self, other):
-        return self._wrap(self.coef / _unwrap_cf(other))
 
     def __pow__(self, power):
         if self.covariant_indices != "11":
@@ -2126,6 +2181,7 @@ __all__ = [
     "as_vectorfield",
     "as_tensorfield",
     "Wedge",
+    "WedgePower",
     "Sym",
     "d",
     "star",
