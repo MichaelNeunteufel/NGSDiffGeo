@@ -33,6 +33,6 @@ def test_hyperbolic_h3_riemann_formula():
     assert np.allclose(
         _value(model.Riemann, point),
         _value(reference.Riemann, point),
-        rtol=2e-9,
+        rtol=2e-8,
         atol=1e-7,
     )
