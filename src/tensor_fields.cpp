@@ -39,8 +39,9 @@ namespace ngfem
       for (auto input : inputs)
       {
         RequireNonNull(input, "SymbolicEinsumCF");
-        // Metadata wrappers remain semantic operands, but add no work to the
-        // native evaluator. Keep canonical value graphs free of wrapper layers.
+        // Remove metadata wrappers, but retain nested semantic nodes here.
+        // Their NonZeroPattern implementation traverses shared evaluators as
+        // DAGs. Bypassing them would repeatedly inspect shared subgraphs.
         while (auto tensor = dynamic_pointer_cast<TensorFieldCoefficientFunction>(input))
           input = tensor->GetFullCoefficient();
         values.Append(input);
@@ -49,7 +50,9 @@ namespace ngfem
     }
     shared_ptr<CoefficientFunction> Rebuild(
         const Array<shared_ptr<CoefficientFunction>> &inputs) const override
-    { return SymbolicEinsumCF(signature, inputs); }
+    {
+      return SymbolicEinsumCF(signature, inputs);
+    }
 
   public:
     SymbolicEinsumCoefficientFunction(
@@ -61,14 +64,16 @@ namespace ngfem
     shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
                                          shared_ptr<CoefficientFunction> dir) const override
     {
-      if (this == var) return dir;
+      if (this == var)
+        return dir;
       shared_ptr<CoefficientFunction> result;
       for (size_t i : Range(operands))
       {
         auto differentiated = operands[i]->Diff(var, dir);
         // A childless native zero has no symbolic dependencies. A zero-valued
         // operation can still depend on other variables (e.g. a mixed Hessian).
-        if (IsConstantZero(differentiated)) continue;
+        if (IsConstantZero(differentiated))
+          continue;
         Array<shared_ptr<CoefficientFunction>> inputs(operands);
         inputs[i] = differentiated;
         auto term = SymbolicEinsumCF(signature, inputs);
@@ -82,17 +87,22 @@ namespace ngfem
   {
     shared_ptr<CoefficientFunction> Rebuild(
         const Array<shared_ptr<CoefficientFunction>> &inputs) const override
-    { return SymbolicSumCF(inputs[0], inputs[1]); }
+    {
+      return SymbolicSumCF(inputs[0], inputs[1]);
+    }
+
   public:
     SymbolicSumCoefficientFunction(shared_ptr<CoefficientFunction> a,
                                    shared_ptr<CoefficientFunction> b)
-        : SymbolicExpressionCoefficientFunction({a, b}, a + b) {}
+        : SymbolicExpressionCoefficientFunction(
+              {a, b}, NativeCoefficientValue(a) + NativeCoefficientValue(b)) {}
     auto GetCArgs() const { return tuple{operands[0], operands[1]}; }
     string GetDescription() const override { return "SymbolicSumCF"; }
     shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
                                          shared_ptr<CoefficientFunction> dir) const override
     {
-      if (this == var) return dir;
+      if (this == var)
+        return dir;
       return SymbolicSumCF(operands[0]->Diff(var, dir), operands[1]->Diff(var, dir));
     }
   };
@@ -105,7 +115,8 @@ namespace ngfem
   }
 
   static ngcore::RegisterClassForArchive<SymbolicEinsumCoefficientFunction,
-                                         CoefficientFunction> reg_symbolic_einsum;
+                                         CoefficientFunction>
+      reg_symbolic_einsum;
 
   shared_ptr<CoefficientFunction> SymbolicSumCF(
       shared_ptr<CoefficientFunction> a, shared_ptr<CoefficientFunction> b)
@@ -131,7 +142,281 @@ namespace ngfem
   }
 
   static ngcore::RegisterClassForArchive<SymbolicSumCoefficientFunction,
-                                         CoefficientFunction> reg_symbolic_sum;
+                                         CoefficientFunction>
+      reg_symbolic_sum;
+
+  class SymbolicMatrixProductCoefficientFunction
+      : public SymbolicExpressionCoefficientFunction
+  {
+    shared_ptr<CoefficientFunction> Rebuild(
+        const Array<shared_ptr<CoefficientFunction>> &inputs) const override
+    {
+      return SymbolicMatrixProductCF(inputs[0], inputs[1]);
+    }
+
+  public:
+    SymbolicMatrixProductCoefficientFunction(shared_ptr<CoefficientFunction> a,
+                                             shared_ptr<CoefficientFunction> b)
+        : SymbolicExpressionCoefficientFunction(
+              {a, b}, NativeCoefficientValue(a) * NativeCoefficientValue(b)) {}
+    auto GetCArgs() const { return tuple{operands[0], operands[1]}; }
+    string GetDescription() const override { return "SymbolicMatrixProductCF"; }
+    shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
+                                         shared_ptr<CoefficientFunction> dir) const override
+    {
+      if (this == var)
+        return dir;
+      auto da = operands[0]->Diff(var, dir);
+      auto db = operands[1]->Diff(var, dir);
+      shared_ptr<CoefficientFunction> result;
+      if (!IsConstantZero(da))
+        result = SymbolicMatrixProductCF(da, operands[1]);
+      if (!IsConstantZero(db))
+      {
+        auto term = SymbolicMatrixProductCF(operands[0], db);
+        result = result ? SymbolicSumCF(result, term) : term;
+      }
+      return result ? result : ZeroCF(Dimensions());
+    }
+  };
+
+  class SymbolicInnerProductCoefficientFunction
+      : public SymbolicExpressionCoefficientFunction
+  {
+    shared_ptr<CoefficientFunction> Rebuild(
+        const Array<shared_ptr<CoefficientFunction>> &inputs) const override
+    {
+      return SymbolicInnerProductCF(inputs[0], inputs[1]);
+    }
+
+  public:
+    SymbolicInnerProductCoefficientFunction(shared_ptr<CoefficientFunction> a,
+                                            shared_ptr<CoefficientFunction> b)
+        : SymbolicExpressionCoefficientFunction(
+              {a, b}, InnerProduct(NativeCoefficientValue(a),
+                                   NativeCoefficientValue(b))) {}
+    auto GetCArgs() const { return tuple{operands[0], operands[1]}; }
+    string GetDescription() const override { return "SymbolicInnerProductCF"; }
+    shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
+                                         shared_ptr<CoefficientFunction> dir) const override
+    {
+      if (this == var)
+        return dir;
+      auto da = operands[0]->Diff(var, dir);
+      auto db = operands[1]->Diff(var, dir);
+      shared_ptr<CoefficientFunction> result;
+      if (!IsConstantZero(da))
+        result = SymbolicInnerProductCF(da, operands[1]);
+      if (!IsConstantZero(db))
+      {
+        auto term = SymbolicInnerProductCF(operands[0], db);
+        result = result ? SymbolicSumCF(result, term) : term;
+      }
+      return result ? result : ZeroCF(Dimensions());
+    }
+  };
+
+  class SymbolicTraceCoefficientFunction
+      : public SymbolicExpressionCoefficientFunction
+  {
+    static shared_ptr<CoefficientFunction> MakeEvaluator(
+        const shared_ptr<CoefficientFunction> &value)
+    {
+      return EinsumCF("ii->", {NativeCoefficientValue(value)});
+    }
+    shared_ptr<CoefficientFunction> Rebuild(
+        const Array<shared_ptr<CoefficientFunction>> &inputs) const override
+    {
+      return SymbolicTraceCF(inputs[0]);
+    }
+
+  public:
+    SymbolicTraceCoefficientFunction(shared_ptr<CoefficientFunction> value)
+        : SymbolicExpressionCoefficientFunction({value}, MakeEvaluator(value)) {}
+    auto GetCArgs() const { return tuple{operands[0]}; }
+    string GetDescription() const override { return "SymbolicTraceCF"; }
+    shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
+                                         shared_ptr<CoefficientFunction> dir) const override
+    {
+      if (this == var)
+        return dir;
+      auto differentiated = operands[0]->Diff(var, dir);
+      return IsConstantZero(differentiated)
+                 ? ZeroCF(Dimensions())
+                 : SymbolicTraceCF(differentiated);
+    }
+  };
+
+  class SymbolicMetricInnerProductCoefficientFunction
+      : public SymbolicExpressionCoefficientFunction
+  {
+    Array<int> metric_axes;
+
+    static shared_ptr<CoefficientFunction> MakeEvaluator(
+        const Array<shared_ptr<CoefficientFunction>> &inputs,
+        const Array<int> &axes)
+    {
+      auto left = NativeCoefficientValue(inputs[0]);
+      auto right = NativeCoefficientValue(inputs[1]);
+      for (size_t i : Range(axes))
+      {
+        auto metric = NativeCoefficientValue(inputs[i + 2]);
+        if (axes[i] == 0)
+          left = metric * left;
+        else if (axes[i] == 1)
+          left = left * metric;
+        else
+          throw Exception("SymbolicMetricInnerProductCF: metric axis must be 0 or 1");
+      }
+      return InnerProduct(left, right);
+    }
+
+    shared_ptr<CoefficientFunction> Rebuild(
+        const Array<shared_ptr<CoefficientFunction>> &inputs) const override
+    {
+      Array<shared_ptr<CoefficientFunction>> metrics;
+      for (size_t i = 2; i < inputs.Size(); ++i)
+        metrics.Append(inputs[i]);
+      return SymbolicMetricInnerProductCF(
+          inputs[0], inputs[1], metrics, metric_axes);
+    }
+
+  public:
+    SymbolicMetricInnerProductCoefficientFunction(
+        const Array<shared_ptr<CoefficientFunction>> &inputs,
+        const Array<int> &axes)
+        : SymbolicExpressionCoefficientFunction(
+              inputs, MakeEvaluator(inputs, axes)),
+          metric_axes(axes)
+    {
+      if (inputs.Size() != axes.Size() + 2)
+        throw Exception("SymbolicMetricInnerProductCF: metric/axis count mismatch");
+    }
+
+    auto GetCArgs() const
+    {
+      return tuple{Array<shared_ptr<CoefficientFunction>>(operands), metric_axes};
+    }
+    string GetDescription() const override
+    {
+      return "SymbolicMetricInnerProductCF";
+    }
+
+    shared_ptr<CoefficientFunction> Diff(
+        const CoefficientFunction *var,
+        shared_ptr<CoefficientFunction> dir) const override
+    {
+      if (this == var)
+        return dir;
+      shared_ptr<CoefficientFunction> result;
+      for (size_t i : Range(operands))
+      {
+        auto differentiated = operands[i]->Diff(var, dir);
+        if (IsConstantZero(differentiated))
+          continue;
+        Array<shared_ptr<CoefficientFunction>> inputs(operands);
+        inputs[i] = differentiated;
+        auto term = Rebuild(inputs);
+        result = result ? SymbolicSumCF(result, term) : term;
+      }
+      return result ? result : ZeroCF(Dimensions());
+    }
+  };
+
+  class SymbolicTransposeCoefficientFunction
+      : public SymbolicExpressionCoefficientFunction
+  {
+    shared_ptr<CoefficientFunction> Rebuild(
+        const Array<shared_ptr<CoefficientFunction>> &inputs) const override
+    {
+      return SymbolicTransposeCF(inputs[0]);
+    }
+
+  public:
+    SymbolicTransposeCoefficientFunction(shared_ptr<CoefficientFunction> value)
+        : SymbolicExpressionCoefficientFunction(
+              {value}, TransposeCF(NativeCoefficientValue(value))) {}
+    auto GetCArgs() const { return tuple{operands[0]}; }
+    string GetDescription() const override { return "SymbolicTransposeCF"; }
+    shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,
+                                         shared_ptr<CoefficientFunction> dir) const override
+    {
+      if (this == var)
+        return dir;
+      auto differentiated = operands[0]->Diff(var, dir);
+      return IsConstantZero(differentiated)
+                 ? ZeroCF(Dimensions())
+                 : SymbolicTransposeCF(differentiated);
+    }
+  };
+
+  shared_ptr<CoefficientFunction> SymbolicMatrixProductCF(
+      shared_ptr<CoefficientFunction> a, shared_ptr<CoefficientFunction> b)
+  {
+    RequireNonNull(a, "SymbolicMatrixProductCF");
+    RequireNonNull(b, "SymbolicMatrixProductCF");
+    return make_shared<SymbolicMatrixProductCoefficientFunction>(a, b);
+  }
+
+  shared_ptr<CoefficientFunction> SymbolicInnerProductCF(
+      shared_ptr<CoefficientFunction> a, shared_ptr<CoefficientFunction> b)
+  {
+    RequireNonNull(a, "SymbolicInnerProductCF");
+    RequireNonNull(b, "SymbolicInnerProductCF");
+    return make_shared<SymbolicInnerProductCoefficientFunction>(a, b);
+  }
+
+  shared_ptr<CoefficientFunction> SymbolicMetricInnerProductCF(
+      shared_ptr<CoefficientFunction> a,
+      shared_ptr<CoefficientFunction> b,
+      const Array<shared_ptr<CoefficientFunction>> &metrics,
+      const Array<int> &metric_axes)
+  {
+    RequireNonNull(a, "SymbolicMetricInnerProductCF");
+    RequireNonNull(b, "SymbolicMetricInnerProductCF");
+    for (auto metric : metrics)
+      RequireNonNull(metric, "SymbolicMetricInnerProductCF");
+    if (metrics.Size() != metric_axes.Size())
+      throw Exception("SymbolicMetricInnerProductCF: metric/axis count mismatch");
+    Array<shared_ptr<CoefficientFunction>> inputs = {a, b};
+    inputs += metrics;
+    return make_shared<SymbolicMetricInnerProductCoefficientFunction>(
+        inputs, metric_axes);
+  }
+
+  shared_ptr<CoefficientFunction> SymbolicTraceCF(
+      shared_ptr<CoefficientFunction> value)
+  {
+    RequireNonNull(value, "SymbolicTraceCF");
+    if (value->Dimensions().Size() != 2 || value->Dimensions()[0] != value->Dimensions()[1])
+      throw Exception("SymbolicTraceCF: input must be a square matrix");
+    return make_shared<SymbolicTraceCoefficientFunction>(value);
+  }
+
+  shared_ptr<CoefficientFunction> SymbolicTransposeCF(
+      shared_ptr<CoefficientFunction> value)
+  {
+    RequireNonNull(value, "SymbolicTransposeCF");
+    if (value->Dimensions().Size() != 2)
+      throw Exception("SymbolicTransposeCF: input must be a matrix");
+    return make_shared<SymbolicTransposeCoefficientFunction>(value);
+  }
+
+  static ngcore::RegisterClassForArchive<SymbolicMatrixProductCoefficientFunction,
+                                         CoefficientFunction>
+      reg_symbolic_matrix_product;
+  static ngcore::RegisterClassForArchive<SymbolicInnerProductCoefficientFunction,
+                                         CoefficientFunction>
+      reg_symbolic_inner_product;
+  static ngcore::RegisterClassForArchive<SymbolicMetricInnerProductCoefficientFunction,
+                                         CoefficientFunction>
+      reg_symbolic_metric_inner_product;
+  static ngcore::RegisterClassForArchive<SymbolicTraceCoefficientFunction,
+                                         CoefficientFunction>
+      reg_symbolic_trace;
+  static ngcore::RegisterClassForArchive<SymbolicTransposeCoefficientFunction,
+                                         CoefficientFunction>
+      reg_symbolic_transpose;
 
   bool IsVectorField(const TensorFieldCoefficientFunction &t)
   {
@@ -266,7 +551,7 @@ void ExportTensorFields(py::module m)
   auto warn_deprecated = [](const char *old_name, const char *replacement)
   {
     const std::string message = std::string(old_name) +
-                                " is deprecated; use " + replacement;
+                                " is deprecated. Use " + replacement;
     if (PyErr_WarnEx(PyExc_DeprecationWarning, message.c_str(), 2) < 0)
       throw py::error_already_set();
   };

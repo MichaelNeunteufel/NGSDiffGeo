@@ -272,6 +272,21 @@ namespace ngfem
     shared_ptr<CoefficientFunction> ScaleCoefficientCF(
         shared_ptr<CoefficientFunction> value, shared_ptr<CoefficientFunction> scalar);
 
+    /// Native low-rank evaluators with reconstructible semantic operands.
+    shared_ptr<CoefficientFunction> SymbolicMatrixProductCF(
+        shared_ptr<CoefficientFunction> a, shared_ptr<CoefficientFunction> b);
+    shared_ptr<CoefficientFunction> SymbolicInnerProductCF(
+        shared_ptr<CoefficientFunction> a, shared_ptr<CoefficientFunction> b);
+    shared_ptr<CoefficientFunction> SymbolicMetricInnerProductCF(
+        shared_ptr<CoefficientFunction> a,
+        shared_ptr<CoefficientFunction> b,
+        const Array<shared_ptr<CoefficientFunction>> &metrics,
+        const Array<int> &metric_axes);
+    shared_ptr<CoefficientFunction> SymbolicTraceCF(
+        shared_ptr<CoefficientFunction> value);
+    shared_ptr<CoefficientFunction> SymbolicTransposeCF(
+        shared_ptr<CoefficientFunction> value);
+
     shared_ptr<TensorFieldCoefficientFunction> PermuteTensorCF(shared_ptr<TensorFieldCoefficientFunction> tf,
                                                                const std::vector<int> &order);
     shared_ptr<TensorFieldCoefficientFunction> ApplyProjectorToIndex(shared_ptr<TensorFieldCoefficientFunction> tf,

@@ -82,11 +82,29 @@ if(BUILD_TESTING)
       add_test(NAME kforms_${check} COMMAND test_kforms ${check})
     endforeach()
 
+    add_executable(
+      test_riemannian_manifold
+      tests/test_riemannian_manifold.cpp
+    )
+    target_include_directories(
+      test_riemannian_manifold BEFORE PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src
+      $<TARGET_PROPERTY:ngsolve,INTERFACE_INCLUDE_DIRECTORIES>
+    )
+    target_link_libraries(
+      test_riemannian_manifold PRIVATE ngsdiffgeo ngsolve Python3::Python
+    )
+    set_target_properties(
+      test_riemannian_manifold PROPERTIES CXX_STANDARD 17
+    )
+    add_test(NAME riemannian_manifold COMMAND test_riemannian_manifold)
+
     list(
       APPEND cpp_test_targets
       test_tensor_field_forwarding
       test_coefficient_grad
       test_kforms
+      test_riemannian_manifold
     )
   endif()
 
