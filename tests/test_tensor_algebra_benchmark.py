@@ -36,6 +36,14 @@ def test_tensor_algebra_benchmark_smoke(tmp_path):
         "lower_rank2_axis1",
         "inner_product_rank1",
         "trace_rank2",
+        "raise_rank3_axis1",
+        "lower_rank3_axis2",
+        "inner_product_rank3",
+        "trace_rank4_axes1_3",
+        "kform_wedge_degree1",
+        "kform_hodge_degree1",
+        "kform_inner_product_degree2",
+        "double_form_slot_inner_22",
     } == set(report["results"])
     for result in report["results"].values():
         assert result["construction"]["median_seconds"] >= 0

@@ -1,9 +1,9 @@
-"""Benchmark the low-rank metric tensor-algebra paths.
+"""Benchmark metric tensor algebra, including higher-rank tensors and forms.
 
 The report records correctness, construction time, assembly time, and
-expression-tree size for ``Raise``, ``Lower``, ``InnerProduct``, and ``Trace``.
-It deliberately has no timing assertions: use ``--output`` to retain reports
-from two builds and compare them on the same machine.
+expression-tree size for low- and higher-rank tensor operations, k-forms, and
+double forms. It deliberately has no timing assertions: use ``--output`` to
+retain reports from two builds and compare them on the same machine.
 """
 
 from __future__ import annotations
@@ -37,6 +37,8 @@ from ngsolve import (
 
 
 def _cases(manifold, metric):
+    cpp = importlib.import_module("ngsdiffgeo.ngsdiffgeo")
+    metric_inv = Inv(metric)
     vector = dg.VectorField(CF((1 + x, 2 - y)))
     one_form = dg.OneForm(CF((2 + y, 1 - x)))
     covariant = dg.TensorField(
@@ -45,6 +47,42 @@ def _cases(manifold, metric):
     contravariant = dg.TensorField(
         CF((2 - x, x + y, x + y, 3 - y), dims=(2, 2)), "00"
     )
+    rank3_covariant = dg.TensorField(
+        CF(
+            tuple((i + 1) * (1 + 0.1 * x) + (8 - i) * 0.05 * y for i in range(8)),
+            dims=(2, 2, 2),
+        ),
+        "111",
+    )
+    rank3_contravariant = dg.TensorField(
+        CF(
+            tuple((i + 2) * (1 - 0.04 * x) + (i + 1) * 0.03 * y for i in range(8)),
+            dims=(2, 2, 2),
+        ),
+        "000",
+    )
+    rank4_covariant = dg.TensorField(
+        CF(
+            tuple((i + 1) * (1 + 0.02 * x * y) for i in range(16)),
+            dims=(2, 2, 2, 2),
+        ),
+        "1111",
+    )
+
+    alpha0, alpha1 = 1 + x, 2 - y
+    beta0, beta1 = 2 + y, 1 - x
+    alpha = dg.OneForm(CF((alpha0, alpha1)))
+    beta = dg.OneForm(CF((beta0, beta1)))
+    wedge_value = alpha0 * beta1 - alpha1 * beta0
+    two_form = dg.TwoForm(
+        CF((0, wedge_value, -wedge_value, 0), dims=(2, 2)), dim=2
+    )
+    euclidean = dg.RiemannianManifold(ngsolve.Id(2))
+    double_one = dg.DoubleForm(
+        CF((1 + x, x * y, x * y, 2 + y), dims=(2, 2)), p=1, q=1, dim=2
+    )
+    double_two = dg.Wedge(double_one, double_one)
+
     return {
         "raise_rank1": (
             lambda: manifold.Raise(one_form),
@@ -73,6 +111,74 @@ def _cases(manifold, metric):
         "lower_rank2_axis1": (
             lambda: manifold.Lower(contravariant, 1),
             lambda: dg.TensorField(contravariant.coef * metric, "01"),
+        ),
+        "raise_rank3_axis1": (
+            lambda: manifold.Raise(rank3_covariant, 1),
+            lambda: dg.TensorField(
+                cpp._EinsumCoefficient(
+                    "abc,bd->adc", [rank3_covariant, metric_inv]
+                ),
+                "101",
+            ),
+        ),
+        "lower_rank3_axis2": (
+            lambda: manifold.Lower(rank3_contravariant, 2),
+            lambda: dg.TensorField(
+                cpp._EinsumCoefficient(
+                    "abc,cd->abd", [rank3_contravariant, metric]
+                ),
+                "001",
+            ),
+        ),
+        "inner_product_rank3": (
+            lambda: manifold.InnerProduct(rank3_covariant, rank3_covariant),
+            lambda: dg.ScalarField(
+                cpp._EinsumCoefficient(
+                    "abc,def,ad,be,cf->",
+                    [
+                        rank3_covariant,
+                        rank3_covariant,
+                        metric_inv,
+                        metric_inv,
+                        metric_inv,
+                    ],
+                ),
+                dim=2,
+            ),
+        ),
+        "trace_rank4_axes1_3": (
+            lambda: manifold.Trace(rank4_covariant, index1=1, index2=3),
+            lambda: dg.TensorField(
+                cpp._EinsumCoefficient(
+                    "abcd,bd->ac", [rank4_covariant, metric_inv]
+                ),
+                "11",
+            ),
+        ),
+        "kform_wedge_degree1": (
+            lambda: dg.Wedge(alpha, beta),
+            lambda: two_form,
+        ),
+        "kform_hodge_degree1": (
+            lambda: alpha.star(euclidean),
+            lambda: dg.OneForm(CF((-alpha1, alpha0))),
+        ),
+        "kform_inner_product_degree2": (
+            lambda: manifold.InnerProduct(two_form, two_form, forms=True),
+            lambda: dg.ScalarField(
+                0.5
+                * cpp._EinsumCoefficient(
+                    "ab,cd,ac,bd->",
+                    [two_form, two_form, metric_inv, metric_inv],
+                ),
+                dim=2,
+            ),
+        ),
+        "double_form_slot_inner_22": (
+            lambda: euclidean.SlotInnerProduct(double_two),
+            lambda: dg.ScalarField(
+                0.5 * cpp._EinsumCoefficient("abab->", [double_two]), dim=2
+            ),
         ),
     }
 

@@ -1,0 +1,714 @@
+{
+  "construction_iterations": 3000,
+  "elements": 936,
+  "iterations": 51,
+  "label": "extended-higher-rank-and-forms",
+  "maxh": 0.05,
+  "ngsolve_version": "6.2.2606-330-g8cea3e679",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "raise_alternatives": {
+    "rank1": {
+      "assembly_speedup": 1.002706484116303,
+      "construction_speedup": 5.213483146067416,
+      "einsum": {
+        "assembly": {
+          "median_seconds": 0.0003549159737303853,
+          "minimum_seconds": 0.00013995799235999584,
+          "value_norm": 4.252868499051782
+        },
+        "construction": {
+          "median_seconds": 1.0208000000000001e-05,
+          "minimum_seconds": 9.916000000000001e-06
+        },
+        "tree": {
+          "dim": 2,
+          "dims": [
+            2
+          ],
+          "types": {
+            "ngfem::ConstantCoefficientFunction": 4,
+            "ngfem::CoordCoefficientFunction": 10,
+            "ngfem::InverseCoefficientFunction<2>": 1,
+            "ngfem::ScaleCoefficientFunction": 2,
+            "ngfem::SymbolicEinsumCoefficientFunction": 1,
+            "ngfem::VectorFieldCoefficientFunction": 1,
+            "ngfem::VectorialCoefficientFunction": 2,
+            "ngfem::cl_BinaryOpCF<ngfem::GenericMinus>": 1,
+            "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 4,
+            "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 3,
+            "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 3
+          },
+          "unique_nodes": 24,
+          "visits": 32
+        }
+      },
+      "l2_error": 3.7053236240045015e-17,
+      "matrix_product": {
+        "assembly": {
+          "median_seconds": 0.00035395799204707146,
+          "minimum_seconds": 0.00014354102313518524,
+          "value_norm": 4.252868499051784
+        },
+        "construction": {
+          "median_seconds": 1.958e-06,
+          "minimum_seconds": 1.791e-06
+        },
+        "tree": {
+          "dim": 2,
+          "dims": [
+            2
+          ],
+          "types": {
+            "ngfem::ConstantCoefficientFunction": 4,
+            "ngfem::CoordCoefficientFunction": 10,
+            "ngfem::InverseCoefficientFunction<2>": 1,
+            "ngfem::ScaleCoefficientFunction": 2,
+            "ngfem::SymbolicMatrixProductCoefficientFunction": 1,
+            "ngfem::VectorFieldCoefficientFunction": 1,
+            "ngfem::VectorialCoefficientFunction": 2,
+            "ngfem::cl_BinaryOpCF<ngfem::GenericMinus>": 1,
+            "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 4,
+            "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 3,
+            "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 3
+          },
+          "unique_nodes": 24,
+          "visits": 32
+        }
+      }
+    },
+    "rank2_axis0": {
+      "assembly_speedup": 0.995097399675734,
+      "construction_speedup": 5.271815008726003,
+      "einsum": {
+        "assembly": {
+          "median_seconds": 0.0003720419481396675,
+          "minimum_seconds": 0.00015537498984485865,
+          "value_norm": 5.047102314257588
+        },
+        "construction": {
+          "median_seconds": 1.2083000000000001e-05,
+          "minimum_seconds": 1.1875e-05
+        },
+        "tree": {
+          "dim": 4,
+          "dims": [
+            2,
+            2
+          ],
+          "types": {
+            "ngfem::ConstantCoefficientFunction": 4,
+            "ngfem::CoordCoefficientFunction": 14,
+            "ngfem::InverseCoefficientFunction<2>": 1,
+            "ngfem::ScaleCoefficientFunction": 2,
+            "ngfem::SymbolicEinsumCoefficientFunction": 1,
+            "ngfem::TensorFieldCoefficientFunction": 1,
+            "ngfem::VectorialCoefficientFunction": 2,
+            "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 6,
+            "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 4,
+            "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 4
+          },
+          "unique_nodes": 27,
+          "visits": 39
+        }
+      },
+      "l2_error": 1.7709293860743634e-16,
+      "matrix_product": {
+        "assembly": {
+          "median_seconds": 0.0003738749073818326,
+          "minimum_seconds": 0.0001461670035496354,
+          "value_norm": 5.04710231425759
+        },
+        "construction": {
+          "median_seconds": 2.2920000000000002e-06,
+          "minimum_seconds": 2.125e-06
+        },
+        "tree": {
+          "dim": 4,
+          "dims": [
+            2,
+            2
+          ],
+          "types": {
+            "ngfem::ConstantCoefficientFunction": 4,
+            "ngfem::CoordCoefficientFunction": 14,
+            "ngfem::InverseCoefficientFunction<2>": 1,
+            "ngfem::ScaleCoefficientFunction": 2,
+            "ngfem::SymbolicMatrixProductCoefficientFunction": 1,
+            "ngfem::TensorFieldCoefficientFunction": 1,
+            "ngfem::VectorialCoefficientFunction": 2,
+            "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 6,
+            "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 4,
+            "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 4
+          },
+          "unique_nodes": 27,
+          "visits": 39
+        }
+      }
+    },
+    "rank2_axis1": {
+      "assembly_speedup": 0.989731313928175,
+      "construction_speedup": 5.272251308900524,
+      "einsum": {
+        "assembly": {
+          "median_seconds": 0.00036133406683802605,
+          "minimum_seconds": 0.0002246249932795763,
+          "value_norm": 5.047102314257594
+        },
+        "construction": {
+          "median_seconds": 1.2084000000000002e-05,
+          "minimum_seconds": 1.1833e-05
+        },
+        "tree": {
+          "dim": 4,
+          "dims": [
+            2,
+            2
+          ],
+          "types": {
+            "ngfem::ConstantCoefficientFunction": 4,
+            "ngfem::CoordCoefficientFunction": 14,
+            "ngfem::InverseCoefficientFunction<2>": 1,
+            "ngfem::ScaleCoefficientFunction": 2,
+            "ngfem::SymbolicEinsumCoefficientFunction": 1,
+            "ngfem::TensorFieldCoefficientFunction": 1,
+            "ngfem::VectorialCoefficientFunction": 2,
+            "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 6,
+            "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 4,
+            "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 4
+          },
+          "unique_nodes": 27,
+          "visits": 39
+        }
+      },
+      "l2_error": 1.7709293860743634e-16,
+      "matrix_product": {
+        "assembly": {
+          "median_seconds": 0.00036508298944681883,
+          "minimum_seconds": 0.00023783394135534763,
+          "value_norm": 5.047102314257592
+        },
+        "construction": {
+          "median_seconds": 2.2920000000000002e-06,
+          "minimum_seconds": 2.0830000000000002e-06
+        },
+        "tree": {
+          "dim": 4,
+          "dims": [
+            2,
+            2
+          ],
+          "types": {
+            "ngfem::ConstantCoefficientFunction": 4,
+            "ngfem::CoordCoefficientFunction": 14,
+            "ngfem::InverseCoefficientFunction<2>": 1,
+            "ngfem::ScaleCoefficientFunction": 2,
+            "ngfem::SymbolicMatrixProductCoefficientFunction": 1,
+            "ngfem::TensorFieldCoefficientFunction": 1,
+            "ngfem::VectorialCoefficientFunction": 2,
+            "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 6,
+            "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 4,
+            "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 4
+          },
+          "unique_nodes": 27,
+          "visits": 39
+        }
+      }
+    }
+  },
+  "results": {
+    "double_form_slot_inner_22": {
+      "assembly": {
+        "median_seconds": 0.00022825004998594522,
+        "minimum_seconds": 0.00019545794930309057,
+        "value_norm": 54.993115523166345
+      },
+      "construction": {
+        "median_seconds": 2.8250000000000002e-05,
+        "minimum_seconds": 2.7792e-05
+      },
+      "l2_error": 0.0,
+      "tree": {
+        "dim": 1,
+        "dims": [],
+        "types": {
+          "ngfem::ConstantCoefficientFunction": 5,
+          "ngfem::CoordCoefficientFunction": 12,
+          "ngfem::DoubleFormCoefficientFunction": 2,
+          "ngfem::DoubleFormWedgeCoefficientFunction": 1,
+          "ngfem::IdentityCoefficientFunction": 2,
+          "ngfem::InverseCoefficientFunction<2>": 2,
+          "ngfem::ScalarFieldCoefficientFunction": 1,
+          "ngfem::SymbolicEinsumCoefficientFunction": 1,
+          "ngfem::SymbolicInnerProductCoefficientFunction": 1,
+          "ngfem::VectorialCoefficientFunction": 2,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 4,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 4,
+          "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 4,
+          "ngfem::tensor_internal::EinsumCoefficientFunction": 1
+        },
+        "unique_nodes": 20,
+        "visits": 42
+      }
+    },
+    "inner_product_rank1": {
+      "assembly": {
+        "median_seconds": 0.0002072090283036232,
+        "minimum_seconds": 0.00019033299759030342,
+        "value_norm": 44.65473021868218
+      },
+      "construction": {
+        "median_seconds": 2.4958e-05,
+        "minimum_seconds": 2.4625000000000002e-05
+      },
+      "l2_error": 0.0,
+      "tree": {
+        "dim": 1,
+        "dims": [],
+        "types": {
+          "ngfem::ConstantCoefficientFunction": 6,
+          "ngfem::CoordCoefficientFunction": 12,
+          "ngfem::MultMatVecCoefficientFunction": 1,
+          "ngfem::ScalarFieldCoefficientFunction": 1,
+          "ngfem::ScaleCoefficientFunction": 2,
+          "ngfem::SymbolicMetricInnerProductCoefficientFunction": 1,
+          "ngfem::VectorialCoefficientFunction": 3,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMinus>": 2,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 4,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 4,
+          "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 4
+        },
+        "unique_nodes": 24,
+        "visits": 40
+      }
+    },
+    "inner_product_rank3": {
+      "assembly": {
+        "median_seconds": 0.0003154580481350422,
+        "minimum_seconds": 0.00028012495022267103,
+        "value_norm": 15463.518225760943
+      },
+      "construction": {
+        "median_seconds": 6.6542e-05,
+        "minimum_seconds": 6.55e-05
+      },
+      "l2_error": 0.0,
+      "tree": {
+        "dim": 1,
+        "dims": [],
+        "types": {
+          "ngfem::ConstantCoefficientFunction": 22,
+          "ngfem::CoordCoefficientFunction": 56,
+          "ngfem::InverseCoefficientFunction<2>": 3,
+          "ngfem::ScalarFieldCoefficientFunction": 1,
+          "ngfem::ScaleCoefficientFunction": 54,
+          "ngfem::SymbolicEinsumCoefficientFunction": 1,
+          "ngfem::VectorialCoefficientFunction": 5,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 12,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 38,
+          "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 10
+        },
+        "unique_nodes": 69,
+        "visits": 202
+      }
+    },
+    "kform_hodge_degree1": {
+      "assembly": {
+        "median_seconds": 0.00032170803751796484,
+        "minimum_seconds": 0.00018679199274629354,
+        "value_norm": 4.666457096924519
+      },
+      "construction": {
+        "median_seconds": 3.0167e-05,
+        "minimum_seconds": 2.9708e-05
+      },
+      "l2_error": 0.0,
+      "tree": {
+        "dim": 2,
+        "dims": [
+          2
+        ],
+        "types": {
+          "ngfem::ConstantCoefficientFunction": 6,
+          "ngfem::CoordCoefficientFunction": 2,
+          "ngfem::IdentityCoefficientFunction": 1,
+          "ngfem::InverseCoefficientFunction<2>": 1,
+          "ngfem::MultScalVecCoefficientFunction": 1,
+          "ngfem::OneFormCoefficientFunction": 1,
+          "ngfem::SymbolicEinsumCoefficientFunction": 2,
+          "ngfem::SymbolicMatrixProductCoefficientFunction": 1,
+          "ngfem::VectorialCoefficientFunction": 2,
+          "ngfem::ZeroCoefficientFunction": 2,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMinus>": 1,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 1,
+          "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 2,
+          "ngfem::cl_UnaryOpCF<ngfem::GenericSqrt>": 1
+        },
+        "unique_nodes": 23,
+        "visits": 24
+      }
+    },
+    "kform_inner_product_degree2": {
+      "assembly": {
+        "median_seconds": 0.0002507079625502229,
+        "minimum_seconds": 0.00022962491493672132,
+        "value_norm": 36.290088821099815
+      },
+      "construction": {
+        "median_seconds": 3.5875000000000005e-05,
+        "minimum_seconds": 3.5166e-05
+      },
+      "l2_error": 7.359147273757971e-16,
+      "tree": {
+        "dim": 1,
+        "dims": [],
+        "types": {
+          "ngfem::ConstantCoefficientFunction": 21,
+          "ngfem::CoordCoefficientFunction": 32,
+          "ngfem::InverseCoefficientFunction<2>": 2,
+          "ngfem::MultMatMatCoefficientFunction": 2,
+          "ngfem::ScalarFieldCoefficientFunction": 1,
+          "ngfem::ScaleCoefficientFunction": 6,
+          "ngfem::SymbolicEinsumCoefficientFunction": 1,
+          "ngfem::SymbolicMetricInnerProductCoefficientFunction": 1,
+          "ngfem::VectorialCoefficientFunction": 4,
+          "ngfem::ZeroCoefficientFunction": 4,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMinus>": 12,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 16,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 12,
+          "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 8
+        },
+        "unique_nodes": 39,
+        "visits": 122
+      }
+    },
+    "kform_wedge_degree1": {
+      "assembly": {
+        "median_seconds": 0.00020808400586247444,
+        "minimum_seconds": 0.00017837504856288433,
+        "value_norm": 18.355037912220393
+      },
+      "construction": {
+        "median_seconds": 4.0334000000000004e-05,
+        "minimum_seconds": 3.9750000000000004e-05
+      },
+      "l2_error": 0.0,
+      "tree": {
+        "dim": 4,
+        "dims": [
+          2,
+          2
+        ],
+        "types": {
+          "ngfem::ConstantCoefficientFunction": 9,
+          "ngfem::CoordCoefficientFunction": 8,
+          "ngfem::SymbolicEinsumCoefficientFunction": 2,
+          "ngfem::SymbolicSumCoefficientFunction": 1,
+          "ngfem::TwoFormCoefficientFunction": 1,
+          "ngfem::VectorialCoefficientFunction": 4,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMinus>": 4,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 4,
+          "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 4,
+          "ngfem::tensor_internal::EinsumCoefficientFunction": 2
+        },
+        "unique_nodes": 21,
+        "visits": 39
+      }
+    },
+    "lower_rank1": {
+      "assembly": {
+        "median_seconds": 0.00037466699723154306,
+        "minimum_seconds": 0.0002401249948889017,
+        "value_norm": 9.087229449212181
+      },
+      "construction": {
+        "median_seconds": 2.125e-06,
+        "minimum_seconds": 2.041e-06
+      },
+      "l2_error": 0.0,
+      "tree": {
+        "dim": 2,
+        "dims": [
+          2
+        ],
+        "types": {
+          "ngfem::ConstantCoefficientFunction": 4,
+          "ngfem::CoordCoefficientFunction": 10,
+          "ngfem::OneFormCoefficientFunction": 1,
+          "ngfem::ScaleCoefficientFunction": 2,
+          "ngfem::SymbolicMatrixProductCoefficientFunction": 1,
+          "ngfem::VectorialCoefficientFunction": 2,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMinus>": 1,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 4,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 3,
+          "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 3
+        },
+        "unique_nodes": 23,
+        "visits": 31
+      }
+    },
+    "lower_rank2_axis1": {
+      "assembly": {
+        "median_seconds": 0.0003743749111890793,
+        "minimum_seconds": 0.0003125830553472042,
+        "value_norm": 20.422862655857887
+      },
+      "construction": {
+        "median_seconds": 2.0840000000000003e-06,
+        "minimum_seconds": 2.0000000000000003e-06
+      },
+      "l2_error": 0.0,
+      "tree": {
+        "dim": 4,
+        "dims": [
+          2,
+          2
+        ],
+        "types": {
+          "ngfem::ConstantCoefficientFunction": 4,
+          "ngfem::CoordCoefficientFunction": 14,
+          "ngfem::ScaleCoefficientFunction": 2,
+          "ngfem::SymbolicMatrixProductCoefficientFunction": 1,
+          "ngfem::TensorFieldCoefficientFunction": 1,
+          "ngfem::VectorialCoefficientFunction": 2,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMinus>": 2,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 4,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 4,
+          "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 4
+        },
+        "unique_nodes": 26,
+        "visits": 38
+      }
+    },
+    "lower_rank3_axis2": {
+      "assembly": {
+        "median_seconds": 0.00030433398205786943,
+        "minimum_seconds": 0.00015708303544670343,
+        "value_norm": 542.9919088744282
+      },
+      "construction": {
+        "median_seconds": 2.3209e-05,
+        "minimum_seconds": 2.2916000000000002e-05
+      },
+      "l2_error": 0.0,
+      "tree": {
+        "dim": 8,
+        "dims": [
+          2,
+          2,
+          2
+        ],
+        "types": {
+          "ngfem::ConstantCoefficientFunction": 10,
+          "ngfem::CoordCoefficientFunction": 24,
+          "ngfem::ScaleCoefficientFunction": 26,
+          "ngfem::SymbolicEinsumCoefficientFunction": 1,
+          "ngfem::TensorFieldCoefficientFunction": 1,
+          "ngfem::VectorialCoefficientFunction": 2,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMinus>": 8,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 4,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 10,
+          "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 4
+        },
+        "unique_nodes": 68,
+        "visits": 90
+      }
+    },
+    "raise_rank1": {
+      "assembly": {
+        "median_seconds": 0.00036295910831540823,
+        "minimum_seconds": 0.000299417064525187,
+        "value_norm": 4.252868499051778
+      },
+      "construction": {
+        "median_seconds": 1.875e-06,
+        "minimum_seconds": 1.7500000000000002e-06
+      },
+      "l2_error": 0.0,
+      "tree": {
+        "dim": 2,
+        "dims": [
+          2
+        ],
+        "types": {
+          "ngfem::ConstantCoefficientFunction": 4,
+          "ngfem::CoordCoefficientFunction": 10,
+          "ngfem::InverseCoefficientFunction<2>": 1,
+          "ngfem::ScaleCoefficientFunction": 2,
+          "ngfem::SymbolicMatrixProductCoefficientFunction": 1,
+          "ngfem::VectorFieldCoefficientFunction": 1,
+          "ngfem::VectorialCoefficientFunction": 2,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMinus>": 1,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 4,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 3,
+          "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 3
+        },
+        "unique_nodes": 24,
+        "visits": 32
+      }
+    },
+    "raise_rank2_axis0": {
+      "assembly": {
+        "median_seconds": 0.0003620409406721592,
+        "minimum_seconds": 0.00027837499510496855,
+        "value_norm": 5.047102314257596
+      },
+      "construction": {
+        "median_seconds": 2.0830000000000002e-06,
+        "minimum_seconds": 1.9590000000000002e-06
+      },
+      "l2_error": 0.0,
+      "tree": {
+        "dim": 4,
+        "dims": [
+          2,
+          2
+        ],
+        "types": {
+          "ngfem::ConstantCoefficientFunction": 4,
+          "ngfem::CoordCoefficientFunction": 14,
+          "ngfem::InverseCoefficientFunction<2>": 1,
+          "ngfem::ScaleCoefficientFunction": 2,
+          "ngfem::SymbolicMatrixProductCoefficientFunction": 1,
+          "ngfem::TensorFieldCoefficientFunction": 1,
+          "ngfem::VectorialCoefficientFunction": 2,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 6,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 4,
+          "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 4
+        },
+        "unique_nodes": 27,
+        "visits": 39
+      }
+    },
+    "raise_rank2_axis1": {
+      "assembly": {
+        "median_seconds": 0.00036562501918524504,
+        "minimum_seconds": 0.00023308396339416504,
+        "value_norm": 5.0471023142575895
+      },
+      "construction": {
+        "median_seconds": 2.125e-06,
+        "minimum_seconds": 1.958e-06
+      },
+      "l2_error": 0.0,
+      "tree": {
+        "dim": 4,
+        "dims": [
+          2,
+          2
+        ],
+        "types": {
+          "ngfem::ConstantCoefficientFunction": 4,
+          "ngfem::CoordCoefficientFunction": 14,
+          "ngfem::InverseCoefficientFunction<2>": 1,
+          "ngfem::ScaleCoefficientFunction": 2,
+          "ngfem::SymbolicMatrixProductCoefficientFunction": 1,
+          "ngfem::TensorFieldCoefficientFunction": 1,
+          "ngfem::VectorialCoefficientFunction": 2,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 6,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 4,
+          "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 4
+        },
+        "unique_nodes": 27,
+        "visits": 39
+      }
+    },
+    "raise_rank3_axis1": {
+      "assembly": {
+        "median_seconds": 0.00031358294654637575,
+        "minimum_seconds": 0.00017320900224149227,
+        "value_norm": 143.68595434023703
+      },
+      "construction": {
+        "median_seconds": 2.3791000000000003e-05,
+        "minimum_seconds": 2.3416e-05
+      },
+      "l2_error": 0.0,
+      "tree": {
+        "dim": 8,
+        "dims": [
+          2,
+          2,
+          2
+        ],
+        "types": {
+          "ngfem::ConstantCoefficientFunction": 10,
+          "ngfem::CoordCoefficientFunction": 24,
+          "ngfem::InverseCoefficientFunction<2>": 1,
+          "ngfem::ScaleCoefficientFunction": 26,
+          "ngfem::SymbolicEinsumCoefficientFunction": 1,
+          "ngfem::TensorFieldCoefficientFunction": 1,
+          "ngfem::VectorialCoefficientFunction": 2,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 4,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 18,
+          "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 4
+        },
+        "unique_nodes": 69,
+        "visits": 91
+      }
+    },
+    "trace_rank2": {
+      "assembly": {
+        "median_seconds": 0.00023033306933939457,
+        "minimum_seconds": 0.0001773328986018896,
+        "value_norm": 9.295323031293892
+      },
+      "construction": {
+        "median_seconds": 3.7920000000000003e-06,
+        "minimum_seconds": 3.625e-06
+      },
+      "l2_error": 0.0,
+      "tree": {
+        "dim": 1,
+        "dims": [],
+        "types": {
+          "ngfem::ConstantCoefficientFunction": 4,
+          "ngfem::CoordCoefficientFunction": 14,
+          "ngfem::InverseCoefficientFunction<2>": 1,
+          "ngfem::ScalarFieldCoefficientFunction": 1,
+          "ngfem::ScaleCoefficientFunction": 2,
+          "ngfem::SymbolicInnerProductCoefficientFunction": 1,
+          "ngfem::VectorialCoefficientFunction": 2,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 6,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 4,
+          "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 4
+        },
+        "unique_nodes": 27,
+        "visits": 39
+      }
+    },
+    "trace_rank4_axes1_3": {
+      "assembly": {
+        "median_seconds": 0.00028966704849153757,
+        "minimum_seconds": 0.00016491708811372519,
+        "value_norm": 883.457843738348
+      },
+      "construction": {
+        "median_seconds": 3.3583e-05,
+        "minimum_seconds": 3.3166e-05
+      },
+      "l2_error": 0.0,
+      "tree": {
+        "dim": 4,
+        "dims": [
+          2,
+          2
+        ],
+        "types": {
+          "ngfem::ConstantCoefficientFunction": 18,
+          "ngfem::CoordCoefficientFunction": 40,
+          "ngfem::InverseCoefficientFunction<2>": 1,
+          "ngfem::ScaleCoefficientFunction": 34,
+          "ngfem::SymbolicEinsumCoefficientFunction": 1,
+          "ngfem::TensorFieldCoefficientFunction": 1,
+          "ngfem::VectorialCoefficientFunction": 2,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericMult>": 20,
+          "ngfem::cl_BinaryOpCF<ngfem::GenericPlus>": 18,
+          "ngfem::cl_UnaryOpCF<ngfem::GenericIdentity>": 4
+        },
+        "unique_nodes": 101,
+        "visits": 139
+      }
+    }
+  },
+  "warmup": 5
+}
