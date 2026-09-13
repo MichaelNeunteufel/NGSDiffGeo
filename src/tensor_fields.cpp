@@ -611,5 +611,6 @@ void ExportTensorFields(py::module m)
   m.def("_SumCoefficients", &SymbolicSumCF);
   m.def("_EinsumCoefficient", &SymbolicEinsumCF,
         py::arg("signature"), py::arg("inputs"),
-        "Internal benchmark/testing hook for a reconstructible symbolic einsum.");
+        "Internal bridge used by typed tensor operations and benchmarks to "
+        "construct a reconstructible symbolic einsum.");
 }
