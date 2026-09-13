@@ -68,6 +68,102 @@ def test_doubleform_hodge_star_left_right_inverse(make_unit_cube_mesh, rm_euclid
     assert l2_error(back_right, df, mesh) == pytest.approx(0)
 
 
+def test_compact_doubleform_hodge_preserves_symbolic_operations(
+    make_unit_cube_mesh,
+):
+    import pickle
+
+    from ngsdiffgeo import ngsdiffgeo as cpp
+    from ngsolve import Parameter
+
+    mesh = make_unit_cube_mesh(maxh=0.7)
+    dim = 3
+    metric_parameter = Parameter(0.35)
+    metric = CF(
+        (
+            2 + metric_parameter + x,
+            0.1,
+            0.05,
+            0.1,
+            3 + y,
+            0.15,
+            0.05,
+            0.15,
+            4 + z,
+        ),
+        dims=(dim, dim),
+    )
+    rm = dg.RiemannianManifold(metric)
+    alpha = dg.OneForm(CF((1 + x, 2 + y, 3 + z)))
+    beta = dg.OneForm(CF((2 - x, 1 + y * z, 1 + z)))
+    gamma = dg.OneForm(CF((3 + y, 1 - x, 2 + z)))
+    delta = dg.OneForm(CF((1 + x * y, 2 - y, 3 - z)))
+    left = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+    right = dg.DoubleForm(Einsum("i,j->ij", gamma, delta), p=1, q=1, dim=dim)
+    compact = dg.Wedge(left, right)
+    dense = cpp._WedgeDenseDoubleForms(left, right)
+
+    for slot in ("left", "right", "both"):
+        compact_star = dg.star(compact, rm, slot=slot)
+        dense_star = dg.star(dense, rm, slot=slot)
+        assert any(
+            "CompactHodgeMap" in name
+            for name in dg.CFStats(compact_star)["types"]
+        )
+        assert l2_error(compact_star, dense_star, mesh) < 1e-9
+        assert l2_error(
+            compact_star.Compile(realcompile=False, wait=True, maxderiv=0),
+            dense_star,
+            mesh,
+        ) < 1e-9
+        assert l2_error(
+            compact_star.Compile(realcompile=True, wait=True, maxderiv=0),
+            dense_star,
+            mesh,
+        ) < 1e-9
+        assert l2_error(
+            pickle.loads(pickle.dumps(compact_star)), dense_star, mesh
+        ) < 1e-9
+
+    input_parameter = Parameter(1.25)
+    scaled = dg.ScalarField(input_parameter, dim=dim) * compact
+    compact_star = dg.star(scaled, rm)
+    dense_star = dg.star(
+        dg.ScalarField(input_parameter, dim=dim) * dense, rm
+    )
+    assert l2_error(
+        compact_star.Diff(input_parameter, CF(1)),
+        dense_star.Diff(input_parameter, CF(1)),
+        mesh,
+    ) < 1e-8
+    assert l2_error(
+        compact_star.Diff(metric_parameter, CF(1)),
+        dense_star.Diff(metric_parameter, CF(1)),
+        mesh,
+    ) < 1e-8
+    assert l2_error(
+        compact_star.Replace({input_parameter: CF(2)}),
+        dense_star.Replace({input_parameter: CF(2)}),
+        mesh,
+    ) < 1e-9
+    assert l2_error(
+        pickle.loads(pickle.dumps(compact_star)), dense_star, mesh
+    ) < 1e-9
+
+    dx = dg.DoubleForm(CF((1, 0, 0)), p=1, q=0, dim=dim)
+    dy = dg.DoubleForm(CF((0, 1, 0)), p=1, q=0, dim=dim)
+    dz = dg.DoubleForm(CF((0, 0, 1)), p=1, q=0, dim=dim)
+    compact_top = dg.Wedge(dg.Wedge(dx, dy), dz)
+    dense_top = cpp._WedgeDenseDoubleForms(
+        cpp._WedgeDenseDoubleForms(dx, dy), dz
+    )
+    assert l2_error(
+        dg.star(compact_top, rm, slot="left"),
+        dg.star(dense_top, rm, slot="left"),
+        mesh,
+    ) < 1e-9
+
+
 def test_project_tensor_tangent_and_normal(make_unit_cube_mesh, rm_euclidean_3d):
     mesh = make_unit_cube_mesh(maxh=0.6)
     dim = 3

@@ -1,4 +1,4 @@
-from tests._kforms_support import BBND, CF, Cross, Einsum, Id, acos, dg, l2_error, l2_error_bbnd, l2_norm, pytest, specialcf, sqrt, x, y, z
+from tests._kforms_support import BBND, CF, Cross, Einsum, Id, Norm, acos, dg, l2_error, l2_error_bbnd, l2_norm, pytest, specialcf, sqrt, x, y, z
 
 
 def test_doubleform_inner_product_factorizes(make_unit_square_mesh, rm_euclidean_2d):
@@ -217,6 +217,86 @@ def test_doubleform_trace_l_parameter(make_unit_square_mesh, rm_euclidean_2d):
     assert l2_norm(trace3, mesh) == pytest.approx(0)
 
 
+def test_compact_doubleform_trace_preserves_symbolic_operations(
+    make_unit_square_mesh,
+):
+    import pickle
+
+    from ngsolve import Parameter
+
+    mesh = make_unit_square_mesh(maxh=0.4)
+    dim = 2
+    metric_parameter = Parameter(0.4)
+    metric = CF(
+        (2 + metric_parameter + x, 0.2, 0.2, 3 + y),
+        dims=(dim, dim),
+    )
+    rm = dg.RiemannianManifold(metric)
+    input_parameter = Parameter(1.25)
+    scale = dg.ScalarField(input_parameter, dim=dim)
+    alpha = dg.OneForm(CF((1 + x, 2 + y)))
+    beta = dg.OneForm(CF((2 - y, 1 + x)))
+    gamma = dg.OneForm(CF((3 + y, 1 - x)))
+    delta = dg.OneForm(CF((1 + x * y, 2 - y)))
+    left = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim)
+    right = dg.DoubleForm(Einsum("i,j->ij", gamma, delta), p=1, q=1, dim=dim)
+    compact = scale * dg.Wedge(left, right)
+
+    trace_once = rm.Trace(compact, l=1)
+    trace_full = rm.Trace(compact, l=2)
+    expected_once = dg.DoubleForm(
+        Einsum("ijkl,ik->jl", compact, rm.G_inv),
+        p=1,
+        q=1,
+        dim=dim,
+    )
+    expected_full = Einsum(
+        "ijkl,ik,jl->", compact, rm.G_inv, rm.G_inv
+    )
+
+    assert any(
+        "CompactDoubleTraceIndependent" in name
+        for name in dg.CFStats(trace_once)["types"]
+    )
+    assert l2_error(trace_once, expected_once, mesh) < 1e-10
+    assert l2_error(trace_full, expected_full, mesh) < 1e-10
+    assert l2_error(
+        trace_once.Diff(input_parameter, CF(1)),
+        expected_once / input_parameter,
+        mesh,
+    ) < 1e-9
+    assert l2_error(
+        trace_once.Diff(metric_parameter, CF(1)),
+        expected_once.Diff(metric_parameter, CF(1)),
+        mesh,
+    ) < 1e-9
+    assert l2_error(
+        trace_once.Replace({input_parameter: CF(2)}),
+        (2 / input_parameter) * expected_once,
+        mesh,
+    ) < 1e-9
+    assert l2_error(
+        pickle.loads(pickle.dumps(trace_once)), expected_once, mesh
+    ) < 1e-9
+    for value, expected in (
+        (trace_once, expected_once),
+        (trace_full, expected_full),
+    ):
+        assert l2_error(
+            value.Compile(realcompile=False, wait=True, maxderiv=0),
+            expected,
+            mesh,
+        ) < 1e-9
+
+    # Native code generation must preserve a negative first contraction term.
+    # A norm-only comparison can hide this as an off-diagonal sign change.
+    assert l2_error(
+        trace_once.Compile(realcompile=True, wait=True, maxderiv=0),
+        expected_once,
+        mesh,
+    ) < 1e-9
+
+
 def test_doubleform_trace_l0_identity(make_unit_square_mesh, rm_euclidean_2d):
     mesh = make_unit_square_mesh(maxh=0.3)
     dim = 2
@@ -264,3 +344,237 @@ def test_inner_product_forms_scaling_doubleforms(make_unit_square_mesh, rm_eucli
     ip_forms = rm.InnerProduct(df1, df2, forms=True)
 
     assert l2_error(ip_forms, 0.25 * ip, mesh) == pytest.approx(0)
+
+
+def test_compact_metric_inner_products_keep_compact_consumers(
+    make_unit_square_mesh,
+):
+    import pickle
+
+    from ngsolve import (
+        BilinearForm,
+        Norm,
+        NumberSpace,
+        Parameter,
+        SymbolicBFI,
+        TaskManager,
+    )
+
+    mesh = make_unit_square_mesh(maxh=0.4)
+    dim = 2
+    metric = CF((2 + x, 0.2, 0.2, 3 + y), dims=(dim, dim))
+    rm = dg.RiemannianManifold(metric)
+    parameter = Parameter(1.25)
+    parameter_form = dg.ScalarField(parameter, dim=dim)
+    alpha = dg.OneForm(CF((1 + x, 2 + y)))
+    beta = dg.OneForm(CF((2 - y, 1 + x)))
+    gamma = dg.OneForm(CF((3 + y, 1 - x)))
+    delta = dg.OneForm(CF((1 + x * y, 2 - y)))
+
+    left_k = parameter_form * dg.Wedge(alpha, beta)
+    right_k = dg.Wedge(gamma, delta)
+    compact_k = rm.InnerProduct(left_k, right_k, forms=True)
+    expected_k = 0.5 * dg.Einsum(
+        "ij,kl,ik,jl->",
+        left_k,
+        right_k,
+        rm.G_inv,
+        rm.G_inv,
+    )
+
+    left_df = dg.DoubleForm(
+        dg.Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=dim
+    )
+    right_df = dg.DoubleForm(
+        dg.Einsum("i,j->ij", gamma, delta), p=1, q=1, dim=dim
+    )
+    compact_left = parameter_form * dg.Wedge(left_df, right_df)
+    compact_right = dg.Wedge(right_df, left_df)
+    compact_double = rm.InnerProduct(
+        compact_left, compact_right, forms=True
+    )
+    expected_double = 0.25 * dg.Einsum(
+        "ijkl,mnop,im,jn,ko,lp->",
+        compact_left,
+        compact_right,
+        rm.G_inv,
+        rm.G_inv,
+        rm.G_inv,
+        rm.G_inv,
+    )
+
+    assert any(
+        "CompactKFormInnerProduct" in name
+        for name in dg.CFStats(compact_k)["types"]
+    )
+    assert any(
+        "CompactDoubleFormInnerProduct" in name
+        for name in dg.CFStats(compact_double)["types"]
+    )
+    assert l2_error(compact_k, expected_k, mesh) < 1e-11
+    assert l2_error(compact_double, expected_double, mesh) < 1e-10
+    assert l2_error(
+        compact_k.Diff(parameter, CF(1)), expected_k / parameter, mesh
+    ) < 1e-10
+    assert l2_error(
+        compact_double.Diff(parameter, CF(1)),
+        expected_double / parameter,
+        mesh,
+    ) < 1e-9
+    assert l2_error(
+        compact_k.Replace({parameter: CF(2)}),
+        2 / parameter * expected_k,
+        mesh,
+    ) < 1e-10
+    assert l2_error(
+        compact_double.Replace({parameter: CF(2)}),
+        2 / parameter * expected_double,
+        mesh,
+    ) < 1e-9
+    assert l2_error(
+        pickle.loads(pickle.dumps(compact_k)), expected_k, mesh
+    ) < 1e-10
+    assert l2_error(
+        pickle.loads(pickle.dumps(compact_double)), expected_double, mesh
+    ) < 1e-9
+
+    for value, expected in (
+        (compact_k, expected_k),
+        (compact_double, expected_double),
+    ):
+        compiled = value.Compile(realcompile=False, wait=True, maxderiv=0)
+        space = NumberSpace(mesh)
+        trial, test = space.TnT()
+        assembled_errors = []
+        for simd in (False, True):
+            form = BilinearForm(space)
+            integrator = SymbolicBFI(
+                (compiled - expected) ** 2 * trial * test,
+                bonus_intorder=2,
+                simd_evaluate=simd,
+            )
+            form += integrator
+            with TaskManager():
+                form.Assemble()
+            assembled_errors.append(Norm(form.mat.AsVector()))
+            assert integrator.simd_evaluate is simd
+        assert assembled_errors[0] < 1e-18
+        assert assembled_errors[1] == pytest.approx(
+            assembled_errors[0], rel=1e-11, abs=1e-18
+        )
+
+
+def test_metric_inner_product_keeps_dense_fallback_for_unproven_forms(
+    make_unit_square_mesh,
+):
+    mesh = make_unit_square_mesh(maxh=0.4)
+    metric = CF((2 + x, 0.2, 0.2, 3 + y), dims=(2, 2))
+    rm = dg.RiemannianManifold(metric)
+
+    left_k = dg.TwoForm(CF((x, 1 + y, 2 - x, y), dims=(2, 2)), dim=2)
+    right_k = dg.TwoForm(
+        CF((1 + x, 3 - y, x * y, 2 + y), dims=(2, 2)), dim=2
+    )
+    result_k = rm.InnerProduct(left_k, right_k, forms=True)
+    expected_k = 0.5 * dg.Einsum(
+        "ij,kl,ik,jl->", left_k, right_k, rm.G_inv, rm.G_inv
+    )
+
+    left_df = dg.DoubleForm(
+        CF((1 + x, y, 2 - y, x * y), dims=(2, 2)),
+        p=1,
+        q=1,
+        dim=2,
+    )
+    right_df = dg.DoubleForm(
+        CF((x, 3 + y, 1 - x, 2 + x * y), dims=(2, 2)),
+        p=1,
+        q=1,
+        dim=2,
+    )
+    result_df = rm.InnerProduct(left_df, right_df, forms=True)
+    expected_df = dg.Einsum(
+        "ij,kl,ik,jl->", left_df, right_df, rm.G_inv, rm.G_inv
+    )
+
+    assert not any(
+        "CompactKFormInnerProduct" in name
+        for name in dg.CFStats(result_k)["types"]
+    )
+    assert not any(
+        "CompactDoubleFormInnerProduct" in name
+        for name in dg.CFStats(result_df)["types"]
+    )
+    assert l2_error(result_k, expected_k, mesh) < 1e-11
+    assert l2_error(result_df, expected_df, mesh) < 1e-11
+
+
+def test_compact_metric_inner_product_metric_derivative_realcompiles(
+    make_unit_square_mesh,
+):
+    from ngsolve import Parameter
+
+    mesh = make_unit_square_mesh(maxh=0.4)
+    metric_parameter = Parameter(0.4)
+    metric = CF(
+        (2 + metric_parameter + x, 0.2, 0.2, 3 + y),
+        dims=(2, 2),
+    )
+    rm = dg.RiemannianManifold(metric)
+    alpha = dg.OneForm(CF((1 + x, 2 + y)))
+    beta = dg.OneForm(CF((2 - y, 1 + x)))
+    gamma = dg.OneForm(CF((3 + y, 1 - x)))
+    delta = dg.OneForm(CF((1 + x * y, 2 - y)))
+    compact = dg.Wedge(
+        dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=2),
+        dg.DoubleForm(Einsum("i,j->ij", gamma, delta), p=1, q=1, dim=2),
+    )
+    result = rm.InnerProduct(compact, compact, forms=True).Diff(
+        metric_parameter, CF(1)
+    )
+    expected = (
+        0.25
+        * dg.Einsum(
+            "ijkl,mnop,im,jn,ko,lp->",
+            compact,
+            compact,
+            rm.G_inv,
+            rm.G_inv,
+            rm.G_inv,
+            rm.G_inv,
+        )
+    ).Diff(metric_parameter, CF(1))
+
+    assert l2_error(result, expected, mesh) < 1e-9
+    assert l2_error(
+        result.Compile(realcompile=True, wait=True, maxderiv=0),
+        expected,
+        mesh,
+    ) < 1e-9
+
+
+def test_compact_metric_inner_products_preserve_complex_values(
+    make_unit_square_mesh,
+):
+    mesh = make_unit_square_mesh(maxh=0.4)
+    rm = dg.RiemannianManifold(
+        CF((2 + x, 0.2, 0.2, 3 + y), dims=(2, 2))
+    )
+    alpha = dg.OneForm(CF(((1 + 2j) * (1 + x), (1 + 2j) * y)))
+    beta = dg.OneForm(CF((2 - y, 1 + x)))
+    left = dg.Wedge(alpha, beta)
+    right = dg.Wedge(beta, alpha)
+    result = rm.InnerProduct(left, right, forms=True)
+    expected = 0.5 * dg.Einsum(
+        "ij,kl,ik,jl->", left, right, rm.G_inv, rm.G_inv
+    )
+
+    assert result.is_complex
+    assert l2_norm(Norm(result - expected), mesh) < 1e-10
+    assert l2_norm(
+        Norm(
+            result.Compile(realcompile=False, wait=True, maxderiv=0)
+            - expected
+        ),
+        mesh,
+    ) < 1e-10

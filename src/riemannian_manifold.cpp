@@ -2,6 +2,7 @@
 #include "tensor_fields.hpp"
 #include "coefficient_grad.hpp"
 #include "kforms.hpp"
+#include "kforms_internal.hpp"
 #include "symbolic_expression.hpp"
 
 #include <coefficient_stdmath.hpp>
@@ -533,27 +534,30 @@ namespace ngfem
         return vol[int(vb)];
     }
 
+    RiemannianManifold::MetricPair
+    RiemannianManifold::SelectMetricPair(VorB vb, const char *error) const
+    {
+        switch (vb)
+        {
+        case VOL:
+            return {g, g_inv};
+        case BND:
+            return {g_F, g_F_inv};
+        case BBND:
+            return {g_E, g_E_inv};
+        default:
+            throw Exception(error);
+        }
+    }
+
     shared_ptr<TensorFieldCoefficientFunction> RiemannianManifold::Raise(shared_ptr<TensorFieldCoefficientFunction> tf, size_t index, VorB vb) const
     {
         ValidateTensorInput(tf, dim, "Raise");
         if (tf->Dimensions().Size() <= index)
             throw Exception(ToString("Raise: Dimension of tf = ") + ToString(tf->Dimensions().Size()) + "<= index = " + ToString(index));
 
-        shared_ptr<CoefficientFunction> metric_inv;
-        switch (vb)
-        {
-        case VOL:
-            metric_inv = g_inv;
-            break;
-        case BND:
-            metric_inv = g_F_inv;
-            break;
-        case BBND:
-            metric_inv = g_E_inv;
-            break;
-        default:
-            throw Exception("Raise: only implemented for VOL, BND, and BBND");
-        }
+        const auto &metric_inv = SelectMetricPair(
+            vb, "Raise: only implemented for VOL, BND, and BBND").inverse;
 
         auto m = tf->Meta();
         if (!m.Covariant(index))
@@ -611,21 +615,8 @@ namespace ngfem
         if (tf->Dimensions().Size() <= index)
             throw Exception(ToString("Lower: Dimension of tf = ") + ToString(tf->Dimensions().Size()) + "<= index = " + ToString(index));
 
-        shared_ptr<CoefficientFunction> metric;
-        switch (vb)
-        {
-        case VOL:
-            metric = g;
-            break;
-        case BND:
-            metric = g_F;
-            break;
-        case BBND:
-            metric = g_E;
-            break;
-        default:
-            throw Exception("Lower: only implemented for VOL, BND, and BBND");
-        }
+        const auto &metric = SelectMetricPair(
+            vb, "Lower: only implemented for VOL, BND, and BBND").metric;
 
         auto m = tf->Meta();
         if (index >= m.Rank())
@@ -894,27 +885,10 @@ namespace ngfem
         if (c1->Dimensions().Size() && c1->Dimensions()[0] != dim)
             throw Exception(ToString("IP: dimensions of c1 and c2 must be ") + ToString(dim) + ". Received " + ToString(c1->Dimensions()[0]));
 
-        shared_ptr<CoefficientFunction> metric;
-        shared_ptr<CoefficientFunction> metric_inv;
-
-        switch (vb)
-        {
-        case VOL:
-            metric = g;
-            metric_inv = g_inv;
-            break;
-        case BND:
-            metric = g_F;
-            metric_inv = g_F_inv;
-            break;
-        case BBND:
-            metric = g_E;
-            metric_inv = g_E_inv;
-            break;
-        default:
-            throw Exception("IP: VorB must be VOL, BND, or BBND");
-            break;
-        }
+        const auto metrics = SelectMetricPair(
+            vb, "IP: VorB must be VOL, BND, or BBND");
+        const auto &metric = metrics.metric;
+        const auto &metric_inv = metrics.inverse;
 
         auto apply_form_scaling = [&](shared_ptr<ScalarFieldCoefficientFunction> result)
         {
@@ -932,6 +906,16 @@ namespace ngfem
             return ScalarFieldCF(
                 ScaleCoefficientCF(result, make_shared<ConstantCoefficientFunction>(scale)), dim);
         };
+
+        if (forms)
+        {
+            auto k1 = dynamic_pointer_cast<KFormCoefficientFunction>(c1);
+            auto k2 = dynamic_pointer_cast<KFormCoefficientFunction>(c2);
+            if (k1 && k2 && k1->Degree() == k2->Degree())
+                if (auto compact = kforms_internal::CompactKFormInnerProduct(
+                        k1, k2, metric_inv))
+                    return ScalarFieldCF(std::move(compact), dim);
+        }
 
         if (cov_ind1.size() == 1)
         {
@@ -997,6 +981,16 @@ namespace ngfem
             throw Exception("IP: double-form dimension does not match manifold dimension");
         if (c1->LeftDegree() != c2->LeftDegree() || c1->RightDegree() != c2->RightDegree())
             throw Exception("IP: double-form degrees must match");
+
+        if (forms)
+        {
+            const auto &metric_inv = SelectMetricPair(
+                vb, "IP: VorB must be VOL, BND, or BBND").inverse;
+            if (auto compact =
+                    kforms_internal::CompactDoubleFormInnerProduct(
+                        c1, c2, metric_inv))
+                return ScalarFieldCF(std::move(compact), dim);
+        }
 
         auto tf1 = static_pointer_cast<TensorFieldCoefficientFunction>(c1);
         auto tf2 = static_pointer_cast<TensorFieldCoefficientFunction>(c2);
@@ -1435,27 +1429,10 @@ namespace ngfem
         if (index1 == index2)
             throw Exception("Trace: indices must be different");
 
-        shared_ptr<CoefficientFunction> metric;
-        shared_ptr<CoefficientFunction> metric_inv;
-
-        switch (vb)
-        {
-        case VOL:
-            metric = g;
-            metric_inv = g_inv;
-            break;
-        case BND:
-            metric = g_F;
-            metric_inv = g_F_inv;
-            break;
-        case BBND:
-            metric = g_E;
-            metric_inv = g_E_inv;
-            break;
-        default:
-            throw Exception("Trace: VorB must be VOL, BND, or BBND");
-            break;
-        }
+        const auto metrics = SelectMetricPair(
+            vb, "Trace: VorB must be VOL, BND, or BBND");
+        const auto &metric = metrics.metric;
+        const auto &metric_inv = metrics.inverse;
 
         auto m = tf->Meta();
         if (std::max(index1, index2) >= m.Rank())
@@ -1527,14 +1504,13 @@ namespace ngfem
             return ScalarFieldCF(zero_cf, dim);
         }
 
+        const auto &metric_inv = SelectMetricPair(
+            vb, "Trace: VorB must be VOL, BND, or BBND").inverse;
+
         auto current = tf;
         for (size_t i = 0; i < l; ++i)
-        {
-            int lp = current->LeftDegree();
-            int lq = current->RightDegree();
-            auto traced = Trace(static_pointer_cast<TensorFieldCoefficientFunction>(current), 0, size_t(lp), vb);
-            current = DoubleFormCF(traced, lp - 1, lq - 1, dim);
-        }
+            current = kforms_internal::TraceDoubleFormWithMetric(
+                current, metric_inv);
 
         if (current->LeftDegree() == 0 && current->RightDegree() == 0)
             return ScalarFieldCF(current->GetFullCoefficient(), dim);
