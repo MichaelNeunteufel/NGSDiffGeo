@@ -80,8 +80,8 @@ fields encode the dimension in each component axis. K-forms and double forms
 also carry an explicit ambient dimension, which is authoritative for scalar
 rank-zero values. A scalar K-form may use ambient dimension zero to mean
 unknown. Supported scalar operations infer the current manifold dimension,
-matching the form-component contract. Axis variance is read from ``TensorMeta``;
-operations must change values and metadata together.
+matching the form-component contract. Axis variance is read from ``TensorMeta``.
+Operations must change values and metadata together.
 
 ``Raise`` and ``Lower`` act on one selected axis using the inverse metric or
 metric for the selected stratum. Their vector and one-form specializations are
@@ -89,6 +89,10 @@ preserved. Rank-one and rank-two operations use reconstructible symbolic
 matrix-product nodes. Higher ranks use reconstructible einsum nodes.
 Multi-index overloads apply the same checked single-index operation in the
 supplied order.
+All metric-backed algebra selects the volume, boundary, or edge metric and its
+inverse through the same internal selector. New overloads should use that
+selector so validation and cached metric identity cannot drift between
+``Raise``, ``Lower``, ``InnerProduct``, and ``Trace``.
 
 Python addition and subtraction require identical axis variance for typed
 tensor fields. In particular, a vector field cannot be added to a one-form.
