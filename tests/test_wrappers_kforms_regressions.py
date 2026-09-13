@@ -8,6 +8,7 @@ import ngsdiffgeo as dg
 from ngsdiffgeo import ngsdiffgeo as cpp
 from ngsdiffgeo import wrappers as wrappers
 from ngsolve import CF, Id, IfPos, Norm, x, y
+from ngsolve.fem import Einsum
 from netgen.libngpy._meshing import NgException
 from tests._helpers import assert_l2_close
 
@@ -211,7 +212,7 @@ def test_form_jacobian_contracts_to_directional_derivative(name, make_unit_squar
     assert_l2_close(contracted, result, mesh, tol=1e-9)
 
 
-@pytest.mark.parametrize("kind", ["wedge", "star", "transpose"])
+@pytest.mark.parametrize("kind", ["wedge", "d", "star", "transpose"])
 @pytest.mark.parametrize("scale", [1, 1+2j])
 def test_symbolic_form_graphs_compile_and_pickle(kind, scale, make_unit_square_mesh, monkeypatch):
     import pickle
@@ -224,6 +225,10 @@ def test_symbolic_form_graphs_compile_and_pickle(kind, scale, make_unit_square_m
         result = dg.Wedge(a,b)
         value = scale*((1+x)*(2+x)-y*y)
         expected = CF((0,value,-value,0),dims=(2,2))
+    elif kind == "d":
+        result = dg.d(dg.OneForm(CF((scale * y, scale * x * x))))
+        value = scale * (2 * x - 1)
+        expected = CF((0, value, -value, 0), dims=(2, 2))
     elif kind == "star":
         result = dg.star(a,dg.RiemannianManifold(Id(2)))
         expected = CF((-scale*y,scale*(1+x)))
@@ -235,6 +240,104 @@ def test_symbolic_form_graphs_compile_and_pickle(kind, scale, make_unit_square_m
                       result.Compile(realcompile=True,maxderiv=2,wait=True)):
         assert tuple(candidate.dims) == tuple(expected.dims)
         assert_l2_close(Norm(candidate-expected),CF(0),mesh,tol=1e-10)
+
+
+def test_compact_kform_arithmetic_chain_preserves_public_contract(
+    make_unit_square_mesh, monkeypatch
+):
+    import pickle
+
+    monkeypatch.setenv("CCACHE_DISABLE", "1")
+    mesh = make_unit_square_mesh(maxh=0.7)
+    a = dg.OneForm(CF((1 + x, y)))
+    b = dg.OneForm(CF((y, 2 + x)))
+    c = dg.OneForm(CF((x - y, 1 + y)))
+    factor = dg.ScalarField(1 + x + y, dim=2)
+
+    ab = (1 + x) * (2 + x) - y * y
+    bc = y * (1 + y) - (2 + x) * (x - y)
+    value = factor.coef * ab - bc
+    expected = CF((0, value, -value, 0), dims=(2, 2))
+    result = factor * dg.Wedge(a, b) - dg.Wedge(b, c)
+
+    assert isinstance(result, dg.KForm)
+    assert result.degree == 2
+    assert tuple(result.dims) == (2, 2)
+    assert tuple(result.coef.dims) == (2, 2)
+    assert_l2_close(result, expected, mesh, tol=1e-11)
+
+    replacement = 2 + y
+    replaced_expected = CF(
+        (0, replacement * ab - bc, -(replacement * ab - bc), 0),
+        dims=(2, 2),
+    )
+    assert_l2_close(result.Replace({factor: replacement}), replaced_expected,
+                    mesh, tol=1e-11)
+    assert_l2_close(result.Diff(factor, CF(3)),
+                    CF((0, 3 * ab, -3 * ab, 0), dims=(2, 2)),
+                    mesh, tol=1e-11)
+
+    for candidate in (
+        pickle.loads(pickle.dumps(result)),
+        result.Compile(realcompile=False),
+        result.Compile(realcompile=True, maxderiv=2, wait=True),
+    ):
+        assert tuple(candidate.dims) == (2, 2)
+        assert_l2_close(candidate, expected, mesh, tol=1e-10)
+
+
+def test_compact_doubleform_arithmetic_chain_preserves_public_contract(
+    make_unit_square_mesh, monkeypatch
+):
+    import pickle
+
+    monkeypatch.setenv("CCACHE_DISABLE", "1")
+    mesh = make_unit_square_mesh(maxh=0.7)
+    alpha = dg.OneForm(CF((1 + x, y)))
+    beta = dg.OneForm(CF((y, 2 + x)))
+    gamma = dg.OneForm(CF((x - y, 1 + y)))
+    delta = dg.OneForm(CF((2 - x, 1 + x * y)))
+    epsilon = dg.OneForm(CF((1 + y, x + y)))
+    eta = dg.OneForm(CF((x * y, 3 - y)))
+    factor = dg.ScalarField(1 + x + y, dim=2)
+
+    a = dg.DoubleForm(Einsum("i,j->ij", alpha, beta), p=1, q=1, dim=2)
+    b = dg.DoubleForm(Einsum("i,j->ij", gamma, delta), p=1, q=1, dim=2)
+    c = dg.DoubleForm(Einsum("i,j->ij", epsilon, eta), p=1, q=1, dim=2)
+    wedge_ab = Einsum(
+        "ij,kl->ijkl", dg.Wedge(alpha, gamma), dg.Wedge(beta, delta)
+    )
+    wedge_bc = Einsum(
+        "ij,kl->ijkl", dg.Wedge(gamma, epsilon), dg.Wedge(delta, eta)
+    )
+    expected = factor.coef * wedge_ab - wedge_bc
+    result = factor * dg.Wedge(a, b) - dg.Wedge(b, c)
+
+    assert isinstance(result, dg.DoubleForm)
+    assert (result.degree_left, result.degree_right) == (2, 2)
+    assert tuple(result.dims) == (2, 2, 2, 2)
+    assert tuple(result.coef.dims) == (2, 2, 2, 2)
+    assert_l2_close(result, expected, mesh, tol=1e-11)
+    assert_l2_close(result.trans.trans, result, mesh, tol=1e-11)
+
+    replacement = 2 + y
+    assert_l2_close(
+        result.Replace({factor: replacement}),
+        replacement * wedge_ab - wedge_bc,
+        mesh,
+        tol=1e-11,
+    )
+    assert_l2_close(
+        result.Diff(factor, CF(3)), 3 * wedge_ab, mesh, tol=1e-11
+    )
+
+    for candidate in (
+        pickle.loads(pickle.dumps(result)),
+        result.Compile(realcompile=False),
+        result.Compile(realcompile=True, maxderiv=2, wait=True),
+    ):
+        assert tuple(candidate.dims) == (2, 2, 2, 2)
+        assert_l2_close(candidate, expected, mesh, tol=1e-10)
 
 
 def test_scalarfield_still_multiplies_integration_measures(make_unit_square_mesh):
