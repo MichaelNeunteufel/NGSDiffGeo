@@ -2,6 +2,7 @@
 #include "tensor_fields.hpp"
 #include "coefficient_grad.hpp"
 #include "kforms.hpp"
+#include "kforms_bindings.hpp"
 
 #include <coefficient.hpp>
 #include <cstdlib>

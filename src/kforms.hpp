@@ -1,8 +1,7 @@
-#ifndef KFORMS_HPP
-#define KFORMS_HPP
+#ifndef NGSDIFFGEO_KFORMS_HPP
+#define NGSDIFFGEO_KFORMS_HPP
 
 #include "tensor_fields.hpp"
-#include "coefficient_grad.hpp"
 
 namespace ngfem
 {
@@ -11,7 +10,7 @@ namespace ngfem
     /**
      * Fully covariant rank-k tensor with an ambient-space dimension.
      *
-     * This class records form semantics; it does not antisymmetrize arbitrary
+     * This class records form semantics. It does not antisymmetrize arbitrary
      * input components. Apply AlternationCF explicitly when input alternation is required.
      */
     class KFormCoefficientFunction : public TensorFieldCoefficientFunction
@@ -185,8 +184,5 @@ namespace ngfem
     shared_ptr<DoubleFormCoefficientFunction> ZeroDoubleForm(int p, int q, int dim);
 
 }
-
-#include <python_ngstd.hpp>
-void ExportKForms(py::module m);
 
 #endif
