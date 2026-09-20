@@ -108,6 +108,7 @@ namespace kforms_internal
         template <typename COMPACT, typename VALUES>
         void Expand(size_t points, const COMPACT &compact, VALUES values) const
         {
+            using T = typename VALUES::TSCAL;
             const auto &entries = basis->DenseEntries();
             for (int dense = 0; dense < Dimension(); ++dense)
             {
@@ -118,7 +119,7 @@ namespace kforms_internal
                 else
                     for (size_t ip = 0; ip < points; ++ip)
                         values(dense, ip) =
-                            entry.sign * compact(entry.independent_index, ip);
+                            T(entry.sign) * compact(entry.independent_index, ip);
             }
         }
         void GenerateCode(Code &code, FlatArray<int> inputs, int index) const override
@@ -375,6 +376,7 @@ namespace kforms_internal
         void Expand(size_t points, const COMPACT &compact,
                     VALUES values) const
         {
+            using T = typename VALUES::TSCAL;
             for (int dense = 0; dense < Dimension(); ++dense)
             {
                 const int compact_index =
@@ -387,7 +389,7 @@ namespace kforms_internal
                     const int sign = expansion->signs[size_t(dense)];
                     for (size_t ip = 0; ip < points; ++ip)
                         values(dense, ip) =
-                            sign * compact(compact_index, ip);
+                            T(sign) * compact(compact_index, ip);
                 }
             }
         }

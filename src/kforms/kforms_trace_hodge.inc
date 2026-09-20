@@ -529,6 +529,7 @@ namespace kforms_internal
                                     VOLUME volume_values,
                                     VALUES values) const
             {
+                using T = typename VALUES::TSCAL;
                 for (int output_row = 0; output_row < table->size;
                      ++output_row)
                     for (int input_column = 0;
@@ -538,7 +539,7 @@ namespace kforms_internal
                             values(output_row * table->size +
                                        input_column,
                                    ip) =
-                                table->signs[size_t(output_row)] *
+                                T(table->signs[size_t(output_row)]) *
                                 volume_values(0, ip) *
                                 induced(table->rows[size_t(output_row)] *
                                                 table->size +

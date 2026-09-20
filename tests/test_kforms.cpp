@@ -1083,6 +1083,13 @@ namespace
             complex_values->Reshape(Array<int>{2, 2}),
             "native-compiled complex double-form facade changed values");
 
+        RiemannianManifold euclidean(IdentityCF(2));
+        auto complex_star = HodgeStar(complex_form, euclidean, VOL, 0);
+        RequireSameValues(
+            InverseHodgeStar(complex_star, euclidean, VOL, 0),
+            complex_form,
+            "complex compact Hodge map changed values");
+
         LocalHeapMem<100000> heap("compact-double-form-simd");
         FE_ElementTransformation<2, 2> transformation(ET_TRIG);
         IntegrationRule rule(ET_TRIG, 2);
