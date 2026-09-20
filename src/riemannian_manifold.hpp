@@ -1,5 +1,5 @@
-#ifndef RIEMANNIAN_MANIFOLD
-#define RIEMANNIAN_MANIFOLD
+#ifndef NGSDIFFGEO_RIEMANNIAN_MANIFOLD_HPP
+#define NGSDIFFGEO_RIEMANNIAN_MANIFOLD_HPP
 
 #include <coefficient.hpp>
 #include <fespace.hpp>
@@ -85,6 +85,13 @@ namespace ngfem
         mutable shared_ptr<TensorFieldCoefficientFunction> levi_civita_cov;
         mutable shared_ptr<TensorFieldCoefficientFunction> levi_civita_contra;
 
+        struct MetricPair
+        {
+            const shared_ptr<CoefficientFunction> &metric;
+            const shared_ptr<CoefficientFunction> &inverse;
+        };
+
+        MetricPair SelectMetricPair(VorB vb, const char *error) const;
         void EnsureCurvature() const;
 
     public:
@@ -228,4 +235,4 @@ namespace ngfem
 #include <python_ngstd.hpp>
 void ExportRiemannianManifold(py::module m);
 
-#endif // RIEMANNIAN_MANIFOLD
+#endif // NGSDIFFGEO_RIEMANNIAN_MANIFOLD_HPP

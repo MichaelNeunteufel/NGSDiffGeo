@@ -1,5 +1,5 @@
-#ifndef COEFFICIENT_GRAD
-#define COEFFICIENT_GRAD
+#ifndef NGSDIFFGEO_COEFFICIENT_GRAD_HPP
+#define NGSDIFFGEO_COEFFICIENT_GRAD_HPP
 
 #include <coefficient.hpp>
 #include <diffop.hpp>
@@ -601,4 +601,4 @@ namespace ngfem
 #include <python_ngstd.hpp>
 void ExportGradCF(py::module m);
 
-#endif // COEFFICIENT_GRAD
+#endif // NGSDIFFGEO_COEFFICIENT_GRAD_HPP

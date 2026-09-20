@@ -1,5 +1,5 @@
-#ifndef TENSOR_FIELDS
-#define TENSOR_FIELDS
+#ifndef NGSDIFFGEO_TENSOR_FIELDS_HPP
+#define NGSDIFFGEO_TENSOR_FIELDS_HPP
 
 #include <coefficient.hpp>
 #include <array>
@@ -586,4 +586,4 @@ namespace ngfem
 #include <python_ngstd.hpp>
 void ExportTensorFields(py::module m);
 
-#endif // TENSOR_FIELDS
+#endif // NGSDIFFGEO_TENSOR_FIELDS_HPP

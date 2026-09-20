@@ -1,10 +1,51 @@
 K-forms and double forms
 ========================
 
-This component comprises ``src/kforms.hpp``, ``src/kforms.cpp``, and the
-form adapters in ``src/wrappers.py``. It builds on :doc:`developer_tensor_fields`
-for metadata and value forwarding, and on :doc:`developer_coefficient_grad`
-for physical derivatives.
+The public C++ interface lives in ``src/kforms.hpp``. The implementation uses
+``src/kforms.cpp``, ``src/kforms_basis.cpp``, and ``src/kforms_bindings.cpp``.
+The public Python adapters live in ``src/wrappers.py``. It builds on
+:doc:`developer_tensor_fields` for metadata and value forwarding, and on
+:doc:`developer_coefficient_grad` for physical derivatives.
+
+
+Source layout
+-------------
+
+``src/kforms.cpp`` deliberately remains one translation unit. Its files below
+``src/kforms/`` are textual C++ implementation fragments rather than separate
+compilation units. Keeping the hot lookup, construction, and evaluation helpers
+in one translation unit preserves cross-fragment inlining in Release builds.
+Do not add the fragments as independent CMake sources. Editors should associate
+``*.inc`` with C++ for syntax highlighting and symbol navigation.
+
+The fragments are grouped by ownership:
+
+* ``kforms_common.inc``, ``kforms_wrappers.inc``, and ``kforms_dispatch.inc``
+  provide shared validation, semantic construction, and stable public dispatch.
+* ``kforms_storage_facades.inc``, ``kforms_compact_facade.inc``, and
+  ``kforms_symbolic_operations.inc`` own compact representation and semantic
+  operation reconstruction.
+* ``kforms_dense_nodes.inc`` and ``kforms_hodge_helpers.inc`` contain the exact
+  dense/reference nodes and boundary or codimension Hodge helpers.
+* ``kforms_metric.inc`` and ``kforms_trace_hodge.inc`` own induced metrics,
+  inner products, trace, and compact Hodge evaluation.
+* ``kforms_compact_algebra.inc`` owns compact wedge tables and evaluator nodes.
+  ``kforms_algebra_operations.inc`` owns the representation-specific algebra
+  factories, arithmetic, and slot operations.
+* ``kforms_compact_exterior.inc`` owns the compact exterior-derivative table and
+  evaluator, while ``kforms_exterior_factories.inc`` owns compact and dense
+  exterior-derivative factories.
+* ``kforms_cache_diagnostics.inc`` contains only cross-family cache-container
+  accounting for tests and benchmarks. It is included at its original
+  definition point so the organizational split does not change Release code
+  layout.
+
+``src/kforms_basis.hpp`` and ``src/kforms_basis.cpp`` own canonical form bases.
+``src/kforms_internal.hpp`` is the narrow interface used by other native
+components, while ``src/kforms_detail.hpp`` is a private implementation and
+testing seam. ``src/kforms_diagnostics.hpp`` declares the unstable internal
+benchmark diagnostics. ``src/kforms_bindings.cpp`` is the central Python-binding
+entry point for the form component.
 
 
 Representation and construction
@@ -21,8 +62,10 @@ alternating input.
 Canonical factories reuse compatible wrappers and remove metadata-only wrapper
 layers when retyping. ``GetFullCoefficient()``, and Python ``.coef``, always
 expose the full public tensor shape and values. They never expose a vector of
-independent alternating components. The current implementation uses full
-component shapes (compact storage remains a separate design proposal).
+independent alternating components. Proven alternating results may nevertheless
+keep only independent components behind an internal facade. Dense constructor
+inputs are not compacted or projected automatically, so a non-alternating
+coefficient retains all of its supplied values.
 
 Keep the following limits distinct:
 
@@ -67,6 +110,9 @@ operand wrappers too, so ``Diff`` and ``Replace`` preserve the operation rather
 than treating its current zero value as permanent. K-form ``wedge``, ``d``, ``star``
 and ``inv_star`` methods return the same Python form wrappers as the free
 functions. Double-form methods and ``trans`` follow the same rule.
+The native K-form and double-form classes receive these method surfaces from
+one explicit operation list per type. Add a new method to that list and its
+reflection test instead of maintaining separate assignment loops.
 
 Explicit degrees and dimensions must be integers. Conversion helpers validate
 requested metadata before reusing an existing Python wrapper. Ambient
@@ -126,8 +172,8 @@ semantic wrapper. Tensor-valued Jacobians append variable axes and are untyped.
 Differentiation with respect to the wrapper itself returns the supplied
 direction or identity directly.
 
-The three internal operation nodes are full alternation, block alternation,
-and double-form wedge. They:
+Native operation nodes, including alternation, compact arithmetic, wedge,
+trace, induced metric, and Hodge maps, share the following contract. They:
 
 * propagate child domains and elementwise-constant state
 * implement both nonzero-pattern overloads, including first and second derivative dependencies
@@ -191,13 +237,26 @@ building component lookup tables. Nodes do not store their own permutation
 copies. Component tables remain local because they depend on shape and block
 position. Separate classes and archive constructors are retained.
 
+Form bases and the tables for compact expansion, trace, wedge, exterior
+derivative, induced metrics, and Hodge maps are immutable and initialized with
+``std::call_once``. They are keyed only by dimension and degrees. Evaluator
+nodes retain a shared table handle rather than copying row, sign, permutation,
+or metric-index vectors. When a new cache family is added, include both its
+fixed container and owned dynamic storage in the private benchmark accounting.
+
 Interpreted evaluation and generated code use the same signed lookup tables.
-All three nodes generate their assignments directly, using the tensor
+The nodes generate their assignments directly, using the tensor
 component's shared declaration helper for real, complex, SIMD, and derivative
 scalar types. Full alternation does not embed an evaluation-fallback pointer
 in generated code. Rank-zero alternation and scalar double wedge also support
 the native scalar point-evaluation overload, including use as conditions in
 complex-valued ``IfPos`` expressions.
+
+Generated signed sums must initialize the first term explicitly. Applying
+``operator-=`` to an empty ``CodeExpr`` loses a leading minus sign. Use the
+shared signed-accumulation helper for every generated contraction or
+permutation sum, and cover a leading-negative case with
+``realcompile=True``.
 
 ``Compile(realcompile=False)`` tests graph compilation. ``realcompile=True``
 also invokes native code generation. Compilation preserves values and shapes

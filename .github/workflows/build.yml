@@ -77,7 +77,7 @@ jobs:
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install "ngsolve>=6.2.2505.post105.dev0" cmake ninja
+          python -m pip install "ngsolve>=6.2.2607" cmake ninja
 
       - name: Expose Netgen runtime libraries
         run: |

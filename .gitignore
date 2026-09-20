@@ -57,3 +57,7 @@ htmlcov/
 
 *.bundle
 todo.txt
+
+# Locally generated benchmark results
+benchmarks/results/**
+!benchmarks/results/README.md

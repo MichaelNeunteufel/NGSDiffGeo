@@ -2,8 +2,9 @@ import pytest
 
 import ngsdiffgeo as dg
 import ngsdiffgeo.wrappers as dg_wrappers
+from ngsdiffgeo import ngsdiffgeo as cpp
 from netgen.occ import unit_cube, unit_square
-from ngsolve import BBND, BND, CF, Id, Mesh, x, y, z
+from ngsolve import BBND, BND, CF, Id, Mesh, dx, x, y, z
 from ngsolve.fem import Einsum
 
 from tests._helpers import l2_error, l2_norm
@@ -32,6 +33,100 @@ def test_as_doubleform_infers_degrees_from_doubleform():
     assert out is df
 
 
+def test_native_doubleform_results_keep_public_python_operations():
+    left = dg.DoubleForm(CF((x, y), dims=(2,)), p=1, q=0, dim=2)
+    right = dg.DoubleForm(CF((1 + x, 1 + y), dims=(2,)), p=0, q=1, dim=2)
+
+    native = cpp.Wedge(left, right)
+
+    assert type(native) is cpp.DoubleForm
+    assert isinstance(native, dg.DoubleForm)
+    assert dg_wrappers.as_doubleform(native) is native
+    assert isinstance(native + native, dg.DoubleForm)
+    assert isinstance(native.trans, dg.DoubleForm)
+    with pytest.raises(TypeError, match="only supports scalar operands"):
+        native * dg.OneForm(CF((x, y)))
+
+
+def test_native_kform_results_keep_public_python_operations():
+    alpha = dg.OneForm(CF((x, y, z)))
+    beta = dg.OneForm(CF((1 + x, 1 + y, 1 + z)))
+
+    native = cpp.Wedge(alpha, beta)
+
+    assert type(native) is cpp.TwoForm
+    assert isinstance(native, dg.KForm)
+    assert isinstance(native, dg.TwoForm)
+    assert dg_wrappers.as_kform(native, k=2, dim=3) is native
+    assert isinstance(native + native, dg.TwoForm)
+    assert isinstance(2 * native, dg.TwoForm)
+    assert isinstance(native.d(), dg.ThreeForm)
+    with pytest.raises(TypeError, match="different degree"):
+        native + alpha
+
+    assert type(alpha + alpha) is dg.OneForm
+    assert type(2 * alpha) is dg.OneForm
+
+
+def test_native_form_operation_surfaces_match_their_python_sources():
+    for name in dg_wrappers._KFORM_OPERATION_SURFACE:
+        assert getattr(cpp.KForm, name) is getattr(
+            dg_wrappers._KFormOperations, name
+        )
+    for name in dg_wrappers._DOUBLE_FORM_OPERATION_SURFACE:
+        assert getattr(cpp.DoubleForm, name) is getattr(
+            dg_wrappers.DoubleForm, name
+        )
+
+
+def test_real_form_scaling_uses_native_constant_path(monkeypatch):
+    alpha = dg.OneForm(CF((x, y, z)))
+    double_form = dg.DoubleForm(CF((x, y, z)), p=1, q=0, dim=3)
+    kform_calls = []
+    double_form_calls = []
+    native_kform_scale = cpp._ScaleKFormConstant
+    native_double_form_scale = cpp._ScaleDoubleFormConstant
+
+    def scale_kform(form, scalar):
+        kform_calls.append(scalar)
+        return native_kform_scale(form, scalar)
+
+    def scale_double_form(form, scalar):
+        double_form_calls.append(scalar)
+        return native_double_form_scale(form, scalar)
+
+    monkeypatch.setattr(cpp, "_ScaleKFormConstant", scale_kform)
+    monkeypatch.setattr(cpp, "_ScaleDoubleFormConstant", scale_double_form)
+
+    scaled_alpha = 2 * alpha
+    scaled_double_form = 0.5 * double_form
+
+    assert kform_calls == [2.0]
+    assert double_form_calls == [0.5]
+    assert isinstance(scaled_alpha, dg.OneForm)
+    assert isinstance(scaled_double_form, dg.DoubleForm)
+
+    kform_calls.clear()
+    complex_scaled = 1j * alpha
+    assert kform_calls == []
+    assert complex_scaled.is_complex
+
+
+def test_native_scalarfield_keeps_generic_coefficient_multiplication():
+    scalar = cpp.ScalarField(x + y + z, dim=3)
+    tensor = dg.TensorField(
+        CF(tuple(range(1, 10)), dims=(3, 3)), "11"
+    )
+
+    tensor_product = scalar * tensor
+    integral = scalar * dx
+
+    assert isinstance(tensor_product, dg.TensorField)
+    assert tuple(tensor_product.dims) == (3, 3)
+    assert tensor_product.covariant_indices == "11"
+    assert integral is not None
+
+
 def test_as_doubleform_requires_inferable_metadata():
     with pytest.raises(TypeError, match="p and q must be provided or inferable"):
         dg_wrappers.as_doubleform(CF((x, y)))
@@ -57,6 +152,16 @@ def test_as_tensorfield_scalar_can_keep_dimension_unknown():
 
     assert isinstance(scalar, dg.ScalarField)
     assert scalar.dim_space == 0
+
+
+def test_scalar_scaling_promotes_unknown_dimension():
+    unknown = dg.ScalarField(x)
+    known = dg.ScalarField(y, dim=2)
+
+    result = unknown * known
+
+    assert isinstance(result, dg.ScalarField)
+    assert result.dim_space == 2
 
 
 def test_wedge_rejects_non_covariant_tensorfield_as_doubleform():
