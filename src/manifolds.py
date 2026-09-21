@@ -865,7 +865,7 @@ class WarpedProduct:
 
 def TestMetric(dim, order=4):
     xvec = [ngsolve.x, ngsolve.y, ngsolve.z]
-    return 10 * ngsolve.Id(dim) + 0.1 * ngsolve.CF(
+    perturbation = ngsolve.CF(
         tuple(
             [
                 xvec[i] ** order
@@ -879,3 +879,4 @@ def TestMetric(dim, order=4):
         ),
         dims=(dim, dim),
     )
+    return 10 * ngsolve.Id(dim) + 0.1 * ngsolve.Sym(perturbation)

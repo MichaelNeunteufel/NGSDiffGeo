@@ -62,3 +62,25 @@ def test_proxy_curvature_matches_gridfunction(metric_case, sign):
         gauss_energy = ng.BilinearForm(gf.space)
         gauss_energy += ng.Variation(proxy.Gauss**2*ng.dx(bonus_intorder=16))
         assert gauss_energy.Energy(gf.vec) == pytest.approx(normalized, rel=1e-10, abs=1e-12)
+
+
+def test_inward_sff_matches_outward_paper_convention():
+    mesh = MakeStructured3DMesh(False, nx=1, ny=1, nz=1)
+    # For g = a(x)^2 I, the left face has outward-paper II_yy = -a'(0) = -1.
+    g = (1 + ng.x)**2 * ng.Id(3)
+    mf = dg.RiemannianManifold(g, normal_sign=-1)
+    left = ng.IfPos(1e-8 - ng.x, 1, 0)
+    faces = ng.dx(element_boundary=True)
+
+    assert ng.Integrate(left * (mf.normal[0] - 1)**2 * faces, mesh) < 1e-10
+    assert ng.Integrate(left * (mf.SFF.coef[1, 1] + 1)**2 * faces, mesh) < 1e-10
+    assert ng.Integrate(left * (mf.MeanCurvature + 2)**2 * faces, mesh) < 1e-10
+
+    normal_flat = mf.Lower(mf.normal)
+    normal_square = dg.DoubleForm(
+        dg.TensorProduct(normal_flat, normal_flat), p=1, q=1, dim=3
+    )
+    q_facet = mf.Raise(mf.star(dg.Wedge(normal_square, mf.SFF)), [0, 1])
+    einstein_facet = mf.Raise(mf.S(mf.SFF), [0, 1], vb=ng.BND)
+    difference = q_facet.coef + einstein_facet.coef
+    assert ng.Integrate(ng.InnerProduct(difference, difference) * faces, mesh) < 1e-10
