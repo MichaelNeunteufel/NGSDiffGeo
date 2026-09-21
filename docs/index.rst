@@ -32,9 +32,11 @@ Welcome
    tutorials/09_distributional_scalar_curvature.ipynb
    tutorials/10_distributional_einstein_tensor.ipynb
    tutorials/11_distributional_riemann_curvature_tensor.ipynb
-   tutorials/12_linearization_curvature_quantitites.ipynb
+   tutorials/12_linearization_curvature_quantities.ipynb
    tutorials/13_kforms_exterior_derivative.ipynb
    tutorials/14_double_forms.ipynb
+   tutorials/15_double_forms_covariant_derivatives.ipynb
+   tutorials/16_submanifold_geometry.ipynb
 
 .. toctree::
    :caption: Developer Guide
