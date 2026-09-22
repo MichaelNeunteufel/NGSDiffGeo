@@ -6,10 +6,15 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+from importlib.metadata import PackageNotFoundError, version as package_version
+
 project = "NGSDiffGeo"
 copyright = "2025, Michael Neunteufel"
 author = "Michael Neunteufel"
-release = "0.1"
+try:
+    release = package_version("ngsdiffgeo")
+except PackageNotFoundError:
+    release = "development"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -82,3 +87,5 @@ html_static_path = ["_static"]
 
 def setup(app):
     app.add_js_file("webgui_jupyter_widgets.js", priority=450)
+    app.add_js_file("version-switcher.js")
+    app.add_css_file("version-switcher.css")
