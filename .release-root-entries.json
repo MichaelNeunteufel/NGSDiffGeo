@@ -1,0 +1,17 @@
+{
+  "version": "v0.3.0",
+  "entries": [
+    "_images",
+    "_sources",
+    "_static",
+    "developer_docs",
+    "genindex.html",
+    "index.html",
+    "install.html",
+    "license.html",
+    "objects.inv",
+    "search.html",
+    "searchindex.js",
+    "tutorials"
+  ]
+}
