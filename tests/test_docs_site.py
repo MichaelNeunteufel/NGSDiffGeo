@@ -27,8 +27,11 @@ class TestDocsSite(unittest.TestCase):
         return json.loads((self.site / "versions.json").read_text())["versions"]
 
     def test_bootstrap_and_release_preserve_development(self):
+        self.site.mkdir()
+        (self.site / ".git").write_text("gitdir: mock-worktree")
         update_site(self.site, self.build, "dev", bootstrap_root=self.old)
         self.assertEqual((self.site / "index.html").read_text(), "old root")
+        self.assertTrue((self.site / ".git").is_file())
         self.assertEqual((self.site / "dev" / "index.html").read_text(), "development")
         self.assertEqual([v["path"] for v in self.manifest()], ["", "dev/"])
 
@@ -62,6 +65,13 @@ class TestDocsSite(unittest.TestCase):
         with self.assertRaises(ValueError):
             update_site(self.build, self.build, "dev")
         self.assertFalse(self.site.exists())
+
+    def test_bootstrap_rejects_existing_site_content(self):
+        self.site.mkdir()
+        (self.site / ".git").write_text("gitdir: mock-worktree")
+        (self.site / "unexpected.html").write_text("existing content")
+        with self.assertRaisesRegex(ValueError, "empty development site"):
+            update_site(self.site, self.build, "dev", bootstrap_root=self.old)
 
 
 if __name__ == "__main__":

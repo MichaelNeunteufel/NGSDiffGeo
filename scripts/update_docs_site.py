@@ -88,7 +88,12 @@ def update_site(site: Path, build: Path, channel: str, version: str | None = Non
         raise ValueError("Development builds must not have a release version")
     if bootstrap_root is not None:
         bootstrap_root = bootstrap_root.resolve()
-        if channel != "dev" or (site.exists() and any(site.iterdir())):
+        site_entries = (
+            [entry for entry in site.iterdir() if entry.name != ".git"]
+            if site.exists()
+            else []
+        )
+        if channel != "dev" or site_entries:
             raise ValueError("Bootstrap is only allowed for an empty development site")
         if not bootstrap_root.is_dir() or not (bootstrap_root / "index.html").is_file():
             raise ValueError(f"Not a Sphinx HTML bootstrap build: {bootstrap_root}")
