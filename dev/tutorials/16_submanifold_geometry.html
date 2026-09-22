@@ -1,0 +1,455 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Differential operators and curvature on hypersurfaces &mdash; NGSDiffGeo 0.2.1.dev59 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/version-switcher.css?v=f4e9e2f5" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=61d3c9bd"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+      <script src="../_static/webgui_jupyter_widgets.js"></script>
+      <script src="../_static/version-switcher.js?v=d0450e9e"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Developer guide" href="../developer_docs/index.html" />
+    <link rel="prev" title="Exterior covariant derivatives of double forms" href="15_double_forms_covariant_derivatives.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NGSDiffGeo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Geometry foundations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="01_riemannian_manifolds.html">Riemannian Manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_covariant_derivatives.html">Covariant Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_curvatures.html">Curvature quantities on Riemannian manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Regge metrics and Gauss curvature</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="05_regge_metric.html">Regge finite elements and Regge metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06_distributional_gauss_curvature.html">Distributional Gauss curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_distributional_gauss_curvature_analysis.html">Distributional Gauss curvature (analysis)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="08_distributional_gauss_curvature_surface.html">Gauss curvature approximation on embedded surfaces</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Higher-dimensional curvature and linearization</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="09_distributional_scalar_curvature.html">Distributional scalar curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="10_distributional_einstein_tensor.html">Distributional Einstein curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_distributional_riemann_curvature_tensor.html">Distributional Riemann curvature tensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="12_linearization_curvature_quantities.html">Linearization of curvature quantities</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exterior calculus and hypersurfaces</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="13_kforms_exterior_derivative.html">Alternating k-forms, wedge product, Hodge star, and exterior (co-) derivative</a></li>
+<li class="toctree-l1"><a class="reference internal" href="14_double_forms.html">Double forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="15_double_forms_covariant_derivatives.html">Exterior covariant derivatives of double forms</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Differential operators and curvature on hypersurfaces</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Induced-metric-and-projections">Induced metric and projections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Codimension-two-edge-geometry">Codimension-two edge geometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Tangential-connection-and-second-fundamental-form">Tangential connection and second fundamental form</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Gauss-and-Codazzi-equations">Gauss and Codazzi equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Boundary-Hodge-star">Boundary Hodge star</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Exterior-covariant-derivatives-on-the-boundary">Exterior covariant derivatives on the boundary</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developer_docs/index.html">Developer guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NGSDiffGeo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Differential operators and curvature on hypersurfaces</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/16_submanifold_geometry.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Differential-operators-and-curvature-on-hypersurfaces">
+<h1>Differential operators and curvature on hypersurfaces<a class="headerlink" href="#Differential-operators-and-curvature-on-hypersurfaces" title="Link to this heading"></a></h1>
+<p>This notebook studies the geometry induced on a boundary facet <span class="math notranslate nohighlight">\(F\)</span> of a three-dimensional Riemannian manifold <span class="math notranslate nohighlight">\((\Omega,g)\)</span>. We compare ambient and tangential metrics and connections, verify the Gauss formula and Codazzi equation, and use boundary Hodge and double-form operators.</p>
+<div class="math notranslate nohighlight">
+\[\def\owedge{\mathbin{\mathchoice{{\scriptstyle\bigcirc}\mkern-10mu{\scriptstyle\wedge}\mkern3mu}{{\scriptstyle\bigcirc}\mkern-10mu{\scriptstyle\wedge}\mkern3mu}{\circ\mkern-7mu{\scriptscriptstyle\wedge}\mkern3mu}{\circ\mkern-6mu{\scriptscriptstyle\wedge}\mkern2mu}}}
+\def\Riem{\mathrm{Riem}}
+\def\sff{\mathrm{I\!I}}\]</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ngsolve</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BBND</span><span class="p">,</span>
+    <span class="n">BND</span><span class="p">,</span>
+    <span class="n">VOL</span><span class="p">,</span>
+    <span class="n">CF</span><span class="p">,</span>
+    <span class="n">Cross</span><span class="p">,</span>
+    <span class="n">Id</span><span class="p">,</span>
+    <span class="n">InnerProduct</span><span class="p">,</span>
+    <span class="n">Integrate</span><span class="p">,</span>
+    <span class="n">Mesh</span><span class="p">,</span>
+    <span class="n">Norm</span><span class="p">,</span>
+    <span class="n">Normalize</span><span class="p">,</span>
+    <span class="n">OuterProduct</span><span class="p">,</span>
+    <span class="n">TaskManager</span><span class="p">,</span>
+    <span class="n">specialcf</span><span class="p">,</span>
+    <span class="n">sqrt</span><span class="p">,</span>
+    <span class="n">x</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">,</span>
+    <span class="n">z</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">netgen.occ</span><span class="w"> </span><span class="kn">import</span> <span class="n">unit_cube</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ngsdiffgeo</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dg</span>
+
+<span class="n">TOL</span> <span class="o">=</span> <span class="mf">1e-7</span>
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">unit_cube</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span><span class="n">maxh</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">Heisenberg</span><span class="p">()</span><span class="o">.</span><span class="n">metric</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">l2_error</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BND</span><span class="p">,</span> <span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">vb</span> <span class="o">==</span> <span class="n">BND</span><span class="p">:</span>
+        <span class="n">dX</span> <span class="o">=</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bonus_intorder</span><span class="o">=</span><span class="n">bonus_intorder</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">vb</span> <span class="o">==</span> <span class="n">BBND</span><span class="p">:</span>
+        <span class="n">dX</span> <span class="o">=</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">element_vb</span><span class="o">=</span><span class="n">BBND</span><span class="p">,</span> <span class="n">bonus_intorder</span><span class="o">=</span><span class="n">bonus_intorder</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dX</span> <span class="o">=</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="n">bonus_intorder</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span> <span class="o">*</span> <span class="n">dX</span><span class="p">,</span> <span class="n">mesh</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<section id="Induced-metric-and-projections">
+<h2>Induced metric and projections<a class="headerlink" href="#Induced-metric-and-projections" title="Link to this heading"></a></h2>
+<p>Let <span class="math notranslate nohighlight">\(n\)</span> be the <span class="math notranslate nohighlight">\(g\)</span>-unit normal and <span class="math notranslate nohighlight">\(n_E\)</span> the Euclidean unit normal. The <span class="math notranslate nohighlight">\(g\)</span>-orthogonal and Euclidean tangential projectors are</p>
+<div class="math notranslate nohighlight">
+\[P_g=I-n\otimes n^\flat,\qquad P_E=I-n_E\otimes n_E.\]</div>
+<p>NGSDiffGeo embeds the induced metric and inverse metric into the ambient coordinates as</p>
+<div class="math notranslate nohighlight">
+\[g_F=g-n^\flat\otimes n^\flat,\qquad g_F^{-1}=g^{-1}-n\otimes n.\]</div>
+<p>The corresponding properties are <code class="docutils literal notranslate"><span class="pre">G_F</span></code> and <code class="docutils literal notranslate"><span class="pre">G_F_inv</span></code>. On a codimension-two edge <span class="math notranslate nohighlight">\(E\)</span>, <code class="docutils literal notranslate"><span class="pre">G_E</span></code> and <code class="docutils literal notranslate"><span class="pre">G_E_inv</span></code> denote the metric and inverse metric induced along the <span class="math notranslate nohighlight">\(g\)</span>-unit edge tangent. Here the subscript <code class="docutils literal notranslate"><span class="pre">E</span></code> means <em>edge</em>, not Euclidean.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">normal</span>
+<span class="n">n_E</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">P_g</span> <span class="o">=</span> <span class="n">Id</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">-</span> <span class="n">OuterProduct</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">Lower</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+<span class="n">P_E</span> <span class="o">=</span> <span class="n">Id</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">-</span> <span class="n">OuterProduct</span><span class="p">(</span><span class="n">n_E</span><span class="p">,</span> <span class="n">n_E</span><span class="p">)</span>
+
+<span class="n">G_F</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">G</span> <span class="o">-</span> <span class="n">OuterProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Lower</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">mf</span><span class="o">.</span><span class="n">Lower</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+<span class="n">G_F_inv</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">G_inv</span> <span class="o">-</span> <span class="n">OuterProduct</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">tangent</span>
+<span class="n">G_E</span> <span class="o">=</span> <span class="n">OuterProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Lower</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">mf</span><span class="o">.</span><span class="n">Lower</span><span class="p">(</span><span class="n">t</span><span class="p">))</span>
+<span class="n">G_E_inv</span> <span class="o">=</span> <span class="n">OuterProduct</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">P_g</span><span class="p">,</span> <span class="n">P_E</span> <span class="o">*</span> <span class="n">P_g</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+<span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">P_E</span><span class="p">,</span> <span class="n">P_g</span> <span class="o">*</span> <span class="n">P_E</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+<span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">G_F</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">G_F</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+<span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">G_F_inv</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">G_F_inv</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+<span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">G_E</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">G_E</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BBND</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+<span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">G_E_inv</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">G_E_inv</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BBND</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Codimension-two-edge-geometry">
+<h2>Codimension-two edge geometry<a class="headerlink" href="#Codimension-two-edge-geometry" title="Link to this heading"></a></h2>
+<p>On <code class="docutils literal notranslate"><span class="pre">BBND</span></code>, the two incident facets are indexed by <span class="math notranslate nohighlight">\(i=0,1\)</span>. The fields <code class="docutils literal notranslate"><span class="pre">edge_normal(i)</span></code> and <code class="docutils literal notranslate"><span class="pre">edge_conormal(i)</span></code> are their <span class="math notranslate nohighlight">\(g\)</span>-unit normals and their <span class="math notranslate nohighlight">\(g\)</span>-unit conormals within the facets. <code class="docutils literal notranslate"><span class="pre">edge_normals</span></code> and <code class="docutils literal notranslate"><span class="pre">edge_conormals</span></code> return both pairs. <code class="docutils literal notranslate"><span class="pre">ProjectTensor(...,</span> <span class="pre">&quot;E&quot;)</span></code> and <code class="docutils literal notranslate"><span class="pre">ProjectDoubleForm(...,</span> <span class="pre">left=&quot;E&quot;,</span> <span class="pre">right=&quot;E&quot;)</span></code> project onto the edge tangent. A slot can instead be contracted with a chosen conormal using mode <code class="docutils literal notranslate"><span class="pre">&quot;m&quot;</span></code>.</p>
+<p>The metric line density on the edges is <code class="docutils literal notranslate"><span class="pre">VolumeForm(BBND)</span></code>. <code class="docutils literal notranslate"><span class="pre">AngleDefect</span></code> is the element-local Euclidean reference angle minus the angle measured with <span class="math notranslate nohighlight">\(g\)</span>. Both quantities are evaluated with <code class="docutils literal notranslate"><span class="pre">dx(element_vb=BBND)</span></code>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">edge_normals</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">edge_normals</span>
+<span class="n">edge_conormals</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">edge_conormals</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">edge_normals</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">edge_conormals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+
+<span class="k">for</span> <span class="n">edge_normal</span><span class="p">,</span> <span class="n">edge_conormal</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">edge_normals</span><span class="p">,</span> <span class="n">edge_conormals</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">edge_normal</span><span class="p">),</span> <span class="n">CF</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">vb</span><span class="o">=</span><span class="n">BBND</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+    <span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">edge_conormal</span><span class="p">),</span> <span class="n">CF</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">vb</span><span class="o">=</span><span class="n">BBND</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+    <span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">edge_normal</span><span class="p">,</span> <span class="n">edge_conormal</span><span class="p">),</span> <span class="n">CF</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">vb</span><span class="o">=</span><span class="n">BBND</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+    <span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">edge_normal</span><span class="p">,</span> <span class="n">edge_normal</span><span class="p">),</span> <span class="n">CF</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">vb</span><span class="o">=</span><span class="n">BBND</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+    <span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">edge_conormal</span><span class="p">,</span> <span class="n">edge_conormal</span><span class="p">),</span> <span class="n">CF</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">vb</span><span class="o">=</span><span class="n">BBND</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+
+<span class="n">v</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">VectorField</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">z</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)))</span>
+<span class="n">v_E</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">ProjectTensor</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s2">"E"</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">edge_normal</span><span class="p">,</span> <span class="n">edge_conormal</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">edge_normals</span><span class="p">,</span> <span class="n">edge_conormals</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">v_E</span><span class="p">,</span> <span class="n">edge_normal</span><span class="p">),</span> <span class="n">CF</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">vb</span><span class="o">=</span><span class="n">BBND</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+    <span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">v_E</span><span class="p">,</span> <span class="n">edge_conormal</span><span class="p">),</span> <span class="n">CF</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">vb</span><span class="o">=</span><span class="n">BBND</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+
+<span class="n">alpha_E</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">ProjectTensor</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">))),</span> <span class="s2">"E"</span><span class="p">)</span>
+<span class="n">beta_E</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">ProjectTensor</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="n">z</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">))),</span> <span class="s2">"E"</span><span class="p">)</span>
+<span class="n">phi_ambient</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">DoubleForm</span><span class="p">(</span>
+    <span class="n">dg</span><span class="o">.</span><span class="n">Einsum</span><span class="p">(</span>
+        <span class="s2">"i,j-&gt;ij"</span><span class="p">,</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">))),</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="n">z</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">)))</span>
+    <span class="p">),</span>
+    <span class="n">p</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">q</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">phi_E</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">ProjectDoubleForm</span><span class="p">(</span><span class="n">phi_ambient</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="s2">"E"</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="s2">"E"</span><span class="p">)</span>
+<span class="n">phi_E_expected</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">DoubleForm</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">Einsum</span><span class="p">(</span><span class="s2">"i,j-&gt;ij"</span><span class="p">,</span> <span class="n">alpha_E</span><span class="p">,</span> <span class="n">beta_E</span><span class="p">),</span> <span class="n">p</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">phi_E</span><span class="p">,</span> <span class="n">phi_E_expected</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BBND</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+
+<span class="n">phi_m</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">ProjectDoubleForm</span><span class="p">(</span>
+    <span class="n">phi_ambient</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="s2">"m"</span><span class="p">,</span> <span class="n">conormal</span><span class="o">=</span><span class="n">edge_conormals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">project_remaining</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="p">(</span>
+    <span class="n">l2_error</span><span class="p">(</span>
+        <span class="n">phi_m</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">ContractSlot</span><span class="p">(</span><span class="n">phi_ambient</span><span class="p">,</span> <span class="n">edge_conormals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">slot</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span> <span class="n">vb</span><span class="o">=</span><span class="n">BBND</span>
+    <span class="p">)</span>
+    <span class="o">&lt;</span> <span class="n">TOL</span>
+<span class="p">)</span>
+
+<span class="n">dE</span> <span class="o">=</span> <span class="n">ngsolve</span><span class="o">.</span><span class="n">dx</span><span class="p">(</span><span class="n">element_vb</span><span class="o">=</span><span class="n">BBND</span><span class="p">,</span> <span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">metric_edge_measure</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">BBND</span><span class="p">)</span> <span class="o">*</span> <span class="n">dE</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span>
+<span class="n">angle_defect_norm</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">AngleDefect</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">BBND</span><span class="p">)</span> <span class="o">*</span> <span class="n">dE</span><span class="p">,</span> <span class="n">mesh</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"metric edge measure: </span><span class="si">{</span><span class="n">metric_edge_measure</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"weighted angle-defect norm: </span><span class="si">{</span><span class="n">angle_defect_norm</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+metric edge measure: 77.335631
+weighted angle-defect norm: 1.904668
+</pre></div></div>
+</div>
+</section>
+<section id="Tangential-connection-and-second-fundamental-form">
+<h2>Tangential connection and second fundamental form<a class="headerlink" href="#Tangential-connection-and-second-fundamental-form" title="Link to this heading"></a></h2>
+<p>The boundary covariant derivative is selected with <code class="docutils literal notranslate"><span class="pre">vb=BND</span></code>. For a tangential vector field <span class="math notranslate nohighlight">\(X\)</span>, the Gauss formula is</p>
+<div class="math notranslate nohighlight">
+\[\nabla_YX=\nabla^F_YX+\sff(Y,X)n.\]</div>
+<p>With NGSDiffGeo’s convention, the second fundamental form is</p>
+<div class="math notranslate nohighlight">
+\[\sff=-P_g^T(\nabla n^\flat)P_g.\]</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sff_from_normal</span> <span class="o">=</span> <span class="o">-</span><span class="n">mf</span><span class="o">.</span><span class="n">ProjectTensor</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDerivative</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Lower</span><span class="p">(</span><span class="n">n</span><span class="p">)),</span> <span class="s2">"F"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">sff_from_normal</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">SFF</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+<span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">SFF</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BND</span><span class="p">),</span> <span class="n">mf</span><span class="o">.</span><span class="n">MeanCurvature</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+
+<span class="n">E1</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">VectorField</span><span class="p">(</span>
+    <span class="n">Normalize</span><span class="p">(</span>
+        <span class="n">ngsolve</span><span class="o">.</span><span class="n">IfPos</span><span class="p">(</span>
+            <span class="n">Norm</span><span class="p">(</span><span class="n">n_E</span> <span class="o">*</span> <span class="n">CF</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span> <span class="o">-</span> <span class="mf">0.9</span><span class="p">,</span>
+            <span class="n">Cross</span><span class="p">(</span><span class="n">n_E</span><span class="p">,</span> <span class="n">CF</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))),</span>
+            <span class="n">Cross</span><span class="p">(</span><span class="n">n_E</span><span class="p">,</span> <span class="n">CF</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))),</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="n">E2</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">VectorField</span><span class="p">(</span><span class="n">Cross</span><span class="p">(</span><span class="n">n_E</span><span class="p">,</span> <span class="n">E1</span><span class="p">))</span>
+<span class="n">X_ambient</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">z</span><span class="p">)</span> <span class="o">*</span> <span class="n">E1</span> <span class="o">+</span> <span class="p">(</span><span class="n">y</span> <span class="o">+</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">E2</span>
+<span class="n">Y_ambient</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">E1</span> <span class="o">+</span> <span class="p">(</span><span class="n">z</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">E2</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">ProjectTensor</span><span class="p">(</span><span class="n">X_ambient</span><span class="p">,</span> <span class="s2">"F"</span><span class="p">)</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">ProjectTensor</span><span class="p">(</span><span class="n">Y_ambient</span><span class="p">,</span> <span class="s2">"F"</span><span class="p">)</span>
+
+<span class="n">ambient</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Contraction</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDerivative</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">Y</span><span class="p">)</span>
+<span class="n">tangential_and_normal</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Contraction</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDerivative</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BND</span><span class="p">),</span> <span class="n">Y</span><span class="p">)</span> <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">SFF</span><span class="p">[</span><span class="n">Y</span><span class="p">,</span> <span class="n">X</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">ambient</span><span class="p">,</span> <span class="n">tangential_and_normal</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Gauss-and-Codazzi-equations">
+<h2>Gauss and Codazzi equations<a class="headerlink" href="#Gauss-and-Codazzi-equations" title="Link to this heading"></a></h2>
+<p>The intrinsic curvature of <span class="math notranslate nohighlight">\(F\)</span> is related to the ambient curvature by the Gauss equation</p>
+<div class="math notranslate nohighlight">
+\[\Riem_F(X,Y,Z,W)=\Riem(X,Y,Z,W)-\tfrac12(\sff\owedge\sff)(X,Y,Z,W).\]</div>
+<p>The mixed ambient curvature is described by the Codazzi equation. With the index and sign conventions used by NGSDiffGeo,</p>
+<div class="math notranslate nohighlight">
+\[\Riem(X,Y,Z,n)=(\nabla_X\sff)(Y,Z)-(\nabla_Y\sff)(X,Z).\]</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Z</span> <span class="o">=</span> <span class="p">(</span><span class="n">z</span> <span class="o">+</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span> <span class="o">-</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="n">E1</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">E2</span>
+
+<span class="n">curvature_term</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Riemann</span><span class="p">[</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span>
+<span class="n">cov_sff</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovDerivative</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">SFF</span><span class="p">)</span>
+<span class="n">codazzi_term</span> <span class="o">=</span> <span class="n">cov_sff</span><span class="p">[</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">]</span> <span class="o">-</span> <span class="n">cov_sff</span><span class="p">[</span><span class="n">Y</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Z</span><span class="p">]</span>
+
+<span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">curvature_term</span><span class="p">,</span> <span class="n">codazzi_term</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Boundary-Hodge-star">
+<h2>Boundary Hodge star<a class="headerlink" href="#Boundary-Hodge-star" title="Link to this heading"></a></h2>
+<p>Passing <code class="docutils literal notranslate"><span class="pre">vb=BND</span></code> to <code class="docutils literal notranslate"><span class="pre">star</span></code> uses the induced metric on the two-dimensional boundary. For a tangential <span class="math notranslate nohighlight">\(k\)</span>-form <span class="math notranslate nohighlight">\(\alpha\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[\star_F\star_F\alpha=(-1)^{k(2-k)}\alpha,\qquad
+\alpha\wedge\star_F\beta=\langle\alpha,\beta\rangle_{g_F}\,\omega_F.\]</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">one</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">ScalarField</span><span class="p">(</span><span class="n">CF</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">ProjectTensor</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">))),</span> <span class="s2">"F"</span><span class="p">)</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">ProjectTensor</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="n">z</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">))),</span> <span class="s2">"F"</span><span class="p">)</span>
+<span class="n">omega_F</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">one</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BND</span><span class="p">)</span>
+
+<span class="n">star_star_alpha</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BND</span><span class="p">),</span> <span class="n">vb</span><span class="o">=</span><span class="n">BND</span><span class="p">)</span>
+<span class="n">wedge_identity</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BND</span><span class="p">))</span>
+<span class="n">inner_product_identity</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BND</span><span class="p">,</span> <span class="n">forms</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">*</span> <span class="n">omega_F</span>
+
+<span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">star_star_alpha</span><span class="p">,</span> <span class="o">-</span><span class="n">alpha</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+<span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">wedge_identity</span><span class="p">,</span> <span class="n">inner_product_identity</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Exterior-covariant-derivatives-on-the-boundary">
+<h2>Exterior covariant derivatives on the boundary<a class="headerlink" href="#Exterior-covariant-derivatives-on-the-boundary" title="Link to this heading"></a></h2>
+<p>The same <code class="docutils literal notranslate"><span class="pre">vb=BND</span></code> convention selects the induced connection for double forms. Transposition exchanges the slots exactly as in the volume, and the coderivative can be recovered from the boundary Hodge star.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">phi</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">DoubleForm</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">Einsum</span><span class="p">(</span><span class="s2">"i,j-&gt;ij"</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">),</span> <span class="n">p</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">phi</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">ProjectDoubleForm</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="s2">"F"</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="s2">"F"</span><span class="p">)</span>
+
+<span class="n">d_right</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">d_cov</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">slot</span><span class="o">=</span><span class="s2">"right"</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BND</span><span class="p">)</span>
+<span class="n">d_right_from_transpose</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">d_cov</span><span class="p">(</span><span class="n">phi</span><span class="o">.</span><span class="n">trans</span><span class="p">,</span> <span class="n">slot</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BND</span><span class="p">)</span><span class="o">.</span><span class="n">trans</span>
+<span class="n">delta_right</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">delta_cov</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">slot</span><span class="o">=</span><span class="s2">"right"</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BND</span><span class="p">)</span>
+<span class="n">delta_right_from_transpose</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">delta_cov</span><span class="p">(</span><span class="n">phi</span><span class="o">.</span><span class="n">trans</span><span class="p">,</span> <span class="n">slot</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BND</span><span class="p">)</span><span class="o">.</span><span class="n">trans</span>
+
+<span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">d_right</span><span class="p">,</span> <span class="n">d_right_from_transpose</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+<span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">delta_right</span><span class="p">,</span> <span class="n">delta_right_from_transpose</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+
+<span class="n">surface_dim</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">sign</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">surface_dim</span> <span class="o">*</span> <span class="n">phi</span><span class="o">.</span><span class="n">degree_left</span> <span class="o">+</span> <span class="n">surface_dim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">delta_from_star</span> <span class="o">=</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">d_cov</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">slot</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BND</span><span class="p">),</span> <span class="n">slot</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BND</span><span class="p">),</span>
+    <span class="n">slot</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span>
+    <span class="n">vb</span><span class="o">=</span><span class="n">BND</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">delta_cov</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">slot</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BND</span><span class="p">),</span> <span class="n">delta_from_star</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+</pre></div>
+</div>
+</div>
+<p>Finally, tangential projection does not commute with the ambient exterior covariant derivative. The correction is governed by the second fundamental form. For example,</p>
+<div class="math notranslate nohighlight">
+\[P^{tt}(d^\nabla\varphi)=d^{\nabla^F}(P^{tt}\varphi)-\sff\owedge P^{tn}\varphi,\]</div>
+<p>with an analogous identity in the right slot.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">alpha2</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span>
+    <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">))),</span>
+    <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">y</span><span class="p">))),</span>
+<span class="p">)</span>
+<span class="n">phi12</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">DoubleForm</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">Einsum</span><span class="p">(</span><span class="s2">"i,jk-&gt;ijk"</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">alpha2</span><span class="p">),</span> <span class="n">p</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">phi21</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">DoubleForm</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">Einsum</span><span class="p">(</span><span class="s2">"ij,k-&gt;ijk"</span><span class="p">,</span> <span class="n">alpha2</span><span class="p">,</span> <span class="n">beta</span><span class="p">),</span> <span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="n">left</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">ProjectDoubleForm</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">d_cov</span><span class="p">(</span><span class="n">phi12</span><span class="p">,</span> <span class="n">slot</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span> <span class="n">left</span><span class="o">=</span><span class="s2">"F"</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="s2">"F"</span><span class="p">)</span>
+<span class="n">right</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">d_cov</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">ProjectDoubleForm</span><span class="p">(</span><span class="n">phi12</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="s2">"F"</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="s2">"F"</span><span class="p">),</span> <span class="n">slot</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BND</span>
+<span class="p">)</span> <span class="o">-</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">SFF</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">ProjectDoubleForm</span><span class="p">(</span><span class="n">phi12</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="s2">"F"</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="s2">"n"</span><span class="p">))</span>
+<span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+
+<span class="n">left</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">ProjectDoubleForm</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">d_cov</span><span class="p">(</span><span class="n">phi21</span><span class="p">,</span> <span class="n">slot</span><span class="o">=</span><span class="s2">"right"</span><span class="p">),</span> <span class="n">left</span><span class="o">=</span><span class="s2">"F"</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="s2">"F"</span><span class="p">)</span>
+<span class="n">right</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">d_cov</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">ProjectDoubleForm</span><span class="p">(</span><span class="n">phi21</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="s2">"F"</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="s2">"F"</span><span class="p">),</span> <span class="n">slot</span><span class="o">=</span><span class="s2">"right"</span><span class="p">,</span> <span class="n">vb</span><span class="o">=</span><span class="n">BND</span>
+<span class="p">)</span> <span class="o">-</span> <span class="n">dg</span><span class="o">.</span><span class="n">Wedge</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">SFF</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">ProjectDoubleForm</span><span class="p">(</span><span class="n">phi21</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="s2">"n"</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="s2">"F"</span><span class="p">))</span>
+<span class="k">assert</span> <span class="n">l2_error</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="15_double_forms_covariant_derivatives.html" class="btn btn-neutral float-left" title="Exterior covariant derivatives of double forms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../developer_docs/index.html" class="btn btn-neutral float-right" title="Developer guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Michael Neunteufel.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

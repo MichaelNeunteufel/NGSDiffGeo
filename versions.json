@@ -1,0 +1,68 @@
+{
+  "versions": [
+    {
+      "path": "",
+      "label": "Current documentation",
+      "pages": [
+        "developer_docs/developer_coefficient_grad.html",
+        "developer_docs/developer_kforms.html",
+        "developer_docs/developer_riemannian_manifold.html",
+        "developer_docs/developer_tensor_fields.html",
+        "developer_docs/index.html",
+        "genindex.html",
+        "index.html",
+        "install.html",
+        "license.html",
+        "search.html",
+        "tutorials/01_riemannian_manifolds.html",
+        "tutorials/02_covariant_derivatives.html",
+        "tutorials/03_curvatures.html",
+        "tutorials/04_gauss_bonnet.html",
+        "tutorials/05_regge_metric.html",
+        "tutorials/06_distributional_gauss_curvature.html",
+        "tutorials/07_distributional_gauss_curvature_analysis.html",
+        "tutorials/08_distributional_gauss_curvature_surface.html",
+        "tutorials/09_distributional_scalar_curvature.html",
+        "tutorials/10_distributional_einstein_tensor.html",
+        "tutorials/11_distributional_riemann_curvature_tensor.html",
+        "tutorials/12_linearization_curvature_quantities.html",
+        "tutorials/13_kforms_exterior_derivative.html",
+        "tutorials/14_double_forms.html",
+        "tutorials/15_double_forms_covariant_derivatives.html",
+        "tutorials/16_submanifold_geometry.html"
+      ]
+    },
+    {
+      "path": "dev/",
+      "label": "Development",
+      "pages": [
+        "developer_docs/developer_coefficient_grad.html",
+        "developer_docs/developer_kforms.html",
+        "developer_docs/developer_riemannian_manifold.html",
+        "developer_docs/developer_tensor_fields.html",
+        "developer_docs/index.html",
+        "genindex.html",
+        "index.html",
+        "install.html",
+        "license.html",
+        "search.html",
+        "tutorials/01_riemannian_manifolds.html",
+        "tutorials/02_covariant_derivatives.html",
+        "tutorials/03_curvatures.html",
+        "tutorials/04_gauss_bonnet.html",
+        "tutorials/05_regge_metric.html",
+        "tutorials/06_distributional_gauss_curvature.html",
+        "tutorials/07_distributional_gauss_curvature_analysis.html",
+        "tutorials/08_distributional_gauss_curvature_surface.html",
+        "tutorials/09_distributional_scalar_curvature.html",
+        "tutorials/10_distributional_einstein_tensor.html",
+        "tutorials/11_distributional_riemann_curvature_tensor.html",
+        "tutorials/12_linearization_curvature_quantities.html",
+        "tutorials/13_kforms_exterior_derivative.html",
+        "tutorials/14_double_forms.html",
+        "tutorials/15_double_forms_covariant_derivatives.html",
+        "tutorials/16_submanifold_geometry.html"
+      ]
+    }
+  ]
+}

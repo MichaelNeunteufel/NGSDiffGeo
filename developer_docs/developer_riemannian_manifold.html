@@ -1,0 +1,409 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Riemannian manifolds &mdash; NGSDiffGeo 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+      <script src="../_static/webgui_jupyter_widgets.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="K-forms and double forms" href="developer_kforms.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NGSDiffGeo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Geometry foundations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/01_riemannian_manifolds.html">Riemannian Manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/02_covariant_derivatives.html">Covariant Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/03_curvatures.html">Curvature quantities on Riemannian manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/04_gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Regge metrics and Gauss curvature</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/05_regge_metric.html">Regge finite elements and Regge metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/06_distributional_gauss_curvature.html">Distributional Gauss curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/07_distributional_gauss_curvature_analysis.html">Distributional Gauss curvature (analysis)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/08_distributional_gauss_curvature_surface.html">Gauss curvature approximation on embedded surfaces</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Higher-dimensional curvature and linearization</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/09_distributional_scalar_curvature.html">Distributional scalar curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/10_distributional_einstein_tensor.html">Distributional Einstein curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/11_distributional_riemann_curvature_tensor.html">Distributional Riemann curvature tensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/12_linearization_curvature_quantities.html">Linearization of curvature quantities</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exterior calculus and hypersurfaces</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/13_kforms_exterior_derivative.html">Alternating k-forms, wedge product, Hodge star, and exterior (co-) derivative</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/14_double_forms.html">Double forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/15_double_forms_covariant_derivatives.html">Exterior covariant derivatives of double forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/16_submanifold_geometry.html">Differential operators and curvature on hypersurfaces</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index.html#documentation-policy">Documentation policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#verification-strategy">Verification strategy</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#components">Components</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="developer_tensor_fields.html">Tensor fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="developer_coefficient_grad.html">Numerical-gradient developer guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="developer_kforms.html">K-forms and double forms</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Riemannian manifolds</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#construction-and-metric-sources">Construction and metric sources</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#intrinsic-strata">Intrinsic strata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tensor-and-form-contracts">Tensor and form contracts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#semantic-expression-graphs">Semantic expression graphs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#covariant-differential-operators">Covariant differential operators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#performance-evidence">Performance evidence</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#projection-modes">Projection modes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#curvature-conventions">Curvature conventions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#validation-and-maintenance">Validation and maintenance</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#verification">Verification</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NGSDiffGeo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Developer guide</a></li>
+      <li class="breadcrumb-item active">Riemannian manifolds</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/developer_docs/developer_riemannian_manifold.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="riemannian-manifolds">
+<h1>Riemannian manifolds<a class="headerlink" href="#riemannian-manifolds" title="Link to this heading"></a></h1>
+<p>This page documents <code class="docutils literal notranslate"><span class="pre">src/riemannian_manifold.hpp</span></code> and
+<code class="docutils literal notranslate"><span class="pre">src/riemannian_manifold.cpp</span></code>. The component owns metric-dependent tensor
+algebra, covariant differential operators, boundary projections, and curvature
+dispatch. It builds on <a class="reference internal" href="developer_tensor_fields.html"><span class="doc">Tensor fields</span></a> for tensor metadata and
+semantic expression nodes, on <a class="reference internal" href="developer_coefficient_grad.html"><span class="doc">Numerical-gradient developer guide</span></a> for physical
+derivatives, and on <a class="reference internal" href="developer_kforms.html"><span class="doc">K-forms and double forms</span></a> for form representation.</p>
+<section id="construction-and-metric-sources">
+<h2>Construction and metric sources<a class="headerlink" href="#construction-and-metric-sources" title="Link to this heading"></a></h2>
+<p>A manifold is constructed from a non-null square metric of dimension two or
+three. <code class="docutils literal notranslate"><span class="pre">normal_sign</span></code> must be exactly <code class="docutils literal notranslate"><span class="pre">+1</span></code> or <code class="docutils literal notranslate"><span class="pre">-1</span></code>. Other magnitudes,
+zero, and non-finite values are rejected instead of silently scaling or
+invalidating the normal. Test-function metrics are rejected. The constructor distinguishes three
+metric sources:</p>
+<ul class="simple">
+<li><p>an ordinary coefficient function uses the analytic derivative and curvature
+construction in this component,</p></li>
+<li><p>an <code class="docutils literal notranslate"><span class="pre">HCurlCurlFESpace</span></code> trial proxy uses the Regge additional proxies, and</p></li>
+<li><p>a grid function in <code class="docutils literal notranslate"><span class="pre">HCurlCurlFESpace</span></code> uses the corresponding additional
+evaluators.</p></li>
+</ul>
+<p>A direct proxy or grid function from another finite-element space is rejected.
+The metric, its inverse, determinant, normalized normals, tangents, conormals,
+and projectors are initialized eagerly. Metric derivatives, Christoffel
+symbols, curvature tensors, and the second fundamental form are initialized
+on first access through <code class="docutils literal notranslate"><span class="pre">EnsureCurvature</span></code>. Initialization is protected by
+<code class="docutils literal notranslate"><span class="pre">std::call_once</span></code> so concurrent first access constructs one shared cache and
+publishes it atomically. Keep this dispatch centralized:
+public curvature accessors must not independently reconstruct one of the three
+source paths.</p>
+<p>The constructor retains whether the metric graph contains a trial proxy in
+<code class="docutils literal notranslate"><span class="pre">has_trial</span></code> for future trial-dependent dispatch. It also retains <code class="docutils literal notranslate"><span class="pre">det_g</span></code> as
+the unique determinant node used by the volume density and by any future
+determinant consumers. Do not reconstruct <code class="docutils literal notranslate"><span class="pre">DeterminantCF(g)</span></code> independently.</p>
+<p>The cached <code class="docutils literal notranslate"><span class="pre">G</span></code>, <code class="docutils literal notranslate"><span class="pre">G_inv</span></code>, <code class="docutils literal notranslate"><span class="pre">G_F</span></code>, <code class="docutils literal notranslate"><span class="pre">G_F_inv</span></code>, <code class="docutils literal notranslate"><span class="pre">G_E</span></code>, and <code class="docutils literal notranslate"><span class="pre">G_E_inv</span></code>
+objects are typed views of the corresponding value graphs. <code class="docutils literal notranslate"><span class="pre">normal_sign</span></code>
+orients the Euclidean normal used during construction. <code class="docutils literal notranslate"><span class="pre">change_riemann_sign</span></code>
+selects the supported Riemann-tensor sign convention and is carried into the
+lazy curvature construction.</p>
+</section>
+<section id="intrinsic-strata">
+<h2>Intrinsic strata<a class="headerlink" href="#intrinsic-strata" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">VorB</span></code> argument selects metric data on an intrinsic stratum:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">VOL</span></code></dt><dd><p>The full metric <code class="docutils literal notranslate"><span class="pre">g</span></code>, its inverse, and <code class="docutils literal notranslate"><span class="pre">sqrt(det(g))</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">BND</span></code></dt><dd><p>The face-tangential metric and inverse. Covariant derivatives are projected
+in every output slot after differentiation.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">BBND</span></code></dt><dd><p>The edge-tangential metric and inverse. It is available to algebraic
+operations such as raising, lowering, traces, and inner products, but not to
+<code class="docutils literal notranslate"><span class="pre">CovDerivative</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">BBBND</span></code></dt><dd><p>Only the stored zero-dimensional volume factor is exposed.</p>
+</dd>
+</dl>
+<p>Every public operation validates its supported <code class="docutils literal notranslate"><span class="pre">VorB</span></code> values before an
+identity, scalar, empty-slot, or structural-zero shortcut. <code class="docutils literal notranslate"><span class="pre">GetVolumeForm</span></code>
+validates all four array indices explicitly. Do not index the internal volume
+array with an unchecked enum value.</p>
+</section>
+<section id="tensor-and-form-contracts">
+<h2>Tensor and form contracts<a class="headerlink" href="#tensor-and-form-contracts" title="Link to this heading"></a></h2>
+<p>Inputs must be non-null and belong to the manifold dimension. Generic tensor
+fields encode the dimension in each component axis. K-forms and double forms
+also carry an explicit ambient dimension, which is authoritative for scalar
+rank-zero values. A scalar K-form may use ambient dimension zero to mean
+unknown. Supported scalar operations infer the current manifold dimension,
+matching the form-component contract. Axis variance is read from <code class="docutils literal notranslate"><span class="pre">TensorMeta</span></code>.
+Operations must change values and metadata together.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Raise</span></code> and <code class="docutils literal notranslate"><span class="pre">Lower</span></code> act on one selected axis using the inverse metric or
+metric for the selected stratum. Their vector and one-form specializations are
+preserved. Rank-one and rank-two operations use reconstructible symbolic
+matrix-product nodes. Higher ranks use reconstructible einsum nodes.
+Multi-index overloads apply the same checked single-index operation in the
+supplied order.
+All metric-backed algebra selects the volume, boundary, or edge metric and its
+inverse through the same internal selector. New overloads should use that
+selector so validation and cached metric identity cannot drift between
+<code class="docutils literal notranslate"><span class="pre">Raise</span></code>, <code class="docutils literal notranslate"><span class="pre">Lower</span></code>, <code class="docutils literal notranslate"><span class="pre">InnerProduct</span></code>, and <code class="docutils literal notranslate"><span class="pre">Trace</span></code>.</p>
+<p>Python addition and subtraction require identical axis variance for typed
+tensor fields. In particular, a vector field cannot be added to a one-form.
+Combining a k-form with a generic tensor of the same covariant shape returns a
+generic tensor, because the operation cannot prove that alternation is retained.
+Multiplication and division between typed tensor wrappers are scalar scaling,
+except for rank-two matrix products whose contracted axes have opposite
+variance. That contraction returns a typed rank-two tensor with the two free
+axis variances. <code class="docutils literal notranslate"><span class="pre">VectorField</span> <span class="pre">*</span> <span class="pre">VectorField</span></code> is deliberately not an inner
+product: the vector objects do not own a metric, so geometric contraction must
+be written as <code class="docutils literal notranslate"><span class="pre">M.InnerProduct(v,</span> <span class="pre">w)</span></code>. Multiplication by an explicitly untyped,
+non-scalar NGSolve coefficient retains NGSolve’s native matrix/vector-product
+behavior and returns an untyped coefficient, since no output variance can be
+inferred.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Trace</span></code> contracts two selected tensor axes. Opposite-variance axes contract
+directly. Equal-variance axes insert the appropriate metric. A double-form
+trace repeatedly contracts the first left and right axes and returns a scalar
+only after both degrees reach zero. <code class="docutils literal notranslate"><span class="pre">TraceSigma</span></code> raises both axes of its
+<code class="docutils literal notranslate"><span class="pre">(1,1)</span></code> sigma operand and contracts one left/right pair. <code class="docutils literal notranslate"><span class="pre">SlotInnerProduct</span></code>
+is the complete double-form trace, with factorial normalization when
+<code class="docutils literal notranslate"><span class="pre">forms=True</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Contraction</span></code> removes one tensor axis by pairing it with a vector. A
+contravariant tensor axis inserts the metric before contraction.
+<code class="docutils literal notranslate"><span class="pre">ContractSlot</span></code> maps the double-form left/right slot convention onto that
+primitive. <code class="docutils literal notranslate"><span class="pre">Transpose</span></code> is an axis permutation and therefore permutes both
+component values and covariance metadata.</p>
+<p>Tensor inner products pair every axis. Axes with opposite variance contract
+directly. Equal-variance pairs insert one metric or inverse metric. With
+<code class="docutils literal notranslate"><span class="pre">forms=True</span></code>, k-form and double-form overloads apply the appropriate
+factorial normalization.</p>
+</section>
+<section id="semantic-expression-graphs">
+<h2>Semantic expression graphs<a class="headerlink" href="#semantic-expression-graphs" title="Link to this heading"></a></h2>
+<p>Public manifold algebra retains tensor and form wrappers as semantic operands.
+This is essential even when an operand currently evaluates to zero. Native
+NGSolve einsum, addition, or multiplication may simplify such an expression
+and erase the wrapper. A later <code class="docutils literal notranslate"><span class="pre">Replace</span></code> or <code class="docutils literal notranslate"><span class="pre">Diff</span></code> targeting that wrapper
+would then incorrectly remain zero.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">SymbolicEinsumCF</span></code>, <code class="docutils literal notranslate"><span class="pre">SymbolicSumCF</span></code>, <code class="docutils literal notranslate"><span class="pre">ScaleCoefficientCF</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">PermuteTensorCF</span></code> for public-operand algebra. These helpers keep semantic
+operands for transformation and differentiation while delegating numerical
+evaluation to efficient native coefficient functions. Do not pass
+<code class="docutils literal notranslate"><span class="pre">GetFullCoefficient()</span></code> to a new native algebra node merely as an
+optimization: that accessor intentionally removes the wrapper identity.</p>
+<p><code class="docutils literal notranslate"><span class="pre">InputCoefficientFunctions</span></code> and <code class="docutils literal notranslate"><span class="pre">TraverseTree</span></code> continue to expose the
+native evaluation layout required by NGSolve evaluators, zero patterns, and
+generated code. Policy checks that need the retained meaning of an expression,
+such as rejecting a test proxy hidden by native zero simplification, use
+<code class="docutils literal notranslate"><span class="pre">TraverseSemanticDAG</span></code> instead. Do not change evaluation traversal to expose
+semantic operands: the evaluator input order is a separate contract.</p>
+<p>Low-rank metric products, inner products, traces, and matrix transposes use
+specialized semantic nodes with native evaluators. This preserves the same
+<code class="docutils literal notranslate"><span class="pre">Diff</span></code> and <code class="docutils literal notranslate"><span class="pre">Replace</span></code> contract without routing common rank-one and rank-two
+operations through a generalized einsum. Numerical evaluators may unwrap one
+semantic layer, but recursive unwrapping during construction is forbidden: it
+would repeatedly traverse shared descendants and turn linear DAG rebuilding
+into quadratic work.</p>
+<p>The contract covers musical maps, traces, tensor and slot inner products,
+cross products, contractions, transposition, <code class="docutils literal notranslate"><span class="pre">S</span></code>, <code class="docutils literal notranslate"><span class="pre">J</span></code>, <code class="docutils literal notranslate"><span class="pre">s</span></code>, and the
+algebra used to assemble differential operators. Structural results that are
+mathematically independent of the input, such as a degree-overflow form, may
+still return a fresh zero.</p>
+</section>
+<section id="covariant-differential-operators">
+<h2>Covariant differential operators<a class="headerlink" href="#covariant-differential-operators" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CovDerivative</span></code> prepends a covariant derivative axis. It differentiates the
+semantic input before adding one Christoffel term per component axis: a minus
+term for a covariant axis and a plus term for a contravariant axis. A
+zero-valued wrapper must take this same path. <code class="docutils literal notranslate"><span class="pre">IsZeroCF</span></code> is not sufficient to
+prove independence from future differentiation or replacement targets.</p>
+<p><code class="docutils literal notranslate"><span class="pre">CovDerivative</span></code> and <code class="docutils literal notranslate"><span class="pre">CovHessian</span></code> are the canonical public Python names.
+<code class="docutils literal notranslate"><span class="pre">CovDeriv</span></code> and <code class="docutils literal notranslate"><span class="pre">CovHesse</span></code> remain compatibility aliases and issue
+<code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code>. Existing scripts continue to run, while new code and
+maintained examples should use the canonical spellings.</p>
+<p>Only <code class="docutils literal notranslate"><span class="pre">VOL</span></code> and <code class="docutils literal notranslate"><span class="pre">BND</span></code> derivatives are supported. Boundary output is
+projected after all derivative and connection terms are assembled. Composite
+operators such as covariant Hessian, divergence, curl, <code class="docutils literal notranslate"><span class="pre">inc</span></code>, <code class="docutils literal notranslate"><span class="pre">ein</span></code>,
+Laplacian, symmetric derivative, rotation, and the Lichnerowicz Laplacian reuse
+these checked primitives and retain their intermediate semantic graphs.</p>
+<p><code class="docutils literal notranslate"><span class="pre">compile_inner=False</span></code> preserves the original semantic input throughout the
+derivative graph. <code class="docutils literal notranslate"><span class="pre">compile_inner=True</span></code> compiles one shared native value graph
+before constructing the gradient and connection terms. This mode is a
+performance option for evaluation, not a promise that later wrapper-targeted
+<code class="docutils literal notranslate"><span class="pre">Replace</span></code> or <code class="docutils literal notranslate"><span class="pre">Diff</span></code> can cross the compiled boundary. Trial and test proxies
+are rejected in this mode because compiling their inner graph would violate
+NGSolve proxy assembly semantics.</p>
+<p>Exterior covariant derivatives and codifferentials of double forms first call
+<code class="docutils literal notranslate"><span class="pre">CovDerivative</span></code>. They then permute, alternate, trace, scale, and optionally
+project the result. Keep their scaling symbolic so a presently zero derivative
+does not lose its source operand.</p>
+<p><code class="docutils literal notranslate"><span class="pre">CovDerivative</span></code> and <code class="docutils literal notranslate"><span class="pre">CovHessian</span></code> are the canonical Python and C++ binding
+names. <code class="docutils literal notranslate"><span class="pre">CovDeriv</span></code> and <code class="docutils literal notranslate"><span class="pre">CovHesse</span></code> remain compatibility aliases. The Python
+wrapper emits <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code> when they are used. Existing programs
+therefore continue to run, while new code and gradual migrations should use
+the canonical spellings.</p>
+</section>
+<section id="performance-evidence">
+<h2>Performance evidence<a class="headerlink" href="#performance-evidence" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">benchmarks/benchmark_tensor_algebra.py</span></code> checks values and records
+construction time, assembly time, and coefficient-tree statistics for
+<code class="docutils literal notranslate"><span class="pre">Raise</span></code>, <code class="docutils literal notranslate"><span class="pre">Lower</span></code>, <code class="docutils literal notranslate"><span class="pre">InnerProduct</span></code>, and <code class="docutils literal notranslate"><span class="pre">Trace</span></code>. It also compares the
+rank-one and rank-two <code class="docutils literal notranslate"><span class="pre">Raise</span></code> matrix-product implementations with the exact
+reconstructible einsum alternatives in alternating order. Reports belong in
+<code class="docutils literal notranslate"><span class="pre">benchmarks/results</span></code>. Correctness is smoke-tested in CI, but timing thresholds
+are intentionally excluded because short assembly timings are host- and
+load-sensitive.</p>
+</section>
+<section id="projection-modes">
+<h2>Projection modes<a class="headerlink" href="#projection-modes" title="Link to this heading"></a></h2>
+<p>Projection modes are validated before rank-zero or empty-slot shortcuts.
+<code class="docutils literal notranslate"><span class="pre">ProjectTensor</span></code> supports mode zero (identity), one (face tangent), two
+(normal contraction of the first axis, with remaining axes face tangent), and
+three (edge tangent). <code class="docutils literal notranslate"><span class="pre">ProjectDoubleForm</span></code> applies modes independently to the
+left and right slots. Its mode two is a pure normal contraction. It additionally
+supports mode four, contraction with a supplied conormal. By default, remaining
+indices in that slot are edge-projected before this contraction, and
+<code class="docutils literal notranslate"><span class="pre">project_remaining=False</span></code> suppresses that projection. Edge modes require the
+edge projector, conormal mode requires an explicit conormal, and contracting an
+empty slot is an error.</p>
+<p>Projectors are applied according to variance: covariant and contravariant axes
+use transposed representations of the same geometric map. Projection nodes
+retain their input tensor as a symbolic operand, as documented in
+<a class="reference internal" href="developer_tensor_fields.html"><span class="doc">Tensor fields</span></a>.</p>
+</section>
+<section id="curvature-conventions">
+<h2>Curvature conventions<a class="headerlink" href="#curvature-conventions" title="Link to this heading"></a></h2>
+<p>All curvature accessors trigger the same lazy initialization. For ordinary
+coefficient-function metrics, curvature is derived from the physical metric
+gradient and Christoffel symbols. Regge proxies and grid functions provide
+native additional operators. The native Regge <code class="docutils literal notranslate"><span class="pre">curvature</span></code> output is divided
+by <code class="docutils literal notranslate"><span class="pre">det(g)</span></code> so it agrees with the geometric curvature operator used here:
+Gauss curvature in two dimensions and the contravariant curvature operator in
+three dimensions.</p>
+<p><code class="docutils literal notranslate"><span class="pre">change_riemann_sign</span></code> changes the Riemann convention consistently across the
+ordinary and Regge paths. Tests compare normalized Regge, proxy, and analytic
+results. Do not validate one curvature path only against another expression
+that reuses the same convention code.</p>
+</section>
+<section id="validation-and-maintenance">
+<h2>Validation and maintenance<a class="headerlink" href="#validation-and-maintenance" title="Link to this heading"></a></h2>
+<p>Validate pointers, manifold dimensions, indices, modes, slots, and <code class="docutils literal notranslate"><span class="pre">VorB</span></code>
+values at public boundaries. Validation must precede shortcuts so invalid input
+does not accidentally become an identity or zero. New public tensor operations
+should have regression coverage for a zero-valued semantic wrapper under both
+directional <code class="docutils literal notranslate"><span class="pre">Diff</span></code> and <code class="docutils literal notranslate"><span class="pre">Replace</span></code>.</p>
+<p>Private state should represent persistent manifold state only. Temporary proxy
+handles and constructor-only orientation arguments remain local. Remove
+disabled experimental coefficient-function classes and branches rather than
+keeping unreachable alternatives beside the active graph implementation.</p>
+</section>
+<section id="verification">
+<h2>Verification<a class="headerlink" href="#verification" title="Link to this heading"></a></h2>
+<p>After configuring a developer build and making that extension available to
+Python, run the focused C++ and Python contracts first:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cmake</span> <span class="o">--</span><span class="n">build</span> <span class="n">build</span> <span class="o">--</span><span class="n">target</span> <span class="n">test_riemannian_manifold</span>
+<span class="n">ctest</span> <span class="o">--</span><span class="n">test</span><span class="o">-</span><span class="nb">dir</span> <span class="n">build</span> <span class="o">-</span><span class="n">R</span> <span class="s1">'^riemannian_manifold$'</span> <span class="o">--</span><span class="n">output</span><span class="o">-</span><span class="n">on</span><span class="o">-</span><span class="n">failure</span>
+<span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pytest</span> <span class="o">-</span><span class="n">q</span> <span class="n">tests</span><span class="o">/</span><span class="n">test_riemannian_manifold_contracts</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>Then run the manifold core, covariant-operator, double-form, projection,
+compiled-inner-graph, and cross-component regression files. Changes to the
+shared symbolic algebra or derivative construction require the full C++ and
+Python suites, following <a class="reference internal" href="index.html"><span class="doc">Developer guide</span></a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="developer_kforms.html" class="btn btn-neutral float-left" title="K-forms and double forms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Michael Neunteufel.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

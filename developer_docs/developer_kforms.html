@@ -1,0 +1,437 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>K-forms and double forms &mdash; NGSDiffGeo 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+      <script src="../_static/webgui_jupyter_widgets.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Riemannian manifolds" href="developer_riemannian_manifold.html" />
+    <link rel="prev" title="Numerical-gradient developer guide" href="developer_coefficient_grad.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NGSDiffGeo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Geometry foundations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/01_riemannian_manifolds.html">Riemannian Manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/02_covariant_derivatives.html">Covariant Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/03_curvatures.html">Curvature quantities on Riemannian manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/04_gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Regge metrics and Gauss curvature</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/05_regge_metric.html">Regge finite elements and Regge metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/06_distributional_gauss_curvature.html">Distributional Gauss curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/07_distributional_gauss_curvature_analysis.html">Distributional Gauss curvature (analysis)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/08_distributional_gauss_curvature_surface.html">Gauss curvature approximation on embedded surfaces</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Higher-dimensional curvature and linearization</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/09_distributional_scalar_curvature.html">Distributional scalar curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/10_distributional_einstein_tensor.html">Distributional Einstein curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/11_distributional_riemann_curvature_tensor.html">Distributional Riemann curvature tensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/12_linearization_curvature_quantities.html">Linearization of curvature quantities</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exterior calculus and hypersurfaces</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/13_kforms_exterior_derivative.html">Alternating k-forms, wedge product, Hodge star, and exterior (co-) derivative</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/14_double_forms.html">Double forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/15_double_forms_covariant_derivatives.html">Exterior covariant derivatives of double forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/16_submanifold_geometry.html">Differential operators and curvature on hypersurfaces</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index.html#documentation-policy">Documentation policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#verification-strategy">Verification strategy</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#components">Components</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="developer_tensor_fields.html">Tensor fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="developer_coefficient_grad.html">Numerical-gradient developer guide</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">K-forms and double forms</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#source-layout">Source layout</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#representation-and-construction">Representation and construction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#python-arithmetic-and-dispatch">Python arithmetic and dispatch</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#operator-conventions">Operator conventions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coefficient-function-contracts">Coefficient-function contracts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#evaluation-compilation-and-archives">Evaluation, compilation, and archives</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#verification">Verification</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="developer_riemannian_manifold.html">Riemannian manifolds</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NGSDiffGeo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Developer guide</a></li>
+      <li class="breadcrumb-item active">K-forms and double forms</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/developer_docs/developer_kforms.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="k-forms-and-double-forms">
+<h1>K-forms and double forms<a class="headerlink" href="#k-forms-and-double-forms" title="Link to this heading"></a></h1>
+<p>The public C++ interface lives in <code class="docutils literal notranslate"><span class="pre">src/kforms.hpp</span></code>. The implementation uses
+<code class="docutils literal notranslate"><span class="pre">src/kforms.cpp</span></code>, <code class="docutils literal notranslate"><span class="pre">src/kforms_basis.cpp</span></code>, and <code class="docutils literal notranslate"><span class="pre">src/kforms_bindings.cpp</span></code>.
+The public Python adapters live in <code class="docutils literal notranslate"><span class="pre">src/wrappers.py</span></code>. It builds on
+<a class="reference internal" href="developer_tensor_fields.html"><span class="doc">Tensor fields</span></a> for metadata and value forwarding, and on
+<a class="reference internal" href="developer_coefficient_grad.html"><span class="doc">Numerical-gradient developer guide</span></a> for physical derivatives.</p>
+<section id="source-layout">
+<h2>Source layout<a class="headerlink" href="#source-layout" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">src/kforms.cpp</span></code> deliberately remains one translation unit. Its files below
+<code class="docutils literal notranslate"><span class="pre">src/kforms/</span></code> are textual C++ implementation fragments rather than separate
+compilation units. Keeping the hot lookup, construction, and evaluation helpers
+in one translation unit preserves cross-fragment inlining in Release builds.
+Do not add the fragments as independent CMake sources. Editors should associate
+<code class="docutils literal notranslate"><span class="pre">*.inc</span></code> with C++ for syntax highlighting and symbol navigation.</p>
+<p>The fragments are grouped by ownership:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">kforms_common.inc</span></code>, <code class="docutils literal notranslate"><span class="pre">kforms_wrappers.inc</span></code>, and <code class="docutils literal notranslate"><span class="pre">kforms_dispatch.inc</span></code>
+provide shared validation, semantic construction, and stable public dispatch.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kforms_storage_facades.inc</span></code>, <code class="docutils literal notranslate"><span class="pre">kforms_compact_facade.inc</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">kforms_symbolic_operations.inc</span></code> own compact representation and semantic
+operation reconstruction.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kforms_dense_nodes.inc</span></code> and <code class="docutils literal notranslate"><span class="pre">kforms_hodge_helpers.inc</span></code> contain the exact
+dense/reference nodes and boundary or codimension Hodge helpers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kforms_metric.inc</span></code> and <code class="docutils literal notranslate"><span class="pre">kforms_trace_hodge.inc</span></code> own induced metrics,
+inner products, trace, and compact Hodge evaluation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kforms_compact_algebra.inc</span></code> owns compact wedge tables and evaluator nodes.
+<code class="docutils literal notranslate"><span class="pre">kforms_algebra_operations.inc</span></code> owns the representation-specific algebra
+factories, arithmetic, and slot operations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kforms_compact_exterior.inc</span></code> owns the compact exterior-derivative table and
+evaluator, while <code class="docutils literal notranslate"><span class="pre">kforms_exterior_factories.inc</span></code> owns compact and dense
+exterior-derivative factories.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kforms_cache_diagnostics.inc</span></code> contains only cross-family cache-container
+accounting for tests and benchmarks. It is included at its original
+definition point so the organizational split does not change Release code
+layout.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">src/kforms_basis.hpp</span></code> and <code class="docutils literal notranslate"><span class="pre">src/kforms_basis.cpp</span></code> own canonical form bases.
+<code class="docutils literal notranslate"><span class="pre">src/kforms_internal.hpp</span></code> is the narrow interface used by other native
+components, while <code class="docutils literal notranslate"><span class="pre">src/kforms_detail.hpp</span></code> is a private implementation and
+testing seam. <code class="docutils literal notranslate"><span class="pre">src/kforms_diagnostics.hpp</span></code> declares the unstable internal
+benchmark diagnostics. <code class="docutils literal notranslate"><span class="pre">src/kforms_bindings.cpp</span></code> is the central Python-binding
+entry point for the form component.</p>
+</section>
+<section id="representation-and-construction">
+<h2>Representation and construction<a class="headerlink" href="#representation-and-construction" title="Link to this heading"></a></h2>
+<p>A K-form records a degree and an ambient dimension. A double form records two
+degrees, with all left component axes preceding all right component axes.
+Every axis is covariant. Constructors validate shape, degree, and ambient
+dimension. They preserve the supplied values without checking or applying
+alternation. In particular, a two-form constructor can contain nonzero
+diagonal entries. Algorithms using exterior-algebra identities require
+alternating input.</p>
+<p>Canonical factories reuse compatible wrappers and remove metadata-only wrapper
+layers when retyping. <code class="docutils literal notranslate"><span class="pre">GetFullCoefficient()</span></code>, and Python <code class="docutils literal notranslate"><span class="pre">.coef</span></code>, always
+expose the full public tensor shape and values. They never expose a vector of
+independent alternating components. Proven alternating results may nevertheless
+keep only independent components behind an internal facade. Dense constructor
+inputs are not compacted or projected automatically, so a non-alternating
+coefficient retains all of its supplied values.</p>
+<p>Keep the following limits distinct:</p>
+<ul class="simple">
+<li><p>ambient dimensions for form algebra: one through four</p></li>
+<li><p>full permutation or alternating-block length: at most four</p></li>
+<li><p>ordinary concrete form rank: at most eight</p></li>
+<li><p>physical gradients and nontrivial exterior derivatives: dimensions one through three, as required by <code class="docutils literal notranslate"><span class="pre">GradCF</span></code></p></li>
+<li><p>the tensor signature limit also bounds higher-rank shaped double-form zeros.</p></li>
+</ul>
+<p>Scalar forms can carry unknown ambient dimension zero. Known dimensions must
+match the manifold. Scalar inner products, slot inner products, and the scalar
+codifferential accept the default unknown dimension, without mutating the input.
+Inner-product results carry the manifold dimension. The scalar codifferential
+retains the existing formal-zero dimension metadata. Hodge operations require
+known ambient dimensions. Python wedge dispatch can infer a scalar operand’s
+dimension from the other operand. Component count one
+does not imply scalar shape: a one-form in dimension one has dimensions
+<code class="docutils literal notranslate"><span class="pre">(1,)</span></code>, while a scalar has dimensions <code class="docutils literal notranslate"><span class="pre">()</span></code>.</p>
+<p>Formal zeros with unknown dimension zero remain valid inputs to subsequent
+formal operations. In particular, applying <code class="docutils literal notranslate"><span class="pre">delta</span></code> repeatedly to a default
+scalar continues to decrease the formal degree without changing its unknown
+dimension. A known, conflicting formal-zero dimension is still rejected.</p>
+</section>
+<section id="python-arithmetic-and-dispatch">
+<h2>Python arithmetic and dispatch<a class="headerlink" href="#python-arithmetic-and-dispatch" title="Link to this heading"></a></h2>
+<p>K-form and double-form multiplication and division accept scalar operands.
+<code class="docutils literal notranslate"><span class="pre">alpha</span> <span class="pre">*</span> <span class="pre">beta</span></code> for positive-degree K-forms raises <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>. Choose
+<code class="docutils literal notranslate"><span class="pre">Wedge</span></code> for an exterior product or an explicit <code class="docutils literal notranslate"><span class="pre">InnerProduct</span></code> for a
+contraction. Plain tensor/matrix arithmetic is available through <code class="docutils literal notranslate"><span class="pre">.coef</span></code>.
+Scalar multiplication in either operand order preserves the form type and
+component shape, including <code class="docutils literal notranslate"><span class="pre">(1,)</span></code> in ambient dimension one. Scalar fields
+also retain NGSolve integration-measure syntax such as <code class="docutils literal notranslate"><span class="pre">f</span> <span class="pre">*</span> <span class="pre">dx</span></code>.</p>
+<p>The shared K-form arithmetic uses semantic wrappers as operands. It does not
+strip them to <code class="docutils literal notranslate"><span class="pre">.coef</span></code> before building the graph. Addition, subtraction,
+scaling, division, negation, symmetrization, wedge, Hodge operations, and exterior
+differentiation retain zero-valued
+operand wrappers too, so <code class="docutils literal notranslate"><span class="pre">Diff</span></code> and <code class="docutils literal notranslate"><span class="pre">Replace</span></code> preserve the operation rather
+than treating its current zero value as permanent. K-form <code class="docutils literal notranslate"><span class="pre">wedge</span></code>, <code class="docutils literal notranslate"><span class="pre">d</span></code>, <code class="docutils literal notranslate"><span class="pre">star</span></code>
+and <code class="docutils literal notranslate"><span class="pre">inv_star</span></code> methods return the same Python form wrappers as the free
+functions. Double-form methods and <code class="docutils literal notranslate"><span class="pre">trans</span></code> follow the same rule.
+The native K-form and double-form classes receive these method surfaces from
+one explicit operation list per type. Add a new method to that list and its
+reflection test instead of maintaining separate assignment loops.</p>
+<p>Explicit degrees and dimensions must be integers. Conversion helpers validate
+requested metadata before reusing an existing Python wrapper. Ambient
+inference uses <code class="docutils literal notranslate"><span class="pre">dim_space</span></code> or tensor axes. The flat coefficient <code class="docutils literal notranslate"><span class="pre">dim</span></code> is
+not an ambient dimension. Component tuples are converted to a coefficient
+before inference, including singleton and complex one-forms.
+Known, conflicting operand dimensions are rejected.
+Manifold operations validate dimensions and operation arguments before formal
+or empty-slot zero shortcuts. Negative <em>formal degrees</em> still propagate.</p>
+<p>Hodge slot aliases are normalized before calling C++: <code class="docutils literal notranslate"><span class="pre">0</span></code>/<code class="docutils literal notranslate"><span class="pre">left</span></code>,
+<code class="docutils literal notranslate"><span class="pre">1</span></code>/<code class="docutils literal notranslate"><span class="pre">right</span></code>, and <code class="docutils literal notranslate"><span class="pre">-1</span></code>/<code class="docutils literal notranslate"><span class="pre">both</span></code>. String names are case-insensitive.</p>
+</section>
+<section id="operator-conventions">
+<h2>Operator conventions<a class="headerlink" href="#operator-conventions" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">AlternationCF</span></code> is the unnormalized signed sum over all permutations.
+Its rank-zero and rank-one cases are identities. Repeated-index outputs vanish.</p>
+<p><code class="docutils literal notranslate"><span class="pre">BlockAlternationByPermutationCF</span></code> applies the same unnormalized operation
+within one contiguous block, leaving the other axes in place. Shape, covariance,
+dimension, and block bounds are validated even for an identity block of length
+zero or one.</p>
+<p>K-form wedge uses signed shuffles of the two input blocks. Double-form wedge
+uses independent shuffles of the left and right blocks and returns the combined
+left block followed by the combined right block. The exterior derivative is
+<code class="docutils literal notranslate"><span class="pre">AlternationCF(GradCF(a),</span> <span class="pre">k+1,</span> <span class="pre">dim)</span> <span class="pre">/</span> <span class="pre">k!</span></code>. The gradient axis comes first.
+These conventions must agree with independent component formulas, not merely
+with another operator using the same permutation tables.</p>
+<p>The Hodge operations validate their input and ambient dimension in C++ before
+taking zero shortcuts. The intrinsic dimension is the ambient dimension minus
+zero, one, or two for <code class="docutils literal notranslate"><span class="pre">VOL</span></code>, <code class="docutils literal notranslate"><span class="pre">BND</span></code>, or <code class="docutils literal notranslate"><span class="pre">BBND</span></code>. Component axes still
+use ambient coordinates on boundaries and edges. A single-slot double-form
+star complements only its selected degree, including when the input is zero.
+Only selected degrees are checked against the intrinsic dimension. For ambient
+dimension two and <code class="docutils literal notranslate"><span class="pre">BBND</span></code>, a selected degree-zero slot is an identity operation:
+single-slot stars return the original operand, preserving differentiation and
+replacement targets. Forward and inverse Python Hodge entrypoints share dispatch.
+The method and free-function <code class="docutils literal notranslate"><span class="pre">delta</span></code> likewise use one implementation.</p>
+<p>Python formal-zero objects retain degree information for operations outside
+the concrete form range, including negative degrees. They are distinct from
+full-shaped NGSolve zero coefficients. Preserve the existing dispatch and
+materialization policies when changing a C++ zero shortcut.</p>
+</section>
+<section id="coefficient-function-contracts">
+<h2>Coefficient-function contracts<a class="headerlink" href="#coefficient-function-contracts" title="Link to this heading"></a></h2>
+<p>The semantic wrappers inherit evaluation, transformation, differentiation, and
+archive behavior from the tensor-field component. Their <code class="docutils literal notranslate"><span class="pre">Rewrap</span></code> methods
+retain degree and ambient-dimension metadata. Scalar Jacobians retain their
+semantic wrapper. Tensor-valued Jacobians append variable axes and are untyped.
+Differentiation with respect to the wrapper itself returns the supplied
+direction or identity directly.</p>
+<p>Native operation nodes, including alternation, compact arithmetic, wedge,
+trace, induced metric, and Hodge maps, share the following contract. They:</p>
+<ul class="simple">
+<li><p>propagate child domains and elementwise-constant state</p></li>
+<li><p>implement both nonzero-pattern overloads, including first and second derivative dependencies</p></li>
+<li><p>expose their children through traversal and <code class="docutils literal notranslate"><span class="pre">InputCoefficientFunctions</span></code></p></li>
+<li><p>preserve the same child identities in <code class="docutils literal notranslate"><span class="pre">Transform</span></code>, <code class="docutils literal notranslate"><span class="pre">Diff</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">DiffJacobi</span></code></p></li>
+<li><p>include operation parameters and child keys in their equivalence keys</p></li>
+<li><p>reconstruct through registered archive constructors.</p></li>
+</ul>
+<p>Form operations use the shared symbolic-expression infrastructure described in
+<a class="reference internal" href="developer_tensor_fields.html"><span class="doc">Tensor fields</span></a> to preserve operands through differentiation,
+replacement, and serialization. <code class="docutils literal notranslate"><span class="pre">SymbolicEinsumCF</span></code> handles tensor products,
+permutations, and Hodge contractions. <code class="docutils literal notranslate"><span class="pre">SymbolicSumCF</span></code> and
+<code class="docutils literal notranslate"><span class="pre">ScaleCoefficientCF</span></code> preserve signed sums and scalar factors.</p>
+<p>Replacement reuses auxiliary subgraphs without replacement targets, so untouched
+native inverse-metric nodes need no <code class="docutils literal notranslate"><span class="pre">Transform</span></code> support. Replacing inside
+such native nodes still depends on their NGSolve support. Shared subgraphs
+are visited once, including semantic operands removed by native simplification.</p>
+<p>Do not replace these expressions with native <code class="docutils literal notranslate"><span class="pre">+</span></code> or <code class="docutils literal notranslate"><span class="pre">*</span></code> where a zero-valued
+semantic operand must survive: native simplification may discard the operand
+or return it directly, losing a factor. Hodge and double-wedge construction
+likewise retain their operator graphs instead of returning a fresh zero solely
+because an operand is zero. Degree-overflow zeros remain structural shortcuts.
+<code class="docutils literal notranslate"><span class="pre">GradCF</span></code> and <code class="docutils literal notranslate"><span class="pre">HesseCF</span></code> preserve zero-valued wrappers and dependent
+intermediate expressions. A childless native zero can still be replaced with a
+correctly shaped derivative zero.</p>
+<p>Jacobians use directional derivatives of the semantic operands, including when
+native evaluation simplifies the result to a childless zero. A zero-valued form
+wrapper remains a differentiation target. Symbolic Jacobian columns also retain
+zero-valued intermediate derivatives for subsequent mixed differentiation or
+replacement. Native <code class="docutils literal notranslate"><span class="pre">ZeroCF</span></code> itself retains
+NGSolve’s constant-zero differentiation semantics.</p>
+<p>Double wedge’s children are the semantic operand wrappers. Replacing or
+differentiating an operand wrapper must work as well as doing so with its
+underlying value coefficient. Bypassing the wrapper when rebuilding the graph
+breaks this contract.</p>
+<p>Nonzero patterns conservatively propagate dependencies. They identify
+structurally impossible repeated-index entries but need not detect every
+cancellation. <code class="docutils literal notranslate"><span class="pre">IsZeroCF()</span></code> is likewise a structural test, not a numerical
+test of whether an expression happens to evaluate to zero. Double wedge caches
+its complete structural-zero result during construction and recomputes it when
+reconstructed. Querying a shared wedge graph does not recursively expand both
+operand branches.</p>
+<p><code class="docutils literal notranslate"><span class="pre">SymbolicEinsumCF</span></code> evaluates nonzero patterns once per dependency in its
+evaluation DAG, using the precomputed-child overloads. The cache lives only for
+one pattern query, so changing proxy components cannot reuse stale patterns.
+This also bounds pattern work when native einsum reconstructs a shared graph.</p>
+</section>
+<section id="evaluation-compilation-and-archives">
+<h2>Evaluation, compilation, and archives<a class="headerlink" href="#evaluation-compilation-and-archives" title="Link to this heading"></a></h2>
+<p>Full and block alternation reuse the shared signed-permutation cache when
+building component lookup tables. Nodes do not store their own permutation
+copies. Component tables remain local because they depend on shape and block
+position. Separate classes and archive constructors are retained.</p>
+<p>Form bases and the tables for compact expansion, trace, wedge, exterior
+derivative, induced metrics, and Hodge maps are immutable and initialized with
+<code class="docutils literal notranslate"><span class="pre">std::call_once</span></code>. They are keyed only by dimension and degrees. Evaluator
+nodes retain a shared table handle rather than copying row, sign, permutation,
+or metric-index vectors. When a new cache family is added, include both its
+fixed container and owned dynamic storage in the private benchmark accounting.</p>
+<p>Interpreted evaluation and generated code use the same signed lookup tables.
+The nodes generate their assignments directly, using the tensor
+component’s shared declaration helper for real, complex, SIMD, and derivative
+scalar types. Full alternation does not embed an evaluation-fallback pointer
+in generated code. Rank-zero alternation and scalar double wedge also support
+the native scalar point-evaluation overload, including use as conditions in
+complex-valued <code class="docutils literal notranslate"><span class="pre">IfPos</span></code> expressions.</p>
+<p>Generated signed sums must initialize the first term explicitly. Applying
+<code class="docutils literal notranslate"><span class="pre">operator-=</span></code> to an empty <code class="docutils literal notranslate"><span class="pre">CodeExpr</span></code> loses a leading minus sign. Use the
+shared signed-accumulation helper for every generated contraction or
+permutation sum, and cover a leading-negative case with
+<code class="docutils literal notranslate"><span class="pre">realcompile=True</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Compile(realcompile=False)</span></code> tests graph compilation. <code class="docutils literal notranslate"><span class="pre">realcompile=True</span></code>
+also invokes native code generation. Compilation preserves values and shapes
+but returns an untyped NGSolve compiled coefficient. Tests must exercise the
+internal operators, not just a semantic wrapper around a simple coefficient.</p>
+<p>Archive constructor arguments contain the children and defining operation
+parameters. Derived dimensions and lookup tables are reconstructed from those
+arguments. When modifying constructor state, update pickle tests in the same
+change. Metadata stored in Python instance attributes is not authoritative.</p>
+</section>
+<section id="verification">
+<h2>Verification<a class="headerlink" href="#verification" title="Link to this heading"></a></h2>
+<p>After configuring a developer build and making that extension available to
+Python, run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cmake</span> <span class="o">--</span><span class="n">build</span> <span class="n">build</span> <span class="o">--</span><span class="n">target</span> <span class="n">cpp_tests</span>
+<span class="n">ctest</span> <span class="o">--</span><span class="n">test</span><span class="o">-</span><span class="nb">dir</span> <span class="n">build</span> <span class="o">--</span><span class="n">output</span><span class="o">-</span><span class="n">on</span><span class="o">-</span><span class="n">failure</span>
+<span class="n">CCACHE_DISABLE</span><span class="o">=</span><span class="mi">1</span> <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pytest</span> <span class="o">-</span><span class="n">q</span> <span class="n">tests</span><span class="o">/</span><span class="n">test_kforms</span><span class="o">.</span><span class="n">py</span>
+<span class="n">CCACHE_DISABLE</span><span class="o">=</span><span class="mi">1</span> <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pytest</span> <span class="o">-</span><span class="n">q</span> <span class="n">tests</span><span class="o">/</span><span class="n">test_symbolic_einsum_regressions</span><span class="o">.</span><span class="n">py</span>
+<span class="n">CCACHE_DISABLE</span><span class="o">=</span><span class="mi">1</span> <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pytest</span> <span class="o">-</span><span class="n">q</span> <span class="n">tests</span><span class="o">/</span><span class="n">test_zero_form_symbolics</span><span class="o">.</span><span class="n">py</span>
+<span class="n">CCACHE_DISABLE</span><span class="o">=</span><span class="mi">1</span> <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pytest</span> <span class="o">-</span><span class="n">q</span> <span class="n">tests</span><span class="o">/</span><span class="n">test_wrappers_kforms_</span><span class="o">*.</span><span class="n">py</span>
+<span class="n">CCACHE_DISABLE</span><span class="o">=</span><span class="mi">1</span> <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pytest</span> <span class="o">-</span><span class="n">q</span> <span class="n">tests</span><span class="o">/</span><span class="n">test_wrappers_hodge_star_delta</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">test_kforms.cpp</span></code> checks domain/constant propagation, equivalence keys,
+nonzero-pattern overloads, direct code generation, validation, and native
+scalar/SIMD evaluation. Traversal and pattern counters check shared-graph
+replacement without a timing threshold. Its tests join the existing <code class="docutils literal notranslate"><span class="pre">cpp_tests</span></code> aggregate
+on platforms supporting addon-linked C++ tests.</p>
+<p><code class="docutils literal notranslate"><span class="pre">test_kforms.py</span></code> includes independent component references, compilation and
+pickle checks, operand replacement/Jacobians, zero-star metadata, public
+dimension validation, and subprocess crash regressions for null manifolds.
+<code class="docutils literal notranslate"><span class="pre">test_wrappers_kforms_regressions.py</span></code> covers public Python arithmetic,
+factory validation, singleton dispatch, null shortcuts, slot aliases,
+method return types, operand identities, contracted Jacobians, and compiled
+and pickled operation graphs.
+<code class="docutils literal notranslate"><span class="pre">test_symbolic_einsum_regressions.py</span></code> checks nested replacements before and
+after pickling and zero-form Jacobians against independent basis directions.
+<code class="docutils literal notranslate"><span class="pre">test_zero_form_symbolics.py</span></code> checks zero operands under scaling, division,
+negation, scalar and positive-degree wedges, Hodge operations, exterior
+differentiation, and composition against explicit component formulas. It also
+checks repeated scalar codifferentials and conflicting formal-zero dimensions.
+Spatial differentiation is tested with nonconstant directions, since it does
+not have a pointwise matrix Jacobian.
+The existing tensor-wrapper, covariant-operator, formal-zero, and
+<code class="docutils literal notranslate"><span class="pre">TaskManager</span></code> tests provide downstream coverage. Run the full suites after
+changes to child identity, code generation, archives, or dispatch.</p>
+<p>Performance comparisons belong in dedicated benchmarks. Compact storage must
+be compared against this corrected dense implementation and independent
+component references. Component-count reductions alone are not timing results.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="developer_coefficient_grad.html" class="btn btn-neutral float-left" title="Numerical-gradient developer guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="developer_riemannian_manifold.html" class="btn btn-neutral float-right" title="Riemannian manifolds" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Michael Neunteufel.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

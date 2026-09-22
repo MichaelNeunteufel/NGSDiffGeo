@@ -1,0 +1,218 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Developer guide &mdash; NGSDiffGeo 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+      <script src="../_static/webgui_jupyter_widgets.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tensor fields" href="developer_tensor_fields.html" />
+    <link rel="prev" title="Differential operators and curvature on hypersurfaces" href="../tutorials/16_submanifold_geometry.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NGSDiffGeo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Geometry foundations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/01_riemannian_manifolds.html">Riemannian Manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/02_covariant_derivatives.html">Covariant Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/03_curvatures.html">Curvature quantities on Riemannian manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/04_gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Regge metrics and Gauss curvature</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/05_regge_metric.html">Regge finite elements and Regge metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/06_distributional_gauss_curvature.html">Distributional Gauss curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/07_distributional_gauss_curvature_analysis.html">Distributional Gauss curvature (analysis)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/08_distributional_gauss_curvature_surface.html">Gauss curvature approximation on embedded surfaces</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Higher-dimensional curvature and linearization</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/09_distributional_scalar_curvature.html">Distributional scalar curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/10_distributional_einstein_tensor.html">Distributional Einstein curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/11_distributional_riemann_curvature_tensor.html">Distributional Riemann curvature tensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/12_linearization_curvature_quantities.html">Linearization of curvature quantities</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exterior calculus and hypersurfaces</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/13_kforms_exterior_derivative.html">Alternating k-forms, wedge product, Hodge star, and exterior (co-) derivative</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/14_double_forms.html">Double forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/15_double_forms_covariant_derivatives.html">Exterior covariant derivatives of double forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/16_submanifold_geometry.html">Differential operators and curvature on hypersurfaces</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Developer guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#documentation-policy">Documentation policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#verification-strategy">Verification strategy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#components">Components</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="developer_tensor_fields.html">Tensor fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="developer_coefficient_grad.html">Numerical-gradient developer guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="developer_kforms.html">K-forms and double forms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="developer_riemannian_manifold.html">Riemannian manifolds</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NGSDiffGeo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Developer guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/developer_docs/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="developer-guide">
+<h1>Developer guide<a class="headerlink" href="#developer-guide" title="Link to this heading"></a></h1>
+<p>This guide is for contributors who modify NGSDiffGeo’s C++ implementation,
+Python bindings, or wrapper behavior. User-facing definitions and examples
+belong in the tutorials. Installation instructions are in <a class="reference internal" href="../install.html"><span class="doc">Installation</span></a>.</p>
+<p>Component pages document stable implementation contracts: ownership,
+invariants, representation choices, extension points, and behavior that is not
+obvious from an individual function. Function signatures and local algorithmic
+details remain in the source.</p>
+<section id="documentation-policy">
+<h2>Documentation policy<a class="headerlink" href="#documentation-policy" title="Link to this heading"></a></h2>
+<p>Developer pages should:</p>
+<ul class="simple">
+<li><p>identify the source files and responsibilities owned by the component,</p></li>
+<li><p>record only the cross-component relationships needed to use or extend it,</p></li>
+<li><p>describe behavior and invariants rather than reproduce implementation steps,</p></li>
+<li><p>keep mathematical definitions, derivations, and executable examples in the
+tutorials or technical report, and</p></li>
+<li><p>update the relevant tests and documentation when a documented contract
+changes.</p></li>
+</ul>
+</section>
+<section id="verification-strategy">
+<h2>Verification strategy<a class="headerlink" href="#verification-strategy" title="Link to this heading"></a></h2>
+<p>Use the smallest test set that covers the change, then expand according to its
+impact:</p>
+<ul class="simple">
+<li><p>documentation-only changes require a warning-free Sphinx build,</p></li>
+<li><p>component-local changes require that component’s C++ and Python tests, and</p></li>
+<li><p>changes to shared base classes, serialization, generated code, or wrapper
+dispatch require the dependent tests and normally the full suites.</p></li>
+</ul>
+<p>Build and install the current extension before running Python tests. Package
+builds exclude the C++ test executables, so configure a developer build with
+<code class="docutils literal notranslate"><span class="pre">-DBUILD_TESTING=ON</span></code> when they are needed. The source installation options
+are described in <a class="reference internal" href="../install.html"><span class="doc">Installation</span></a>. With <code class="docutils literal notranslate"><span class="pre">build</span></code> as the CMake build
+directory, the common commands are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cmake</span> <span class="o">--</span><span class="n">build</span> <span class="n">build</span>
+<span class="n">cmake</span> <span class="o">--</span><span class="n">install</span> <span class="n">build</span>
+<span class="n">ctest</span> <span class="o">--</span><span class="n">test</span><span class="o">-</span><span class="nb">dir</span> <span class="n">build</span> <span class="o">--</span><span class="n">output</span><span class="o">-</span><span class="n">on</span><span class="o">-</span><span class="n">failure</span>
+<span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pytest</span> <span class="o">-</span><span class="n">q</span>
+</pre></div>
+</div>
+<p>The normal documentation configuration executes every listed notebook. For a
+fast documentation check that parses and renders notebooks without running
+their cells, use this command from the repository root:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sphinx</span><span class="o">-</span><span class="n">build</span> <span class="o">-</span><span class="n">W</span> <span class="o">--</span><span class="n">keep</span><span class="o">-</span><span class="n">going</span> <span class="o">-</span><span class="n">b</span> <span class="n">html</span> \
+    <span class="o">-</span><span class="n">D</span> <span class="n">nbsphinx_execute</span><span class="o">=</span><span class="n">never</span> <span class="n">docs</span> <span class="n">docs</span><span class="o">/</span><span class="n">_build</span><span class="o">/</span><span class="n">html</span><span class="o">-</span><span class="n">fast</span>
+</pre></div>
+</div>
+<p>Use the regular <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">-C</span> <span class="pre">docs</span> <span class="pre">html</span></code> build when notebook execution itself must
+be verified.</p>
+</section>
+<section id="components">
+<h2>Components<a class="headerlink" href="#components" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="developer_tensor_fields.html">Tensor fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_coefficient_grad.html">Numerical-gradient developer guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_kforms.html">K-forms and double forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_riemannian_manifold.html">Riemannian manifolds</a></li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../tutorials/16_submanifold_geometry.html" class="btn btn-neutral float-left" title="Differential operators and curvature on hypersurfaces" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="developer_tensor_fields.html" class="btn btn-neutral float-right" title="Tensor fields" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Michael Neunteufel.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,566 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Riemannian Manifolds &mdash; NGSDiffGeo 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=2709fde1"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+      <script src="../_static/webgui_jupyter_widgets.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Covariant Derivatives" href="02_covariant_derivatives.html" />
+    <link rel="prev" title="License" href="../license.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NGSDiffGeo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Geometry foundations</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Riemannian Manifolds</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#2D-metrics">2D metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Poincaré-disk">Poincaré disk</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Poincaré-half-plane-(\mathbb{H}^2)">Poincaré half-plane (<span class="math notranslate nohighlight">\(\mathbb{H}^2\)</span>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#2-sphere">2-sphere</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Cigar-soliton-metric">Cigar soliton metric</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3D-metrics">3D metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#3-sphere">3-sphere</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Poincaré-upper-half-space-(\mathbb{H}^3)">Poincaré upper half-space (<span class="math notranslate nohighlight">\(\mathbb{H}^3\)</span>)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#Additional-reference-metrics-and-conventions">Additional reference metrics and conventions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="02_covariant_derivatives.html">Covariant Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_curvatures.html">Curvature quantities on Riemannian manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Regge metrics and Gauss curvature</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="05_regge_metric.html">Regge finite elements and Regge metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06_distributional_gauss_curvature.html">Distributional Gauss curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_distributional_gauss_curvature_analysis.html">Distributional Gauss curvature (analysis)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="08_distributional_gauss_curvature_surface.html">Gauss curvature approximation on embedded surfaces</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Higher-dimensional curvature and linearization</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="09_distributional_scalar_curvature.html">Distributional scalar curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="10_distributional_einstein_tensor.html">Distributional Einstein curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_distributional_riemann_curvature_tensor.html">Distributional Riemann curvature tensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="12_linearization_curvature_quantities.html">Linearization of curvature quantities</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exterior calculus and hypersurfaces</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="13_kforms_exterior_derivative.html">Alternating k-forms, wedge product, Hodge star, and exterior (co-) derivative</a></li>
+<li class="toctree-l1"><a class="reference internal" href="14_double_forms.html">Double forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="15_double_forms_covariant_derivatives.html">Exterior covariant derivatives of double forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="16_submanifold_geometry.html">Differential operators and curvature on hypersurfaces</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developer_docs/index.html">Developer guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NGSDiffGeo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Riemannian Manifolds</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/01_riemannian_manifolds.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Riemannian-Manifolds">
+<h1>Riemannian Manifolds<a class="headerlink" href="#Riemannian-Manifolds" title="Link to this heading"></a></h1>
+<p>In this notebook, we recap some basic definitions of Riemannian manifolds, especially the metric tensor, Christoffel symbols, and several curvature quantities. Covariant derivatives are handled in details in <a class="reference internal" href="02_covariant_derivatives.html"><span class="doc">following notebook</span></a>. We also present some Riemannian metrics in two and three dimensions. Curvature relations and identities are numerically tested in <a class="reference internal" href="03_curvatures.html"><span class="doc">this notebook</span></a>.</p>
+<p>Let <span class="math notranslate nohighlight">\((M,g)\)</span> be an <span class="math notranslate nohighlight">\(N\)</span>-dimensional Riemannian manifold with metric tensor <span class="math notranslate nohighlight">\(g\)</span>. That means <span class="math notranslate nohighlight">\(M\)</span> is a smooth manifold, and <span class="math notranslate nohighlight">\(g\)</span> is a symmetric and positive definite bilinear form on the tangent space of <span class="math notranslate nohighlight">\(M\)</span>. If <span class="math notranslate nohighlight">\(g\)</span> has signature <span class="math notranslate nohighlight">\(-+\dots+\)</span>, then <span class="math notranslate nohighlight">\((M,g)\)</span> is called a pseudo-Riemannian manifold. For instance, in general relativity, the metric has the signature <span class="math notranslate nohighlight">\(-+++\)</span>, where the associated negative coordinate corresponds to time. For numerical
+experiments and simulations we will approximate the exact metric by <a class="reference internal" href="05_regge_metric.html"><span class="doc">Regge finite elements</span></a>.</p>
+<p>For simplicity we assume that <span class="math notranslate nohighlight">\(M\)</span> can be covered by a single chart, inducing local coordinates <span class="math notranslate nohighlight">\(x^1,\dots, x^N\)</span> with basis vectors <span class="math notranslate nohighlight">\(\partial_1,\dots,\partial_N\)</span> (a frame of vector fields <span class="math notranslate nohighlight">\(\partial_i\in \mathfrak{X}(M)\)</span> ), and their corresponding dual basis of 1-forms <span class="math notranslate nohighlight">\(dx^1,\dots, dx^N\)</span>, <span class="math notranslate nohighlight">\(dx^i\in \Lambda^1(M)\)</span>. That means <span class="math notranslate nohighlight">\(dx^i(\partial_j)=\delta^i_{j}\)</span>. Then, we can write the metric <span class="math notranslate nohighlight">\(g\)</span> and its inverse in terms of the coordinates via</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+g_{ij} = g(\partial_i,\partial_j),\qquad g^{ij}= g^{-1}(dx^i,dx^j),\qquad g= g_{ij}dx^i\otimes dx^j,\qquad g^{-1} = g^{ij}\,\partial_i\otimes \partial_j.
+\end{align*}\]</div>
+<p>Note that both <span class="math notranslate nohighlight">\(g_{ij}\)</span> and <span class="math notranslate nohighlight">\(g^{ij}\)</span> are symmetric. We utilized Einstein’s summation convention of repeated indices. That means if an index appears as a subscript and superscript, we implicitly sum over it. The volume form <span class="math notranslate nohighlight">\(\omega\in \Lambda^N(M)\)</span> used for integration on the manifold can be expressed in coordinates as</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\omega = \sqrt{\det (g_{ij})}\,dx^1\wedge\dots\wedge dx^N,
+\end{align*}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\wedge:\Lambda^i(M)\times\Lambda^j(M)\to\Lambda^{i+j}(M)\)</span> denotes the wedge-product of two forms.</p>
+<p>The Levi-Civita connection <span class="math notranslate nohighlight">\(\nabla\)</span> is the unique connection that is metric-compatible (Leibniz rule) and torsion-free, i.e. for all <span class="math notranslate nohighlight">\(X,Y,Z\in\mathfrak{X}(M)\)</span></p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align*}
+&amp; X(g(Y,Z)) = g(\nabla_XY,Z)+ g(Y,\nabla_XZ)\\
+&amp; \nabla_XY -\nabla_YX = [X,Y],
+\end{align*}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\([X,Y]\in \mathfrak{X}(M)\)</span> denotes the commutator (Lie-bracket) defined by</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+[X,Y]f = X(Y(f))-Y(X(f)),\qquad \forall f\in C^{\infty}(M).
+\end{align*}\]</div>
+<p>The Christoffel symbols of the first and second kinds are defined via</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\Gamma_{ijk}= g(\nabla_{\partial_i}\partial_j,\partial_k),\qquad \nabla_{\partial_i}\partial_j=\Gamma_{ij}^k\partial_k
+\end{align*}\]</div>
+<p>and in terms of the metric tensor</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\Gamma_{ijk}=\frac{1}{2}\left(\partial_ig_{jk}+\partial_jg_{ik}-\partial_kg_{ij}\right),\qquad \Gamma_{ij}^k = g^{kl}\Gamma_{ijl}.
+\end{align*}\]</div>
+<p>The full fourth-order Riemann curvature tensor, encoding the complete curvature information of the Riemannian manifold <span class="math notranslate nohighlight">\(M\)</span>, is given by</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\mathfrak{R}(X,Y,Z,W) = g(\nabla_X\nabla_YZ-\nabla_Y\nabla_XZ-\nabla_{[X,Y]}Z,W),\qquad  \mathfrak{R}_{ijkl} = \partial_i \Gamma_{jkl}-\partial_j \Gamma_{ikl} + \Gamma_{ik}^p\Gamma_{jlp}- \Gamma_{jk}^p\Gamma_{ilp}.
+\end{align*}\]</div>
+<p>The Riemann curvature tensor is skew-symmetric in its first two and second two components and symmetric when switching the first two with the second two indices. Further, there holds the first (algebraic) and second (differential) Bianchi identity</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align*}
+&amp;\mathfrak{R}(X,Y,Z,W)=-\mathfrak{R}(Y,X,Z,W)=-\mathfrak{R}(X,Y,W,Z)= \mathfrak{R}(Z,W,X,Y),\\
+&amp;\mathfrak{R}(X,Y,Z,W)+\mathfrak{R}(X,Z,W,Y)+\mathfrak{R}(X,W,Y,Z)=0,\\
+&amp;\nabla_V\mathfrak{R}(X,Y,Z,W)+\nabla_Z\mathfrak{R}(X,Y,W,V)+\nabla_W\mathfrak{R}(X,Y,V,Z)=0.
+\end{align*}\end{split}\]</div>
+<p>Note that there exist two different sign conventions for the Riemann curvature tensor! The Ricci curvature tensor coincides in both conventions and reads (in our convention)</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\mathrm{Ric}_{ij} = \mathfrak{R}_{kijl}g^{kl},
+\end{align*}\]</div>
+<p>i.e., the first and last indices are contracted (in the other convention, the first and third indices get contracted). A second contraction gives the scalar curvature</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+S = \mathrm{Ric}_{ij} g^{ij} = \mathfrak{R}_{kijl}g^{kl}g^{ij}.
+\end{align*}\]</div>
+<p>In two dimensions, the Gauss curvature is given for any linear independent <span class="math notranslate nohighlight">\(X,Y\)</span> by</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+K = \frac{\mathcal{R}(X,Y,Y,X)}{g(X,X)g(Y,Y)-g(X,Y)^2},
+\end{align*}\]</div>
+<p>which is independent of the choice of <span class="math notranslate nohighlight">\(X,Y\)</span>. Further, it is related to the scalar curvature by <span class="math notranslate nohighlight">\(S=2K\)</span>.</p>
+<p>The notation of Gauss curvature can be extended to arbitrary dimensions considering a plane spanned by two independent vectors <span class="math notranslate nohighlight">\(X,Y\)</span>. The result is denoted as the sectional curvature <span class="math notranslate nohighlight">\(K(X,Y)\)</span>.</p>
+<p>The Einstein tensor, which is zero in two dimensions but in general non-zero for dimensions greater than 2, is defined by</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+G_{ij}=\mathrm{Ric}_{ij}-\frac{1}{2}S\,g_{ij}.
+\end{align*}\]</div>
+<p>On a codimension-one manifold <span class="math notranslate nohighlight">\(F\)</span> (also called a hypersurface), the second fundamental form <span class="math notranslate nohighlight">\(I\!I\)</span> acting on vector fields on the hypersurface is defined by</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+I\!I^n(X,Y)= g(n,\nabla_XY)=-g(\nabla_Xn,Y),\qquad X,Y\in \mathfrak{X}(F),
+\end{align*}\]</div>
+<p>where <span class="math notranslate nohighlight">\(n\)</span> denotes a <span class="math notranslate nohighlight">\(g\)</span>-normalized normal vector on <span class="math notranslate nohighlight">\(F\)</span>. Again, the sign may depend on the convention (changing the normal vector’s direction changes the sign). The second fundamental form is symmetric. In two dimensions, the second fundamental form reduces to the geodesic curvature of a curve</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+\kappa^n_g = g(\nabla_tt,n)=-g(\nabla_tn,t),
+\end{align*}\]</div>
+<p>where <span class="math notranslate nohighlight">\(t\)</span> is a <span class="math notranslate nohighlight">\(g\)</span>-normalized tangent vector.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve.webgui</span><span class="w"> </span><span class="kn">import</span> <span class="n">Draw</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">netgen.occ</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ngsdiffgeo</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dg</span>
+</pre></div>
+</div>
+</div>
+<section id="2D-metrics">
+<h2>2D metrics<a class="headerlink" href="#2D-metrics" title="Link to this heading"></a></h2>
+<p>Let’s start with some two-dimensional Riemannian manifolds and investigate their properties, such as curvatures.</p>
+<section id="Poincaré-disk">
+<h3>Poincaré disk<a class="headerlink" href="#Poincaré-disk" title="Link to this heading"></a></h3>
+<p>The Poincaré disk (also called conformal disk) is defined on the open unit disk <span class="math notranslate nohighlight">\(M=\{(x,y)\in \mathbb{R}^2\,:\, x^2+y^2&lt;1\}\)</span> with metric tensor</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+g = \frac{4}{(1-x^2-y^2)^2}(dx\otimes dx + dy\otimes dy).
+\end{align*}\]</div>
+<p>The Gauss curvature is constant, <span class="math notranslate nohighlight">\(K=-1\)</span>; thus, the Poincaré disk is a hyperbolic geometry. When plotting the norm of the metric, we clearly observe the blow-up towards the circle boundary.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span>
+    <span class="n">OCCGeometry</span><span class="p">(</span><span class="n">Circle</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mf">0.9</span><span class="p">)</span><span class="o">.</span><span class="n">Face</span><span class="p">(),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span><span class="n">maxh</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="p">)</span><span class="o">.</span><span class="n">Curve</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">pcd</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">PoincareDisk</span><span class="p">()</span>
+<span class="c1"># Norm of metric</span>
+<span class="n">Draw</span><span class="p">(</span><span class="n">Norm</span><span class="p">(</span><span class="n">pcd</span><span class="o">.</span><span class="n">metric</span><span class="p">),</span> <span class="n">mesh</span><span class="p">)</span>
+<span class="c1"># Gauss curvature</span>
+<span class="n">Draw</span><span class="p">(</span><span class="n">pcd</span><span class="o">.</span><span class="n">curvature</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">deformation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;netgen.webgui.WebGuiWidget&gt;: Run `pip install anywidget` to enable WebGuiWidget in Jupyter
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;netgen.webgui.WebGuiWidget&gt;: Run `pip install anywidget` to enable WebGuiWidget in Jupyter
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+WebGLScene
+</pre></div></div>
+</div>
+</section>
+<section id="Poincaré-half-plane-(\mathbb{H}^2)">
+<h3>Poincaré half-plane (<span class="math notranslate nohighlight">\(\mathbb{H}^2\)</span>)<a class="headerlink" href="#Poincaré-half-plane-(\mathbb{H}^2)" title="Link to this heading"></a></h3>
+<p>The Poincaré half-plane is given on the upper half-plane <span class="math notranslate nohighlight">\(\mathbb{H}^2:=\{(x,y)\in\mathbb{R}^2\,:\, y&gt;0\}\)</span> with the metric</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+g = \frac{1}{y^2}\, (dx\otimes dx+dy\otimes dy).
+\end{align*}\]</div>
+<p>It is also a hyperbolic Riemannian manifold with constant Gauss curvature <span class="math notranslate nohighlight">\(K=-1\)</span>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span>
+    <span class="n">OCCGeometry</span><span class="p">(</span><span class="n">MoveTo</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">Face</span><span class="p">(),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span><span class="n">maxh</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">hyp2</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">HyperbolicH2</span><span class="p">()</span>
+
+<span class="n">Draw</span><span class="p">(</span><span class="n">Norm</span><span class="p">(</span><span class="n">hyp2</span><span class="o">.</span><span class="n">metric</span><span class="p">),</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">Draw</span><span class="p">(</span><span class="n">hyp2</span><span class="o">.</span><span class="n">curvature</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">deformation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;netgen.webgui.WebGuiWidget&gt;: Run `pip install anywidget` to enable WebGuiWidget in Jupyter
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;netgen.webgui.WebGuiWidget&gt;: Run `pip install anywidget` to enable WebGuiWidget in Jupyter
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+WebGLScene
+</pre></div></div>
+</div>
+</section>
+<section id="2-sphere">
+<h3>2-sphere<a class="headerlink" href="#2-sphere" title="Link to this heading"></a></h3>
+<p>The standard metric on the sphere <span class="math notranslate nohighlight">\(S^2\)</span> is given by (<span class="math notranslate nohighlight">\(x,y\)</span> are interpreted as angles)</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+g = dx\otimes dx + \sin^2(x)\,dy\otimes dy
+\end{align*}\]</div>
+<p>on the domain <span class="math notranslate nohighlight">\(M=[0,\pi]\times [0,2\pi)\)</span>. Its Gauss curvature is constant, <span class="math notranslate nohighlight">\(K=1\)</span>, and therefore an elliptic manifold.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span>
+    <span class="n">OCCGeometry</span><span class="p">(</span><span class="n">MoveTo</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pi</span><span class="p">)</span><span class="o">.</span><span class="n">Face</span><span class="p">(),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span><span class="n">maxh</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">sphere2</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Sphere2</span><span class="p">()</span>
+
+<span class="n">Draw</span><span class="p">(</span><span class="n">Norm</span><span class="p">(</span><span class="n">sphere2</span><span class="o">.</span><span class="n">metric</span><span class="p">),</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">Draw</span><span class="p">(</span><span class="n">sphere2</span><span class="o">.</span><span class="n">curvature</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">0.99</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mf">1.01</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;netgen.webgui.WebGuiWidget&gt;: Run `pip install anywidget` to enable WebGuiWidget in Jupyter
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;netgen.webgui.WebGuiWidget&gt;: Run `pip install anywidget` to enable WebGuiWidget in Jupyter
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+WebGLScene
+</pre></div></div>
+</div>
+</section>
+<section id="Cigar-soliton-metric">
+<h3>Cigar soliton metric<a class="headerlink" href="#Cigar-soliton-metric" title="Link to this heading"></a></h3>
+<p>The time-dependent cigar soliton metric</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+g(t) = \frac{1}{e^{4t}+x^2+y^2}(dx\otimes dx+dy\otimes dy)
+\end{align*}\]</div>
+<p>defined on <span class="math notranslate nohighlight">\(\mathbb{R}^2\)</span> is an example for Ricci flow. The metric satisfy the Ricci flow equation <span class="math notranslate nohighlight">\(g^\prime(t) = -2\mathrm{Ric}(t)\)</span> with <span class="math notranslate nohighlight">\(\mathrm{Ric}(t)\)</span> the Ricci curvature tensor of <span class="math notranslate nohighlight">\(g(t)\)</span>. It has positive Gauss curvature</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+K = \frac{2e^{4t}}{e^{4t}+x^2+y^2},
+\end{align*}\]</div>
+<p>i.e., is a Riemannian manifold of elliptic type.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span>
+    <span class="n">OCCGeometry</span><span class="p">(</span><span class="n">MoveTo</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">Face</span><span class="p">(),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span><span class="n">maxh</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># set a time parameter</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">cig</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">CigarSoliton</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+<span class="n">Draw</span><span class="p">(</span><span class="n">Norm</span><span class="p">(</span><span class="n">cig</span><span class="o">.</span><span class="n">metric</span><span class="p">),</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">deformation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Check if g'(t) = -2 Ric(g(t))</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">"g'(t) + 2 Ric(g(t)) = </span><span class="si">{</span><span class="n">Integrate</span><span class="p">(</span><span class="n">Norm</span><span class="p">(</span><span class="n">cig</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cig</span><span class="o">.</span><span class="n">Ricci</span><span class="p">),</span><span class="w"> </span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">"</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;netgen.webgui.WebGuiWidget&gt;: Run `pip install anywidget` to enable WebGuiWidget in Jupyter
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+g&#39;(t) + 2 Ric(g(t)) = 0.000000
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="3D-metrics">
+<h2>3D metrics<a class="headerlink" href="#3D-metrics" title="Link to this heading"></a></h2>
+<section id="3-sphere">
+<h3>3-sphere<a class="headerlink" href="#3-sphere" title="Link to this heading"></a></h3>
+<p>The standard metric on the sphere <span class="math notranslate nohighlight">\(S^3\)</span> is given by (<span class="math notranslate nohighlight">\(x,y,z\)</span> are interpreted as angles)</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+g = dx\otimes dx + \sin^2(x)\,dy\otimes dy + \sin^2(x)\sin^2(y)\,dz\otimes dz
+\end{align*}\]</div>
+<p>on the domain <span class="math notranslate nohighlight">\(M=[0,\pi]\times[0,\pi]\times [0,2\pi)\)</span>. Its scalar curvature is constant, <span class="math notranslate nohighlight">\(S=6\)</span>. Further, the sectional curvature is constant 1 for any two directions.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">OCCGeometry</span><span class="p">(</span><span class="n">Box</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pi</span><span class="p">)))</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span><span class="n">maxh</span><span class="o">=</span><span class="mf">0.5</span><span class="p">))</span>
+<span class="n">sphere3</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Sphere3</span><span class="p">()</span>
+
+<span class="n">Draw</span><span class="p">(</span><span class="n">Norm</span><span class="p">(</span><span class="n">sphere3</span><span class="o">.</span><span class="n">metric</span><span class="p">),</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">Draw</span><span class="p">(</span><span class="n">sphere3</span><span class="o">.</span><span class="n">scalar</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">5.9</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mf">6.1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;netgen.webgui.WebGuiWidget&gt;: Run `pip install anywidget` to enable WebGuiWidget in Jupyter
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;netgen.webgui.WebGuiWidget&gt;: Run `pip install anywidget` to enable WebGuiWidget in Jupyter
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+WebGLScene
+</pre></div></div>
+</div>
+</section>
+<section id="Poincaré-upper-half-space-(\mathbb{H}^3)">
+<h3>Poincaré upper half-space (<span class="math notranslate nohighlight">\(\mathbb{H}^3\)</span>)<a class="headerlink" href="#Poincaré-upper-half-space-(\mathbb{H}^3)" title="Link to this heading"></a></h3>
+<p>The Poincaré upper half-space is given by <span class="math notranslate nohighlight">\(\mathbb{H}^3:=\{(x,y,z)\in\mathbb{R}^3\,:\, z&gt;0\}\)</span> with the metric</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+g = \frac{1}{z^2}\, (dx\otimes dx+dy\otimes dy+dz\otimes dz).
+\end{align*}\]</div>
+<p>It has constant negative scalar curvature <span class="math notranslate nohighlight">\(S=-6\)</span>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="Additional-reference-metrics-and-conventions">
+<h2>Additional reference metrics and conventions<a class="headerlink" href="#Additional-reference-metrics-and-conventions" title="Link to this heading"></a></h2>
+<p>NGSDiffGeo also provides several compact reference metrics. <code class="docutils literal notranslate"><span class="pre">EuclideanMetric(dim)</span></code> is flat in any supported dimension, <code class="docutils literal notranslate"><span class="pre">Heisenberg()</span></code> is a non-flat three-dimensional metric, and <code class="docutils literal notranslate"><span class="pre">WarpedProduct()</span></code> is a three-dimensional metric of constant negative sectional curvature. These classes provide the metric together with known geometric quantities. <code class="docutils literal notranslate"><span class="pre">TestMetric(dim,</span> <span class="pre">order)</span></code> instead returns a smooth metric coefficient function intended for implementation tests on bounded coordinate domains.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">reference_metrics</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"Euclidean (2D)"</span><span class="p">:</span> <span class="n">dg</span><span class="o">.</span><span class="n">EuclideanMetric</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span>
+    <span class="s2">"Heisenberg"</span><span class="p">:</span> <span class="n">dg</span><span class="o">.</span><span class="n">Heisenberg</span><span class="p">()</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span>
+    <span class="s2">"warped product"</span><span class="p">:</span> <span class="n">dg</span><span class="o">.</span><span class="n">WarpedProduct</span><span class="p">()</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span>
+    <span class="s2">"test metric"</span><span class="p">:</span> <span class="n">dg</span><span class="o">.</span><span class="n">TestMetric</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+<span class="p">}</span>
+
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">reference_metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s2">16s</span><span class="si">}</span><span class="s2">: tensor dimensions </span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">metric</span><span class="o">.</span><span class="n">dims</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Euclidean (2D)  : tensor dimensions (2, 2)
+Heisenberg      : tensor dimensions (3, 3)
+warped product  : tensor dimensions (3, 3)
+test metric     : tensor dimensions (3, 3)
+</pre></div></div>
+</div>
+<p>The constructor <code class="docutils literal notranslate"><span class="pre">RiemannianManifold(metric,</span> <span class="pre">normal_sign=...)</span></code> accepts <code class="docutils literal notranslate"><span class="pre">normal_sign=1</span></code> or <code class="docutils literal notranslate"><span class="pre">-1</span></code>. Reversing it reverses the boundary normal and consequently changes the sign of orientation-dependent extrinsic quantities such as the second fundamental form. Intrinsic curvature is unaffected.</p>
+<p>Set <code class="docutils literal notranslate"><span class="pre">change_riemann_sign=True</span></code> to use the opposite sign convention for the Riemann tensor. NGSDiffGeo also switches the Ricci contraction convention consistently, so Ricci and scalar curvature still describe the same geometry.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">euclidean_metric</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">EuclideanMetric</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">metric</span>
+<span class="n">mf_outward</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">euclidean_metric</span><span class="p">,</span> <span class="n">normal_sign</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">mf_inward</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">euclidean_metric</span><span class="p">,</span> <span class="n">normal_sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">sphere_metric</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">Sphere2</span><span class="p">()</span><span class="o">.</span><span class="n">metric</span>
+<span class="n">mf_riemann_default</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">sphere_metric</span><span class="p">)</span>
+<span class="n">mf_riemann_opposite</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">sphere_metric</span><span class="p">,</span> <span class="n">change_riemann_sign</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../license.html" class="btn btn-neutral float-left" title="License" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="02_covariant_derivatives.html" class="btn btn-neutral float-right" title="Covariant Derivatives" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Michael Neunteufel.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

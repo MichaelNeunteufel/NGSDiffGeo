@@ -1,0 +1,348 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Numerical-gradient developer guide &mdash; NGSDiffGeo 0.2.1.dev59 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/version-switcher.css?v=f4e9e2f5" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=61d3c9bd"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+      <script src="../_static/webgui_jupyter_widgets.js"></script>
+      <script src="../_static/version-switcher.js?v=d0450e9e"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="K-forms and double forms" href="developer_kforms.html" />
+    <link rel="prev" title="Tensor fields" href="developer_tensor_fields.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NGSDiffGeo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Geometry foundations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/01_riemannian_manifolds.html">Riemannian Manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/02_covariant_derivatives.html">Covariant Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/03_curvatures.html">Curvature quantities on Riemannian manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/04_gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Regge metrics and Gauss curvature</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/05_regge_metric.html">Regge finite elements and Regge metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/06_distributional_gauss_curvature.html">Distributional Gauss curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/07_distributional_gauss_curvature_analysis.html">Distributional Gauss curvature (analysis)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/08_distributional_gauss_curvature_surface.html">Gauss curvature approximation on embedded surfaces</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Higher-dimensional curvature and linearization</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/09_distributional_scalar_curvature.html">Distributional scalar curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/10_distributional_einstein_tensor.html">Distributional Einstein curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/11_distributional_riemann_curvature_tensor.html">Distributional Riemann curvature tensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/12_linearization_curvature_quantities.html">Linearization of curvature quantities</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exterior calculus and hypersurfaces</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/13_kforms_exterior_derivative.html">Alternating k-forms, wedge product, Hodge star, and exterior (co-) derivative</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/14_double_forms.html">Double forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/15_double_forms_covariant_derivatives.html">Exterior covariant derivatives of double forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/16_submanifold_geometry.html">Differential operators and curvature on hypersurfaces</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index.html#documentation-policy">Documentation policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#verification-strategy">Verification strategy</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#components">Components</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="developer_tensor_fields.html">Tensor fields</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Numerical-gradient developer guide</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#dispatch-and-shape">Dispatch and shape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#numerical-evaluator">Numerical evaluator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#surface-rules">Surface rules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ngsolve-coefficient-function-contract">NGSolve coefficient-function contract</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simd-support">SIMD support</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hessian-dispatch">Hessian dispatch</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#covariant-inner-graph-compilation">Covariant inner-graph compilation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#maintenance-rules">Maintenance rules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#verification">Verification</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="developer_kforms.html">K-forms and double forms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="developer_riemannian_manifold.html">Riemannian manifolds</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NGSDiffGeo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Developer guide</a></li>
+      <li class="breadcrumb-item active">Numerical-gradient developer guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/developer_docs/developer_coefficient_grad.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="numerical-gradient-developer-guide">
+<h1>Numerical-gradient developer guide<a class="headerlink" href="#numerical-gradient-developer-guide" title="Link to this heading"></a></h1>
+<p>This page documents the implementation of <code class="docutils literal notranslate"><span class="pre">GradCF</span></code> and <code class="docutils literal notranslate"><span class="pre">HesseCF</span></code>.</p>
+<section id="dispatch-and-shape">
+<h2>Dispatch and shape<a class="headerlink" href="#dispatch-and-shape" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">GradCF(cf,</span> <span class="pre">dim,</span> <span class="pre">surface=False)</span></code> always puts the physical derivative axis
+first. If <code class="docutils literal notranslate"><span class="pre">cf.dims</span> <span class="pre">==</span> <span class="pre">(d0,</span> <span class="pre">...,</span> <span class="pre">dk)</span></code>, the result dimensions are
+<code class="docutils literal notranslate"><span class="pre">(dim,</span> <span class="pre">d0,</span> <span class="pre">...,</span> <span class="pre">dk)</span></code>. Tensor-field code relies on this ordering when it adds
+the derivative slot to a tensor signature.</p>
+<p>The factory selects one of three paths:</p>
+<ul class="simple">
+<li><p>a childless native zero produces a correctly shaped NGSolve <code class="docutils literal notranslate"><span class="pre">ZeroCF</span></code>. Zero-valued wrappers and intermediate expressions retain their dependencies,</p></li>
+<li><p>an expression containing trial or test proxies uses NGSolve’s symbolic gradient operators, with a chain-rule fallback for composite expressions,</p></li>
+<li><p>every pure coefficient graph is wrapped in
+<code class="docutils literal notranslate"><span class="pre">GradCoefficientFunction&lt;dim&gt;</span></code>.</p></li>
+</ul>
+<p>Expressions containing both trial and test functions in one <code class="docutils literal notranslate"><span class="pre">GradCF</span></code> call
+are rejected. Surface gradients of proxy expressions use NGSolve’s
+<code class="docutils literal notranslate"><span class="pre">Gradboundary</span></code> operator. The symbolic path retains the surrounding value
+graph and normalizes NGSolve’s component-first proxy layout to the public
+derivative-first convention. Direct scalar proxies retain the native
+<code class="docutils literal notranslate"><span class="pre">GradProxy</span></code> return type. Wrapped proxy expressions retain their original
+operand alongside the native evaluator, so differentiation or replacement of
+that wrapper commutes with the spatial derivative. Native <code class="docutils literal notranslate"><span class="pre">ProxyFunction</span></code>
+objects are not registered for archives in the supported NGSolve build, so
+proxy-bearing expressions cannot be pickled. Replacing the semantic operand
+with a pure coefficient rebuilds the derivative without the old proxy evaluator.
+The resulting numerical derivative can be archived.</p>
+<p>Proxy discovery visits each node in the evaluation DAG once. Spatial chain-rule
+collection also visits shared nodes once and treats retained differential
+expressions as complete operands rather than descending into their evaluators.
+Construction-cost regressions use deterministic visit counts, not timing limits.</p>
+</section>
+<section id="numerical-evaluator">
+<h2>Numerical evaluator<a class="headerlink" href="#numerical-evaluator" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">GradCoefficientFunction</span></code> evaluates its child at the four reference-space
+offsets <code class="docutils literal notranslate"><span class="pre">-2h</span></code>, <code class="docutils literal notranslate"><span class="pre">-h</span></code>, <code class="docutils literal notranslate"><span class="pre">h</span></code>, and <code class="docutils literal notranslate"><span class="pre">2h</span></code> with <code class="docutils literal notranslate"><span class="pre">h</span> <span class="pre">=</span> <span class="pre">1e-4</span></code>. It uses the
+fourth-order centered stencil</p>
+<div class="math notranslate nohighlight">
+\[\partial_i f \approx
+\frac{f(x-2h e_i)-8f(x-h e_i)+8f(x+h e_i)-f(x+2h e_i)}{12h}.\]</div>
+<p>Reference derivatives are mapped to physical coordinates by the inverse
+Jacobian, so evaluation requires a mapped integration rule.</p>
+<p>NGSolve may attach <code class="docutils literal notranslate"><span class="pre">ProxyUserData</span></code> containing values cached for the original
+integration rule. Those values are invalid at the perturbed stencil points.
+Every child evaluation therefore uses <code class="docutils literal notranslate"><span class="pre">PushUserData</span></code> to detach the original
+cache for the lifetime of the perturbed rule. Omitting this guard can return a
+plausible but incorrect zero gradient of a cached <code class="docutils literal notranslate"><span class="pre">GridFunction</span></code>.</p>
+</section>
+<section id="surface-rules">
+<h2>Surface rules<a class="headerlink" href="#surface-rules" title="Link to this heading"></a></h2>
+<p>Surface evaluation supports both NGSolve boundary layouts:</p>
+<ul class="simple">
+<li><p>a boundary-element transformation has an intrinsic <code class="docutils literal notranslate"><span class="pre">dim-1</span></code> reference rule. Its mapped Jacobian inverse is the tangential pseudoinverse,</p></li>
+<li><p>element-boundary integration maps facet points into the volume reference element before coefficient evaluation. The implementation uses the retained facet number and the inverse reference-facet map to recover intrinsic facet coordinates, perturbs those coordinates, and maps each stencil point into the volume exactly once.</p></li>
+</ul>
+<p>The result still has <code class="docutils literal notranslate"><span class="pre">dim</span></code> ambient components. <code class="docutils literal notranslate"><span class="pre">surface=True</span></code> changes the
+derivative map, not the result shape.</p>
+</section>
+<section id="ngsolve-coefficient-function-contract">
+<h2>NGSolve coefficient-function contract<a class="headerlink" href="#ngsolve-coefficient-function-contract" title="Link to this heading"></a></h2>
+<p>The custom coefficient node follows the standard NGSolve graph interfaces:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">InputCoefficientFunctions</span></code> and <code class="docutils literal notranslate"><span class="pre">TraverseTree</span></code> expose the child graph,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Transform</span></code> preserves the surface flag and participates in NGSolve’s replacement cache,</p></li>
+<li><p>directional <code class="docutils literal notranslate"><span class="pre">Diff</span></code> differentiates the child and reconstructs <code class="docutils literal notranslate"><span class="pre">GradCF</span></code>,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NonZeroPattern</span></code> conservatively copies each child dependency to every physical derivative of that component,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GetCArgs</span></code> contains the child and surface flag, and all three dimensional specializations are registered for polymorphic archiving.</p></li>
+</ul>
+<p>Consequently, graph transformation, pickling, and compilation retain the
+component shape, complex-valued state, and surface mode. <code class="docutils literal notranslate"><span class="pre">GradProxy</span></code> remains a Python
+compatibility alias for NGSolve’s native <code class="docutils literal notranslate"><span class="pre">ProxyFunction</span></code>. It is no longer a
+separate NGSDiffGeo coefficient class.</p>
+</section>
+<section id="simd-support">
+<h2>SIMD support<a class="headerlink" href="#simd-support" title="Link to this heading"></a></h2>
+<p>Native SIMD evaluation currently covers real, non-surface
+<code class="docutils literal notranslate"><span class="pre">GradCoefficientFunction</span></code> objects on full-dimensional mapped rules. This
+also covers element-boundary rules represented through the volume
+transformation. SIMD and scalar evaluation use the same stencil and physical
+derivative convention.</p>
+<p>The following modes deliberately raise <code class="docutils literal notranslate"><span class="pre">ExceptionNOSIMD</span></code> so the enclosing
+integrator can retry with scalar evaluation:</p>
+<ul class="simple">
+<li><p>surface gradients,</p></li>
+<li><p>complex and automatic-differentiation SIMD values,</p></li>
+<li><p>child coefficient graphs that do not support SIMD.</p></li>
+</ul>
+<p>When diagnosing boundary performance, use a SIMD-capable integrator.
+NGSolve’s <code class="docutils literal notranslate"><span class="pre">SymbolicLFI</span></code> currently takes a scalar-only path for
+<code class="docutils literal notranslate"><span class="pre">element_vb</span> <span class="pre">!=</span> <span class="pre">VOL</span></code> before evaluating the coefficient tree, whereas
+<code class="docutils literal notranslate"><span class="pre">SymbolicBFI</span></code> supports SIMD element-boundary rules. The benchmark reports
+both requested and still-active SIMD state to distinguish these cases from a
+coefficient fallback.</p>
+</section>
+<section id="hessian-dispatch">
+<h2>Hessian dispatch<a class="headerlink" href="#hessian-dispatch" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">HesseCF</span></code> prepends two physical derivative axes. Pure coefficient graphs may
+have arbitrary component dimensions and are differentiated by applying
+<code class="docutils literal notranslate"><span class="pre">GradCF</span></code> twice. Direct <code class="docutils literal notranslate"><span class="pre">VectorH1</span></code> and <code class="docutils literal notranslate"><span class="pre">H1(dim=...)</span></code> proxies are also
+supported. <code class="docutils literal notranslate"><span class="pre">VectorH1</span></code> Hessians are reshaped and transposed from NGSolve’s
+component-first operator layout. <code class="docutils literal notranslate"><span class="pre">H1(dim=...)</span></code> proxies use an explicit block
+Hessian operator because their native additional evaluator is scalar.
+Direct H1 gradient proxies and their component expressions use the primary
+proxy’s native Hessian when differentiated again. Wrapped scalar trial functions
+therefore support the Euclidean <code class="docutils literal notranslate"><span class="pre">CovHesse</span></code> path as well. Tensor proxy Hessians
+continue to use the derivative-first layout described above.
+Composite proxy expressions still require NGSolve to expose a native Hessian
+operator for the complete expression and otherwise fail with a specific error.</p>
+<p>Both <code class="docutils literal notranslate"><span class="pre">HesseCF(f,</span> <span class="pre">dim)</span></code> and <code class="docutils literal notranslate"><span class="pre">GradCF(GradCF(f,</span> <span class="pre">dim),</span> <span class="pre">dim)</span></code> retain zero-valued
+semantic inputs. For example, differentiating either expression with respect to
+a zero scalar wrapper in direction <code class="docutils literal notranslate"><span class="pre">x*x</span> <span class="pre">+</span> <span class="pre">y*y</span></code> gives <code class="docutils literal notranslate"><span class="pre">2*Id(2)</span></code>. A zero value
+is not sufficient evidence that an operand is independent of a symbolic target.</p>
+<p>Boundary Hessians follow the same ambient-dimension restriction as surface
+gradients and therefore require dimension two or three. Both derivative axes
+are projected into the boundary tangent space.</p>
+</section>
+<section id="covariant-inner-graph-compilation">
+<h2>Covariant inner-graph compilation<a class="headerlink" href="#covariant-inner-graph-compilation" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">RiemannianManifold.CovDeriv</span></code>, <code class="docutils literal notranslate"><span class="pre">d_cov</span></code>, and <code class="docutils literal notranslate"><span class="pre">delta_cov</span></code> accept the opt-in
+mode <code class="docutils literal notranslate"><span class="pre">compile_inner=&quot;graph&quot;</span></code>. It compiles one shared copy of the input value
+graph before constructing the gradient and connection terms. <code class="docutils literal notranslate"><span class="pre">False</span></code> and
+<code class="docutils literal notranslate"><span class="pre">None</span></code> retain the default uncompiled path. Trial/test proxy inputs are
+rejected in graph mode because compiling them would erase the symbolic finite
+element differentiation contract.</p>
+<p>Measure the one-time construction cost and repeated assembly cost with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">benchmarks</span><span class="o">/</span><span class="n">benchmark_covariant_inner</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">depth</span> <span class="mi">5</span> <span class="o">--</span><span class="n">iterations</span> <span class="mi">9</span>
+</pre></div>
+</div>
+<p>The benchmark alternates the default and graph-compiled cases, validates their
+assembled values, reports expression-graph statistics and SIMD state, and
+estimates the number of repeated assemblies needed to amortize compilation.
+It times the volume <code class="docutils literal notranslate"><span class="pre">CovDeriv</span></code> core used by <code class="docutils literal notranslate"><span class="pre">d_cov</span></code> and <code class="docutils literal notranslate"><span class="pre">delta_cov</span></code>.
+Their additional alternation or contraction is not included in the timing.
+Timings are diagnostic and therefore have no fixed CI threshold. A lightweight
+smoke test keeps the benchmark interface and correctness check operational.</p>
+</section>
+<section id="maintenance-rules">
+<h2>Maintenance rules<a class="headerlink" href="#maintenance-rules" title="Link to this heading"></a></h2>
+<p>Keep the numerical and proxy paths consistent in these contracts:</p>
+<ul class="simple">
+<li><p>the derivative axis is first,</p></li>
+<li><p>the reference stencil and step size agree,</p></li>
+<li><p>reference derivatives are mapped to physical coordinates,</p></li>
+<li><p>scalar and complex mapped rules reject incompatible dimensions before a downcast,</p></li>
+<li><p>unsupported SIMD modes use <code class="docutils literal notranslate"><span class="pre">ExceptionNOSIMD</span></code>, not a generic exception.</p></li>
+</ul>
+<p>If the stencil or step size changes, rerun the polynomial, <code class="docutils literal notranslate"><span class="pre">GridFunction</span></code>,
+curved-mesh, boundary, complex, proxy, compilation, pickling, and SIMD tests.
+Absolute performance thresholds do not belong in the correctness test suite.
+Record comparative timing in a dedicated benchmark when performance changes.
+Run the scalar/SIMD comparison from the repository root with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">benchmarks</span><span class="o">/</span><span class="n">benchmark_gradcf</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">dim</span> <span class="mi">2</span> <span class="o">--</span><span class="n">iterations</span> <span class="mi">10</span>
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">--json</span></code> for machine-readable output. The benchmark validates each
+assembled value against an analytic-gradient baseline before reporting timing,
+so it rejects a fast but incorrect path. Select <code class="docutils literal notranslate"><span class="pre">--mode</span> <span class="pre">volume</span></code> (the
+default), <code class="docutils literal notranslate"><span class="pre">--mode</span> <span class="pre">element-boundary</span></code>, or <code class="docutils literal notranslate"><span class="pre">--mode</span> <span class="pre">surface-boundary</span></code> to cover
+the volume SIMD path, SIMD-capable element-boundary rules, and the expected
+scalar fallback for surface gradients, respectively.</p>
+</section>
+<section id="verification">
+<h2>Verification<a class="headerlink" href="#verification" title="Link to this heading"></a></h2>
+<p>After changing the coefficient implementation, build and install the extension
+before running the focused tests:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cmake</span> <span class="o">--</span><span class="n">build</span> <span class="n">build</span>
+<span class="n">cmake</span> <span class="o">--</span><span class="n">install</span> <span class="n">build</span>
+<span class="n">CCACHE_DISABLE</span><span class="o">=</span><span class="mi">1</span> <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pytest</span> <span class="o">-</span><span class="n">q</span> <span class="n">tests</span><span class="o">/</span><span class="n">test_coefficient_grad</span><span class="o">.</span><span class="n">py</span>
+<span class="n">CCACHE_DISABLE</span><span class="o">=</span><span class="mi">1</span> <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pytest</span> <span class="o">-</span><span class="n">q</span> <span class="n">tests</span><span class="o">/</span><span class="n">test_symbolic_gradcf</span><span class="o">.</span><span class="n">py</span>
+<span class="n">CCACHE_DISABLE</span><span class="o">=</span><span class="mi">1</span> <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pytest</span> <span class="o">-</span><span class="n">q</span> <span class="n">tests</span><span class="o">/</span><span class="n">test_cross_module_regressions</span><span class="o">.</span><span class="n">py</span>
+<span class="n">CCACHE_DISABLE</span><span class="o">=</span><span class="mi">1</span> <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pytest</span> <span class="o">-</span><span class="n">q</span> <span class="n">tests</span><span class="o">/</span><span class="n">test_covariant_inner_compilation</span><span class="o">.</span><span class="n">py</span>
+<span class="n">ctest</span> <span class="o">--</span><span class="n">test</span><span class="o">-</span><span class="nb">dir</span> <span class="n">build</span> <span class="o">--</span><span class="n">output</span><span class="o">-</span><span class="n">on</span><span class="o">-</span><span class="n">failure</span>
+</pre></div>
+</div>
+<p>Performance comparisons belong in <code class="docutils literal notranslate"><span class="pre">benchmarks/benchmark_gradcf.py</span></code> and are
+not part of the correctness test suite.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="developer_tensor_fields.html" class="btn btn-neutral float-left" title="Tensor fields" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="developer_kforms.html" class="btn btn-neutral float-right" title="K-forms and double forms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Michael Neunteufel.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,1135 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Linearization of curvature quantities &mdash; NGSDiffGeo 0.2.1.dev59 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/version-switcher.css?v=f4e9e2f5" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=61d3c9bd"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+      <script src="../_static/webgui_jupyter_widgets.js"></script>
+      <script src="../_static/version-switcher.js?v=d0450e9e"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Alternating k-forms, wedge product, Hodge star, and exterior (co-) derivative" href="13_kforms_exterior_derivative.html" />
+    <link rel="prev" title="Distributional Riemann curvature tensor" href="11_distributional_riemann_curvature_tensor.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NGSDiffGeo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Geometry foundations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="01_riemannian_manifolds.html">Riemannian Manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_covariant_derivatives.html">Covariant Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_curvatures.html">Curvature quantities on Riemannian manifolds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_gauss_bonnet.html">Gauss-Bonnet theorem</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Regge metrics and Gauss curvature</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="05_regge_metric.html">Regge finite elements and Regge metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06_distributional_gauss_curvature.html">Distributional Gauss curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_distributional_gauss_curvature_analysis.html">Distributional Gauss curvature (analysis)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="08_distributional_gauss_curvature_surface.html">Gauss curvature approximation on embedded surfaces</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Higher-dimensional curvature and linearization</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="09_distributional_scalar_curvature.html">Distributional scalar curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="10_distributional_einstein_tensor.html">Distributional Einstein curvature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_distributional_riemann_curvature_tensor.html">Distributional Riemann curvature tensor</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Linearization of curvature quantities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#2D">2D</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Volume-forms">Volume forms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Gauss-curvature">Gauss curvature</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Geodesic-curvature">Geodesic curvature</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3D">3D</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Edge-volume-form">Edge volume form</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Scalar-curvature">Scalar curvature</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Mean-curvature">Mean curvature</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Ricci-curvature">Ricci curvature</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Einstein-tensor">Einstein tensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Riemann-curvature-tensor">Riemann curvature tensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Second-fundamental-form">Second fundamental form</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Exterior calculus and hypersurfaces</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="13_kforms_exterior_derivative.html">Alternating k-forms, wedge product, Hodge star, and exterior (co-) derivative</a></li>
+<li class="toctree-l1"><a class="reference internal" href="14_double_forms.html">Double forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="15_double_forms_covariant_derivatives.html">Exterior covariant derivatives of double forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="16_submanifold_geometry.html">Differential operators and curvature on hypersurfaces</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developer_docs/index.html">Developer guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NGSDiffGeo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Linearization of curvature quantities</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/12_linearization_curvature_quantities.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Linearization-of-curvature-quantities">
+<h1>Linearization of curvature quantities<a class="headerlink" href="#Linearization-of-curvature-quantities" title="Link to this heading"></a></h1>
+<p>In the numerical analysis of distributional curvatures, their linearization around a given metric is essential, i.e., how the curvature quantity transforms when the underlying metric changes. These linearizations involve covariant differential operators, which we are going to investigate in this notebook by testing the formulas numerically by means of a Taylor test. To this end we compute the quantity <span class="math notranslate nohighlight">\(F=F(g)\)</span> and a time-dependent <span class="math notranslate nohighlight">\(g=g(t)\)</span> and denote <span class="math notranslate nohighlight">\(\sigma = \dot{g}\)</span></p>
+<div class="math notranslate nohighlight">
+\[F(g+t\sigma)-F(g)-t\, \dot{F}(g),\]</div>
+<p>where <span class="math notranslate nohighlight">\(\dot{F}(g):= \frac{d}{dt} F(g):=(DF)(g)[\sigma]\)</span> denotes the directional derivative in direction <span class="math notranslate nohighlight">\(\sigma\)</span> and test if the expression converges quadratically in <span class="math notranslate nohighlight">\(t\)</span> for <span class="math notranslate nohighlight">\(t\to 0\)</span>.</p>
+<section id="2D">
+<h2>2D<a class="headerlink" href="#2D" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">log2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">netgen.occ</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ngsdiffgeo</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dg</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve.meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">MakeStructured2DMesh</span>
+
+
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">MakeStructured2DMesh</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">peak</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span>
+<span class="n">F</span> <span class="o">=</span> <span class="n">CF</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">peak</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">peak</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">y</span><span class="p">)),</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">Gex</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">trans</span> <span class="o">*</span> <span class="n">F</span>
+
+<span class="n">cfsigma</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorField</span><span class="p">(</span>
+    <span class="n">Sym</span><span class="p">(</span>
+        <span class="n">CF</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="mi">1</span> <span class="o">+</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">3</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+                <span class="mf">0.2</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span> <span class="o">*</span> <span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">,</span>
+                <span class="mf">0.2</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">),</span>
+                <span class="mi">1</span> <span class="o">+</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="p">),</span>
+    <span class="s2">"11"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">order</span> <span class="o">=</span> <span class="mi">3</span>
+
+<span class="n">gfG</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">HCurlCurl</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">))</span>
+<span class="n">gfsigma</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">HCurlCurl</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">))</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="n">gfG</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">Gex</span><span class="p">)</span>
+    <span class="n">gfsigma</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">cfsigma</span><span class="p">)</span>
+
+<span class="n">sigma</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorField</span><span class="p">(</span><span class="n">gfsigma</span><span class="p">,</span> <span class="s2">"11"</span><span class="p">)</span>
+
+<span class="n">mf</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfG</span><span class="p">,</span> <span class="n">normal_sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># quadratic convergence rate is expected</span>
+<span class="n">rate_tol</span> <span class="o">=</span> <span class="mf">1.75</span>
+</pre></div>
+</div>
+</div>
+<section id="Volume-forms">
+<h3>Volume forms<a class="headerlink" href="#Volume-forms" title="Link to this heading"></a></h3>
+<p>We start by verifying the variations of the volume forms</p>
+<div class="math notranslate nohighlight">
+\[\frac{d}{dt}(\omega_T) = 0.5\,\mathrm{tr}(\sigma)\,\omega_T,\qquad \frac{d}{dt}(\omega_F) = 0.5\,\mathrm{tr}(\sigma|_F)\,\omega_F\]</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">8</span>
+<span class="n">gfGt</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">gfsigma</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="n">errold</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="n">omega_T</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span>
+<span class="n">omega_F</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">BND</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"omega_T:"</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="n">term_0</span> <span class="o">=</span> <span class="n">omega_T</span>
+
+    <span class="n">variation</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="n">omega_T</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="n">gfGt</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">vec</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span>
+        <span class="n">mf_t</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfGt</span><span class="p">,</span> <span class="n">normal_sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">term_t</span> <span class="o">=</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span>
+
+        <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">mesh</span><span class="p">))</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">"-"</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">"-"</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
+
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">omega_F:"</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">8</span>
+<span class="n">errold</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="n">term_0</span> <span class="o">=</span> <span class="n">omega_F</span>
+
+    <span class="n">variation</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">BND</span><span class="p">)</span> <span class="o">*</span> <span class="n">omega_F</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="n">gfGt</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">vec</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span>
+        <span class="n">mf_t</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfGt</span><span class="p">,</span> <span class="n">normal_sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">term_t</span> <span class="o">=</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">BND</span><span class="p">)</span>
+
+        <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
+
+        <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span>
+            <span class="n">Integrate</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">mesh</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">"-"</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">"-"</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+omega_T:
+err = 0.0035249629, order = -
+err = 0.0009621393, order = 1.873
+err = 0.0002523502, order = 1.931
+err = 0.0000646952, order = 1.964
+err = 0.0000163839, order = 1.981
+err = 0.0000041228, order = 1.991
+err = 0.0000010341, order = 1.995
+err = 0.0000002590, order = 1.998
+
+omega_F:
+err = 0.0189513367, order = -
+err = 0.0050394053, order = 1.911
+err = 0.0013028271, order = 1.952
+err = 0.0003314756, order = 1.975
+err = 0.0000836174, order = 1.987
+err = 0.0000209997, order = 1.993
+err = 0.0000052620, order = 1.997
+err = 0.0000013170, order = 1.998
+</pre></div></div>
+</div>
+</section>
+<section id="Gauss-curvature">
+<h3>Gauss curvature<a class="headerlink" href="#Gauss-curvature" title="Link to this heading"></a></h3>
+<p>Next, we look at the Gauss curvature <span class="math notranslate nohighlight">\(K\)</span> and the Gauss curvature multiplied by the volume form <span class="math notranslate nohighlight">\(K\,\omega_T\)</span>. The variations are</p>
+<div class="math notranslate nohighlight">
+\[\frac{d}{dt}K = 0.5(\mathrm{div}_g\mathrm{div}_g(\sigma)-\Delta_g\mathrm{tr}(\sigma)-g(\sigma,\mathrm{Ric})),\qquad \frac{d}{dt}(K\,\omega_T) = 0.5\,\mathrm{div}_g\mathrm{div}_g(\mathbb{S}_g\sigma)\,\omega_T,\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mathrm{div}_g\)</span> is the covariant divergence of vector/tensor-fields, <span class="math notranslate nohighlight">\(\Delta_g\)</span> the Laplace-Beltrami operator, and <span class="math notranslate nohighlight">\(\mathbb{S}_g\sigma:=\sigma-\mathrm{tr}(\sigma)\,g\)</span>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"Gauss curvature:"</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">8</span>
+<span class="n">gfGt</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">gfsigma</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="n">errold</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="n">term_0</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Gauss</span>
+
+    <span class="n">variation</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">sigma</span><span class="p">))</span>
+        <span class="o">-</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovLaplace</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">sigma</span><span class="p">))</span>
+        <span class="o">-</span> <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">Ricci</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="n">gfGt</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">vec</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span>
+        <span class="n">mf_t</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfGt</span><span class="p">,</span> <span class="n">normal_sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">term_t</span> <span class="o">=</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">Gauss</span>
+
+        <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">mesh</span><span class="p">))</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">"-"</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">"-"</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
+
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">K omega_T:"</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">8</span>
+<span class="n">gfGt</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">gfsigma</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="n">errold</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="n">term_0</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Gauss</span> <span class="o">*</span> <span class="n">omega_T</span>
+
+    <span class="n">variation</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">S</span><span class="p">(</span><span class="n">sigma</span><span class="p">)))</span> <span class="o">*</span> <span class="n">omega_T</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="n">gfGt</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">vec</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span>
+        <span class="n">mf_t</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfGt</span><span class="p">,</span> <span class="n">normal_sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">term_t</span> <span class="o">=</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">Gauss</span> <span class="o">*</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span>
+
+        <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">mesh</span><span class="p">))</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">"-"</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">"-"</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Gauss curvature:
+err = 0.1145910880, order = -
+err = 0.0339083892, order = 1.757
+err = 0.0093398643, order = 1.86
+err = 0.0024606592, order = 1.924
+err = 0.0006322173, order = 1.961
+err = 0.0001602782, order = 1.98
+err = 0.0000403536, order = 1.99
+err = 0.0000101243, order = 1.995
+
+K omega_T:
+err = 0.1108513300, order = -
+err = 0.0320222866, order = 1.791
+err = 0.0086919300, order = 1.881
+err = 0.0022712555, order = 1.936
+err = 0.0005810198, order = 1.967
+err = 0.0001469686, order = 1.983
+err = 0.0000369605, order = 1.991
+err = 0.0000092677, order = 1.996
+</pre></div></div>
+</div>
+</section>
+<section id="Geodesic-curvature">
+<h3>Geodesic curvature<a class="headerlink" href="#Geodesic-curvature" title="Link to this heading"></a></h3>
+<p>For the geodesic curvature <span class="math notranslate nohighlight">\(\kappa\)</span> at edges we have that</p>
+<div class="math notranslate nohighlight">
+\[\frac{d}{dt}(\kappa\,\omega_F) = 0.5\Big(g(\mathrm{div}_g(\mathbb{S}_g\sigma), n_g) + g\big(\nabla_g(\sigma(n_g,t_g)),t_g\big) \Big)\,\omega_F,\]</div>
+<p>where <span class="math notranslate nohighlight">\(n_g\)</span> and <span class="math notranslate nohighlight">\(t_g\)</span> are the <span class="math notranslate nohighlight">\(g\)</span>-normal and tangential vectors.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"kappa omega_F:"</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">8</span>
+<span class="n">gfGt</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">gfsigma</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="n">errold</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="n">tv</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">tangential</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+<span class="n">nv</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+
+<span class="n">nv_g</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">normal</span>
+<span class="n">tv_g</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">tangent</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="n">term_0</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">GeodesicCurvature</span> <span class="o">*</span> <span class="n">omega_F</span>
+
+    <span class="n">variation</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="mf">0.5</span>
+        <span class="o">*</span> <span class="p">(</span>
+            <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">S</span><span class="p">(</span><span class="n">sigma</span><span class="p">)),</span> <span class="n">nv_g</span><span class="p">)</span>
+            <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span>
+                <span class="n">mf</span><span class="o">.</span><span class="n">CovDerivative</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">nv_g</span><span class="p">,</span> <span class="n">tv_g</span><span class="p">))),</span>
+                <span class="n">tv_g</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="o">*</span> <span class="n">omega_F</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="n">gfGt</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">vec</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span>
+        <span class="n">mf_t</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfGt</span><span class="p">,</span> <span class="n">normal_sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">term_t</span> <span class="o">=</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">GeodesicCurvature</span> <span class="o">*</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">BND</span><span class="p">)</span>
+
+        <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span>
+            <span class="n">Integrate</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">mesh</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">"-"</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">"-"</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+kappa omega_F:
+err = 0.1681449576, order = -
+err = 0.0469285654, order = 1.841
+err = 0.0124799881, order = 1.911
+err = 0.0032245567, order = 1.952
+err = 0.0008200097, order = 1.975
+err = 0.0002067903, order = 1.987
+err = 0.0000519246, order = 1.994
+err = 0.0000130097, order = 1.997
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="3D">
+<h2>3D<a class="headerlink" href="#3D" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">log2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve.fem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Einsum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">netgen.occ</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ngsdiffgeo</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dg</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngsolve.meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">MakeStructured3DMesh</span>
+
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">MakeStructured3DMesh</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">nz</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">peak</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="mf">0.5</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span>
+<span class="p">)</span>
+<span class="n">F</span> <span class="o">=</span> <span class="n">CF</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">peak</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">peak</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">peak</span><span class="o">.</span><span class="n">Diff</span><span class="p">(</span><span class="n">z</span><span class="p">)),</span>
+    <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">Gex</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">trans</span> <span class="o">*</span> <span class="n">F</span>
+<span class="n">cfsigma</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorField</span><span class="p">(</span>
+    <span class="n">Sym</span><span class="p">(</span>
+        <span class="n">CF</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="mi">1</span> <span class="o">+</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">3</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+                <span class="mf">0.2</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span> <span class="o">*</span> <span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">,</span>
+                <span class="mf">0.2</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span> <span class="o">*</span> <span class="n">x</span> <span class="o">-</span> <span class="n">z</span><span class="p">,</span>
+                <span class="mf">0.2</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">),</span>
+                <span class="mi">1</span> <span class="o">+</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+                <span class="mf">0.2</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">z</span><span class="p">),</span>
+                <span class="mf">0.2</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span> <span class="o">*</span> <span class="n">x</span> <span class="o">-</span> <span class="n">z</span><span class="p">,</span>
+                <span class="mf">0.2</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">z</span><span class="p">),</span>
+                <span class="mi">1</span> <span class="o">+</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="p">),</span>
+    <span class="s2">"11"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">order</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="n">gfG</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">HCurlCurl</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">))</span>
+<span class="n">gfsigma</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">HCurlCurl</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">))</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="n">gfG</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">Gex</span><span class="p">)</span>
+    <span class="n">gfsigma</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">cfsigma</span><span class="p">)</span>
+
+<span class="n">sigma</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorField</span><span class="p">(</span><span class="n">gfsigma</span><span class="p">,</span> <span class="s2">"11"</span><span class="p">)</span>
+<span class="n">sigma_form</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">DoubleForm</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">mesh</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+
+<span class="n">mf</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfG</span><span class="p">,</span> <span class="n">normal_sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<section id="Edge-volume-form">
+<h3>Edge volume form<a class="headerlink" href="#Edge-volume-form" title="Link to this heading"></a></h3>
+<p>In 3D, we also have the volume form on codimension 2 boundaries</p>
+<div class="math notranslate nohighlight">
+\[\frac{d}{dt}(\omega_E) = 0.5\,\mathrm{tr}(\sigma|_E)\,\omega_E.\]</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">8</span>
+<span class="n">gfGt</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">gfsigma</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="n">errold</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="n">omega_T</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span>
+<span class="n">omega_F</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">BND</span><span class="p">)</span>
+<span class="n">omega_E</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">BBND</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"omega_E:"</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">8</span>
+<span class="n">errold</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="n">term_0</span> <span class="o">=</span> <span class="n">omega_E</span>
+
+    <span class="n">variation</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">BBND</span><span class="p">)</span> <span class="o">*</span> <span class="n">omega_E</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="n">gfGt</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">vec</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span>
+        <span class="n">mf_t</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfGt</span><span class="p">,</span> <span class="n">normal_sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">term_t</span> <span class="o">=</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">BBND</span><span class="p">)</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="n">BilinearForm</span><span class="p">(</span><span class="n">gfsigma</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">+=</span> <span class="n">Variation</span><span class="p">(</span>
+            <span class="n">InnerProduct</span><span class="p">(</span>
+                <span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">,</span> <span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span>
+            <span class="p">)</span>
+            <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_vb</span><span class="o">=</span><span class="n">BBND</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">Energy</span><span class="p">(</span><span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span><span class="p">))</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">"-"</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">"-"</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+omega_E:
+err = 0.0321053102, order = -
+err = 0.0086069850, order = 1.899
+err = 0.0022355777, order = 1.945
+err = 0.0005702281, order = 1.971
+err = 0.0001440331, order = 1.985
+err = 0.0000361967, order = 1.992
+err = 0.0000090730, order = 1.996
+err = 0.0000022712, order = 1.998
+err = 0.0000005682, order = 1.999
+err = 0.0000001421, order = 2.0
+</pre></div></div>
+</div>
+</section>
+<section id="Scalar-curvature">
+<h3>Scalar curvature<a class="headerlink" href="#Scalar-curvature" title="Link to this heading"></a></h3>
+<p>The scalar curvature coincides with the Gauss curvature in two dimensions up to a factor 2. In 3D, the linearization of the scalar curvature reads</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align*}
+\frac{d}{dt}S &amp;= \mathrm{div}_g\mathrm{div}_g\sigma-\Delta_g\mathrm{tr}\sigma-g(\mathrm{Ric},\sigma),\\
+\frac{d}{dt}(S\,\omega_T) &amp;= \big(\mathrm{div}_g\mathrm{div}_g(\mathbb{S}_g\sigma)-g(\sigma,G)\big)\,\omega_T,
+\end{align*}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\Delta_g\)</span> is the Laplace-Beltrami operator, <span class="math notranslate nohighlight">\(\mathrm{Ric}\)</span> the Ricci curvature tensor, and <span class="math notranslate nohighlight">\(G\)</span> the Einstein tensor.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">scalar:"</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">8</span>
+<span class="n">gfGt</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">gfsigma</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="n">errold</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="n">term_0</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Scalar</span>
+    <span class="n">variation</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">sigma</span><span class="p">))</span>
+        <span class="o">-</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovLaplace</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">sigma</span><span class="p">))</span>
+        <span class="o">-</span> <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Ricci</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="n">gfGt</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">vec</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span>
+        <span class="n">mf_t</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfGt</span><span class="p">,</span> <span class="n">normal_sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">term_t</span> <span class="o">=</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">Scalar</span>
+
+        <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">mesh</span><span class="p">))</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">"-"</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">"-"</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
+
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">scalar omega_T:"</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">8</span>
+<span class="n">gfGt</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">gfsigma</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="n">errold</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="n">term_0</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Scalar</span> <span class="o">*</span> <span class="n">omega_T</span>
+    <span class="n">variation</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">S</span><span class="p">(</span><span class="n">sigma</span><span class="p">)))</span> <span class="o">-</span> <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Einstein</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+    <span class="p">)</span> <span class="o">*</span> <span class="n">omega_T</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="n">gfGt</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">vec</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span>
+        <span class="n">mf_t</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfGt</span><span class="p">)</span>
+        <span class="n">term_t</span> <span class="o">=</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">Scalar</span> <span class="o">*</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span>
+        <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">Integrate</span><span class="p">((</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">mesh</span><span class="p">))</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">"-"</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">"-"</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+scalar:
+err = 0.2264855757, order = -
+err = 0.0662693647, order = 1.773
+err = 0.0181455712, order = 1.869
+err = 0.0047662194, order = 1.929
+err = 0.0012227376, order = 1.963
+err = 0.0003097518, order = 1.981
+err = 0.0000779575, order = 1.99
+err = 0.0000195551, order = 1.995
+
+scalar omega_T:
+err = 0.1965983470, order = -
+err = 0.0568023418, order = 1.791
+err = 0.0154271984, order = 1.88
+err = 0.0040331368, order = 1.936
+err = 0.0010320348, order = 1.966
+err = 0.0002610945, order = 1.983
+err = 0.0000656670, order = 1.991
+err = 0.0000164664, order = 1.996
+</pre></div></div>
+</div>
+</section>
+<section id="Mean-curvature">
+<h3>Mean curvature<a class="headerlink" href="#Mean-curvature" title="Link to this heading"></a></h3>
+<p>The mean curvature <span class="math notranslate nohighlight">\(H\)</span> at a facet <span class="math notranslate nohighlight">\(F\)</span> generalizes the geodesic curvature to higher dimensions and has the linearization</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align*}
+\frac{d}{dt}H &amp;= 0.5\,\big(g(\mathrm{div}_g(\mathbb{S}_g\sigma),n_g)-g_F(I\!I,\sigma|_F)+ \mathrm{div}^F_g(\sigma_{n_g})+H\,\sigma(n_g,n_g)\big),\\
+\frac{d}{dt}(H\,\omega_F) &amp;= 0.5\,\big(g(\mathrm{div}_g(\mathbb{S}_g\sigma),n_g)-g_F(\mathbb{S}_{F,g}I\!I,\sigma)+ \mathrm{div}^F_g(\sigma_{n_g})+H\,\sigma(n_g,n_g)\big)\,\omega_F,
+\end{align*}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(g_F\)</span> is the metric restricted to <span class="math notranslate nohighlight">\(F\)</span>, <span class="math notranslate nohighlight">\(\mathbb{S}_{F,g}\sigma=\sigma_F-\mathrm{tr}(\sigma|_F)g_F\)</span>, <span class="math notranslate nohighlight">\(I\,I\)</span> the second fundamental form, and <span class="math notranslate nohighlight">\(\mathrm{div}^F_g\)</span> the covariant surface divergence.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">mean curvature:"</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">8</span>
+<span class="n">gfGt</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">gfsigma</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="n">errold</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="n">tv</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">tangential</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+<span class="n">nv</span> <span class="o">=</span> <span class="n">specialcf</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+
+<span class="n">nv_g</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">normal</span>
+<span class="n">tv_g</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">tangent</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="n">term_0</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">MeanCurvature</span>
+
+    <span class="n">variation</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="o">-</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">SFF</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">BND</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">S</span><span class="p">(</span><span class="n">sigma</span><span class="p">)),</span> <span class="n">nv_g</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Contraction</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">nv_g</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">BND</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">MeanCurvature</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">nv_g</span><span class="p">,</span> <span class="n">nv_g</span><span class="p">))</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="n">gfGt</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">vec</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span>
+        <span class="n">mf_t</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfGt</span><span class="p">,</span> <span class="n">normal_sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">term_t</span> <span class="o">=</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">MeanCurvature</span>
+        <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span>
+            <span class="n">Integrate</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">mesh</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">"-"</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">"-"</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
+
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">mean curvature omega_F:"</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">8</span>
+<span class="n">gfGt</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">gfsigma</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="n">errold</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="n">term_0</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">MeanCurvature</span> <span class="o">*</span> <span class="n">omega_F</span>
+
+    <span class="n">variation</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="mf">0.5</span>
+        <span class="o">*</span> <span class="p">(</span>
+            <span class="o">-</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">S</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">SFF</span><span class="p">,</span> <span class="n">BND</span><span class="p">),</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">BND</span><span class="p">)</span>
+            <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">S</span><span class="p">(</span><span class="n">sigma</span><span class="p">)),</span> <span class="n">nv_g</span><span class="p">)</span>
+            <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Contraction</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">nv_g</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">BND</span><span class="p">)</span>
+            <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">MeanCurvature</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">nv_g</span><span class="p">,</span> <span class="n">nv_g</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="o">*</span> <span class="n">omega_F</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="n">gfGt</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">vec</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span>
+        <span class="n">mf_t</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfGt</span><span class="p">,</span> <span class="n">normal_sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">term_t</span> <span class="o">=</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">MeanCurvature</span> <span class="o">*</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">BND</span><span class="p">)</span>
+        <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span>
+            <span class="n">Integrate</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">mesh</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">"-"</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">"-"</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+mean curvature:
+err = 0.1725509887, order = -
+err = 0.0498854044, order = 1.79
+err = 0.0135479350, order = 1.881
+err = 0.0035413369, order = 1.936
+err = 0.0009060939, order = 1.967
+err = 0.0002292187, order = 1.983
+err = 0.0000576481, order = 1.991
+err = 0.0000144554, order = 1.996
+
+mean curvature omega_F:
+err = 0.1323187459, order = -
+err = 0.0374509451, order = 1.821
+err = 0.0100432122, order = 1.899
+err = 0.0026069735, order = 1.946
+err = 0.0006645769, order = 1.972
+err = 0.0001678036, order = 1.986
+err = 0.0000421619, order = 1.993
+err = 0.0000105671, order = 1.996
+</pre></div></div>
+</div>
+</section>
+<section id="Ricci-curvature">
+<h3>Ricci curvature<a class="headerlink" href="#Ricci-curvature" title="Link to this heading"></a></h3>
+<p>The linearization of the Ricci curvature is given by</p>
+<div class="math notranslate nohighlight">
+\[\frac{d}{dt}\mathrm{Ric} = -0.5\big(\Delta_L\sigma+\nabla_g^2(\mathrm{tr}\sigma)-2\,\mathrm{def}_g(\mathrm{div}_g\sigma)\big)- 2\mathfrak{R}_{aijb}\sigma^{ab}dx^i\otimes dx^j,\]</div>
+<p>where <span class="math notranslate nohighlight">\(\nabla_g^2\)</span> denotes the covariant Hessian, <span class="math notranslate nohighlight">\(\mathrm{def}_g = 0.5(\nabla_g+\nabla_g^T)\)</span> the covariant deformation operator (symmetric covariant derivative) for vector fields or 1-forms, and <span class="math notranslate nohighlight">\(\Delta_L\sigma\)</span> is the Lichnerowicz Laplacian defined by</p>
+<div class="math notranslate nohighlight">
+\[\Delta_L\sigma = \Delta_g\sigma - 2 \big(\mathfrak{R}_{ikjl}\sigma^{lk}dx^i\otimes dx^j-\mathrm{sym}(\mathrm{Ric}_{ia}g^{ab}\sigma_{bj}dx^i\otimes dx^j)\big).\]</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"Ricci curvature:"</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">8</span>
+<span class="n">gfGt</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">gfsigma</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="n">errold</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="n">term_0</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Ricci</span>
+
+    <span class="n">variation</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">mf</span><span class="o">.</span><span class="n">LichnerowiczLaplacian</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovHessian</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">sigma</span><span class="p">))</span>
+        <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovDef</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">sigma</span><span class="p">))</span>
+    <span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">TraceSigma</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Riemann</span><span class="p">,</span> <span class="n">sigma_form</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="n">gfGt</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">vec</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span>
+        <span class="n">mf_t</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfGt</span><span class="p">,</span> <span class="n">normal_sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">term_t</span> <span class="o">=</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">Ricci</span>
+
+        <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span>
+            <span class="n">Integrate</span><span class="p">(</span>
+                <span class="n">InnerProduct</span><span class="p">(</span>
+                    <span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">,</span> <span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span>
+                <span class="p">),</span>
+                <span class="n">mesh</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">"-"</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">"-"</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Ricci curvature:
+err = 0.1749835684, order = -
+err = 0.0511596238, order = 1.774
+err = 0.0139985279, order = 1.87
+err = 0.0036752128, order = 1.929
+err = 0.0009425918, order = 1.963
+err = 0.0002387484, order = 1.981
+err = 0.0000600830, order = 1.99
+err = 0.0000150708, order = 1.995
+</pre></div></div>
+</div>
+</section>
+<section id="Einstein-tensor">
+<h3>Einstein tensor<a class="headerlink" href="#Einstein-tensor" title="Link to this heading"></a></h3>
+<p>The linearization of the Einstein tensor <span class="math notranslate nohighlight">\(G=J\mathrm{Ric}:=\mathrm{Ric}-0.5\,S\,g\)</span> follows by the product rule and simplifying</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align*}
+\frac{d}{dt}G &amp;= -0.5\Big(\Delta_L\sigma + 4\mathfrak{R}_{aijb}\sigma^{ab}dx^i\otimes dx^j - 2\mathrm{def}_g(\mathrm{div}_gJ(\sigma))+\big(\mathrm{div}_g\mathrm{div}_g(S(\sigma))-g(\mathrm{Ric},\sigma)\big)\,g + S\,\sigma\Big),\\
+\frac{d}{dt}(G\,\omega_T) &amp;= 0.5\Big(2\mathrm{ein}_g\sigma +2\mathfrak{R}_{ikjl}g^{la}\sigma_{ab}g^{bk} + g(\mathrm{Ric},\sigma)\,g+\mathrm{tr}\sigma\,\mathrm{Ric}+\mathrm{sym}(\mathrm{Ric}_{ia}g^{ab}\sigma_{bj})-S\,\sigma-0.5\mathrm{tr}(\sigma)\,S\,g \Big)\,\omega_T.
+\end{align*}\end{split}\]</div>
+<p>Here, <span class="math notranslate nohighlight">\(\mathrm{ein}_g\sigma= J\mathrm{def}_g(\mathrm{div}_gJ\sigma)-0.5\Delta_gJ\sigma\)</span> is the covariant linearized Einstein operator.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"Einstein tensor:"</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">8</span>
+<span class="n">gfGt</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">gfsigma</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="n">errold</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="n">term_0</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Einstein</span>
+
+    <span class="n">variation</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">mf</span><span class="o">.</span><span class="n">LichnerowiczLaplacian</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">TraceSigma</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Riemann</span><span class="p">,</span> <span class="n">sigma_form</span><span class="p">)</span>
+        <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovDef</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">J</span><span class="p">(</span><span class="n">sigma</span><span class="p">)))</span>
+        <span class="o">+</span> <span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">S</span><span class="p">(</span><span class="n">sigma</span><span class="p">)))</span> <span class="o">-</span> <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Ricci</span><span class="p">,</span> <span class="n">sigma</span><span class="p">))</span> <span class="o">*</span> <span class="n">gfG</span>
+        <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">Scalar</span> <span class="o">*</span> <span class="n">sigma</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="n">gfGt</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">vec</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span>
+        <span class="n">mf_t</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfGt</span><span class="p">,</span> <span class="n">normal_sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">term_t</span> <span class="o">=</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">Einstein</span>
+
+        <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span>
+            <span class="n">Integrate</span><span class="p">(</span>
+                <span class="n">InnerProduct</span><span class="p">(</span>
+                    <span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">,</span> <span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span>
+                <span class="p">),</span>
+                <span class="n">mesh</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">"-"</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">"-"</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
+
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Einstein omega_T:"</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">8</span>
+<span class="n">gfGt</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">gfsigma</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="n">errold</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="n">term_0</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Einstein</span> <span class="o">*</span> <span class="n">omega_T</span>
+    <span class="n">variation</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">mf</span><span class="o">.</span><span class="n">CovEin</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">TraceSigma</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Riemann</span><span class="p">,</span> <span class="n">sigma_form</span><span class="p">)</span>
+        <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Ricci</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="n">gfG</span>
+        <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">Ricci</span>
+        <span class="o">+</span> <span class="n">Sym</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Ricci</span><span class="o">.</span><span class="n">coef</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">Raise</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span>
+        <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">Scalar</span> <span class="o">*</span> <span class="n">sigma</span>
+        <span class="o">-</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">Scalar</span> <span class="o">*</span> <span class="n">gfG</span>
+    <span class="p">)</span> <span class="o">*</span> <span class="n">omega_T</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="n">gfGt</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">vec</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span>
+        <span class="n">mf_t</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfGt</span><span class="p">,</span> <span class="n">normal_sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">term_t</span> <span class="o">=</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">Einstein</span> <span class="o">*</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">VolumeForm</span><span class="p">(</span><span class="n">VOL</span><span class="p">)</span>
+
+        <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span>
+            <span class="n">Integrate</span><span class="p">(</span>
+                <span class="n">InnerProduct</span><span class="p">(</span>
+                    <span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">,</span> <span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span>
+                <span class="p">),</span>
+                <span class="n">mesh</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">"-"</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">"-"</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Einstein tensor:
+err = 0.1512166480, order = -
+err = 0.0443818452, order = 1.769
+err = 0.0121730968, order = 1.866
+err = 0.0032003151, order = 1.927
+err = 0.0008213931, order = 1.962
+err = 0.0002081288, order = 1.981
+err = 0.0000523874, order = 1.99
+err = 0.0000131417, order = 1.995
+
+Einstein omega_T:
+err = 0.1340645430, order = -
+err = 0.0386422320, order = 1.795
+err = 0.0104839110, order = 1.882
+err = 0.0027394740, order = 1.936
+err = 0.0007008376, order = 1.967
+err = 0.0001772847, order = 1.983
+err = 0.0000445857, order = 1.991
+err = 0.0000111798, order = 1.996
+</pre></div></div>
+</div>
+</section>
+<section id="Riemann-curvature-tensor">
+<h3>Riemann curvature tensor<a class="headerlink" href="#Riemann-curvature-tensor" title="Link to this heading"></a></h3>
+<p>The linearization of the full Riemann curvature tensor is given by</p>
+<div class="math notranslate nohighlight">
+\[\frac{d}{dt}\mathfrak{R} = -2\,\mathrm{Inc}_g\sigma +0.5\Big(\mathfrak{R}_{ijal}g^{ab}\sigma_{bk}+\mathfrak{R}_{ijka}g^{ab}\sigma_{bl}\Big)dx^i\otimes dx^j\otimes dx^k\otimes dx^l,\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[(\mathrm{Inc}_g\sigma)(X,Y,Z,W) = -\frac{1}{4}\big(\nabla^2_{X,Z}\sigma(Y,W)-\nabla^2_{Y,Z}\sigma(X,W)-\nabla^2_{X,W}\sigma(Y,Z)+\nabla^2_{Y,W}\sigma(X,Z)\big)\]</div>
+<p>is covariant incompatibility operator in arbitrary dimensions.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Riemann curvature tensor:"</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">8</span>
+<span class="n">gfGt</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">gfsigma</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="n">errold</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="n">term_0</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Riemann</span>
+    <span class="n">variation</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovInc</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">fem</span><span class="o">.</span><span class="n">Einsum</span><span class="p">(</span><span class="s2">"ijal,ak-&gt;ijkl"</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">Riemann</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">Raise</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">fem</span><span class="o">.</span><span class="n">Einsum</span><span class="p">(</span><span class="s2">"ijka,al-&gt;ijkl"</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">Riemann</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">Raise</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="n">gfGt</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">vec</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span>
+        <span class="n">mf_t</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfGt</span><span class="p">,</span> <span class="n">normal_sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">term_t</span> <span class="o">=</span> <span class="n">mf_t</span><span class="o">.</span><span class="n">Riemann</span>
+
+        <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span>
+            <span class="n">Integrate</span><span class="p">(</span>
+                <span class="n">InnerProduct</span><span class="p">(</span>
+                    <span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">,</span> <span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span>
+                <span class="p">),</span>
+                <span class="n">mesh</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">"-"</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">"-"</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+Riemann curvature tensor:
+err = 0.1692318838, order = -
+err = 0.0478505650, order = 1.822
+err = 0.0128254268, order = 1.9
+err = 0.0033282434, order = 1.946
+err = 0.0008483202, order = 1.972
+err = 0.0002141818, order = 1.986
+err = 0.0000538127, order = 1.993
+err = 0.0000134869, order = 1.996
+</pre></div></div>
+</div>
+</section>
+<section id="Second-fundamental-form">
+<h3>Second fundamental form<a class="headerlink" href="#Second-fundamental-form" title="Link to this heading"></a></h3>
+<p>The second fundamental form <span class="math notranslate nohighlight">\(I\!I(X,Y) = -g(\nabla_X\nu,Y)\)</span>, <span class="math notranslate nohighlight">\(X,Y\in \mathfrak{X}(F)\)</span> at facet <span class="math notranslate nohighlight">\(F\)</span> has the following linearization</p>
+<div class="math notranslate nohighlight">
+\[\Big(\frac{d}{dt}I\!I\Big)(X,Y) = 0.5\,\sigma(n_g,n_g)I\!I(X,Y)+0.5\big((\nabla_X\sigma)(n_g,Y)+(\nabla_Y\sigma)(n_g,X)-(\nabla_{n_g}\sigma)(X,Y)\big),\qquad X,Y\in\mathfrak{X}(F).\]</div>
+<p>The formula holds for tangent vectors to the fixed facet <span class="math notranslate nohighlight">\(F\)</span>. For comparison, we restrict all three tensors using the same Euclidean reference manifold: <code class="docutils literal notranslate"><span class="pre">euclidean.ProjectTensor(...,</span> <span class="pre">mode=&quot;F&quot;)</span></code> applies the fixed Euclidean tangential projector to both arguments. This projector is independent of the varied metric <span class="math notranslate nohighlight">\(g+t\sigma\)</span>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"second fundamental form:"</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">8</span>
+<span class="n">gfGt</span> <span class="o">=</span> <span class="n">GridFunction</span><span class="p">(</span><span class="n">gfsigma</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="n">errold</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="n">euclidean</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">Id</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">dim</span><span class="p">))</span>
+<span class="n">nv_g</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">normal</span>
+
+<span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
+    <span class="n">term_0</span> <span class="o">=</span> <span class="n">euclidean</span><span class="o">.</span><span class="n">ProjectTensor</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">SFF</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"F"</span><span class="p">)</span>
+
+    <span class="n">cov_sigma</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovDerivative</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Contraction</span><span class="p">(</span><span class="n">cov_sigma</span><span class="p">,</span> <span class="n">nv_g</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Contraction</span><span class="p">(</span><span class="n">cov_sigma</span><span class="p">,</span> <span class="n">nv_g</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">sigma_nn</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">nv_g</span><span class="p">,</span> <span class="n">nv_g</span><span class="p">))</span>
+    <span class="n">variation</span> <span class="o">=</span> <span class="n">euclidean</span><span class="o">.</span><span class="n">ProjectTensor</span><span class="p">(</span>
+        <span class="mf">0.5</span> <span class="o">*</span> <span class="n">sigma_nn</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">SFF</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dg</span><span class="o">.</span><span class="n">Sym</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">-</span> <span class="n">B</span><span class="p">),</span>
+        <span class="n">mode</span><span class="o">=</span><span class="s2">"F"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="n">gfGt</span><span class="o">.</span><span class="n">vec</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">gfG</span><span class="o">.</span><span class="n">vec</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">gfsigma</span><span class="o">.</span><span class="n">vec</span>
+        <span class="n">mf_t</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">gfGt</span><span class="p">,</span> <span class="n">normal_sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">term_t</span> <span class="o">=</span> <span class="n">euclidean</span><span class="o">.</span><span class="n">ProjectTensor</span><span class="p">(</span><span class="n">mf_t</span><span class="o">.</span><span class="n">SFF</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"F"</span><span class="p">)</span>
+
+        <span class="n">errold</span> <span class="o">=</span> <span class="n">err</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span>
+            <span class="n">Integrate</span><span class="p">(</span>
+                <span class="n">InnerProduct</span><span class="p">(</span>
+                    <span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span><span class="p">,</span> <span class="n">term_t</span> <span class="o">-</span> <span class="n">term_0</span> <span class="o">-</span> <span class="n">t</span> <span class="o">*</span> <span class="n">variation</span>
+                <span class="p">)</span>
+                <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="n">mesh</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">log2</span><span class="p">(</span><span class="n">errold</span> <span class="o">/</span> <span class="n">err</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">errold</span> <span class="k">else</span> <span class="s2">"-"</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"err = </span><span class="si">{</span><span class="n">err</span><span class="si">:</span><span class="s2">.10f</span><span class="si">}</span><span class="s2">, order = </span><span class="si">{</span><span class="n">rate</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">rate</span> <span class="o">==</span> <span class="s2">"-"</span> <span class="ow">or</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="n">rate_tol</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+second fundamental form:
+err = 0.1258856343, order = -
+err = 0.0352443468, order = 1.837
+err = 0.0093919143, order = 1.908
+err = 0.0024295226, order = 1.951
+err = 0.0006182224, order = 1.974
+err = 0.0001559547, order = 1.987
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="11_distributional_riemann_curvature_tensor.html" class="btn btn-neutral float-left" title="Distributional Riemann curvature tensor" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="13_kforms_exterior_derivative.html" class="btn btn-neutral float-right" title="Alternating k-forms, wedge product, Hodge star, and exterior (co-) derivative" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Michael Neunteufel.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
