@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Regge finite elements and Regge metrics &mdash; NGSDiffGeo 0.2.1.dev60 documentation</title>
+  <title>Regge finite elements and Regge metrics &mdash; NGSDiffGeo 0.3.1.dev1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/version-switcher.css?v=f4e9e2f5" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=4b680e67"></script>
+      <script src="../_static/documentation_options.js?v=54fce9ad"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
@@ -175,12 +175,12 @@ determine a higher-order Regge field. On a triangle, only edge and element-inter
  \varphi_{E_i} = \nabla \lambda_j\odot\nabla \lambda_k,\qquad t_j^\top\varphi_{E_i}t_j=c_i\delta_{ij},\qquad\qquad\varphi_{T_i} = \lambda_i\,\nabla \lambda_j\odot\nabla \lambda_k.
 \end{align*}\]</div>
 <p>For higher-order shape functions, one might augment these low-order functions by, e.g. linear independent Legendre and Jacobi polynomials. The construction for higher-dimensional simplices follows the same lines, for example, by constructing appropriate bubble functions. In the following figure, the DoFs are schematically sketched for some shapes.</p>
-<center><table><tr><td><p><img alt="323ec9e6ca374e2ca46ade0fb05c4b72" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_1.jpg" width="120" /></p>
-</td><td><p><img alt="c7980fee48a6480dbe880a5a546c49dc" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_2.jpg" width="120" /></p>
-</td><td><p><img alt="afaafae59b184a9eb5104de1fc418a46" class="no-scaled-link" src="../_images/hcurlcurl_0_tet_ref_1.jpg" width="130" /></p>
-</td></tr><tr><td><p><img alt="fbd60e986c6f430885dd4badb1d8e57d" class="no-scaled-link" src="../_images/hcurlcurl_0_quad_ref_1.jpg" width="120" /></p>
-</td><td><p><img alt="249953d72c3344658773971bfaea8fca" class="no-scaled-link" src="../_images/hcurlcurl_0_hex_ref_1.jpg" width="120" /></p>
-</td><td><p><img alt="47f6c9ea5f4b44949437ff2833973311" class="no-scaled-link" src="../_images/hcurlcurl_0_prism_ref_1.jpg" width="130" /></p>
+<center><table><tr><td><p><img alt="ebeecf9649fa44c3a0e4c7813db58cdf" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_1.jpg" width="120" /></p>
+</td><td><p><img alt="3cced2596ae044f5b4cfa2fa100ad057" class="no-scaled-link" src="../_images/hcurlcurl_0_trig_ref_2.jpg" width="120" /></p>
+</td><td><p><img alt="dcc4ee579ecb4d3ca7e9dca75e0a2519" class="no-scaled-link" src="../_images/hcurlcurl_0_tet_ref_1.jpg" width="130" /></p>
+</td></tr><tr><td><p><img alt="e402cb7bf6fe459bbbc3ca9792375722" class="no-scaled-link" src="../_images/hcurlcurl_0_quad_ref_1.jpg" width="120" /></p>
+</td><td><p><img alt="3f7a3eabfe754e68b329b8f6c9b75179" class="no-scaled-link" src="../_images/hcurlcurl_0_hex_ref_1.jpg" width="120" /></p>
+</td><td><p><img alt="f760f55d78d6433889f1a33f5d4d476e" class="no-scaled-link" src="../_images/hcurlcurl_0_prism_ref_1.jpg" width="130" /></p>
 </td></tr></table></center><p>The canonical Regge interpolant <span class="math notranslate nohighlight">\(\mathcal{I}_{Reg}^k\)</span> is defined by the requirement to preserve tangential-tangential moments at edges and inner moments</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{align*}
