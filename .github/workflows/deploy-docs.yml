@@ -1,0 +1,38 @@
+name: Deploy Documentation Site
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ngsdiffgeo-pages-deployment
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    name: Deploy Documentation
+    if: github.ref == 'refs/heads/docs-site'
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Prepare clean Pages artifact
+        run: rsync -a --exclude=.git --exclude=.github ./ "$RUNNER_TEMP/site-public/"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: ${{ runner.temp }}/site-public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
