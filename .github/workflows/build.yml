@@ -392,7 +392,7 @@ jobs:
         if: steps.save_site.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run deploy-docs.yml --ref docs-site
+        run: gh workflow run deploy-docs.yml --repo "$GITHUB_REPOSITORY" --ref docs-site
 
   # docs:
   #   name: Build and Deploy Documentation
