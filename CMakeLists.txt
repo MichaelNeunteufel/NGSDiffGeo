@@ -21,6 +21,23 @@ add_ngsolve_addon(
   src/kforms_bindings.cpp
 )
 
+# Netgen 6.2.2608 separates Python archive casters from C++ archive
+# registration. Probe the API so older supported NGSolve builds still work.
+function(check_python_archive_caster_api)
+  include(CheckCXXSourceCompiles)
+  set(CMAKE_REQUIRED_LIBRARIES ngsolve Python3::Module)
+  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+  check_cxx_source_compiles([=[
+    #include <core/python_ngcore.hpp>
+    using Registration = decltype(&ngcore::RegisterPyArchiveCaster<int>);
+  ]=] NGSDIFFGEO_HAS_PY_ARCHIVE_CASTERS)
+endfunction()
+check_python_archive_caster_api()
+if(NGSDIFFGEO_HAS_PY_ARCHIVE_CASTERS)
+  target_compile_definitions(ngsdiffgeo PRIVATE NGSDIFFGEO_HAS_PY_ARCHIVE_CASTERS)
+endif()
+
 include(CTest)
 if(BUILD_TESTING)
   # NGSolve's C++ libraries use the Python C API.  Extension modules obtain

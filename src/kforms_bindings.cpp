@@ -67,6 +67,9 @@ void ExportKForms(py::module m)
         .def("inv_star", [](shared_ptr<KFormCoefficientFunction> a, shared_ptr<RiemannianManifold> M, VorB vb)
              { return InverseHodgeStar(a, *RequireBindingNonNull(M, "InverseHodgeStar"), vb); }, py::arg("M"), py::arg("vb") = VOL)
         .def(NGSPickle<KFormCoefficientFunction>());
+#ifdef NGSDIFFGEO_HAS_PY_ARCHIVE_CASTERS
+    ngcore::RegisterPyArchiveCaster<KFormCoefficientFunction>();
+#endif
 
     py::class_<DoubleFormCoefficientFunction,
                TensorFieldCoefficientFunction,
@@ -89,6 +92,9 @@ void ExportKForms(py::module m)
         .def_property_readonly("trans", [](shared_ptr<DoubleFormCoefficientFunction> a)
                                { return SwapDoubleFormSlots(a); })
         .def(NGSPickle<DoubleFormCoefficientFunction>());
+#ifdef NGSDIFFGEO_HAS_PY_ARCHIVE_CASTERS
+    ngcore::RegisterPyArchiveCaster<DoubleFormCoefficientFunction>();
+#endif
 
     py::class_<ScalarFieldCoefficientFunction,
                KFormCoefficientFunction,
