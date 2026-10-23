@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.1 — 2026-10-23
 
 - Restore pickling of form expression graphs with NGSolve 6.2.2608 by
   registering Python archive casters when the new API is available.
