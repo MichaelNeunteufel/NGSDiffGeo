@@ -1,0 +1,19 @@
+.ngsdiffgeo-version-label {
+  display: block;
+  margin: 0.75em 0 0.2em;
+  color: #fff;
+  font-size: 0.85em;
+  text-align: left;
+}
+
+.ngsdiffgeo-version-select {
+  display: block;
+  width: 100%;
+  margin-top: 0.25em;
+  padding: 0.3em;
+  color: #333;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  font-size: 1em;
+}

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Installation &mdash; NGSDiffGeo 0.3.0 documentation</title>
+  <title>Installation &mdash; NGSDiffGeo 0.3.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/version-switcher.css?v=f4e9e2f5" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=e259d695"></script>
+      <script src="_static/documentation_options.js?v=4621528c"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
@@ -126,10 +126,13 @@
 <li><p>from <a class="reference external" href="https://pypi.org/project/ngsdiffgeo/">PyPI</a> (recommended), or</p></li>
 <li><p>from source (advanced / developer setup).</p></li>
 </ul>
-<p>The package depends on <a class="reference external" href="https://ngsolve.org/">NGSolve</a>. When installing from PyPI, <code class="docutils literal notranslate"><span class="pre">pip</span></code> will also install
-<code class="docutils literal notranslate"><span class="pre">ngsolve</span></code> automatically <em>if</em> a compatible wheel is available for your platform. For details on NGSolve
+<p>The package requires <a class="reference external" href="https://ngsolve.org/">NGSolve</a> 6.2.2607 or newer.
+When installing from PyPI, <code class="docutils literal notranslate"><span class="pre">pip</span></code> will also install <code class="docutils literal notranslate"><span class="pre">ngsolve</span></code> automatically
+<em>if</em> a compatible wheel is available for your platform. For details on NGSolve
 installation options (pip, conda, or building from source), see
 <a class="reference external" href="https://ngsolve.org/installation.html">the official NGSolve installation guide</a>.</p>
+<p>For fixes listed under <code class="docutils literal notranslate"><span class="pre">Unreleased</span></code> in the changelog, build from a source
+checkout containing the fix.</p>
 <section id="install-from-pypi-recommended">
 <h2>Install from PyPI (recommended)<a class="headerlink" href="#install-from-pypi-recommended" title="Link to this heading"></a></h2>
 <p>We recommend installing NGSDiffGeo into a dedicated virtual environment:</p>
@@ -147,6 +150,9 @@ then install NGSDiffGeo via <code class="docutils literal notranslate"><span cla
 <section id="build-from-source-advanced">
 <h2>Build from source (advanced)<a class="headerlink" href="#build-from-source-advanced" title="Link to this heading"></a></h2>
 <p>A source build is useful if you want to develop NGSDiffGeo or need to compile against a local NGSolve build.</p>
+<p>The build uses the NGSolve installation visible to its Python interpreter.
+Build and run NGSDiffGeo in the same environment. Reconfigure and rebuild
+NGSDiffGeo after changing the NGSolve version or installation.</p>
 <section id="prerequisites">
 <h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h3>
 <ol class="arabic simple">

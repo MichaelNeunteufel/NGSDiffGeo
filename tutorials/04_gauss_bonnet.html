@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gauss-Bonnet theorem &mdash; NGSDiffGeo 0.3.0 documentation</title>
+  <title>Gauss-Bonnet theorem &mdash; NGSDiffGeo 0.3.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/version-switcher.css?v=f4e9e2f5" />
@@ -15,7 +15,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=e259d695"></script>
+      <script src="../_static/documentation_options.js?v=4621528c"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
@@ -178,7 +178,7 @@ Gauss-Bonnet theorem holds for two-dimensional Riemannian manifolds, but we cons
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-int_S K = 12.566702932823457 = 4*pi = 12.566370614359172 = 2*pi*(#T-#E+#V) = 12.566370614359172
+int_S K = 12.566702932822562 = 4*pi = 12.566370614359172 = 2*pi*(#T-#E+#V) = 12.566370614359172
 </pre></div></div>
 </div>
 <p>An ellipsoid is topologically equivalent to a sphere. Therefore, we expect it to have the same Euler characteristic.</p>
@@ -209,7 +209,7 @@ int_S K = 12.566702932823457 = 4*pi = 12.566370614359172 = 2*pi*(#T-#E+#V) = 12.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-int_S K = 12.572887860639069 = 4*pi = 12.566370614359172 = 2*pi*(#T-#E+#V) = 12.566370614359172
+int_S K = 12.572887860642252 = 4*pi = 12.566370614359172 = 2*pi*(#T-#E+#V) = 12.566370614359172
 </pre></div></div>
 </div>
 <p>A torus has Euler characteristic <span class="math notranslate nohighlight">\(\chi_{\mathcal{S}}=0\)</span>. Its genus is <span class="math notranslate nohighlight">\(g=1\)</span> as it has one hole.</p>
@@ -242,7 +242,7 @@ int_S K = 12.572887860639069 = 4*pi = 12.566370614359172 = 2*pi*(#T-#E+#V) = 12.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-int_S K = 0.017253064926507904 = 0 = 2*pi*(#T-#E+#V) = 0.0
+int_S K = 0.01739235462647106 = 0 = 2*pi*(#T-#E+#V) = 0.0
 </pre></div></div>
 </div>
 </section>
@@ -278,7 +278,7 @@ int_S K = 0.017253064926507904 = 0 = 2*pi*(#T-#E+#V) = 0.0
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-int_S K = -4.099770502767808 = 2 * pi * (2 - 4) = -12.566370614359172 = 2*pi*(#T-#E+#V) = -12.566370614359172
+int_S K = -4.100016286533096 = 2 * pi * (2 - 4) = -12.566370614359172 = 2*pi*(#T-#E+#V) = -12.566370614359172
 </pre></div></div>
 </div>
 <p>The computation by counting the number of triangles, edges, and vertices matches the expected value. However, the integral of the Gauss curvature does not. Why?</p>
@@ -316,7 +316,7 @@ int_S K = -4.099770502767808 = 2 * pi * (2 - 4) = -12.566370614359172 = 2*pi*(#T
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-int_S K + int_{dS} k_g = -4.099770502767808 + -8.47722690259807 = -12.57699740536588
+int_S K + int_{dS} k_g = -4.100016286533096 + -8.476977383516328 = -12.576993670049424
 </pre></div></div>
 </div>
 </section>
@@ -334,9 +334,9 @@ int_S K + int_{dS} k_g = -4.099770502767808 + -8.47722690259807 = -12.5769974053
 \end{align*}\]</div>
 <p>where <span class="math notranslate nohighlight">\(t_1\)</span> and <span class="math notranslate nohighlight">\(t_2\)</span> are the two unit tangent vectors starting at <span class="math notranslate nohighlight">\(V\)</span> and going in the directions of the edges attached to <span class="math notranslate nohighlight">\(V\)</span> on the element <span class="math notranslate nohighlight">\(T\)</span>. At a boundary vertex, the corresponding turning angle is <span class="math notranslate nohighlight">\(\pi-\sum_{T\supset V}\sphericalangle_V^T\)</span>. Thus, the function below subtracts <span class="math notranslate nohighlight">\(\pi\)</span> from the interior-vertex formula at each boundary vertex.</p>
 <p>In summary, we need to consider the Gauss curvature, geodesic curvature, and boundary turning angles for the Gauss-Bonnet theorem, visualized in the following picture. Thus, all these quantities are tightly connected to each other.</p>
-<center><p><img alt="a2213e5e2d8847cbaacb31005d16c9b1" class="no-scaled-link" src="../_images/curved_triangle_gb.png" width="150" /></p>
+<center><p><img alt="263e037af7e144ce98d6b4f641f02017" class="no-scaled-link" src="../_images/curved_triangle_gb.png" width="150" /></p>
 </center><p>For the rectangle, each of its four corners has a turning angle of <span class="math notranslate nohighlight">\(\frac{\pi}{2}\)</span>. All other boundary vertices have zero turning angle, so the sum is <span class="math notranslate nohighlight">\(2\pi\)</span> as required by Gauss-Bonnet.</p>
-<center><p><img alt="73327b48a49441ea85adb60e41cbadfa" class="no-scaled-link" src="../_images/rect_gb.png" width="180" /></p>
+<center><p><img alt="9a59f182b4984e1cb0932baf499354fe" class="no-scaled-link" src="../_images/rect_gb.png" width="180" /></p>
 </center><div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
@@ -399,7 +399,7 @@ int_S K + int_{dS} k_g = -4.099770502767808 + -8.47722690259807 = -12.5769974053
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-int_S K + int_{dS} k_g = 6.283185307179734 =  2*pi = 6.283185307179586 = 2*pi*(#T-#E+#V) = 6.283185307179586
+int_S K + int_{dS} k_g = 6.283185307179952 =  2*pi = 6.283185307179586 = 2*pi*(#T-#E+#V) = 6.283185307179586
 </pre></div></div>
 </div>
 <p>If we round the edges such that a C1-boundary is obtained, the geodesic curvature <span class="math notranslate nohighlight">\(\kappa_g\)</span> includes all curvature information. Thus, the vertex contributions can be seen as the limit of geodesic curvatures (magnitude <span class="math notranslate nohighlight">\(\frac{1}{\varepsilon}\)</span>) integrated over the circle part (magnitude <span class="math notranslate nohighlight">\(\varepsilon\)</span>).</p>
@@ -437,7 +437,7 @@ int_S K + int_{dS} k_g = 6.283185307179734 =  2*pi = 6.283185307179586 = 2*pi*(#
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-int_S K + int_{dS} k_g = 6.289394080128498 = 6.283185307179586 = 2*pi*(#T-#E+#V) = 6.283185307179586
+int_S K + int_{dS} k_g = 6.289394080129405 = 6.283185307179586 = 2*pi*(#T-#E+#V) = 6.283185307179586
 </pre></div></div>
 </div>
 </section>
@@ -475,8 +475,8 @@ int_S K + int_{dS} k_g = 6.289394080128498 = 6.283185307179586 = 2*pi*(#T-#E+#V)
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-int_S K  = 0.0014061761979716643
-int_{dS} k_g = 12.573826270855013
+int_S K  = 0.0014061761981159202
+int_{dS} k_g = 12.573826270854473
 2*pi*(#T-#E+#V) = 12.566370614359172
 </pre></div></div>
 </div>
@@ -509,8 +509,8 @@ int_{dS} k_g = 12.573826270855013
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-int_S K = 12.597224467820945
-int_{dS} k_g = -0.0305680670786335
+int_S K = 12.597224467820704
+int_{dS} k_g = -0.030568067075595527
 2*pi*(#T-#E+#V) = 12.566370614359172
 </pre></div></div>
 </div>
@@ -558,9 +558,9 @@ int_{dS} k_g = -0.0305680670786335
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 K    = 0.0
-kg   = 9.131304725410944e-13
-kV   = 12.566370614359117
-K + kg + kV = 12.56637061436003
+kg   = 8.15351676775521e-15
+kV   = 12.566370614359133
+K + kg + kV = 12.566370614359142
 4*pi        = 12.566370614359172
 </pre></div></div>
 </div>
@@ -601,10 +601,10 @@ K + kg + kV = 12.56637061436003
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-K    = 12.750119514496292
-kg   = -0.18235138482711782
-kV   = -7.881543728238682e-05
-K + kg + kV = 12.567689314231892
+K    = 12.750119514477637
+kg   = -0.18235138480758098
+kV   = -7.881543734011842e-05
+K + kg + kV = 12.567689314232716
 4*pi        = 12.566370614359172
 </pre></div></div>
 </div>
