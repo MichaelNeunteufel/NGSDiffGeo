@@ -223,17 +223,17 @@ namespace
         for (int invalid : {-1, 256})
         {
             ExpectException([&] {
-                make_shared<KFormCoefficientFunction>(scalar, invalid, 2);
+                (void)make_shared<KFormCoefficientFunction>(scalar, invalid, 2);
             });
             ExpectException([&] {
-                make_shared<DoubleFormCoefficientFunction>(scalar, invalid, 0, 2);
+                (void)make_shared<DoubleFormCoefficientFunction>(scalar, invalid, 0, 2);
             });
         }
         ExpectException([&] {
-            make_shared<KFormCoefficientFunction>(scalar, 0, 258);
+            (void)make_shared<KFormCoefficientFunction>(scalar, 0, 258);
         });
         ExpectException([&] {
-            make_shared<DoubleFormCoefficientFunction>(scalar, 0, 0, 258);
+            (void)make_shared<DoubleFormCoefficientFunction>(scalar, 0, 0, 258);
         });
         RiemannianManifold manifold(IdentityCF(2));
         shared_ptr<KFormCoefficientFunction> null_kform;

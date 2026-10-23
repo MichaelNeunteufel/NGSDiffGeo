@@ -170,7 +170,7 @@ int main()
     Require(vector_zero->Dimensions()[0] == 2);
     Require(vector_zero->Dimensions()[1] == 3);
     ExpectException([]() {
-        std::make_shared<ngfem::GradCoefficientFunction<2>>(
+        (void)std::make_shared<ngfem::GradCoefficientFunction<2>>(
             nullptr, false);
     });
 }
