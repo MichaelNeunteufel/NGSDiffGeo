@@ -136,7 +136,16 @@ is not sufficient evidence that an operand is independent of a symbolic target.
 
 Boundary Hessians follow the same ambient-dimension restriction as surface
 gradients and therefore require dimension two or three. Both derivative axes
-are projected into the boundary tangent space.
+are projected into the boundary tangent space. The remaining projection uses
+native matrix multiplication, with reshapes and matrix transposes preserving
+every value-component axis and both derivative slots.
+
+Proxy axis normalization also uses reshapes and a native matrix transpose to
+exchange the component and derivative axis groups, preserving the order within
+each group. Use ``TransposeCF`` for these matrix transposes so the graph remains
+reconstructible under ``Replace``. In NGSolve 6.2.2608, native tensor-subview
+nodes produced by ``TensorTranspose`` lack ``Transform`` support. Substituting
+them can preserve evaluated values while breaking later graph replacement.
 
 
 Covariant inner-graph compilation

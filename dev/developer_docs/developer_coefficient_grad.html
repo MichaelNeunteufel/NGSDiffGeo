@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Numerical-gradient developer guide &mdash; NGSDiffGeo 0.3.1.dev3 documentation</title>
+  <title>Numerical-gradient developer guide &mdash; NGSDiffGeo 0.3.1.dev7 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/version-switcher.css?v=f4e9e2f5" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=c77ce7de"></script>
+      <script src="../_static/documentation_options.js?v=3b0dfd79"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
@@ -249,7 +249,15 @@ a zero scalar wrapper in direction <code class="docutils literal notranslate"><s
 is not sufficient evidence that an operand is independent of a symbolic target.</p>
 <p>Boundary Hessians follow the same ambient-dimension restriction as surface
 gradients and therefore require dimension two or three. Both derivative axes
-are projected into the boundary tangent space.</p>
+are projected into the boundary tangent space. The remaining projection uses
+native matrix multiplication, with reshapes and matrix transposes preserving
+every value-component axis and both derivative slots.</p>
+<p>Proxy axis normalization also uses reshapes and a native matrix transpose to
+exchange the component and derivative axis groups, preserving the order within
+each group. Use <code class="docutils literal notranslate"><span class="pre">TransposeCF</span></code> for these matrix transposes so the graph remains
+reconstructible under <code class="docutils literal notranslate"><span class="pre">Replace</span></code>. In NGSolve 6.2.2608, native tensor-subview
+nodes produced by <code class="docutils literal notranslate"><span class="pre">TensorTranspose</span></code> lack <code class="docutils literal notranslate"><span class="pre">Transform</span></code> support. Substituting
+them can preserve evaluated values while breaking later graph replacement.</p>
 </section>
 <section id="covariant-inner-graph-compilation">
 <h2>Covariant inner-graph compilation<a class="headerlink" href="#covariant-inner-graph-compilation" title="Link to this heading"></a></h2>

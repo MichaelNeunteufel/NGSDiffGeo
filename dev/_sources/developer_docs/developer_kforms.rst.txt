@@ -245,12 +245,15 @@ or metric-index vectors. When a new cache family is added, include both its
 fixed container and owned dynamic storage in the private benchmark accounting.
 
 Interpreted evaluation and generated code use the same signed lookup tables.
-The nodes generate their assignments directly, using the tensor
-component's shared declaration helper for real, complex, SIMD, and derivative
-scalar types. Full alternation does not embed an evaluation-fallback pointer
-in generated code. Rank-zero alternation and scalar double wedge also support
-the native scalar point-evaluation overload, including use as conditions in
-complex-valued ``IfPos`` expressions.
+The nodes declare storage through NGSolve's ``Code::Declare`` and generate their
+assignments directly. Native declarations cover real and complex values, SIMD,
+and automatic-differentiation types, including rank-zero ``Tens<T>`` storage in
+tensor mode. This API is exported for Windows addons in the supported NGSolve
+baseline 6.2.2607, so no local declaration implementation is needed. Full
+alternation does not embed an evaluation-fallback pointer in generated code.
+Rank-zero alternation and scalar double wedge also support the native scalar
+point-evaluation overload, including use as conditions in complex-valued
+``IfPos`` expressions.
 
 Generated signed sums must initialize the first term explicitly. Applying
 ``operator-=`` to an empty ``CodeExpr`` loses a leading minus sign. Use the
@@ -267,6 +270,15 @@ Archive constructor arguments contain the children and defining operation
 parameters. Derived dimensions and lookup tables are reconstructed from those
 arguments. When modifying constructor state, update pickle tests in the same
 change. Metadata stored in Python instance attributes is not authoritative.
+
+NGSolve 6.2.2608 separates Python archive conversions from C++ archive
+registration. The form bindings therefore call
+``ngcore::RegisterPyArchiveCaster<T>()`` for ``KFormCoefficientFunction`` and
+``DoubleFormCoefficientFunction``, in addition to their C++ archive
+registrations and ``NGSPickle`` definitions. These conversions serve the typed
+form pointers retained by internal operation nodes. CMake detects the API and
+guards the calls with ``NGSDIFFGEO_HAS_PY_ARCHIVE_CASTERS``, retaining support
+for NGSolve 6.2.2607.
 
 
 Verification

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>K-forms and double forms &mdash; NGSDiffGeo 0.3.1.dev3 documentation</title>
+  <title>K-forms and double forms &mdash; NGSDiffGeo 0.3.1.dev7 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/version-switcher.css?v=f4e9e2f5" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=c77ce7de"></script>
+      <script src="../_static/documentation_options.js?v=3b0dfd79"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
@@ -343,12 +343,15 @@ nodes retain a shared table handle rather than copying row, sign, permutation,
 or metric-index vectors. When a new cache family is added, include both its
 fixed container and owned dynamic storage in the private benchmark accounting.</p>
 <p>Interpreted evaluation and generated code use the same signed lookup tables.
-The nodes generate their assignments directly, using the tensor
-component’s shared declaration helper for real, complex, SIMD, and derivative
-scalar types. Full alternation does not embed an evaluation-fallback pointer
-in generated code. Rank-zero alternation and scalar double wedge also support
-the native scalar point-evaluation overload, including use as conditions in
-complex-valued <code class="docutils literal notranslate"><span class="pre">IfPos</span></code> expressions.</p>
+The nodes declare storage through NGSolve’s <code class="docutils literal notranslate"><span class="pre">Code::Declare</span></code> and generate their
+assignments directly. Native declarations cover real and complex values, SIMD,
+and automatic-differentiation types, including rank-zero <code class="docutils literal notranslate"><span class="pre">Tens&lt;T&gt;</span></code> storage in
+tensor mode. This API is exported for Windows addons in the supported NGSolve
+baseline 6.2.2607, so no local declaration implementation is needed. Full
+alternation does not embed an evaluation-fallback pointer in generated code.
+Rank-zero alternation and scalar double wedge also support the native scalar
+point-evaluation overload, including use as conditions in complex-valued
+<code class="docutils literal notranslate"><span class="pre">IfPos</span></code> expressions.</p>
 <p>Generated signed sums must initialize the first term explicitly. Applying
 <code class="docutils literal notranslate"><span class="pre">operator-=</span></code> to an empty <code class="docutils literal notranslate"><span class="pre">CodeExpr</span></code> loses a leading minus sign. Use the
 shared signed-accumulation helper for every generated contraction or
@@ -362,6 +365,14 @@ internal operators, not just a semantic wrapper around a simple coefficient.</p>
 parameters. Derived dimensions and lookup tables are reconstructed from those
 arguments. When modifying constructor state, update pickle tests in the same
 change. Metadata stored in Python instance attributes is not authoritative.</p>
+<p>NGSolve 6.2.2608 separates Python archive conversions from C++ archive
+registration. The form bindings therefore call
+<code class="docutils literal notranslate"><span class="pre">ngcore::RegisterPyArchiveCaster&lt;T&gt;()</span></code> for <code class="docutils literal notranslate"><span class="pre">KFormCoefficientFunction</span></code> and
+<code class="docutils literal notranslate"><span class="pre">DoubleFormCoefficientFunction</span></code>, in addition to their C++ archive
+registrations and <code class="docutils literal notranslate"><span class="pre">NGSPickle</span></code> definitions. These conversions serve the typed
+form pointers retained by internal operation nodes. CMake detects the API and
+guards the calls with <code class="docutils literal notranslate"><span class="pre">NGSDIFFGEO_HAS_PY_ARCHIVE_CASTERS</span></code>, retaining support
+for NGSolve 6.2.2607.</p>
 </section>
 <section id="verification">
 <h2>Verification<a class="headerlink" href="#verification" title="Link to this heading"></a></h2>
