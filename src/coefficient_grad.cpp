@@ -115,14 +115,17 @@ namespace ngfem
         auto last = DerivativeLastDimensions(cf, dim, difforder);
         auto move_last_to_first = [&]()
         {
-            auto transposed = result;
-            size_t cfdim = cf->Dimensions().Size();
+            const size_t cfdim = cf->Dimensions().Size();
+            if (cfdim == 0 || difforder == 0)
+                return result;
+            int derivative_dimension = 1;
             for (size_t deriv = 0; deriv < difforder; deriv++)
-            {
-                for (size_t pos = cfdim + deriv; pos > deriv; pos--)
-                    transposed = transposed->TensorTranspose(int(pos - 1), int(pos));
-            }
-            return transposed;
+                derivative_dimension *= int(dim);
+            // Treat value and derivative axes as two matrix indices. Matrix
+            // transpose supports graph replacement, unlike tensor-subviews.
+            return TransposeCF(result->Reshape(
+                                   Array<int>{int(cf->Dimension()), derivative_dimension}))
+                ->Reshape(first);
         };
 
         if (derivatives_are_last && SameDimensions(result->Dimensions(), last))
@@ -253,33 +256,16 @@ namespace ngfem
         auto normal = NormalVectorCF(int(dim));
         auto normal_column = normal->Reshape(Array<int>{int(dim), 1});
         auto projection = IdentityCF(int(dim)) - normal_column * TransposeCF(normal_column);
-        const size_t value_dimension = cf->Dimension();
-        Array<shared_ptr<CoefficientFunction>> components(
-            dim * dim * value_dimension);
-
-        for (size_t first = 0; first < dim; first++)
-            for (size_t second = 0; second < dim; second++)
-                for (size_t component = 0;
-                     component < value_dimension;
-                     component++)
-                {
-                    shared_ptr<CoefficientFunction> projected_component;
-                    for (size_t contracted = 0; contracted < dim; contracted++)
-                    {
-                        auto term = MakeComponentCoefficientFunction(
-                                        hessian,
-                                        int((first * dim + contracted) * value_dimension + component)) *
-                                    MakeComponentCoefficientFunction(
-                                        projection,
-                                        int(contracted * dim + second));
-                        projected_component = projected_component
-                                                  ? projected_component + term
-                                                  : term;
-                    }
-                    components[(first * dim + second) * value_dimension + component] = projected_component;
-                }
-
-        return MakeVectorialCoefficientFunction(std::move(components))
+        const int value_dimension = cf->Dimension();
+        // Move value components before both derivative slots, then use the
+        // second derivative as the matrix column. Matrix transposes preserve
+        // graph replacement, which native tensor-subviews do not implement.
+        auto rows = TransposeCF(hessian->Reshape(
+                                   Array<int>{int(dim * dim), value_dimension}))
+                        ->Reshape(Array<int>{value_dimension * int(dim), int(dim)});
+        auto projected = rows * projection;
+        return TransposeCF(projected->Reshape(
+                               Array<int>{value_dimension, int(dim * dim)}))
             ->Reshape(DerivativeFirstDimensions(cf, dim, 2));
     }
 

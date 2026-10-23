@@ -147,6 +147,42 @@ namespace
       throw std::runtime_error("tensor-field forwarding unit-test assertion failed");
   }
 
+  void TestScalarTensorGeneratedStorage()
+  {
+    struct TensorModeGuard
+    {
+      bool previous = ngfem::code_uses_tensors;
+      ~TensorModeGuard() { ngfem::code_uses_tensors = previous; }
+    } guard;
+    ngfem::code_uses_tensors = true;
+
+    for (bool is_complex : {false, true})
+    {
+      const auto constant = is_complex
+          ? ngfem::MakeConstantCoefficientFunction(ngcore::Complex(2.0, 3.0))
+          : ngfem::ConstantCF(2.0);
+      const auto scalar = ngfem::TensorFieldCF(constant, "");
+      for (bool simd : {false, true})
+        for (int deriv : {0, 1, 2})
+        {
+          ngfem::Code code;
+          code.is_simd = simd;
+          code.deriv = deriv;
+          code.res_type = code.GetType(is_complex);
+          ngstd::Array<int> inputs{3};
+          scalar->GenerateCode(code, inputs, 7);
+
+          // Scalar accesses in tensor mode use var_i(). The declaration must
+          // create scalar tensor storage, rather than declare a function.
+          const auto declaration = code.body.substr(0, code.body.find(';') + 1);
+          Require(declaration.find("Tens<") != std::string::npos);
+          Require(declaration.find(" var_7;") != std::string::npos);
+          Require(declaration.find("()") == std::string::npos);
+          Require(code.body.find("var_7() = var_3();") != std::string::npos);
+        }
+    }
+  }
+
   void ExpectException(const std::function<void()> &func)
   {
     bool threw = false;
@@ -164,6 +200,8 @@ namespace
 
 int main()
 {
+  TestScalarTensorGeneratedStorage();
+
   const auto constant =
       std::make_shared<ngfem::ConstantCoefficientFunction>(3.5);
   const auto scalar_tensor = ngfem::TensorFieldCF(constant, "");

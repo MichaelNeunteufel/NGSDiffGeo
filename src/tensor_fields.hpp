@@ -51,49 +51,6 @@ namespace ngfem
         return s;
     }
 
-    inline std::string TensorFieldGeneratedCoefficientType(
-        const Code &code, bool is_complex)
-    {
-        std::string type = is_complex ? "Complex" : "double";
-        if (code.is_simd)
-            type = "SIMD<" + type + ">";
-        if (code.deriv == 1)
-            type = "AutoDiff<1," + type + ">";
-        if (code.deriv == 2)
-            type = "AutoDiffDiff<1," + type + ">";
-        return type;
-    }
-
-    inline void DeclareTensorFieldGeneratedCoefficient(
-        Code &code, int index, FlatArray<int> dims, bool is_complex)
-    {
-        // Code::Declare is not exported by the NGSolve DLL on Windows.
-        // Generate the equivalent declaration locally so addon wheels link.
-        const std::string type =
-            TensorFieldGeneratedCoefficientType(code, is_complex);
-
-        if (dims.Size() == 0)
-        {
-            code.body += Var(index).Declare(type);
-            return;
-        }
-
-        if (code_uses_tensors)
-        {
-            code.body += "Tens<" + type;
-            for (int dim : dims)
-                code.body += ',' + ToLiteral(dim);
-            code.body += "> var_" + ToLiteral(index) + ";\n";
-            return;
-        }
-
-        size_t component_count = 1;
-        for (int dim : dims)
-            component_count *= size_t(dim);
-        for (size_t component = 0; component < component_count; ++component)
-            code.body += Var(index, int(component), dims).Declare(type);
-    }
-
     /**
      * Variance metadata for the ordered component axes of a tensor.
      *
@@ -438,8 +395,7 @@ namespace ngfem
 
         virtual void GenerateCode(Code &code, FlatArray<int> inputs, int index) const override
         {
-            DeclareTensorFieldGeneratedCoefficient(
-                code, index, this->Dimensions(), this->IsComplex());
+            code.Declare(index, this->Dimensions(), this->IsComplex());
             if (this->Dimensions().Size() == 0)
                 code.body += Var(index).Assign(Var(inputs[0]), false);
             else if (code_uses_tensors)

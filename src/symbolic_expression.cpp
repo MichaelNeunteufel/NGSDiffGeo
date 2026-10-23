@@ -97,7 +97,7 @@ namespace ngfem
       evaluator->GenerateCode(code, inputs, index);
       return;
     }
-    DeclareTensorFieldGeneratedCoefficient(code, index, Dimensions(), IsComplex());
+    code.Declare(index, Dimensions(), IsComplex());
     for (int i = 0; i < Dimension(); ++i)
       code.body += Var(index, i, Dimensions()).Assign(Var(inputs[0], i, Dimensions()), false);
   }

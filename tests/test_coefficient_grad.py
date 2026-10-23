@@ -639,6 +639,95 @@ def test_pure_boundary_hessian_is_symmetric_and_tangential_on_curved_boundary():
     assert _l2_error(hessian, projected, mesh, vb=BND) < 1e-9
 
 
+@pytest.mark.parametrize(
+    "dim, component_dims, complex_scale",
+    [
+        (2, (), 1.0),
+        (2, (4,), 1.0 + 2.0j),
+        (2, (2, 3), 1.0),
+        (3, (), 1.0 + 2.0j),
+        (3, (4,), 1.0),
+        (3, (2, 3), 1.0 + 2.0j),
+    ],
+)
+def test_boundary_hessian_preserves_derivative_and_value_axes(
+    dim, component_dims, complex_scale
+):
+    geometry = unit_square if dim == 2 else unit_cube
+    mesh = Mesh(geometry.GenerateMesh(maxh=0.7 if dim == 2 else 0.9))
+    coordinates = (x, y, z)[:dim]
+    component_count = 1
+    for extent in component_dims:
+        component_count *= extent
+    normal = specialcf.normal(dim)
+    projection = Id(dim) - OuterProduct(normal, normal)
+    polynomials = []
+    projected_hessians = []
+    for component in range(component_count):
+        entries = tuple(
+            complex_scale
+            * (1 + (component + 1) * (first + second + 1)
+               + 3 * (first + 1) * (second + 1))
+            for first in range(dim)
+            for second in range(dim)
+        )
+        ambient_hessian = CF(entries, dims=(dim, dim))
+        polynomials.append(
+            sum(
+                0.5 * entries[first * dim + second]
+                * coordinates[first] * coordinates[second]
+                for first in range(dim)
+                for second in range(dim)
+            )
+        )
+        # Each planar mesh face has zero curvature: its intrinsic Hessian is
+        # the ambient polynomial Hessian projected in both derivative slots.
+        projected_hessians.append(projection * ambient_hessian * projection)
+    coefficient = (
+        polynomials[0] if not component_dims
+        else CF(tuple(polynomials), dims=component_dims)
+    )
+    expected = CF(
+        tuple(
+            projected_hessians[component][first, second]
+            for first in range(dim)
+            for second in range(dim)
+            for component in range(component_count)
+        ),
+        dims=(dim, dim) + component_dims,
+    )
+    hessian = dg.HesseCF(coefficient, dim, boundary=True)
+
+    assert tuple(hessian.dims) == tuple(expected.dims)
+    assert hessian.is_complex == coefficient.is_complex
+    # Two reference-space finite differences amplify roundoff by h**-2 and
+    # by the inverse element maps, so compare relative to the Hessian scale.
+    zero = CF((0,) * expected.dim, dims=tuple(expected.dims))
+    for layout in ({"vb": BND}, {"element_boundary": True}):
+        expected_norm = _l2_error(expected, zero, mesh, **layout)
+        assert _l2_error(hessian, expected, mesh, **layout) < 1e-6 * expected_norm
+
+
+def test_boundary_tensor_hessian_retains_symbolic_operand():
+    mesh = Mesh(unit_square.GenerateMesh(maxh=0.5))
+    variable = CF((x**2, x * y, y**2, x**2 * y), dims=(2, 2))
+    direction = (1 + 2j) * CF(
+        (x * y, y**2, x**2, x**2 + y**2), dims=(2, 2)
+    )
+    hessian = dg.HesseCF(variable, 2, boundary=True)
+    expected = dg.HesseCF(direction, 2, boundary=True)
+    for result in (
+        hessian.Diff(variable, direction),
+        hessian.Replace({variable: direction}),
+    ):
+        assert tuple(result.dims) == (2, 2, 2, 2)
+        assert result.is_complex
+        assert _l2_error(result, expected, mesh, vb=BND) < 2e-7
+        assert _l2_error(
+            result.Compile(realcompile=False), expected, mesh, vb=BND
+        ) < 2e-7
+
+
 def test_gradcf_equivalence_key_includes_surface_mode():
     coefficient = x**2 + y
     first = dg.GradCF(coefficient, 2)

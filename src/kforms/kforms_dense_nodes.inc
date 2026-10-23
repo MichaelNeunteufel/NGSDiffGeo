@@ -82,8 +82,7 @@ static void GenerateSignedLinearCode(
     const std::vector<int> &valid_indices, const std::vector<int> &signs,
     const std::vector<int> &lin_table)
 {
-    DeclareTensorFieldGeneratedCoefficient(
-        code, index, output.Dimensions(), output.IsComplex());
+    code.Declare(index, output.Dimensions(), output.IsComplex());
     size_t vi = 0;
     for (size_t component = 0; component < output.Dimension(); ++component)
     {
@@ -761,7 +760,7 @@ public:
 
     virtual void GenerateCode(Code &code, FlatArray<int> inputs, int index) const override
     {
-        DeclareTensorFieldGeneratedCoefficient(code, index, Dimensions(), IsComplex());
+        code.Declare(index, Dimensions(), IsComplex());
 
         size_t vi = 0;
         for (int idx = 0; idx < this->Dimension(); ++idx)

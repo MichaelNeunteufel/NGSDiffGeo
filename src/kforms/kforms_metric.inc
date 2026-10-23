@@ -326,8 +326,7 @@ namespace kforms_internal
             void GenerateCode(Code &code, FlatArray<int> inputs,
                               int index) const override
             {
-                DeclareTensorFieldGeneratedCoefficient(
-                    code, index, Dimensions(), IsComplex());
+                code.Declare(index, Dimensions(), IsComplex());
                 for (int output = 0; output < Dimension(); ++output)
                 {
                     CodeExpr sum;

@@ -270,8 +270,7 @@ namespace kforms_internal
             void GenerateCode(Code &code, FlatArray<int> inputs,
                               int index) const override
             {
-                DeclareTensorFieldGeneratedCoefficient(
-                    code, index, Dimensions(), IsComplex());
+                code.Declare(index, Dimensions(), IsComplex());
                 for (size_t output = 0; output < table->outputs.size();
                      ++output)
                 {
@@ -643,8 +642,7 @@ namespace kforms_internal
             void GenerateCode(Code &code, FlatArray<int> inputs,
                               int index) const override
             {
-                DeclareTensorFieldGeneratedCoefficient(
-                    code, index, Dimensions(), IsComplex());
+                code.Declare(index, Dimensions(), IsComplex());
                 for (int output_row = 0; output_row < table->size;
                      ++output_row)
                     for (int input_column = 0;
