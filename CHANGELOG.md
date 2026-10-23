@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Restore pickling of form expression graphs with NGSolve 6.2.2608 by
+  registering Python archive casters when the new API is available.
+- Use native NGSolve declarations in generated code, fixing scalar tensor
+  storage in tensor-based code generation and removing copied type logic.
+- Simplify derivative-axis normalization and boundary-Hessian projection
+  using native matrix operations while preserving differentiation and
+  replacement.
+
+The minimum NGSolve version remains `6.2.2607`.
+
 ## 0.3.0 — 2026-09-22
 
 This release expands the differential-form and tensor APIs, improves symbolic

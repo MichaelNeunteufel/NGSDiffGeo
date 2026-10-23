@@ -6,10 +6,14 @@ NGSDiffGeo is distributed as a standard Python package and can be installed eith
 * from `PyPI <https://pypi.org/project/ngsdiffgeo/>`_ (recommended), or
 * from source (advanced / developer setup).
 
-The package depends on `NGSolve <https://ngsolve.org/>`_. When installing from PyPI, ``pip`` will also install
-``ngsolve`` automatically *if* a compatible wheel is available for your platform. For details on NGSolve
+The package requires `NGSolve <https://ngsolve.org/>`_ 6.2.2607 or newer.
+When installing from PyPI, ``pip`` will also install ``ngsolve`` automatically
+*if* a compatible wheel is available for your platform. For details on NGSolve
 installation options (pip, conda, or building from source), see
 `the official NGSolve installation guide <https://ngsolve.org/installation.html>`_.
+
+For fixes listed under ``Unreleased`` in the changelog, build from a source
+checkout containing the fix.
 
 
 Install from PyPI (recommended)
@@ -34,6 +38,10 @@ Build from source (advanced)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A source build is useful if you want to develop NGSDiffGeo or need to compile against a local NGSolve build.
+
+The build uses the NGSolve installation visible to its Python interpreter.
+Build and run NGSDiffGeo in the same environment. Reconfigure and rebuild
+NGSDiffGeo after changing the NGSolve version or installation.
 
 Prerequisites
 ^^^^^^^^^^^^^
