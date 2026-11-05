@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Covariant Derivatives &mdash; NGSDiffGeo 0.3.1 documentation</title>
+  <title>Covariant Derivatives &mdash; NGSDiffGeo 0.3.2.dev2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/version-switcher.css?v=f4e9e2f5" />
@@ -15,7 +15,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=4621528c"></script>
+      <script src="../_static/documentation_options.js?v=19b2d828"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
@@ -903,21 +903,27 @@ X\times Y = \varepsilon^{ijk}X_jY_k\,\partial_i.
 &amp;\int_M \Delta f\,g\,\omega = -\int_{M} g(\nabla f,\nabla g)\,\omega + \int_{\partial M}(\nabla f)(n)\,g\,\omega_{\partial M}.
 \end{align*}\end{split}\]</div>
 <p>Note that <span class="math notranslate nohighlight">\((\nabla f)(n) = g(\nabla f, n)\)</span>.</p>
+<p>The metric coefficients are non-polynomial, so the following comparisons use additional quadrature points in both the volume and boundary integrals.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
-    <span class="n">left</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">B</span><span class="p">),</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovDerivative</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="o">*</span> <span class="n">omega_T</span> <span class="o">*</span> <span class="n">dx</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span>
+    <span class="n">left</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
+        <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">B</span><span class="p">),</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovDerivative</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="o">*</span> <span class="n">omega_T</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+        <span class="n">mesh</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="n">right</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
-        <span class="o">-</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovHessian</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="o">*</span> <span class="n">omega_T</span> <span class="o">*</span> <span class="n">dx</span>
+        <span class="o">-</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovHessian</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="o">*</span> <span class="n">omega_T</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
         <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovDerivative</span><span class="p">(</span><span class="n">f</span><span class="p">)))</span>
         <span class="o">*</span> <span class="n">omega_S</span>
-        <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
         <span class="n">mesh</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">left</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">right</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">left</span> <span class="o">-</span> <span class="n">right</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+    <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">left</span> <span class="o">-</span> <span class="n">right</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span><span class="p">,</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"Integration-by-parts residual: </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">left</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">right</span><span class="p">)</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">"</span>
+    <span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -935,17 +941,22 @@ X\times Y = \varepsilon^{ijk}X_jY_k\,\partial_i.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">TaskManager</span><span class="p">():</span>
-    <span class="n">left</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovHessian</span><span class="p">(</span><span class="n">f</span><span class="p">)),</span> <span class="n">g</span><span class="p">)</span> <span class="o">*</span> <span class="n">omega_T</span> <span class="o">*</span> <span class="n">dx</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span>
+    <span class="n">left</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
+        <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovHessian</span><span class="p">(</span><span class="n">f</span><span class="p">)),</span> <span class="n">g</span><span class="p">)</span> <span class="o">*</span> <span class="n">omega_T</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+        <span class="n">mesh</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="n">right</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
-        <span class="o">-</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDerivative</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovDerivative</span><span class="p">(</span><span class="n">g</span><span class="p">))</span> <span class="o">*</span> <span class="n">omega_T</span> <span class="o">*</span> <span class="n">dx</span>
+        <span class="o">-</span><span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDerivative</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">mf</span><span class="o">.</span><span class="n">CovDerivative</span><span class="p">(</span><span class="n">g</span><span class="p">))</span> <span class="o">*</span> <span class="n">omega_T</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
         <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDerivative</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">mf</span><span class="o">.</span><span class="n">normal</span><span class="p">)</span>
         <span class="o">*</span> <span class="n">g</span>
         <span class="o">*</span> <span class="n">omega_S</span>
-        <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">element_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bonus_intorder</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
         <span class="n">mesh</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">left</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">right</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">left</span> <span class="o">-</span> <span class="n">right</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+    <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">left</span> <span class="o">-</span> <span class="n">right</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span><span class="p">,</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"Integration-by-parts residual: </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">left</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">right</span><span class="p">)</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">"</span>
+    <span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -969,12 +980,13 @@ X\times Y = \varepsilon^{ijk}X_jY_k\,\partial_i.
 \mathrm{inc}(\sigma) = -\mathrm{div}\mathrm{div}(\mathbb{S}\sigma) = -\mathrm{div}\mathrm{div}(\sigma) + \Delta \mathrm{Tr}(\sigma),
 \end{align*}\]</div>
 <p>where <span class="math notranslate nohighlight">\(\mathbb{S}\sigma = \sigma-\mathrm{Tr}(\sigma)\,g\)</span>.</p>
+<p>The fields in this example are analytic coefficient functions, so a coarse mesh with accurate quadrature suffices. This avoids amplifying roundoff in the nested numerical derivatives on small elements.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">metric</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">CigarSoliton</span><span class="p">()</span><span class="o">.</span><span class="n">metric</span>
-<span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">unit_square</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span><span class="n">maxh</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">unit_square</span><span class="o">.</span><span class="n">GenerateMesh</span><span class="p">(</span><span class="n">maxh</span><span class="o">=</span><span class="mf">1.0</span><span class="p">))</span>
 <span class="n">mf</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">RiemannianManifold</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
 
 <span class="n">alpha</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">OneForm</span><span class="p">(</span><span class="n">CF</span><span class="p">((</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">),</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)))</span>
@@ -985,15 +997,21 @@ X\times Y = \varepsilon^{ijk}X_jY_k\,\partial_i.
 <span class="n">C</span> <span class="o">=</span> <span class="n">dg</span><span class="o">.</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
 
 
-<span class="n">lhs</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovInc</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="n">mesh</span><span class="p">)</span>
+<span class="n">lhs</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovInc</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 <span class="n">mid</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
-    <span class="o">-</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">TensorField</span><span class="p">(</span><span class="n">C</span> <span class="o">-</span> <span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">C</span><span class="p">)</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">G</span><span class="p">,</span> <span class="s2">"11"</span><span class="p">))),</span> <span class="n">mesh</span>
+    <span class="o">-</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">dg</span><span class="o">.</span><span class="n">TensorField</span><span class="p">(</span><span class="n">C</span> <span class="o">-</span> <span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">C</span><span class="p">)</span> <span class="o">*</span> <span class="n">mf</span><span class="o">.</span><span class="n">G</span><span class="p">,</span> <span class="s2">"11"</span><span class="p">))),</span>
+    <span class="n">mesh</span><span class="p">,</span>
+    <span class="n">order</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">rhs</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span><span class="o">-</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">C</span><span class="p">))</span> <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovHessian</span><span class="p">((</span><span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">C</span><span class="p">)))),</span> <span class="n">mesh</span><span class="p">)</span>
+<span class="n">rhs</span> <span class="o">=</span> <span class="n">Integrate</span><span class="p">(</span>
+    <span class="o">-</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovDiv</span><span class="p">(</span><span class="n">C</span><span class="p">))</span> <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">CovHessian</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">Trace</span><span class="p">(</span><span class="n">C</span><span class="p">))),</span>
+    <span class="n">mesh</span><span class="p">,</span>
+    <span class="n">order</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">lhs</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">mid</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">rhs</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lhs</span> <span class="o">-</span> <span class="n">mid</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
-<span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">mid</span> <span class="o">-</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span>
+<span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lhs</span> <span class="o">-</span> <span class="n">mid</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Incompatibility residual: </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">lhs</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">mid</span><span class="p">)</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">"</span>
+<span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">mid</span> <span class="o">-</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">TOL</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Incompatibility residual: </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">mid</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">rhs</span><span class="p">)</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">"</span>
 </pre></div>
 </div>
 </div>

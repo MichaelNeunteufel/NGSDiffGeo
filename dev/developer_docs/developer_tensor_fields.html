@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tensor fields &mdash; NGSDiffGeo 0.3.1 documentation</title>
+  <title>Tensor fields &mdash; NGSDiffGeo 0.3.2.dev2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/version-switcher.css?v=f4e9e2f5" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=4621528c"></script>
+      <script src="../_static/documentation_options.js?v=19b2d828"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
@@ -196,22 +196,30 @@ behavior in their own components.</p>
 </section>
 <section id="value-graph-behavior">
 <h2>Value-graph behavior<a class="headerlink" href="#value-graph-behavior" title="Link to this heading"></a></h2>
-<p>The tensor wrapper forwards evaluation, domain checks, derivative evaluation,
-zero detection, and nonzero patterns to the wrapped coefficient. Generated
-code declares an output with the same shape and real or complex scalar type,
-then copies the generated input values into it.</p>
+<p>The tensor wrapper forwards evaluation, domain checks, and zero detection to
+the wrapped coefficient. <code class="docutils literal notranslate"><span class="pre">InputCoefficientFunctions</span></code> exposes that coefficient
+as its single child. NGSolve handles traversal and pattern evaluation; the
+wrapper’s three-argument <code class="docutils literal notranslate"><span class="pre">NonZeroPattern</span></code> copies the precomputed child
+pattern. Generated code declares an output with the same shape and real or
+complex scalar type, then copies the generated input values into it.</p>
 <p><code class="docutils literal notranslate"><span class="pre">GetFullCoefficient</span></code> is the C++ accessor for the full-shaped semantic value
 graph. Python <code class="docutils literal notranslate"><span class="pre">.coef</span></code> exposes the same graph. Canonical conversions use this
 accessor when removing metadata-only wrapper layers. Operations whose
 operands must remain targets for <code class="docutils literal notranslate"><span class="pre">Diff</span></code> or <code class="docutils literal notranslate"><span class="pre">Replace</span></code> instead retain those
 semantic operand wrappers in their expression graphs.</p>
 <p><code class="docutils literal notranslate"><span class="pre">SymbolicExpressionCoefficientFunction</span></code> in <code class="docutils literal notranslate"><span class="pre">src/symbolic_expression.*</span></code>
-shares evaluation, transformation, nonzero-pattern caching, and Jacobian
+shares evaluation, transformation, local pattern rules, and Jacobian
 construction between tensor algebra and proxy derivatives. It retains semantic
-operands independently of the native evaluation graph. Evaluation, child
-discovery, nonzero patterns, and code generation must use a consistent graph
-layout that keeps native proxy leaves visible to NGSolve.
-<code class="docutils literal notranslate"><span class="pre">SymbolicEinsumCF</span></code> retains its original operands for symbolic operations while
+operands separately from the numerical input graph. Evaluation, child
+discovery, nonzero patterns, and code generation use the same input layout,
+which keeps native proxy leaves visible to NGSolve.</p>
+<p>For native proxy variables, <code class="docutils literal notranslate"><span class="pre">DiffJacobi</span></code> delegates to the numerical
+evaluator. Symbolic assembly treats value, gradient, and Hessian proxies as
+independent variables. When the evaluator is exposed as a single input, the
+Jacobian with respect to that input is the identity; reverse differentiation
+uses this local rule. Directional <code class="docutils literal notranslate"><span class="pre">Diff</span></code> and Jacobians with respect to
+semantic wrapper operands reconstruct expressions from the retained operands.</p>
+<p><code class="docutils literal notranslate"><span class="pre">SymbolicEinsumCF</span></code> retains its original operands for symbolic operations while
 removing metadata-only wrapper layers from the native evaluation inputs.
 Projection uses this same helper: its archive retains the original tensor
 operand, and <code class="docutils literal notranslate"><span class="pre">Replace</span></code> reconstructs the contraction from that operand.</p>

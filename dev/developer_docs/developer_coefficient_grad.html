@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Numerical-gradient developer guide &mdash; NGSDiffGeo 0.3.1 documentation</title>
+  <title>Numerical-gradient developer guide &mdash; NGSDiffGeo 0.3.2.dev2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/version-switcher.css?v=f4e9e2f5" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=4621528c"></script>
+      <script src="../_static/documentation_options.js?v=19b2d828"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
@@ -197,16 +197,19 @@ derivative map, not the result shape.</p>
 <h2>NGSolve coefficient-function contract<a class="headerlink" href="#ngsolve-coefficient-function-contract" title="Link to this heading"></a></h2>
 <p>The custom coefficient node follows the standard NGSolve graph interfaces:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">InputCoefficientFunctions</span></code> and <code class="docutils literal notranslate"><span class="pre">TraverseTree</span></code> expose the child graph,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Transform</span></code> preserves the surface flag and participates in NGSolve’s replacement cache,</p></li>
-<li><p>directional <code class="docutils literal notranslate"><span class="pre">Diff</span></code> differentiates the child and reconstructs <code class="docutils literal notranslate"><span class="pre">GradCF</span></code>,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">NonZeroPattern</span></code> conservatively copies each child dependency to every physical derivative of that component,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">GetCArgs</span></code> contains the child and surface flag, and all three dimensional specializations are registered for polymorphic archiving.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">InputCoefficientFunctions</span></code> exposes the child to NGSolve’s traversal
+and pattern evaluation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Transform</span></code> preserves the surface flag and uses NGSolve’s replacement
+cache.</p></li>
+<li><p>Directional <code class="docutils literal notranslate"><span class="pre">Diff</span></code> differentiates the child and reconstructs <code class="docutils literal notranslate"><span class="pre">GradCF</span></code>.</p></li>
+<li><p>The three-argument <code class="docutils literal notranslate"><span class="pre">NonZeroPattern</span></code> receives the precomputed child pattern
+and copies each component’s dependencies to all of its physical derivatives.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GetCArgs</span></code> contains the child and surface flag. The specializations for
+dimensions 1, 2, and 3 are registered for polymorphic archiving.</p></li>
 </ul>
-<p>Consequently, graph transformation, pickling, and compilation retain the
-component shape, complex-valued state, and surface mode. <code class="docutils literal notranslate"><span class="pre">GradProxy</span></code> remains a Python
-compatibility alias for NGSolve’s native <code class="docutils literal notranslate"><span class="pre">ProxyFunction</span></code>. It is no longer a
-separate NGSDiffGeo coefficient class.</p>
+<p>Graph transformation, pickling, and compilation retain the component shape,
+complex-valued state, and surface mode. <code class="docutils literal notranslate"><span class="pre">GradProxy</span></code> is a Python alias for
+NGSolve’s native <code class="docutils literal notranslate"><span class="pre">ProxyFunction</span></code>.</p>
 </section>
 <section id="simd-support">
 <h2>SIMD support<a class="headerlink" href="#simd-support" title="Link to this heading"></a></h2>

@@ -144,12 +144,11 @@ evaluation to efficient native coefficient functions. Do not pass
 ``GetFullCoefficient()`` to a new native algebra node merely as an
 optimization: that accessor intentionally removes the wrapper identity.
 
-``InputCoefficientFunctions`` and ``TraverseTree`` continue to expose the
-native evaluation layout required by NGSolve evaluators, zero patterns, and
-generated code. Policy checks that need the retained meaning of an expression,
-such as rejecting a test proxy hidden by native zero simplification, use
-``TraverseSemanticDAG`` instead. Do not change evaluation traversal to expose
-semantic operands: the evaluator input order is a separate contract.
+``InputCoefficientFunctions`` exposes the numerical input graph used by
+NGSolve for traversal, nonzero patterns, and generated code. Its input order
+must match evaluation and code generation. Validation that inspects retained
+semantic operands, such as rejecting a test proxy hidden by native zero
+simplification, uses ``TraverseSemanticDAG``.
 
 Low-rank metric products, inner products, traces, and matrix transposes use
 specialized semantic nodes with native evaluators. This preserves the same

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Installation &mdash; NGSDiffGeo 0.3.1 documentation</title>
+  <title>Installation &mdash; NGSDiffGeo 0.3.2.dev2 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/version-switcher.css?v=f4e9e2f5" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=4621528c"></script>
+      <script src="_static/documentation_options.js?v=19b2d828"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
@@ -126,40 +126,43 @@
 <li><p>from <a class="reference external" href="https://pypi.org/project/ngsdiffgeo/">PyPI</a> (recommended), or</p></li>
 <li><p>from source (advanced / developer setup).</p></li>
 </ul>
-<p>The package requires <a class="reference external" href="https://ngsolve.org/">NGSolve</a> 6.2.2607 or newer.
-When installing from PyPI, <code class="docutils literal notranslate"><span class="pre">pip</span></code> will also install <code class="docutils literal notranslate"><span class="pre">ngsolve</span></code> automatically
-<em>if</em> a compatible wheel is available for your platform. For details on NGSolve
-installation options (pip, conda, or building from source), see
+<p>NGSDiffGeo requires <a class="reference external" href="https://ngsolve.org/">NGSolve</a>
+6.2.2608.post166.dev0 or newer. For NGSolve 6.2.2607 or the stable
+6.2.2608 release, use NGSDiffGeo v0.3.1.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pip</span></code> installs the package’s Python dependencies automatically. For
+NGSolve installation options and supported platforms, see
 <a class="reference external" href="https://ngsolve.org/installation.html">the official NGSolve installation guide</a>.</p>
-<p>For fixes listed under <code class="docutils literal notranslate"><span class="pre">Unreleased</span></code> in the changelog, build from a source
-checkout containing the fix.</p>
 <section id="install-from-pypi-recommended">
 <h2>Install from PyPI (recommended)<a class="headerlink" href="#install-from-pypi-recommended" title="Link to this heading"></a></h2>
 <p>We recommend installing NGSDiffGeo into a dedicated virtual environment:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
 <span class="nb">source</span><span class="w"> </span>.venv/bin/activate<span class="w">  </span><span class="c1"># Linux/macOS</span>
-<span class="c1"># .venv\Scripts\activate # Windows (PowerShell)</span>
+<span class="c1"># .\.venv\Scripts\Activate.ps1 # Windows (PowerShell)</span>
 
 python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>pip
 python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>ngsdiffgeo
 </pre></div>
 </div>
-<p>If your platform does not provide a prebuilt <code class="docutils literal notranslate"><span class="pre">ngsolve</span></code> wheel, install NGSolve first (see the link above),
-then install NGSDiffGeo via <code class="docutils literal notranslate"><span class="pre">pip</span></code> as shown.</p>
+<p>If no compatible NGSolve wheel is available for your platform, install a
+compatible NGSolve build first, following the guide linked above. Then build
+NGSDiffGeo from source against that installation as described below.</p>
 </section>
 <section id="build-from-source-advanced">
 <h2>Build from source (advanced)<a class="headerlink" href="#build-from-source-advanced" title="Link to this heading"></a></h2>
-<p>A source build is useful if you want to develop NGSDiffGeo or need to compile against a local NGSolve build.</p>
+<p>Build from source to develop NGSDiffGeo or compile it against an existing
+NGSolve installation.</p>
 <p>The build uses the NGSolve installation visible to its Python interpreter.
 Build and run NGSDiffGeo in the same environment. Reconfigure and rebuild
 NGSDiffGeo after changing the NGSolve version or installation.</p>
 <section id="prerequisites">
 <h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h3>
 <ol class="arabic simple">
-<li><p>A working NGSolve installation (pip-installed or self-compiled). See
-<a class="reference external" href="https://ngsolve.org/installation.html">NGSolve installation</a>.</p></li>
+<li><p>A compatible NGSolve installation that can be imported by the Python
+interpreter used for the build.</p></li>
 <li><p>A C++ toolchain and CMake (Linux/macOS: GCC/Clang; Windows: Visual Studio).</p></li>
-<li><p>Standard Python build tooling (<code class="docutils literal notranslate"><span class="pre">pip</span></code>). Build requirements are declared in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>.</p></li>
+<li><p>Python build tools for the chosen installation method. The pip build
+requirements are listed in <code class="docutils literal notranslate"><span class="pre">[build-system].requires</span></code> in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>;
+the CMake installation also uses <code class="docutils literal notranslate"><span class="pre">pybind11_stubgen</span></code> to generate type stubs.</p></li>
 </ol>
 <p>Clone the repository:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/MichaelNeunteufel/NGSDiffGeo.git
@@ -176,12 +179,16 @@ make<span class="w"> </span>install<span class="w"> </span><span class="c1"># Li
 <span class="c1"># cmake --build . --config Release --target install # Windows</span>
 </pre></div>
 </div>
-<p>If CMake cannot locate your NGSolve installation, you may need to set <code class="docutils literal notranslate"><span class="pre">CMAKE_PREFIX_PATH</span></code> to the directory
-containing NGSolve/Netgen CMake package configuration files (platform-specific).</p>
+<p>To select a specific Python installation, configure CMake with
+<code class="docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">..</span> <span class="pre">-DPython3_EXECUTABLE=/path/to/python</span></code>. That interpreter must be
+able to import NGSolve.</p>
 </section>
 <section id="option-b-build-and-install-with-pip">
 <h3>Option B: Build and install with pip<a class="headerlink" href="#option-b-build-and-install-with-pip" title="Link to this heading"></a></h3>
-<p>This uses the <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> build configuration and is typically the most convenient for development.</p>
+<p>These commands use the <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> build configuration and the NGSolve
+installation in the active Python environment. <code class="docutils literal notranslate"><span class="pre">--no-build-isolation</span></code>
+requires the build dependencies listed in <code class="docutils literal notranslate"><span class="pre">[build-system].requires</span></code> to be
+installed in that environment before running pip.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>pip
 python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--no-build-isolation<span class="w"> </span>.
 </pre></div>
@@ -190,6 +197,10 @@ python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </sp
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--no-build-isolation<span class="w"> </span>-e<span class="w"> </span>.
 </pre></div>
 </div>
+<p>If pip does not recognize a compatible local NGSolve build from its package
+metadata, add <code class="docutils literal notranslate"><span class="pre">--no-deps</span></code> to either command. This skips installation of all
+package dependencies, so use it only when those dependencies are already
+installed.</p>
 </section>
 </section>
 <section id="development-snapshots-testpypi">
