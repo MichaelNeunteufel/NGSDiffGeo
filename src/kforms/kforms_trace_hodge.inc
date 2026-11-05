@@ -235,13 +235,6 @@ namespace kforms_internal
             {
                 return {input, inverse_metric};
             }
-            void TraverseTree(
-                const function<void(CoefficientFunction &)> &func) override
-            {
-                input->TraverseTree(func);
-                inverse_metric->TraverseTree(func);
-                func(*this);
-            }
             using BASE::Evaluate;
             template <typename MIR, typename T, ORDERING ORD>
             void T_Evaluate(const MIR &mir,
@@ -291,24 +284,8 @@ namespace kforms_internal
                         Var(index, int(output), Dimensions()).Assign(sum.S(), false);
                 }
             }
-            void NonZeroPattern(
-                const ProxyUserData &ud,
-                FlatVector<AutoDiffDiff<1, NonZero>> values) const override
-            {
-                Vector<AutoDiffDiff<1, NonZero>> input_pattern(
-                    input->Dimension());
-                Vector<AutoDiffDiff<1, NonZero>> metric_pattern(
-                    inverse_metric->Dimension());
-                input->NonZeroPattern(ud, input_pattern);
-                inverse_metric->NonZeroPattern(ud, metric_pattern);
-                FlatVector<AutoDiffDiff<1, NonZero>> inputs[] = {
-                    input_pattern, metric_pattern};
-                NonZeroPattern(
-                    ud,
-                    FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>>(
-                        2, inputs),
-                    values);
-            }
+            using BASE::NonZeroPattern;
+
             void NonZeroPattern(
                 const ProxyUserData &,
                 FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> inputs,
@@ -607,13 +584,6 @@ namespace kforms_internal
             {
                 return {induced_metric, volume};
             }
-            void TraverseTree(
-                const function<void(CoefficientFunction &)> &func) override
-            {
-                induced_metric->TraverseTree(func);
-                volume->TraverseTree(func);
-                func(*this);
-            }
             using BASE::Evaluate;
             template <typename MIR, typename T, ORDERING ORD>
             void T_Evaluate(const MIR &mir,
@@ -666,24 +636,8 @@ namespace kforms_internal
                                 .Assign(value.S(), false);
                     }
             }
-            void NonZeroPattern(
-                const ProxyUserData &ud,
-                FlatVector<AutoDiffDiff<1, NonZero>> values) const override
-            {
-                Vector<AutoDiffDiff<1, NonZero>> induced_pattern(
-                    induced_metric->Dimension());
-                Vector<AutoDiffDiff<1, NonZero>> volume_pattern(
-                    volume->Dimension());
-                induced_metric->NonZeroPattern(ud, induced_pattern);
-                volume->NonZeroPattern(ud, volume_pattern);
-                FlatVector<AutoDiffDiff<1, NonZero>> inputs[] = {
-                    induced_pattern, volume_pattern};
-                NonZeroPattern(
-                    ud,
-                    FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>>(
-                        2, inputs),
-                    values);
-            }
+            using BASE::NonZeroPattern;
+
             void NonZeroPattern(
                 const ProxyUserData &,
                 FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> inputs,

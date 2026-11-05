@@ -75,12 +75,6 @@ namespace kforms_internal
         {
             return {independent};
         }
-        void TraverseTree(const function<void(CoefficientFunction &)> &func) override
-        {
-            independent->TraverseTree(func);
-            func(*this);
-        }
-
         using BASE::Evaluate;
         double Evaluate(const BaseMappedIntegrationPoint &ip) const override
         {
@@ -141,13 +135,8 @@ namespace kforms_internal
                 }
             }
         }
-        void NonZeroPattern(const ProxyUserData &ud,
-                            FlatVector<AutoDiffDiff<1, NonZero>> values) const override
-        {
-            Vector<AutoDiffDiff<1, NonZero>> compact(independent->Dimension());
-            independent->NonZeroPattern(ud, compact);
-            ApplyPattern(compact, values);
-        }
+        using BASE::NonZeroPattern;
+
         void NonZeroPattern(
             const ProxyUserData &,
             FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> inputs,
@@ -356,13 +345,6 @@ namespace kforms_internal
         {
             return {independent};
         }
-        void TraverseTree(
-            const function<void(CoefficientFunction &)> &func) override
-        {
-            independent->TraverseTree(func);
-            func(*this);
-        }
-
         using BASE::Evaluate;
         double Evaluate(const BaseMappedIntegrationPoint &ip) const override
         {
@@ -451,15 +433,7 @@ namespace kforms_internal
             }
         }
 
-        void NonZeroPattern(
-            const ProxyUserData &ud,
-            FlatVector<AutoDiffDiff<1, NonZero>> values) const override
-        {
-            Vector<AutoDiffDiff<1, NonZero>> compact(
-                independent->Dimension());
-            independent->NonZeroPattern(ud, compact);
-            ApplyPattern(compact, values);
-        }
+        using BASE::NonZeroPattern;
 
         void NonZeroPattern(
             const ProxyUserData &,

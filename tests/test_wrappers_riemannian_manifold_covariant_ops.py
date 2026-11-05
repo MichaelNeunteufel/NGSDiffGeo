@@ -149,6 +149,9 @@ def test_integration_by_parts_2d():
     metric = dg.CigarSoliton().metric
     mesh = Mesh(unit_square.GenerateMesh(maxh=0.15))
     mf = dg.RiemannianManifold(metric)
+    # The metric and trigonometric fields require extra quadrature accuracy.
+    volume = dx(bonus_intorder=4)
+    boundary = ds(bonus_intorder=4)
     omega_T = dg.ScalarField(mf.VolumeForm(VOL), dim=2)
     omega_S = dg.ScalarField(mf.VolumeForm(BND), dim=2)
 
@@ -174,10 +177,10 @@ def test_integration_by_parts_2d():
 
     assert (
         abs(
-            Integrate(mf.InnerProduct(mf.CovDerivative(f), X) * omega_T * dx, mesh)
+            Integrate(mf.InnerProduct(mf.CovDerivative(f), X) * omega_T * volume, mesh)
             - Integrate(
-                -mf.InnerProduct(mf.CovDiv(X), f) * omega_T * dx
-                + f * mf.InnerProduct(X, mf.normal) * omega_S * ds,
+                -mf.InnerProduct(mf.CovDiv(X), f) * omega_T * volume
+                + f * mf.InnerProduct(X, mf.normal) * omega_S * boundary,
                 mesh,
             )
         )
@@ -186,10 +189,10 @@ def test_integration_by_parts_2d():
 
     assert (
         abs(
-            Integrate(mf.InnerProduct(mf.CovDerivative(X), A) * omega_T * dx, mesh)
+            Integrate(mf.InnerProduct(mf.CovDerivative(X), A) * omega_T * volume, mesh)
             - Integrate(
-                -mf.InnerProduct(mf.CovDiv(A), X) * omega_T * dx
-                + mf.InnerProduct(dg.TensorProduct(mf.normal, X), A) * omega_S * ds,
+                -mf.InnerProduct(mf.CovDiv(A), X) * omega_T * volume
+                + mf.InnerProduct(dg.TensorProduct(mf.normal, X), A) * omega_S * boundary,
                 mesh,
             )
         )
@@ -198,10 +201,10 @@ def test_integration_by_parts_2d():
 
     assert (
         abs(
-            Integrate(mf.InnerProduct(mf.CovCurl(X), f) * omega_T * dx, mesh)
+            Integrate(mf.InnerProduct(mf.CovCurl(X), f) * omega_T * volume, mesh)
             - Integrate(
-                mf.InnerProduct(X, mf.CovRot(f)) * omega_T * dx
-                + f * mf.InnerProduct(X, mf.tangent) * omega_S * ds,
+                mf.InnerProduct(X, mf.CovRot(f)) * omega_T * volume
+                + f * mf.InnerProduct(X, mf.tangent) * omega_S * boundary,
                 mesh,
             )
         )
@@ -210,10 +213,10 @@ def test_integration_by_parts_2d():
 
     assert (
         abs(
-            Integrate(mf.InnerProduct(mf.CovCurl(C), X) * omega_T * dx, mesh)
+            Integrate(mf.InnerProduct(mf.CovCurl(C), X) * omega_T * volume, mesh)
             - Integrate(
-                mf.InnerProduct(C, mf.CovRot(X)) * omega_T * dx
-                + mf.InnerProduct(C, dg.TensorProduct(X, mf.tangent)) * omega_S * ds,
+                mf.InnerProduct(C, mf.CovRot(X)) * omega_T * volume
+                + mf.InnerProduct(C, dg.TensorProduct(X, mf.tangent)) * omega_S * boundary,
                 mesh,
             )
         )
@@ -222,25 +225,25 @@ def test_integration_by_parts_2d():
 
     assert (
         abs(
-            Integrate(mf.InnerProduct(mf.CovInc(C, True), f) * omega_T * dx, mesh)
+            Integrate(mf.InnerProduct(mf.CovInc(C, True), f) * omega_T * volume, mesh)
             - 0.5
             * Integrate(
-                mf.InnerProduct(mf.CovCurl(C), mf.CovRot(f)) * omega_T * dx
+                mf.InnerProduct(mf.CovCurl(C), mf.CovRot(f)) * omega_T * volume
                 + f
                 * mf.InnerProduct(mf.CovCurl(C), mf.tangent)
                 * omega_S
-                * dx(element_boundary=True),
+                * volume(element_boundary=True),
                 mesh,
             )
             - 0.5
             * Integrate(
-                mf.InnerProduct(C, mf.CovRot(mf.CovRot(f))) * omega_T * dx
+                mf.InnerProduct(C, mf.CovRot(mf.CovRot(f))) * omega_T * volume
                 + (
                     mf.InnerProduct(C, dg.TensorProduct(mf.CovRot(f), mf.tangent))
                     + f * mf.InnerProduct(mf.CovCurl(C), mf.tangent)
                 )
                 * omega_S
-                * dx(element_boundary=True),
+                * volume(element_boundary=True),
                 mesh,
             )
         )
@@ -250,13 +253,13 @@ def test_integration_by_parts_2d():
     assert (
         abs(
             Integrate(
-                mf.InnerProduct(mf.CovDiv(B), mf.CovDerivative(f)) * omega_T * dx, mesh
+                mf.InnerProduct(mf.CovDiv(B), mf.CovDerivative(f)) * omega_T * volume, mesh
             )
             - Integrate(
-                -mf.InnerProduct(B, mf.CovHessian(f)) * omega_T * dx
+                -mf.InnerProduct(B, mf.CovHessian(f)) * omega_T * volume
                 + mf.InnerProduct(B, dg.TensorProduct(mf.normal, mf.CovDerivative(f)))
                 * omega_S
-                * dx(element_boundary=True),
+                * volume(element_boundary=True),
                 mesh,
             )
         )
@@ -265,13 +268,13 @@ def test_integration_by_parts_2d():
 
     assert (
         abs(
-            Integrate(mf.InnerProduct(mf.Trace(mf.CovHessian(f)), g) * omega_T * dx, mesh)
+            Integrate(mf.InnerProduct(mf.Trace(mf.CovHessian(f)), g) * omega_T * volume, mesh)
             - Integrate(
-                -mf.InnerProduct(mf.CovDerivative(f), mf.CovDerivative(g)) * omega_T * dx
+                -mf.InnerProduct(mf.CovDerivative(f), mf.CovDerivative(g)) * omega_T * volume
                 + mf.InnerProduct(mf.CovDerivative(f), mf.normal)
                 * g
                 * omega_S
-                * dx(element_boundary=True),
+                * volume(element_boundary=True),
                 mesh,
             )
         )

@@ -5,7 +5,7 @@ import pickle
 import pytest
 from ngsolve import (
     BBND, BilinearForm, CF, Grad, H1, Id, InnerProduct, Integrate,
-    Norm, SymbolicBFI, x, y,
+    Norm, SymbolicBFI, ngsglobals, x, y,
 )
 
 from netgen.libngpy._meshing import NgException
@@ -13,6 +13,16 @@ from netgen.libngpy._meshing import NgException
 import ngsdiffgeo as dg
 from ngsdiffgeo import wrappers
 from tests._helpers import assert_l2_close, l2_error_bnd
+
+
+@pytest.fixture(params=[False, True], ids=["autodiff", "symbolic"])
+def symbolic_assembly(request):
+    previous = ngsglobals.symbolic_integrator_uses_diff
+    ngsglobals.symbolic_integrator_uses_diff = request.param
+    try:
+        yield
+    finally:
+        ngsglobals.symbolic_integrator_uses_diff = previous
 
 
 @pytest.mark.parametrize("vector", [False, True])
@@ -58,7 +68,7 @@ def test_proxy_form_gradient_retains_wrapper(exterior, action, make_unit_square_
 @pytest.mark.parametrize("operation", ["nested", "component", "covariant"])
 @pytest.mark.parametrize("simd", [False, True])
 @pytest.mark.parametrize("custom_gradient", [False, True])
-def test_proxy_hessian_matches_native(operation, simd, custom_gradient, make_unit_square_mesh):
+def test_proxy_hessian_matches_native(operation, simd, custom_gradient, symbolic_assembly, make_unit_square_mesh):
     mesh = make_unit_square_mesh(maxh=0.7)
     fes = H1(mesh, order=3)
     u, v = fes.TnT()
@@ -162,8 +172,19 @@ def test_proxy_derivative_replacement_can_be_archived(hessian, make_unit_square_
 
 
 @pytest.mark.parametrize("hessian", [False, True])
+def test_proxy_derivative_in_analytic_direction(hessian, make_unit_square_mesh):
+    mesh = make_unit_square_mesh(maxh=0.7)
+    u = H1(mesh, order=3).TrialFunction()
+    f = dg.ScalarField(u, dim=2)
+    expression = dg.HesseCF(f, 2) if hessian else dg.GradCF(f, 2)
+    direction = x*x+y*y
+    expected = 2*Id(2) if hessian else CF((2*x, 2*y))
+    assert_l2_close(expression.Diff(u, direction), expected, mesh, tol=2e-6)
+
+
+@pytest.mark.parametrize("hessian", [False, True])
 @pytest.mark.parametrize("realcompile", [False, True])
-def test_compiled_proxy_derivative_matches_native(hessian, realcompile, make_unit_square_mesh):
+def test_compiled_proxy_derivative_matches_native(hessian, realcompile, symbolic_assembly, make_unit_square_mesh):
     mesh = make_unit_square_mesh(maxh=0.7)
     fes = H1(mesh, order=3)
     u, v = fes.TnT()

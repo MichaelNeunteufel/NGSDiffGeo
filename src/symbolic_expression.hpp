@@ -53,7 +53,6 @@ namespace ngfem
     bool DefinedOn(const ElementTransformation &trafo) override;
     void CalcEquivalenceKey() override;
     Array<shared_ptr<CoefficientFunction>> InputCoefficientFunctions() const override;
-    void TraverseTree(const function<void(CoefficientFunction &)> &func) override;
     using BASE::Evaluate;
     double Evaluate(const BaseMappedIntegrationPoint &ip) const override;
     template <typename MIR, typename T, ORDERING ORD>
@@ -73,8 +72,7 @@ namespace ngfem
             values(i, ip) = inputs[0](i, ip);
     }
     void GenerateCode(Code &code, FlatArray<int> inputs, int index) const override;
-    void NonZeroPattern(const ProxyUserData &ud,
-                        FlatVector<AutoDiffDiff<1, NonZero>> values) const override;
+    using BASE::NonZeroPattern;
     void NonZeroPattern(const ProxyUserData &ud,
                         FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> inputs,
                         FlatVector<AutoDiffDiff<1, NonZero>> values) const override;

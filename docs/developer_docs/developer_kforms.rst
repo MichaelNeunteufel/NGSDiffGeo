@@ -223,10 +223,11 @@ its complete structural-zero result during construction and recomputes it when
 reconstructed. Querying a shared wedge graph does not recursively expand both
 operand branches.
 
-``SymbolicEinsumCF`` evaluates nonzero patterns once per dependency in its
-evaluation DAG, using the precomputed-child overloads. The cache lives only for
-one pattern query, so changing proxy components cannot reuse stale patterns.
-This also bounds pattern work when native einsum reconstructs a shared graph.
+NGSolve evaluates nonzero patterns along the numerical dependency DAG,
+visiting each shared node once per query. Each node's three-argument
+``NonZeroPattern`` uses the precomputed child patterns. A new query evaluates
+the patterns for the selected proxy components, so results from a previous
+query are not reused.
 
 
 Evaluation, compilation, and archives
@@ -248,9 +249,8 @@ Interpreted evaluation and generated code use the same signed lookup tables.
 The nodes declare storage through NGSolve's ``Code::Declare`` and generate their
 assignments directly. Native declarations cover real and complex values, SIMD,
 and automatic-differentiation types, including rank-zero ``Tens<T>`` storage in
-tensor mode. This API is exported for Windows addons in the supported NGSolve
-baseline 6.2.2607, so no local declaration implementation is needed. Full
-alternation does not embed an evaluation-fallback pointer in generated code.
+tensor mode. Full alternation does not embed an evaluation-fallback pointer in
+generated code.
 Rank-zero alternation and scalar double wedge also support the native scalar
 point-evaluation overload, including use as conditions in complex-valued
 ``IfPos`` expressions.
@@ -271,14 +271,16 @@ parameters. Derived dimensions and lookup tables are reconstructed from those
 arguments. When modifying constructor state, update pickle tests in the same
 change. Metadata stored in Python instance attributes is not authoritative.
 
-NGSolve 6.2.2608 separates Python archive conversions from C++ archive
-registration. The form bindings therefore call
+The form bindings register Python archive conversions with
 ``ngcore::RegisterPyArchiveCaster<T>()`` for ``KFormCoefficientFunction`` and
-``DoubleFormCoefficientFunction``, in addition to their C++ archive
-registrations and ``NGSPickle`` definitions. These conversions serve the typed
-form pointers retained by internal operation nodes. CMake detects the API and
-guards the calls with ``NGSDIFFGEO_HAS_PY_ARCHIVE_CASTERS``, retaining support
-for NGSolve 6.2.2607.
+``DoubleFormCoefficientFunction``, alongside their C++ archive registrations
+and ``NGSPickle`` definitions. These conversions handle the typed form pointers
+retained by internal operation nodes.
+
+Custom nodes expose their numerical children through
+``InputCoefficientFunctions``. NGSolve uses this graph for traversal and
+pattern evaluation; the nodes provide their local pattern rules through the
+three-argument ``NonZeroPattern``.
 
 
 Verification

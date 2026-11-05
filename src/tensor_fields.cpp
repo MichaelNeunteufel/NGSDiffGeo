@@ -40,8 +40,7 @@ namespace ngfem
       {
         RequireNonNull(input, "SymbolicEinsumCF");
         // Remove metadata wrappers, but retain nested semantic nodes here.
-        // Their NonZeroPattern implementation traverses shared evaluators as
-        // DAGs. Bypassing them would repeatedly inspect shared subgraphs.
+        // NGSolve evaluates their nonzero patterns along the shared DAG.
         while (auto tensor = dynamic_pointer_cast<TensorFieldCoefficientFunction>(input))
           input = tensor->GetFullCoefficient();
         values.Append(input);

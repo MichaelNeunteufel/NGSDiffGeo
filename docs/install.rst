@@ -6,14 +6,13 @@ NGSDiffGeo is distributed as a standard Python package and can be installed eith
 * from `PyPI <https://pypi.org/project/ngsdiffgeo/>`_ (recommended), or
 * from source (advanced / developer setup).
 
-The package requires `NGSolve <https://ngsolve.org/>`_ 6.2.2607 or newer.
-When installing from PyPI, ``pip`` will also install ``ngsolve`` automatically
-*if* a compatible wheel is available for your platform. For details on NGSolve
-installation options (pip, conda, or building from source), see
-`the official NGSolve installation guide <https://ngsolve.org/installation.html>`_.
+NGSDiffGeo requires `NGSolve <https://ngsolve.org/>`_
+6.2.2608.post166.dev0 or newer. For NGSolve 6.2.2607 or the stable
+6.2.2608 release, use NGSDiffGeo v0.3.1.
 
-For fixes listed under ``Unreleased`` in the changelog, build from a source
-checkout containing the fix.
+``pip`` installs the package's Python dependencies automatically. For
+NGSolve installation options and supported platforms, see
+`the official NGSolve installation guide <https://ngsolve.org/installation.html>`_.
 
 
 Install from PyPI (recommended)
@@ -25,19 +24,21 @@ We recommend installing NGSDiffGeo into a dedicated virtual environment:
 
    python -m venv .venv
    source .venv/bin/activate  # Linux/macOS
-   # .venv\Scripts\activate # Windows (PowerShell)
+   # .\.venv\Scripts\Activate.ps1 # Windows (PowerShell)
 
    python -m pip install --upgrade pip
    python -m pip install ngsdiffgeo
 
-If your platform does not provide a prebuilt ``ngsolve`` wheel, install NGSolve first (see the link above),
-then install NGSDiffGeo via ``pip`` as shown.
+If no compatible NGSolve wheel is available for your platform, install a
+compatible NGSolve build first, following the guide linked above. Then build
+NGSDiffGeo from source against that installation as described below.
 
 
 Build from source (advanced)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A source build is useful if you want to develop NGSDiffGeo or need to compile against a local NGSolve build.
+Build from source to develop NGSDiffGeo or compile it against an existing
+NGSolve installation.
 
 The build uses the NGSolve installation visible to its Python interpreter.
 Build and run NGSDiffGeo in the same environment. Reconfigure and rebuild
@@ -46,10 +47,12 @@ NGSDiffGeo after changing the NGSolve version or installation.
 Prerequisites
 ^^^^^^^^^^^^^
 
-1. A working NGSolve installation (pip-installed or self-compiled). See
-   `NGSolve installation <https://ngsolve.org/installation.html>`_.
+1. A compatible NGSolve installation that can be imported by the Python
+   interpreter used for the build.
 2. A C++ toolchain and CMake (Linux/macOS: GCC/Clang; Windows: Visual Studio).
-3. Standard Python build tooling (``pip``). Build requirements are declared in ``pyproject.toml``.
+3. Python build tools for the chosen installation method. The pip build
+   requirements are listed in ``[build-system].requires`` in ``pyproject.toml``;
+   the CMake installation also uses ``pybind11_stubgen`` to generate type stubs.
 
 Clone the repository:
 
@@ -70,14 +73,18 @@ Option A: Build with CMake
    make install # Linux/macOS
    # cmake --build . --config Release --target install # Windows
 
-If CMake cannot locate your NGSolve installation, you may need to set ``CMAKE_PREFIX_PATH`` to the directory
-containing NGSolve/Netgen CMake package configuration files (platform-specific).
+To select a specific Python installation, configure CMake with
+``cmake .. -DPython3_EXECUTABLE=/path/to/python``. That interpreter must be
+able to import NGSolve.
 
 
 Option B: Build and install with pip
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This uses the ``pyproject.toml`` build configuration and is typically the most convenient for development.
+These commands use the ``pyproject.toml`` build configuration and the NGSolve
+installation in the active Python environment. ``--no-build-isolation``
+requires the build dependencies listed in ``[build-system].requires`` to be
+installed in that environment before running pip.
 
 .. code-block:: bash
 
@@ -89,6 +96,11 @@ For editable development installs:
 .. code-block:: bash
 
    python -m pip install --no-build-isolation -e .
+
+If pip does not recognize a compatible local NGSolve build from its package
+metadata, add ``--no-deps`` to either command. This skips installation of all
+package dependencies, so use it only when those dependencies are already
+installed.
 
 
 Development snapshots (TestPyPI)

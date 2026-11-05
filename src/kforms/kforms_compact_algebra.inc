@@ -422,14 +422,6 @@ namespace kforms_internal
             return {left, right};
         }
 
-        void TraverseTree(
-            const function<void(CoefficientFunction &)> &func) override
-        {
-            left->TraverseTree(func);
-            right->TraverseTree(func);
-            func(*this);
-        }
-
         using BASE::Evaluate;
 
         double Evaluate(
@@ -479,24 +471,7 @@ namespace kforms_internal
             }
         }
 
-        void NonZeroPattern(
-            const ProxyUserData &ud,
-            FlatVector<AutoDiffDiff<1, NonZero>> values) const override
-        {
-            Vector<AutoDiffDiff<1, NonZero>> left_values(
-                left->Dimension());
-            Vector<AutoDiffDiff<1, NonZero>> right_values(
-                right->Dimension());
-            left->NonZeroPattern(ud, left_values);
-            right->NonZeroPattern(ud, right_values);
-            FlatVector<AutoDiffDiff<1, NonZero>> input_storage[] = {
-                left_values, right_values};
-            NonZeroPattern(
-                ud,
-                FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>>(
-                    2, input_storage),
-                values);
-        }
+        using BASE::NonZeroPattern;
 
         void NonZeroPattern(
             const ProxyUserData &,
@@ -698,14 +673,6 @@ namespace kforms_internal
             return {left, right};
         }
 
-        void TraverseTree(
-            const function<void(CoefficientFunction &)> &func) override
-        {
-            left->TraverseTree(func);
-            right->TraverseTree(func);
-            func(*this);
-        }
-
         using BASE::Evaluate;
 
         double Evaluate(
@@ -779,23 +746,7 @@ namespace kforms_internal
             }
         }
 
-        void NonZeroPattern(
-            const ProxyUserData &ud,
-            FlatVector<AutoDiffDiff<1, NonZero>> values) const override
-        {
-            Vector<AutoDiffDiff<1, NonZero>> left_values(
-                left->Dimension());
-            Vector<AutoDiffDiff<1, NonZero>> right_values(
-                right->Dimension());
-            left->NonZeroPattern(ud, left_values);
-            right->NonZeroPattern(ud, right_values);
-            FlatVector<AutoDiffDiff<1, NonZero>> input_storage[] = {
-                left_values, right_values};
-            ApplyPattern(
-                FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>>(
-                    2, input_storage),
-                values);
-        }
+        using BASE::NonZeroPattern;
 
         void NonZeroPattern(
             const ProxyUserData &,

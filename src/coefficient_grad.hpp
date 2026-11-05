@@ -449,34 +449,13 @@ namespace ngfem
                 std::string(surface ? "SurfaceGradCF<" : "GradCF<") + ToString(D) + ">(" + c1->EquivalenceKey() + "," + ToString(this->Dimensions()) + ")";
         }
 
-        void TraverseTree(
-            const std::function<void(CoefficientFunction &)> &func) override
-        {
-            c1->TraverseTree(func);
-            func(*this);
-        }
-
         Array<std::shared_ptr<CoefficientFunction>>
         InputCoefficientFunctions() const override
         {
             return Array<std::shared_ptr<CoefficientFunction>>({c1});
         }
 
-        void NonZeroPattern(
-            const ProxyUserData &ud,
-            FlatVector<AutoDiffDiff<1, NonZero>> values) const override
-        {
-            // Dependency propagation is conservative: any input dependency may
-            // contribute to every physical derivative of that component.
-            Vector<AutoDiffDiff<1, NonZero>> input_values(c1->Dimension());
-            c1->NonZeroPattern(ud, input_values);
-            for (size_t direction = 0; direction < D; ++direction)
-                for (size_t component = 0;
-                     component < c1->Dimension();
-                     ++component)
-                    values[direction * c1->Dimension() + component] =
-                        input_values[component];
-        }
+        using BASE::NonZeroPattern;
 
         void NonZeroPattern(
             const ProxyUserData &,

@@ -166,13 +166,6 @@ namespace kforms_internal
             return {gradient};
         }
 
-        void TraverseTree(
-            const function<void(CoefficientFunction &)> &func) override
-        {
-            gradient->TraverseTree(func);
-            func(*this);
-        }
-
         using BASE::Evaluate;
 
         double Evaluate(
@@ -228,21 +221,7 @@ namespace kforms_internal
             }
         }
 
-        void NonZeroPattern(
-            const ProxyUserData &ud,
-            FlatVector<AutoDiffDiff<1, NonZero>> values) const override
-        {
-            Vector<AutoDiffDiff<1, NonZero>> input(
-                gradient->Dimension());
-            gradient->NonZeroPattern(ud, input);
-            FlatVector<AutoDiffDiff<1, NonZero>> input_storage[] = {
-                input};
-            NonZeroPattern(
-                ud,
-                FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>>(
-                    1, input_storage),
-                values);
-        }
+        using BASE::NonZeroPattern;
 
         void NonZeroPattern(
             const ProxyUserData &,

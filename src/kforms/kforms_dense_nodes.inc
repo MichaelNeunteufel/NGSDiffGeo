@@ -220,24 +220,12 @@ public:
                                  valid_indices, signs, lin_table);
     }
 
-    virtual void TraverseTree(const function<void(CoefficientFunction &)> &func) override
-    {
-        c1->TraverseTree(func);
-        func(*this);
-    }
-
     virtual Array<shared_ptr<CoefficientFunction>> InputCoefficientFunctions() const override
     {
         return Array<shared_ptr<CoefficientFunction>>({c1});
     }
 
-    virtual void NonZeroPattern(const class ProxyUserData &ud,
-                                FlatVector<AutoDiffDiff<1, NonZero>> values) const override
-    {
-        Vector<AutoDiffDiff<1, NonZero>> input(values.Size());
-        c1->NonZeroPattern(ud, input);
-        ApplyLinearNonZeroPattern(valid_indices, lin_table, signs.size(), input, values);
-    }
+    using CoefficientFunction::NonZeroPattern;
 
     virtual void NonZeroPattern(const class ProxyUserData &ud,
                                 FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> input,
@@ -445,24 +433,12 @@ public:
                                  valid_indices, signs, lin_table);
     }
 
-    virtual void TraverseTree(const function<void(CoefficientFunction &)> &func) override
-    {
-        c1->TraverseTree(func);
-        func(*this);
-    }
-
     virtual Array<shared_ptr<CoefficientFunction>> InputCoefficientFunctions() const override
     {
         return Array<shared_ptr<CoefficientFunction>>({c1});
     }
 
-    virtual void NonZeroPattern(const class ProxyUserData &ud,
-                                FlatVector<AutoDiffDiff<1, NonZero>> values) const override
-    {
-        Vector<AutoDiffDiff<1, NonZero>> input(values.Size());
-        c1->NonZeroPattern(ud, input);
-        ApplyLinearNonZeroPattern(valid_indices, lin_table, signs.size(), input, values);
-    }
+    using CoefficientFunction::NonZeroPattern;
 
     virtual void NonZeroPattern(const class ProxyUserData &ud,
                                 FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> input,
@@ -785,28 +761,12 @@ public:
         }
     }
 
-    virtual void TraverseTree(const function<void(CoefficientFunction &)> &func) override
-    {
-        a->TraverseTree(func);
-        b->TraverseTree(func);
-        func(*this);
-    }
-
     virtual Array<shared_ptr<CoefficientFunction>> InputCoefficientFunctions() const override
     {
         return Array<shared_ptr<CoefficientFunction>>({a, b});
     }
 
-    virtual void NonZeroPattern(const class ProxyUserData &ud,
-                                FlatVector<AutoDiffDiff<1, NonZero>> values) const override
-    {
-        Vector<AutoDiffDiff<1, NonZero>> left(a->Dimension()), right(b->Dimension());
-        a->NonZeroPattern(ud, left);
-        b->NonZeroPattern(ud, right);
-        FlatVector<AutoDiffDiff<1, NonZero>> input_storage[] = {left, right};
-        FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> inputs(2, input_storage);
-        NonZeroPattern(ud, inputs, values);
-    }
+    using CoefficientFunction::NonZeroPattern;
 
     virtual void NonZeroPattern(const class ProxyUserData &ud,
                                 FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> input,

@@ -2,7 +2,7 @@
 #include "tensor_fields.hpp"
 
 #include <core/register_archive.hpp>
-#include <map>
+#include <symbolicintegrator.hpp>
 #include <set>
 
 namespace ngfem
@@ -78,13 +78,6 @@ namespace ngfem
                               : evaluator->InputCoefficientFunctions();
   }
 
-  void SymbolicExpressionCoefficientFunction::TraverseTree(const function<void(CoefficientFunction &)> &func)
-  {
-    for (auto input : InputCoefficientFunctions())
-      input->TraverseTree(func);
-    func(*this);
-  }
-
   double SymbolicExpressionCoefficientFunction::Evaluate(const BaseMappedIntegrationPoint &ip) const
   {
     return evaluator->Evaluate(ip);
@@ -100,33 +93,6 @@ namespace ngfem
     code.Declare(index, Dimensions(), IsComplex());
     for (int i = 0; i < Dimension(); ++i)
       code.body += Var(index, i, Dimensions()).Assign(Var(inputs[0], i, Dimensions()), false);
-  }
-
-  void SymbolicExpressionCoefficientFunction::NonZeroPattern(const ProxyUserData &ud,
-                                                             FlatVector<AutoDiffDiff<1, NonZero>> values) const
-  {
-    using Pattern = AutoDiffDiff<1, NonZero>;
-    // Native einsum queries operand patterns while rebuilding its evaluator.
-    // Use precomputed child patterns to avoid expanding shared DAGs into trees.
-    // Keep this cache local: patterns depend on the current proxy/component.
-    std::map<CoefficientFunction *, Vector<Pattern>> patterns;
-    evaluator->TraverseDAG([&](CoefficientFunction &node)
-                           {
-      auto &output = patterns.try_emplace(&node, node.Dimension()).first->second;
-      auto children = node.InputCoefficientFunctions();
-      if (children.Size() == 0)
-      {
-        node.NonZeroPattern(ud, output);
-        return;
-      }
-      std::vector<FlatVector<Pattern>> inputs;
-      inputs.reserve(children.Size());
-      for (auto child : children)
-        inputs.emplace_back(child ? FlatVector<Pattern>(patterns.at(child.get()))
-                                  : FlatVector<Pattern>(0, nullptr));
-      node.NonZeroPattern(ud,
-          FlatArray<FlatVector<Pattern>>(inputs.size(), inputs.data()), output); });
-    values = patterns.at(evaluator.get());
   }
 
   void SymbolicExpressionCoefficientFunction::NonZeroPattern(const ProxyUserData &ud,
@@ -253,6 +219,12 @@ namespace ngfem
       return it->second;
     if (this == var)
       return IdentityCF(Dimensions());
+    if (evaluator_as_input && var == evaluator.get())
+      return cache[self] = IdentityCF(Dimensions());
+    // Native assembly takes partial derivatives with respect to independent
+    // evaluator proxies, including gradient and Hessian leaves.
+    if (dynamic_cast<const ProxyFunction *>(var))
+      return cache[self] = evaluator->DiffJacobi(var, cache);
     Array<shared_ptr<CoefficientFunction>> columns(var->Dimension());
     for (size_t i : Range(columns))
       columns[i] = Diff(var, UnitVectorCF(var->Dimension(), int(i))->Reshape(var->Dimensions()));

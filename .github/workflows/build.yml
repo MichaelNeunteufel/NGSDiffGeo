@@ -17,14 +17,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
+        # The required NGSolve snapshot provides Linux/macOS wheels for Python 3.11+.
         cibw_build:
-          - cp310-* cp311-* cp312-* cp313-*
-        include:
-          - os: windows-2022
-            cibw-arch: AMD64
-            cmake-generator: "Visual Studio 17 2022"
-            cmake_generator_platform: "x64"
-            cibw_build: cp310-* cp311-* cp312-* cp313-*
+          - cp311-* cp312-* cp313-*
     env:
       CIBW_BUILD: ${{ matrix.cibw_build }}
 
@@ -77,7 +72,7 @@ jobs:
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install "ngsolve>=6.2.2607" cmake ninja
+          python -m pip install "ngsolve==6.2.2608.post166.dev0" cmake ninja
 
       - name: Expose Netgen runtime libraries
         run: |

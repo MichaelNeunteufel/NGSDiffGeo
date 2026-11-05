@@ -269,15 +269,6 @@ namespace kforms_internal
                            : Array<shared_ptr<CoefficientFunction>>{metric};
             }
 
-            void TraverseTree(
-                const function<void(CoefficientFunction &)> &func) override
-            {
-                metric->TraverseTree(func);
-                if (metric_derivative)
-                    metric_derivative->TraverseTree(func);
-                func(*this);
-            }
-
             using BASE::Evaluate;
 
             double Evaluate(
@@ -380,37 +371,7 @@ namespace kforms_internal
                 }
             }
 
-            void NonZeroPattern(
-                const ProxyUserData &ud,
-                FlatVector<AutoDiffDiff<1, NonZero>> values) const override
-            {
-                Vector<AutoDiffDiff<1, NonZero>> input(
-                    metric->Dimension());
-                metric->NonZeroPattern(ud, input);
-                if (!metric_derivative)
-                {
-                    FlatVector<AutoDiffDiff<1, NonZero>> inputs[] = {
-                        input};
-                    NonZeroPattern(
-                        ud,
-                        FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>>(
-                            1, inputs),
-                        values);
-                }
-                else
-                {
-                    Vector<AutoDiffDiff<1, NonZero>> derivative(
-                        metric_derivative->Dimension());
-                    metric_derivative->NonZeroPattern(ud, derivative);
-                    FlatVector<AutoDiffDiff<1, NonZero>> inputs[] = {
-                        input, derivative};
-                    NonZeroPattern(
-                        ud,
-                        FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>>(
-                            2, inputs),
-                        values);
-                }
-            }
+            using BASE::NonZeroPattern;
 
             void NonZeroPattern(
                 const ProxyUserData &,

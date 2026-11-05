@@ -382,12 +382,6 @@ namespace ngfem
                 GetDescription() + "[" + meta.CovString() + "](" + c1->EquivalenceKey() + ")";
         }
 
-        virtual void TraverseTree(const function<void(CoefficientFunction &)> &func) override
-        {
-            c1->TraverseTree(func);
-            func(*this);
-        }
-
         virtual Array<shared_ptr<CoefficientFunction>> InputCoefficientFunctions() const override
         {
             return Array<shared_ptr<CoefficientFunction>>({c1});
@@ -411,11 +405,7 @@ namespace ngfem
                                      .Assign(Var(inputs[0], i, c1->Dimensions()), false);
         }
 
-        virtual void NonZeroPattern(const class ProxyUserData &ud,
-                                    FlatVector<AutoDiffDiff<1, NonZero>> values) const override
-        {
-            c1->NonZeroPattern(ud, values);
-        }
+        using BASE::NonZeroPattern;
 
         virtual void NonZeroPattern(const class ProxyUserData &ud,
                                     FlatArray<FlatVector<AutoDiffDiff<1, NonZero>>> input,
@@ -468,13 +458,6 @@ namespace ngfem
             for (size_t ip = 0; ip < ir.Size(); ++ip)
                 for (size_t i = 0; i < this->Dimension(); ++i)
                     values(i, ip) = input_values(i, ip);
-        }
-
-        void EvaluateDeriv(const BaseMappedIntegrationRule &ir,
-                           FlatMatrix<Complex> values,
-                           FlatMatrix<Complex> deriv) const override
-        {
-            c1->EvaluateDeriv(ir, values, deriv);
         }
 
         shared_ptr<CoefficientFunction> Diff(const CoefficientFunction *var,

@@ -66,7 +66,9 @@ namespace
                               ToString(hot) + "]";
         }
 
-        void NonZeroPattern(const ProxyUserData &, FlatVector<Pattern> values) const override
+        void NonZeroPattern(const ProxyUserData &,
+                            FlatArray<FlatVector<Pattern>>,
+                            FlatVector<Pattern> values) const override
         {
             values = Pattern(false);
             values(hot) = Pattern(NonZero(true), 0);
@@ -262,17 +264,13 @@ namespace
             return Array<shared_ptr<CoefficientFunction>>();
         }
 
-        void TraverseTree(const function<void(CoefficientFunction &)> &func) override
-        {
-            ++visits;
-            func(*this);
-        }
-
         using ConstantCoefficientFunction::NonZeroPattern;
-        void NonZeroPattern(const ProxyUserData &userdata, FlatVector<Pattern> values) const override
+        void NonZeroPattern(const ProxyUserData &userdata,
+                            FlatArray<FlatVector<Pattern>> inputs,
+                            FlatVector<Pattern> values) const override
         {
             ++pattern_visits;
-            ConstantCoefficientFunction::NonZeroPattern(userdata, values);
+            ConstantCoefficientFunction::NonZeroPattern(userdata, inputs, values);
         }
     };
 
@@ -284,6 +282,26 @@ namespace
         shared_ptr<TensorFieldCoefficientFunction> graph = scalar;
         for (int i = 0; i < depth; ++i)
             graph = TensorProduct(graph, graph);
+
+        size_t leaf_visits = 0;
+        CoefficientFunction *last = nullptr;
+        graph->TraverseDAG([&](CoefficientFunction &node)
+                           {
+                               leaf_visits += &node == probe.get();
+                               last = &node;
+                           });
+        Require(leaf_visits == 1 && last == graph.get(),
+                "native DAG traversal lost sharing or child-first order");
+        probe->pattern_visits = 0;
+        ProxyUserData userdata;
+        Vector<Pattern> pattern(graph->Dimension());
+        graph->NonZeroPattern(userdata, pattern);
+        Require(probe->pattern_visits == 1,
+                "native pattern evaluation revisited a shared leaf");
+        Require(bool(pattern(0).Value()) &&
+                    !bool(pattern(0).DValue(0)) &&
+                    !bool(pattern(0).DDValue(0)),
+                "constant shared graph acquired derivative dependencies");
 
         for (bool affected : {true, false})
         {

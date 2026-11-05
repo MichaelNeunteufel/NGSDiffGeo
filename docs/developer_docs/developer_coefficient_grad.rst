@@ -77,16 +77,19 @@ NGSolve coefficient-function contract
 
 The custom coefficient node follows the standard NGSolve graph interfaces:
 
-* ``InputCoefficientFunctions`` and ``TraverseTree`` expose the child graph,
-* ``Transform`` preserves the surface flag and participates in NGSolve's replacement cache,
-* directional ``Diff`` differentiates the child and reconstructs ``GradCF``,
-* ``NonZeroPattern`` conservatively copies each child dependency to every physical derivative of that component,
-* ``GetCArgs`` contains the child and surface flag, and all three dimensional specializations are registered for polymorphic archiving.
+* ``InputCoefficientFunctions`` exposes the child to NGSolve's traversal
+  and pattern evaluation.
+* ``Transform`` preserves the surface flag and uses NGSolve's replacement
+  cache.
+* Directional ``Diff`` differentiates the child and reconstructs ``GradCF``.
+* The three-argument ``NonZeroPattern`` receives the precomputed child pattern
+  and copies each component's dependencies to all of its physical derivatives.
+* ``GetCArgs`` contains the child and surface flag. The specializations for
+  dimensions 1, 2, and 3 are registered for polymorphic archiving.
 
-Consequently, graph transformation, pickling, and compilation retain the
-component shape, complex-valued state, and surface mode. ``GradProxy`` remains a Python
-compatibility alias for NGSolve's native ``ProxyFunction``. It is no longer a
-separate NGSDiffGeo coefficient class.
+Graph transformation, pickling, and compilation retain the component shape,
+complex-valued state, and surface mode. ``GradProxy`` is a Python alias for
+NGSolve's native ``ProxyFunction``.
 
 
 SIMD support

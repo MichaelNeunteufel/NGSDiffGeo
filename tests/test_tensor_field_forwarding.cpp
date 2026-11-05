@@ -83,36 +83,11 @@ namespace
 
     void NonZeroPattern(
         const ngfem::ProxyUserData &,
+        ngstd::FlatArray<ngbla::FlatVector<
+            ngcore::AutoDiffDiff<1, ngfem::NonZero>>>,
         ngbla::FlatVector<ngcore::AutoDiffDiff<1, ngfem::NonZero>>) const override
     {
       throw ngstd::Exception("nonzero-pattern probe");
-    }
-  };
-
-  class DerivativeProbeCoefficientFunction
-      : public ngfem::CoefficientFunction
-  {
-  public:
-    mutable bool derivative_called = false;
-
-    DerivativeProbeCoefficientFunction()
-        : ngfem::CoefficientFunction(1)
-    {
-    }
-
-    double Evaluate(const ngfem::BaseMappedIntegrationPoint &) const override
-    {
-      return 0.0;
-    }
-
-    void EvaluateDeriv(
-        const ngfem::BaseMappedIntegrationRule &,
-        ngbla::FlatMatrix<ngcore::Complex> values,
-        ngbla::FlatMatrix<ngcore::Complex> deriv) const override
-    {
-      derivative_called = true;
-      values = ngcore::Complex(2.0);
-      deriv = ngcore::Complex(7.0);
     }
   };
 
@@ -219,8 +194,9 @@ int main()
   std::vector<ngfem::CoefficientFunction *> visited;
   scalar_tensor->TraverseTree(
       [&](ngfem::CoefficientFunction &node) { visited.push_back(&node); });
-  Require(!visited.empty());
-  Require(visited.back() == scalar_tensor.get());
+  Require(visited.size() == 2);
+  Require(visited[0] == constant.get());
+  Require(visited[1] == scalar_tensor.get());
 
   const auto same_scalar_tensor = ngfem::TensorFieldCF(scalar_tensor, "");
   Require(same_scalar_tensor == scalar_tensor);
@@ -276,20 +252,4 @@ int main()
   scalar_tensor->NonZeroPattern(user_data, input, output_values);
   Require(bool(output_pattern.Value()));
   Require(bool(output_pattern.DValue(0)));
-
-  const auto derivative_probe =
-      std::make_shared<DerivativeProbeCoefficientFunction>();
-  const auto derivative_tensor =
-      ngfem::TensorFieldCF(derivative_probe, "");
-  ngcore::LocalHeap heap(1024, "tensor-field forwarding test");
-  ngfem::IntegrationRule integration_rule(ngfem::ET_POINT, 0);
-  ngfem::MappedIntegrationRule<0, 0> mapped_rule(
-      integration_rule, transformation, 0, heap);
-  ngbla::Matrix<ngcore::Complex> derivative_values(1, mapped_rule.Size());
-  ngbla::Matrix<ngcore::Complex> derivatives(1, mapped_rule.Size());
-  derivative_tensor->EvaluateDeriv(
-      mapped_rule, derivative_values, derivatives);
-  Require(derivative_probe->derivative_called);
-  Require(derivative_values(0, 0) == ngcore::Complex(2.0));
-  Require(derivatives(0, 0) == ngcore::Complex(7.0));
 }

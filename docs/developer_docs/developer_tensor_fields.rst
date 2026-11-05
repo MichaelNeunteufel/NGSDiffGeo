@@ -79,10 +79,12 @@ behavior in their own components.
 Value-graph behavior
 --------------------
 
-The tensor wrapper forwards evaluation, domain checks, derivative evaluation,
-zero detection, and nonzero patterns to the wrapped coefficient. Generated
-code declares an output with the same shape and real or complex scalar type,
-then copies the generated input values into it.
+The tensor wrapper forwards evaluation, domain checks, and zero detection to
+the wrapped coefficient. ``InputCoefficientFunctions`` exposes that coefficient
+as its single child. NGSolve handles traversal and pattern evaluation; the
+wrapper's three-argument ``NonZeroPattern`` copies the precomputed child
+pattern. Generated code declares an output with the same shape and real or
+complex scalar type, then copies the generated input values into it.
 
 ``GetFullCoefficient`` is the C++ accessor for the full-shaped semantic value
 graph. Python ``.coef`` exposes the same graph. Canonical conversions use this
@@ -91,11 +93,19 @@ operands must remain targets for ``Diff`` or ``Replace`` instead retain those
 semantic operand wrappers in their expression graphs.
 
 ``SymbolicExpressionCoefficientFunction`` in ``src/symbolic_expression.*``
-shares evaluation, transformation, nonzero-pattern caching, and Jacobian
+shares evaluation, transformation, local pattern rules, and Jacobian
 construction between tensor algebra and proxy derivatives. It retains semantic
-operands independently of the native evaluation graph. Evaluation, child
-discovery, nonzero patterns, and code generation must use a consistent graph
-layout that keeps native proxy leaves visible to NGSolve.
+operands separately from the numerical input graph. Evaluation, child
+discovery, nonzero patterns, and code generation use the same input layout,
+which keeps native proxy leaves visible to NGSolve.
+
+For native proxy variables, ``DiffJacobi`` delegates to the numerical
+evaluator. Symbolic assembly treats value, gradient, and Hessian proxies as
+independent variables. When the evaluator is exposed as a single input, the
+Jacobian with respect to that input is the identity; reverse differentiation
+uses this local rule. Directional ``Diff`` and Jacobians with respect to
+semantic wrapper operands reconstruct expressions from the retained operands.
+
 ``SymbolicEinsumCF`` retains its original operands for symbolic operations while
 removing metadata-only wrapper layers from the native evaluation inputs.
 Projection uses this same helper: its archive retains the original tensor
