@@ -92,3 +92,24 @@ def test_riemann_tutorial_facet_matches_tensor_cross(metric_mesh):
            * fem.Einsum('ikl,jmn,km,ln->ij', eps, eps,
                         ngs.OuterProduct(gf*ng, gf*ng), gf.Operator('christoffel')*ng))
     assert error(facet-ref, mesh, ngs.dx(element_boundary=True)) < 1e-11
+
+
+@pytest.mark.parametrize("identity", ["hessian", "inc"])
+def test_covariant_tutorial_second_derivative_identities(identity):
+    path = TUTORIAL_DIR / "02_covariant_derivatives.ipynb"
+    cells = json.loads(path.read_text(encoding="utf-8"))["cells"]
+    sources = [''.join(cell["source"]) for cell in cells
+               if cell["cell_type"] == "code"]
+    if identity == "hessian":
+        setup = next(source for source in sources
+                     if "metric = dg.WarpedProduct().metric" in source)
+        check = next(source for source in sources
+                     if "mf.InnerProduct(mf.CovDiv(B), mf.CovDerivative(f))" in source)
+        selected = (sources[0], setup, check)
+    else:
+        check = next(source for source in sources
+                     if "lhs = Integrate" in source and "mf.CovInc(C, True)" in source)
+        selected = (sources[0], check)
+    namespace = {}
+    for source in selected:
+        exec(compile(source, str(path), "exec"), namespace)
